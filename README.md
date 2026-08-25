@@ -1,36 +1,90 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# nmt.in.ua
 
-## Getting Started
+Сайт [nmt.in.ua](https://nmt.in.ua) на Next.js 16 (App Router, TypeScript). Стилі — CSS Modules, без Tailwind.
 
-First, run the development server:
+## Як почати
+
+Потрібні Node.js 20+ і npm.
 
 ```bash
+git clone https://github.com/tony-kobs/nmt.in.ua.git
+cd nmt.in.ua
+git checkout dev
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Локально сайт відкриється на [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Код сторінок лежить у `src/app/`. Після змін сторінка оновлюється сама.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Команди
 
-## Learn More
+| Команда | Що робить |
+| --- | --- |
+| `npm run dev` | локальна розробка |
+| `npm run build` | продакшен-збірка (Webpack) |
+| `npm start` | запуск зібраного сайту через `server.js` |
+| `npm run lint` | перевірка ESLint |
 
-To learn more about Next.js, take a look at the following resources:
+## Стилі
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Нові компоненти стилізуйте через CSS Modules:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```tsx
+import styles from "./page.module.css";
 
-## Deploy on Vercel
+<div className={styles.page}>...</div>
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Глобальний reset і змінні кольорів — у `src/app/globals.css`. Tailwind не використовуємо.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Гілки
+
+Працюйте тільки з `dev`. У `main` напряму пушити не можна.
+
+```bash
+git checkout dev
+git pull origin dev
+```
+
+Нову задачу краще робити в окремій гілці від `dev`:
+
+```bash
+git checkout dev
+git pull origin dev
+git checkout -b feature/коротка-назва
+```
+
+Після роботи:
+
+```bash
+git add .
+git commit -m "Коротко, навіщо зміна"
+git push -u origin HEAD
+```
+
+Далі відкрийте pull request:
+
+1. `feature/...` → `dev` — перевірка й код-рев’ю
+2. `dev` → `main` — реліз на прод
+
+Мердж у `main` можливий лише через pull request.
+
+## Деплой
+
+Після злиття в `main` GitHub Actions сам оновлює **лише** nmt.in.ua: `git pull`, `npm install`, `npm run build`, перезапуск Node.js.
+
+Хід деплою: [Actions](https://github.com/tony-kobs/nmt.in.ua/actions).
+
+Пуш у `dev` сайт на хостингу не оновлює.
+
+## Структура
+
+```
+src/app/          сторінки, layout, CSS Modules
+public/           статичні файли
+server.js         запуск на хостингу
+deploy.sh         скрипт автодеплою (тільки nmt.in.ua)
+.github/workflows/deploy.yml
+```
