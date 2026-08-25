@@ -1,0 +1,25 @@
+name: Deploy nmt.in.ua
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-nmt-in-ua
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to nmt.in.ua hosting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy only nmt.in.ua
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: levelhst.ftp.tools
+          username: levelhst
+          key: ${{ secrets.NMT_HOSTING_SSH_KEY }}
+          fingerprint: SHA256:ozhEu5ShQNp1fRdWNdC1gvn50IXVsGQ/JriD9Ht4u6o
+          command_timeout: 10m
+          script: /home/levelhst/nmt.in.ua/www/deploy.sh
