@@ -21,5 +21,31 @@ jobs:
           username: levelhst
           key: ${{ secrets.NMT_HOSTING_SSH_KEY }}
           fingerprint: SHA256:ozhEu5ShQNp1fRdWNdC1gvn50IXVsGQ/JriD9Ht4u6o
-          command_timeout: 10m
-          script: /home/levelhst/nmt.in.ua/www/deploy.sh
+          command_timeout: 20m
+          script: |
+            set -euo pipefail
+            export PATH="/usr/local/node24/bin:/usr/local/bin:/usr/bin:${PATH}"
+            SITE_DIR="/home/levelhst/nmt.in.ua/www"
+            cd "$SITE_DIR"
+
+            # Stop stuck install/build/start for this site only
+            pkill -f 'nmt.in.ua/www.*(npm (install|run)|node server\.js)' || true
+            sleep 2
+
+            # Fast recovery: build if needed, then start with hosting host/port
+            if [ ! -f .next/BUILD_ID ]; then
+              npm run build
+            fi
+
+            export NODE_ENV=production
+            export PORT=3000
+            export HOST=127.1.10.37
+
+            nohup npm run start >> /home/levelhst/.system/nodejs/logs/www.nmt.in.ua.log 2>&1 &
+            sleep 8
+
+            echo "=== processes ==="
+            ps aux | grep 'nmt.in.ua' | grep -v grep || true
+            echo "=== local curl ==="
+            curl -sI --max-time 5 "http://${HOST}:${PORT}/" | head -10
+            curl -sf --max-time 5 "http://${HOST}:${PORT}/" >/dev/null
