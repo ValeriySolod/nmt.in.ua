@@ -21,5 +21,12 @@ jobs:
           username: levelhst
           key: ${{ secrets.NMT_HOSTING_SSH_KEY }}
           fingerprint: SHA256:ozhEu5ShQNp1fRdWNdC1gvn50IXVsGQ/JriD9Ht4u6o
-          command_timeout: 10m
-          script: /home/levelhst/nmt.in.ua/www/deploy.sh
+          command_timeout: 20m
+          script: |
+            set -euo pipefail
+            cd /home/levelhst/nmt.in.ua/www
+            export PATH="/usr/local/node24/bin:/usr/local/bin:/usr/bin:${PATH}"
+            git fetch origin main
+            git checkout main
+            git reset --hard origin/main
+            bash ./deploy.sh

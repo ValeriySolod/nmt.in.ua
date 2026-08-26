@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Keep noisy scanners away from non-existent app paths.
+Disallow: /wp-admin
+Disallow: /wp-login.php
+Disallow: /.env
+Disallow: /.git
