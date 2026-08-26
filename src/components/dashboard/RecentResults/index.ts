@@ -1,0 +1,1 @@
+export { RecentResults } from "./RecentResults";

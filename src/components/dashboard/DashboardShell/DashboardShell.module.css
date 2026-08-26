@@ -1,0 +1,119 @@
+.shell {
+  position: relative;
+  min-height: 100dvh;
+  isolation: isolate;
+}
+
+.shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      180deg,
+      rgb(244 246 248 / 84%) 0%,
+      rgb(244 246 248 / 94%) 48%,
+      rgb(244 246 248 / 98%) 100%
+    ),
+    url("/decor/header-formulas.webp");
+  background-size: cover, cover;
+  background-position: center top;
+  opacity: 0.5;
+}
+
+.backdrop {
+  position: fixed;
+  inset: var(--header-h) 0 0;
+  z-index: 25;
+  border: 0;
+  background: rgb(16 20 24 / 42%);
+  backdrop-filter: blur(2px);
+  cursor: pointer;
+  animation: fadeIn 0.2s var(--ease);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.body {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  width: min(100%, 1920px);
+  margin-inline: auto;
+  padding: var(--pad-y) var(--pad-x) 32px;
+}
+
+.sidebarSlot {
+  flex: 0 0 0;
+  width: 0;
+  min-width: 0;
+  overflow: visible;
+}
+
+.content {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  min-width: 0;
+}
+
+.main {
+  min-width: 0;
+  padding: 8px 0 28px;
+}
+
+@media (min-width: 768px) {
+  .backdrop {
+    display: none;
+  }
+
+  .body {
+    gap: 22px;
+  }
+
+  .sidebarSlotOpen {
+    flex: 0 0 var(--sidebar-w);
+    width: var(--sidebar-w);
+  }
+
+  .sidebarSlotClosed {
+    flex: 0 0 0;
+    width: 0;
+  }
+
+  .content {
+    gap: 20px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .body {
+    gap: 26px;
+  }
+
+  .content {
+    grid-template-columns: minmax(0, 1fr) var(--aside-w);
+    gap: 24px;
+    align-items: start;
+  }
+}
+
+@media (min-width: 1440px) {
+  .body {
+    gap: 28px;
+  }
+
+  .main {
+    padding-top: 12px;
+  }
+}
