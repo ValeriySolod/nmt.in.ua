@@ -1,0 +1,155 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.intro {
+  display: grid;
+  gap: 8px;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--title);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.lead {
+  margin: 0;
+  max-width: 40rem;
+  color: var(--muted);
+}
+
+.controls {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+  border-radius: 18px;
+  background:
+    linear-gradient(165deg, rgb(255 255 255 / 95%), rgb(232 248 238 / 70%)),
+    url("/decor/formulas-ribbon.svg");
+  background-size: cover, 260px auto;
+  background-position: center, right -30px bottom -20px;
+  background-repeat: no-repeat;
+  box-shadow: 5px 6px 0 rgb(22 22 22 / 6%);
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.label {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.select,
+.input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-muted);
+}
+
+.start {
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 2px solid var(--green);
+  border-radius: 10px;
+  background: var(--green-bg);
+  color: var(--green-dark);
+  font-weight: 800;
+  cursor: not-allowed;
+  opacity: 0.85;
+}
+
+.preview {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.previewTitle {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 750;
+}
+
+.previewText {
+  margin: 0;
+  color: var(--muted);
+}
+
+.answers {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.answer {
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-muted);
+  text-align: left;
+  cursor: not-allowed;
+}
+
+.stats {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.stats div {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--surface) 88%, var(--green-bg));
+}
+
+.stats dt {
+  color: var(--subtle);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.stats dd {
+  margin: 0;
+  font-weight: 750;
+}
+
+@media (min-width: 768px) {
+  .controls {
+    grid-template-columns: minmax(0, 1.4fr) minmax(7rem, 0.6fr) auto;
+    align-items: end;
+  }
+
+  .answers {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .stats {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 1280px) {
+  .controls {
+    padding: 16px 18px;
+  }
+}

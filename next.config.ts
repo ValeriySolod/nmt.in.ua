@@ -1,5 +1,14 @@
 import type { NextConfig } from "next";
 
+const isDev = process.env.NODE_ENV !== "production";
+
+const scriptSrc = [
+  "'self'",
+  "'unsafe-inline'",
+  // React Refresh / call stacks need eval only in development.
+  ...(isDev ? ["'unsafe-eval'"] : []),
+].join(" ");
+
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
@@ -19,7 +28,7 @@ const securityHeaders = [
       "img-src 'self' data: blob:",
       "font-src 'self' data:",
       "style-src 'self' 'unsafe-inline'",
-      "script-src 'self' 'unsafe-inline'",
+      `script-src ${scriptSrc}`,
       "connect-src 'self'",
     ].join("; "),
   },
