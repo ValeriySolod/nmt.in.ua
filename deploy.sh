@@ -26,14 +26,19 @@ npm install
 npm run build
 
 echo "Restarting nmt.in.ua Node.js"
-pkill -f 'nmt.in.ua/www.*(npm run start|server\.js)' || true
+# Kill only running app processes (never the deploy shell itself).
+while read -r pid; do
+  [ -n "$pid" ] || continue
+  [ "$pid" = "$$" ] && continue
+  kill "$pid" 2>/dev/null || true
+done < <(pgrep -f '/home/levelhst/nmt.in.ua/www.*(npm run start|node server\.js)' || true)
 sleep 2
 
 export NODE_ENV=production
 export PORT="${PORT:-3000}"
 export HOST="${HOST:-127.1.10.37}"
 
-nohup npm run start >> /home/levelhst/.system/nodejs/logs/www.nmt.in.ua.log 2>&1 &
+nohup node server.js >> /home/levelhst/.system/nodejs/logs/www.nmt.in.ua.log 2>&1 &
 sleep 5
 
 if curl -sf --max-time 5 "http://${HOST}:${PORT}/" >/dev/null; then

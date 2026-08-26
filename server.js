@@ -7,10 +7,22 @@ if (!process.env.NODE_ENV) {
   process.env.NODE_ENV = "production";
 }
 
-const portEnv = process.env.PORT || "3000";
+// Hosting panel may pass `--port=3000 --host=127.x.x.x` to `npm run start`.
+function argValue(name) {
+  const prefix = `--${name}=`;
+  const hit = process.argv.find((a) => a.startsWith(prefix));
+  return hit ? hit.slice(prefix.length) : undefined;
+}
+
+const portEnv =
+  process.env.PORT || argValue("port") || "3000";
 const isSocket = portEnv.includes("/") || portEnv.endsWith(".sock");
 const port = isSocket ? portEnv : parseInt(portEnv, 10);
-const hostname = process.env.HOST || process.env.HOSTNAME || "127.0.0.1";
+const hostname =
+  process.env.HOST ||
+  process.env.HOSTNAME ||
+  argValue("host") ||
+  "127.0.0.1";
 const dev = process.env.NODE_ENV !== "production";
 const dir = __dirname;
 
