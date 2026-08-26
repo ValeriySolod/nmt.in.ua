@@ -79,12 +79,34 @@ git push -u origin HEAD
 
 Пуш у `dev` сайт на хостингу не оновлює.
 
+## Безпека (без Cloudflare)
+
+На shared-хостингу немає root/iptables і edge-WAF. Об’ємний L3/L4 DDoS цим репо не зупинити — захист у коді відсікає сканери, флуд з одного IP і типові probe-шляхи до важкого рендеру Next.
+
+У коді вже є:
+
+- `server.js` — early `404` на шкідливі path, ліміт тіла, ліміт одночасних запитів, коротші HTTP-таймаути
+- `src/middleware.ts` — rate limit по IP + блок probe-шляхів (`429` / `404`)
+- `next.config.ts` — security headers (CSP, HSTS, frame deny, nosniff)
+- `public/robots.txt` — Disallow для типових CMS-шляхів
+
+### Чеклист панелі хостингу (adm.tools)
+
+1. Node.js → для nmt.in.ua увімкни **«Додавати до команди запуску параметри»**: `--port=3000 --host=127.1.10.37`
+2. SSL для домену увімкнений
+3. SSH: лише ключі; пароль вимкни, якщо панель дозволяє
+4. Не клади `.env` і секрети в `www/`
+5. Якщо в тарифі є ModSecurity / антибот / ліміт запитів — увімкни для сайту
+6. Після «Перезапустити» перевір, що https://nmt.in.ua відкривається (не 502)
+
 ## Структура
 
 ```
 src/app/          сторінки, layout, CSS Modules
-public/           статичні файли
-server.js         запуск на хостингу
+src/middleware.ts rate limit + блок probe-шляхів
+src/lib/security.ts спільні правила path/IP
+public/           статичні файли + robots.txt
+server.js         hardened запуск на хостингу
 deploy.sh         скрипт автодеплою (тільки nmt.in.ua)
 .github/workflows/deploy.yml
 ```
