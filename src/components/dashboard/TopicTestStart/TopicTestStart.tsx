@@ -1,7 +1,28 @@
+"use client";
+
+import { useActionState } from "react";
+import {
+  startTopicTestAction,
+  type StartTopicTestActionState,
+} from "@/modules/testing/actions";
 import css from "./TopicTestStart.module.css";
 
-/** Starting shell for “Тест за обраною темою” — controls are placeholders for now. */
+/** Existing theme identifiers surfaced by the UI (no separate theme model). */
+const THEMES = [
+  { id: 1, label: "1. Елементарна математика" },
+  { id: 2, label: "2. Арифметичні дії" },
+  { id: 3, label: "3. Елементарна планіметрія" },
+];
+
+const INITIAL_STATE: StartTopicTestActionState = { status: "idle" };
+
+/** “Тест за обраною темою” — starts a topic-test session via a Server Action. */
 export function TopicTestStart() {
+  const [state, formAction, pending] = useActionState(
+    startTopicTestAction,
+    INITIAL_STATE,
+  );
+
   return (
     <section className={css.section} aria-labelledby="topic-test-title">
       <header className={css.intro}>
@@ -14,13 +35,20 @@ export function TopicTestStart() {
         </p>
       </header>
 
-      <div className={css.controls}>
+      <form className={css.controls} action={formAction}>
         <label className={css.field}>
           <span className={css.label}>Обери тему</span>
-          <select className={css.select} defaultValue="1" disabled>
-            <option value="1">1. Елементарна математика</option>
-            <option value="2">2. Арифметичні дії</option>
-            <option value="3">3. Елементарна планіметрія</option>
+          <select
+            className={css.select}
+            name="themeId"
+            defaultValue={THEMES[0].id}
+            disabled={pending}
+          >
+            {THEMES.map((theme) => (
+              <option key={theme.id} value={theme.id}>
+                {theme.label}
+              </option>
+            ))}
           </select>
         </label>
 
@@ -29,18 +57,31 @@ export function TopicTestStart() {
           <input
             className={css.input}
             type="number"
-            min={1}
-            max={30}
+            min={10}
+            max={10}
             defaultValue={10}
             disabled
             aria-label="Кількість завдань"
           />
         </label>
 
-        <button type="button" className={css.start} disabled>
-          Старт
+        <button type="submit" className={css.start} disabled={pending}>
+          {pending ? "Завантаження…" : "Старт"}
         </button>
-      </div>
+      </form>
+
+      {state.status === "error" && (
+        <p className={css.error} role="alert">
+          {state.message}
+        </p>
+      )}
+
+      {state.status === "success" && (
+        <p className={css.success} role="status">
+          Сесію тесту створено (№{state.sessionId}). Проходження завдань
+          підключимо наступною ітерацією.
+        </p>
+      )}
 
       <article className={css.preview} aria-label="Приклад картки завдання">
         <h2 className={css.previewTitle}>Назва завдання</h2>

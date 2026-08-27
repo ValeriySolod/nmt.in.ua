@@ -67,8 +67,34 @@
   background: var(--green-bg);
   color: var(--green-dark);
   font-weight: 800;
+  cursor: pointer;
+}
+
+.start:disabled {
   cursor: not-allowed;
   opacity: 0.85;
+}
+
+.error {
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid color-mix(in srgb, crimson 45%, var(--border));
+  border-radius: 10px;
+  background: color-mix(in srgb, crimson 10%, var(--surface));
+  color: crimson;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.success {
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--green);
+  border-radius: 10px;
+  background: var(--green-bg);
+  color: var(--green-dark);
+  font-size: 0.9rem;
+  font-weight: 600;
 }
 
 .preview {
