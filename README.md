@@ -85,10 +85,12 @@ git push -u origin HEAD
 
 У коді вже є:
 
-- `server.js` — early `404` на шкідливі path, ліміт тіла, ліміт одночасних запитів, коротші HTTP-таймаути
+- `server.js` — early `404` на шкідливі path, ліміт тіла (`MAX_BODY_BYTES`, за замовчуванням 64 КіБ), ліміт одночасних запитів, коротші HTTP-таймаути
 - `src/middleware.ts` — rate limit по IP + блок probe-шляхів (`429` / `404`)
 - `next.config.ts` — security headers (CSP, HSTS, frame deny, nosniff)
 - `public/robots.txt` — Disallow для типових CMS-шляхів
+
+**`MAX_BODY_BYTES` і `POST /api/import`.** Дефолтний ліміт тіла запиту в `server.js` (64 КіБ) значно менший за максимальний **заявлений** розмір запиту імпорту (8 МіБ, `MAX_REQUEST_BODY_BYTES` у `src/modules/content-import/schema.ts`) — на проді сервер відхилить будь-який реальний CSV/JSON-імпорт ще до Next.js. Щоб імпорт працював, задайте в оточенні хостингу `MAX_BODY_BYTES` **не нижче** за `MAX_REQUEST_BODY_BYTES` — рекомендоване значення `8388608` (8 МіБ), див. `.env.example`. Це число вже включає запас під multipart-накладні витрати (межі частин, заголовки) понад ліміт **вмісту файлів** (5 МіБ, `MAX_TOTAL_UPLOAD_BYTES`) — саме тому 8 МіБ і 5 МіБ це два різних ліміти на різних рівнях, а не одне й те саме число. Ліміт сервера має завжди залишатися не нижчим за ліміт застосунку; занижувати існуючий захист `server.js` не можна.
 
 ### Чеклист панелі хостингу (adm.tools)
 
@@ -124,22 +126,101 @@ deploy.sh                     автодеплой (лише nmt.in.ua)
 
 | Що | Де |
 | --- | --- |
-| Методи парсингу й запису в БД | [`src/modules/content-import/index.ts`](src/modules/content-import/index.ts) — `parseCsv`, `parseJson`, `importToDatabase`, `runContentImport` |
-| HTTP endpoint | [`src/app/api/import/route.ts`](src/app/api/import/route.ts) — `POST` (зараз `501`) |
+| Методи парсингу й запису в БД | [`src/modules/content-import/`](src/modules/content-import/) — `runContentImport` (фасад), `importToDatabase` |
+| HTTP endpoint | [`src/app/api/import/route.ts`](src/app/api/import/route.ts) — `POST` (реалізовано) |
 | UI (опційно) | майбутня адмінка або блок у `/settings` |
 
-Як зробити:
+Реалізовано: `POST /api/import` приймає `multipart/form-data` у двох форматах.
 
-1. Реалізувати `parseCsv` / `parseJson` + валідацію схеми завдань.
-2. Підключити ORM/клієнт БД і `importToDatabase` (upsert тем і питань).
-3. У `POST` `api/import` прийняти `multipart/form-data` і викликати `runContentImport`.
-4. Не імпортувати секрети БД в клієнтські компоненти — лише Server Actions / Route Handlers.
+#### Авторизація
 
-```ts
-import { runContentImport } from "@/modules/content-import";
-// у route.ts / server action:
-await runContentImport(file, "csv");
+Ендпоінт захищений спільним секретом. Кожен запит має містити:
+
 ```
+Authorization: Bearer <CONTENT_IMPORT_API_KEY>
+```
+
+`CONTENT_IMPORT_API_KEY` задається лише на сервері (`.env.local`, ніколи не в репозиторії — див. `.env.example`). Якщо змінна не задана, ендпоінт відхиляє **всі** запити (`401`) — це навмисний fail-closed режим, а не тимчасовий обхід авторизації. Порівняння секрету — константного часу (`crypto.timingSafeEqual` після SHA-256), секрет ніколи не потрапляє в логи чи відповідь.
+
+#### Формат запиту — рівно одна форма
+
+Дозволено рівно один із двох наборів полів форми, без домішування, дублікатів чи зайвих полів:
+
+- CSV: лише `themes`, `themeConnections`, `quizTasks`;
+- JSON: лише `file` і `format`.
+
+Запит, що змішує поля обох форматів, дублює поле, або містить невідоме поле — відхиляється (`400`).
+
+#### Формат 1 — три CSV-файли
+
+Поля форми: `themes`, `themeConnections`, `quizTasks` (кожне — файл).
+
+Точні заголовки колонок (порядок важливий):
+
+```
+themes.csv:            id,name,description,ord
+theme_connections.csv: id,vertex_start,vertex_finish
+quiz_tasks.csv:         id,name,task_text,theme_id,answer_1,answer_2,answer_3,answer_4,right_answer_n,comments
+```
+
+```bash
+curl -X POST http://localhost:3000/api/import \
+  -H "Authorization: Bearer $CONTENT_IMPORT_API_KEY" \
+  -F "themes=@themes.csv;type=text/csv" \
+  -F "themeConnections=@theme_connections.csv;type=text/csv" \
+  -F "quizTasks=@quiz_tasks.csv;type=text/csv"
+```
+
+#### Формат 2 — один JSON-файл
+
+Поля форми: `file` (JSON-файл) + `format=json`.
+
+Схема документа (ключі об'єктів збігаються з назвами колонок БД):
+
+```json
+{
+  "themes": [{ "id": 1, "name": "...", "description": "...", "ord": 1 }],
+  "themeConnections": [{ "id": 1, "vertex_start": 1, "vertex_finish": 2 }],
+  "quizTasks": [
+    {
+      "id": 1,
+      "name": "...",
+      "task_text": "...",
+      "theme_id": 1,
+      "answer_1": "...",
+      "answer_2": "...",
+      "answer_3": "...",
+      "answer_4": "...",
+      "right_answer_n": 1,
+      "comments": "..."
+    }
+  ]
+}
+```
+
+```bash
+curl -X POST http://localhost:3000/api/import \
+  -H "Authorization: Bearer $CONTENT_IMPORT_API_KEY" \
+  -F "file=@import.json;type=application/json" \
+  -F "format=json"
+```
+
+#### Відповідь і коди статусів
+
+- `200` — успішний імпорт: `{ "ok": true, "inserted": {...}, "updated": {...}, "totalInserted": n, "totalUpdated": n }`.
+- `400` — некоректний вхід або помилка валідації (включно зі змішаним форматом, дублікатами чи невідомими полями форми): `{ "ok": false, "errors": ["..."] }`.
+- `401` — відсутній або невірний `Authorization: Bearer` (включно з випадком, коли `CONTENT_IMPORT_API_KEY` не задано на сервері).
+- `413` — перевищено один із двох лімітів розміру. Перевіряється двічі: спочатку за заголовком `Content-Length` — до розбору `multipart/form-data` — проти `MAX_REQUEST_BODY_BYTES` (8 МіБ, `src/modules/content-import/schema.ts`), який покриває весь HTTP-body **разом** з multipart-межами й заголовками частин; а потім, після розбору, за фактичним сумарним розміром завантажених файлів (`File.size`) проти `MAX_TOTAL_UPLOAD_BYTES` (5 МіБ, той самий файл) — саме цей ліміт стосується лише вмісту файлів. Другу перевірку не можна пропустити навіть коли перша пройшла, бо `Content-Length` може бути відсутнім або невірним.
+- `415` — непідтримуваний формат запиту (немає розпізнаваних полів форми, або `format` вказано неправильно).
+- `500` — неочікувана помилка сервера/БД. Клієнту повертається лише фіксоване повідомлення; SQL, хост, креденшли й інші деталі ніколи не потрапляють ані у відповідь, ані в логи (`console.error` пише лише операцію й санітизовану категорію помилки).
+
+Валідація перед відкриттям з'єднання з БД: обов'язкові/невідомі поля, цілочисельні значення в межах `INT` MySQL (-2147483648..2147483647), довжина рядків (varchar(100)/varchar(50)), `right_answer_n` у діапазоні 1..4, унікальність id у межах датасету, порожні датасети, а також посилання `quiz_tasks.theme_id` і `theme_connections.vertex_start/vertex_finish` — мають вказувати на тему, яка вже існує в БД або імпортується в цьому ж запиті.
+
+Первинні `id` та посилання на теми (`theme_id`, `vertex_start`, `vertex_finish`) мають бути додатними (`>= 1`). `ord` — порядковий номер теми; `0` є коректним значенням (перша позиція), недопустимі лише від'ємні числа.
+
+Увесь запис виконується в одній транзакції в порядку `themes → theme_connections → quiz_tasks` (upsert за первинним ключем); будь-яка помилка валідації чи SQL відкочує весь імпорт повністю.
+
+Код: [`src/modules/content-import/`](src/modules/content-import/) (`csv.ts`, `json.ts`, `validate.ts`, `db.ts`, `auth.ts`, `logging.ts`, `index.ts`) + [`src/app/api/import/route.ts`](src/app/api/import/route.ts).
 
 ### 3. Тести + інтерактивні тренажери
 
@@ -195,4 +276,4 @@ const actions = recommendNextActions(snapshot);
 | `/problems` | `StubPage` | 3 |
 | `/settings` | `StubPage` | профіль; опційно UI імпорту (2) |
 | `/consultations` | `StubPage` | дія з рекомендацій (4) |
-| `POST /api/import` | `501` | 2 |
+| `POST /api/import` | реалізовано | 2 |
