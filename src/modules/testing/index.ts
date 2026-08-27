@@ -14,21 +14,28 @@ export type TopicTestConfig = {
   questionCount: number;
 };
 
+export {
+  startTopicTest,
+  validateStartTopicTestInput,
+  StartTopicTestError,
+  TOPIC_TEST_TASK_COUNT,
+} from "./startTopicTest";
+export type {
+  StartTopicTestInput,
+  StartTopicTestResult,
+  StartTopicTestErrorCode,
+} from "./startTopicTest";
+export {
+  startTopicTestAction,
+  type StartTopicTestActionState,
+} from "./actions";
+
 export type TrainerSession = {
   id: string;
   topicId: string;
   startedAt: string;
   answers: unknown[];
 };
-
-/** Створити сесію тесту за темою (після натискання «Старт»). */
-export async function startTopicTest(
-  config: TopicTestConfig,
-): Promise<TrainerSession> {
-  void config;
-  // TODO(module-3): вибір завдань з БД, створення session
-  throw new Error("startTopicTest: ще не реалізовано (модуль 3)");
-}
 
 /** Перевірити відповідь учня на одне завдання. */
 export function checkAnswer(
