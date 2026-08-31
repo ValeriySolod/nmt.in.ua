@@ -73,11 +73,33 @@ git push -u origin HEAD
 
 ## Деплой
 
-Після злиття в `main` GitHub Actions сам оновлює **лише** nmt.in.ua: `git pull`, `npm install`, `npm run build`, перезапуск Node.js.
+Два середовища:
 
-Хід деплою: [Actions](https://github.com/tony-kobs/nmt.in.ua/actions).
+| Середовище | Як оновлюється |
+| --- | --- |
+| **Vercel** | автоматично з push/merge у `main` (Production branch у Vercel) |
+| **nmt.in.ua (ukraine.com.ua)** | **вручну** через SSH — GitHub Actions на хостинг **не** деплоїть |
 
-Пуш у `dev` сайт на хостингу не оновлює.
+`dev` ні на Vercel production, ні на shared-хостинг сам по собі не виводить прод.
+
+### Vercel (`main`)
+
+Стандартна практика: `main` = production, preview — з PR/гілок. У Vercel задай env (`DB_*`, `NEXT_PUBLIC_SITE_URL`, `CONTENT_IMPORT_API_KEY` тощо) у Project → Settings → Environment Variables.
+
+### Shared-хостинг (ручний деплой)
+
+З локальної машини (Git Bash), після merge у `main`:
+
+```bash
+bash scripts/manual-deploy-hosting.sh
+```
+
+Скрипт: `npm ci` + `npm run build` локально → архів по SSH → `npm install --omit=dev` на сервері → restart Node.  
+`.env.production` на сервері зберігається (backup/restore); у git не комітити.
+
+Env на хості: `/home/levelhst/nmt.in.ua/www/.env.production` (копія з `.env.example` / локального `.env.local`).
+
+`deploy.sh` на сервері — допоміжний скрипт для перезапуску; основний шлях — `scripts/manual-deploy-hosting.sh`.
 
 ## Безпека (без Cloudflare)
 
@@ -97,7 +119,7 @@ git push -u origin HEAD
 1. Node.js → для nmt.in.ua увімкни **«Додавати до команди запуску параметри»**: `--port=3000 --host=127.1.10.37`
 2. SSL для домену увімкнений
 3. SSH: лише ключі; пароль вимкни, якщо панель дозволяє
-4. Не клади `.env` і секрети в `www/`
+4. `.env.production` у `www/` — так (не в git); секрети не комітити
 5. Якщо в тарифі є ModSecurity / антибот / ліміт запитів — увімкни для сайту
 6. Після «Перезапустити» перевір, що https://nmt.in.ua відкривається (не 502)
 
@@ -115,7 +137,8 @@ src/middleware.ts             rate limit + блок probe-шляхів
 src/lib/security.ts           спільні правила path/IP
 public/                       статичні файли, decor/, robots.txt
 server.js                     hardened запуск на хостингу
-deploy.sh                     автодеплой (лише nmt.in.ua)
+deploy.sh                     перезапуск на хостингу (допоміжний)
+scripts/manual-deploy-hosting.sh  ручний деплой на ukraine.com.ua
 ```
 
 ## Модулі команди — куди підключатись
