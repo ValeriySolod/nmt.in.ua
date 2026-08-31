@@ -1,8 +1,8 @@
 import type { SqlConnection } from "@/lib/db/mysql";
 
 /**
- * Fixed number of tasks per topic-test session (observed team requirement).
- * `tasks_number` / mapping-row count both derive from this constant.
+ * Maximum tasks per topic-test session. If the theme bank has fewer, the
+ * session uses all available tasks (but at least one is required).
  */
 export const TOPIC_TEST_TASK_COUNT = 10;
 
@@ -21,8 +21,7 @@ const TASK_STATUS_UNANSWERED = 0;
  * Table and column names below match the schema verified directly against
  * the team's MySQL database.
  */
-const SQL_SELECT_TASKS =
-  "SELECT id FROM quiz_tasks WHERE theme_id = ? ORDER BY RAND() LIMIT ?";
+const SQL_SELECT_TASKS = `SELECT id FROM quiz_tasks WHERE theme_id = ? ORDER BY RAND() LIMIT ${TOPIC_TEST_TASK_COUNT}`;
 const SQL_INSERT_SESSION =
   "INSERT INTO task_sessions (user_id, session_type, theme_id, tasks_number, right_number, time, session_status, start_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 const SQL_INSERT_MAPPING_PREFIX =
@@ -91,9 +90,10 @@ async function loadDefaultConnection(): Promise<SqlConnection> {
 }
 
 /**
- * Starts a topic-test session: selects 10 distinct tasks for the theme,
- * inserts one `task_sessions` row and one `tasks2session` row per task, all
- * inside a single transaction. Rolls back entirely on any failure.
+ * Starts a topic-test session: selects up to {@link TOPIC_TEST_TASK_COUNT}
+ * distinct tasks for the theme (or all available when fewer), inserts one
+ * `task_sessions` row and one `tasks2session` row per task, all inside a
+ * single transaction. Rolls back entirely on any failure.
  */
 export async function startTopicTest(
   rawInput: unknown,
@@ -114,15 +114,15 @@ export async function startTopicTest(
     try {
       await connection.beginTransaction();
 
-      const tasks = await connection.query<{ id: number }>(
-        SQL_SELECT_TASKS,
-        [input.themeId, TOPIC_TEST_TASK_COUNT],
-      );
+      const tasks = await connection.query<{ id: number }>(SQL_SELECT_TASKS, [
+        input.themeId,
+      ]);
 
-      if (tasks.length < TOPIC_TEST_TASK_COUNT) {
+      const taskCount = tasks.length;
+      if (taskCount === 0) {
         await connection.rollback();
         throw new StartTopicTestError(
-          "Not enough tasks available for the selected theme.",
+          "No tasks available for the selected theme.",
           "insufficient_tasks",
         );
       }
@@ -131,7 +131,7 @@ export async function startTopicTest(
         input.userId,
         SESSION_TYPE_TOPIC,
         input.themeId,
-        TOPIC_TEST_TASK_COUNT,
+        taskCount,
         SESSION_INITIAL_RIGHT_NUMBER,
         SESSION_INITIAL_TIME,
         SESSION_STATUS_CREATED,
@@ -151,7 +151,7 @@ export async function startTopicTest(
         mappingParams,
       );
 
-      if (mapping.affectedRows !== TOPIC_TEST_TASK_COUNT) {
+      if (mapping.affectedRows !== taskCount) {
         await connection.rollback();
         throw new StartTopicTestError(
           "Failed to link all tasks to the new session.",

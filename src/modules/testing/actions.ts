@@ -9,7 +9,7 @@ export type StartTopicTestActionState =
 
 const GENERIC_ERROR_MESSAGE = "Не вдалося запустити тест. Спробуйте ще раз.";
 const INSUFFICIENT_TASKS_MESSAGE =
-  "Для цієї теми поки що недостатньо завдань у банку питань.";
+  "Для цієї теми поки що немає завдань у банку питань.";
 const IN_PROGRESS_MESSAGE = "Запит уже виконується — зачекайте.";
 const INVALID_INPUT_MESSAGE = "Оберіть тему, щоб почати тест.";
 

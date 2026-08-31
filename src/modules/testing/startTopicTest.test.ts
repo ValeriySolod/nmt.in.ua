@@ -81,6 +81,32 @@ function mappingRows(params: unknown[]): Record<(typeof MAPPING_COLUMNS)[number]
   return rows;
 }
 
+test("creates a session with fewer than TOPIC_TEST_TASK_COUNT when the bank is smaller", async () => {
+  const themeId = 99901;
+  const userId = 7;
+  const availableCount = 4;
+  const tasks = tasksFor(availableCount, themeId);
+  const mock = makeConnection({ tasks });
+
+  const result = await startTopicTest(
+    { userId, themeId },
+    { getConnection: async () => mock.connection },
+  );
+
+  assert.equal(result.taskIds.length, availableCount);
+
+  const sessionInsert = mock.calls.find((c) =>
+    c.sql.startsWith("INSERT INTO task_sessions"),
+  );
+  assert.equal(sessionInsert?.params[3], availableCount);
+
+  const mappingCall = mock.calls.find((c) =>
+    c.sql.startsWith("INSERT INTO tasks2session"),
+  );
+  assert.equal(mappingRows(mappingCall!.params).length, availableCount);
+  assert.ok(mock.isCommitted());
+});
+
 test("creates a session and links exactly 10 distinct tasks from the requested theme", async () => {
   const themeId = 2;
   const userId = 7;
@@ -195,10 +221,9 @@ test("rejects invalid input before touching the database", async () => {
   assert.equal(called, false);
 });
 
-test("rolls back and reports insufficient_tasks when fewer than 10 tasks exist", async () => {
+test("rolls back and reports insufficient_tasks when no tasks exist", async () => {
   const themeId = 3;
-  const tasks = tasksFor(4, themeId);
-  const mock = makeConnection({ tasks });
+  const mock = makeConnection({ tasks: [] });
 
   await assert.rejects(
     () =>
@@ -220,6 +245,20 @@ test("rolls back and reports insufficient_tasks when fewer than 10 tasks exist",
     c.sql.startsWith("INSERT INTO task_sessions"),
   );
   assert.equal(sessionInsert, undefined);
+});
+
+test("creates a session when fewer than 10 tasks exist in the theme bank", async () => {
+  const themeId = 3;
+  const tasks = tasksFor(4, themeId);
+  const mock = makeConnection({ tasks });
+
+  const result = await startTopicTest(
+    { userId: 9, themeId },
+    { getConnection: async () => mock.connection },
+  );
+
+  assert.equal(result.taskIds.length, 4);
+  assert.ok(mock.isCommitted());
 });
 
 test("rolls back the whole transaction and releases the connection when the mapping insert fails partially", async () => {
