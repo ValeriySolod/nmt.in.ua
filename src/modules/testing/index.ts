@@ -29,6 +29,21 @@ export {
   startTopicTestAction,
   type StartTopicTestActionState,
 } from "./actions";
+export {
+  getAvailableTopicThemes,
+} from "./getAvailableTopicThemes";
+export {
+  getSessionTasks,
+  GetSessionTasksError,
+  validateSessionId,
+} from "./getSessionTasks";
+export type { GetSessionTasksErrorCode } from "./getSessionTasks";
+export type {
+  AvailableTopicTheme,
+  SessionTask,
+  SessionTasksResult,
+  SessionTaskAnswer,
+} from "./types";
 
 export type TrainerSession = {
   id: string;

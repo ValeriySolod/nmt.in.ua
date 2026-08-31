@@ -1,5 +1,7 @@
 import { TopicTestStart } from "@/components/dashboard/TopicTestStart";
 import { createPageMetadata } from "@/constants/seo";
+import { getAvailableTopicThemes } from "@/modules/testing/getAvailableTopicThemes";
+import { TOPIC_TEST_TASK_COUNT } from "@/modules/testing/startTopicTest";
 
 export const metadata = createPageMetadata({
   title: "Тест за обраною темою",
@@ -8,6 +10,10 @@ export const metadata = createPageMetadata({
   path: "/",
 });
 
-export default function HomePage() {
-  return <TopicTestStart />;
+export default async function HomePage() {
+  const themes = await getAvailableTopicThemes();
+
+  return (
+    <TopicTestStart themes={themes} maxTaskCount={TOPIC_TEST_TASK_COUNT} />
+  );
 }

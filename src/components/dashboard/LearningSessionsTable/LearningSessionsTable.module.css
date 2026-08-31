@@ -1,0 +1,142 @@
+.learningSessions {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.intro {
+  display: grid;
+  gap: 8px;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--title);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.lead {
+  margin: 0;
+  max-width: 42rem;
+  color: var(--muted);
+}
+
+.tableWrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: 5px 6px 0 rgb(22 22 22 / 6%);
+}
+
+.table {
+  width: 100%;
+  min-width: 980px;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: middle;
+  font-size: 0.88rem;
+}
+
+.table th {
+  font-size: 0.78rem;
+  font-weight: 800;
+  background: color-mix(in srgb, var(--surface) 82%, var(--green-bg));
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.themeCell {
+  font-weight: 700;
+  min-width: 10rem;
+}
+
+.statusCompleted {
+  color: var(--green-dark);
+  font-weight: 700;
+}
+
+.statusPlanned {
+  color: var(--blue);
+  font-weight: 700;
+}
+
+.statusInProgress {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.startLink,
+.cancelButton {
+  min-height: 34px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.startLink {
+  display: inline-flex;
+  align-items: center;
+  border: 2px solid var(--green);
+  background: var(--green-bg);
+  color: var(--green-dark);
+  text-decoration: none;
+}
+
+.cancelButton {
+  border: 1px solid color-mix(in srgb, crimson 45%, var(--border));
+  background: color-mix(in srgb, crimson 8%, var(--surface));
+  color: crimson;
+  cursor: pointer;
+}
+
+.cancelButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.empty,
+.error,
+.hint {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.empty,
+.hint {
+  color: var(--subtle);
+}
+
+.error {
+  padding: 10px 14px;
+  border: 1px solid color-mix(in srgb, crimson 45%, var(--border));
+  border-radius: 10px;
+  background: color-mix(in srgb, crimson 10%, var(--surface));
+  color: crimson;
+  font-weight: 600;
+}
+
+@media (min-width: 768px) {
+  .table th,
+  .table td {
+    padding: 12px 14px;
+  }
+}

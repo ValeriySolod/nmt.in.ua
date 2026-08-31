@@ -1,0 +1,100 @@
+.topicResults {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.intro {
+  display: grid;
+  gap: 8px;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--title);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.lead {
+  margin: 0;
+  max-width: 42rem;
+  color: var(--muted);
+}
+
+.tableWrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: 5px 6px 0 rgb(22 22 22 / 6%);
+}
+
+.table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.table th {
+  font-size: 0.82rem;
+  font-weight: 800;
+  background: color-mix(in srgb, var(--surface) 82%, var(--green-bg));
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.themeCell {
+  font-weight: 700;
+}
+
+.metric {
+  min-width: 5.5rem;
+  font-weight: 750;
+  border-radius: 8px;
+}
+
+.metricNone {
+  color: var(--subtle);
+  font-weight: 600;
+}
+
+.metricHigh {
+  background: var(--green-bg);
+  color: var(--green-dark);
+}
+
+.metricMedium {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.metricLow {
+  background: color-mix(in srgb, crimson 12%, var(--surface));
+  color: crimson;
+}
+
+.hint {
+  margin: 0;
+  color: var(--subtle);
+  font-size: 0.85rem;
+}
+
+@media (min-width: 768px) {
+  .table th,
+  .table td {
+    padding: 14px 16px;
+  }
+}

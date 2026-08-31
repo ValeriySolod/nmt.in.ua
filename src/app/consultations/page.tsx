@@ -1,15 +1,8 @@
-import { StubPage } from "@/components/dashboard/StubPage";
-import { getNavItem } from "@/constants/navigation";
-import { createPageMetadata } from "@/constants/seo";
+import { NavStubPage, createStubPageMetadata } from "@/components/dashboard/StubPage";
 
-const item = getNavItem("/consultations");
-
-export const metadata = createPageMetadata({
-  title: item.label,
-  description: item.description,
-  path: item.href,
-});
+const { metadata } = createStubPageMetadata("/consultations");
+export { metadata };
 
 export default function ConsultationsPage() {
-  return <StubPage title={item.label} description={item.description} />;
+  return <NavStubPage href="/consultations" />;
 }

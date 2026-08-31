@@ -1,6 +1,7 @@
-import { StubPage } from "@/components/dashboard/StubPage";
+import { TopicResultsTable } from "@/components/dashboard/TopicResultsTable";
 import { getNavItem } from "@/constants/navigation";
 import { createPageMetadata } from "@/constants/seo";
+import { getTopicResults } from "@/modules/results/getTopicResults";
 
 const item = getNavItem("/results");
 
@@ -10,6 +11,8 @@ export const metadata = createPageMetadata({
   path: item.href,
 });
 
-export default function ResultsPage() {
-  return <StubPage title={item.label} description={item.description} />;
+export default async function ResultsPage() {
+  const rows = await getTopicResults();
+
+  return <TopicResultsTable rows={rows} />;
 }
