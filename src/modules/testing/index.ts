@@ -27,8 +27,20 @@ export type {
 } from "./startTopicTest";
 export {
   startTopicTestAction,
+  checkAnswerAction,
   type StartTopicTestActionState,
 } from "./actions";
+export {
+  checkAnswer,
+  validateCheckAnswerInput,
+  CheckAnswerError,
+} from "./checkAnswer";
+export type {
+  CheckAnswerInput,
+  CheckAnswerResult,
+  CheckAnswerErrorCode,
+  AnswerNumber,
+} from "./checkAnswer";
 export {
   getAvailableTopicThemes,
 } from "./getAvailableTopicThemes";
@@ -43,6 +55,13 @@ export type {
   SessionTask,
   SessionTasksResult,
   SessionTaskAnswer,
+  CheckAnswerActionInput,
+  CheckAnswerActionState,
+} from "./types";
+export {
+  TASK_STATUS_UNANSWERED,
+  TASK_STATUS_CORRECT,
+  TASK_STATUS_INCORRECT,
 } from "./types";
 
 export type TrainerSession = {
@@ -51,17 +70,6 @@ export type TrainerSession = {
   startedAt: string;
   answers: unknown[];
 };
-
-/** Перевірити відповідь учня на одне завдання. */
-export function checkAnswer(
-  questionId: string,
-  userAnswer: unknown,
-): { correct: boolean; score: number } {
-  void questionId;
-  void userAnswer;
-  // TODO(module-3): типи питань (одна відповідь / відповідність / коротка)
-  throw new Error("checkAnswer: ще не реалізовано (модуль 3)");
-}
 
 /** Завершити сесію й порахувати підсумок. */
 export async function finishTrainerSession(
