@@ -1,6 +1,15 @@
 "use server";
 
+import {
+  checkAnswer,
+  CheckAnswerError,
+  type CheckAnswerResult,
+} from "./checkAnswer";
 import { startTopicTest, StartTopicTestError } from "./startTopicTest";
+import type {
+  CheckAnswerActionInput,
+  CheckAnswerActionState,
+} from "./types";
 
 export type StartTopicTestActionState =
   | { status: "idle" }
@@ -12,6 +21,11 @@ const INSUFFICIENT_TASKS_MESSAGE =
   "Для цієї теми поки що немає завдань у банку питань.";
 const IN_PROGRESS_MESSAGE = "Запит уже виконується — зачекайте.";
 const INVALID_INPUT_MESSAGE = "Оберіть тему, щоб почати тест.";
+const CHECK_GENERIC_ERROR_MESSAGE =
+  "Не вдалося перевірити відповідь. Спробуйте ще раз.";
+const CHECK_INVALID_INPUT_MESSAGE = "Оберіть один із варіантів відповіді.";
+const CHECK_NOT_FOUND_MESSAGE = "Завдання не знайдено в цій сесії.";
+const CHECK_COMPLETED_MESSAGE = "Цей тест уже завершено.";
 
 // TODO: replace with the authenticated user's id once auth is implemented.
 // The repo has no auth/user-context source yet, so this Server Action uses
@@ -57,5 +71,45 @@ export async function startTopicTestAction(
     }
     console.error("startTopicTestAction: unexpected error", error);
     return { status: "error", message: GENERIC_ERROR_MESSAGE };
+  }
+}
+
+export type { CheckAnswerActionInput, CheckAnswerActionState };
+
+type CheckAnswerActionDeps = {
+  checkAnswer: typeof checkAnswer;
+};
+
+/**
+ * Server Action for a chosen option in TopicTrainer. User id is the trusted
+ * server-side `DEMO_USER_ID`. The payload never includes `right_answer_n`.
+ */
+export async function checkAnswerAction(
+  input: CheckAnswerActionInput,
+  deps: CheckAnswerActionDeps = { checkAnswer },
+): Promise<CheckAnswerActionState> {
+  try {
+    const result: CheckAnswerResult = await deps.checkAnswer({
+      userId: DEMO_USER_ID,
+      sessionId: input.sessionId,
+      mappingId: input.mappingId,
+      answerNumber: input.answerNumber,
+    });
+    return { status: "success", correct: result.correct };
+  } catch (error) {
+    if (error instanceof CheckAnswerError) {
+      switch (error.code) {
+        case "invalid_input":
+          return { status: "error", message: CHECK_INVALID_INPUT_MESSAGE };
+        case "not_found":
+          return { status: "error", message: CHECK_NOT_FOUND_MESSAGE };
+        case "session_completed":
+          return { status: "error", message: CHECK_COMPLETED_MESSAGE };
+        default:
+          return { status: "error", message: CHECK_GENERIC_ERROR_MESSAGE };
+      }
+    }
+    console.error("checkAnswerAction: unexpected error", error);
+    return { status: "error", message: CHECK_GENERIC_ERROR_MESSAGE };
   }
 }

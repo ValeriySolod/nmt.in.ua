@@ -3,7 +3,13 @@
 import Link from "next/link";
 import { useState } from "react";
 import clsx from "clsx";
-import type { SessionTask, SessionTaskAnswer } from "@/modules/testing/types";
+import { checkAnswerAction } from "@/modules/testing/actions";
+import {
+  TASK_STATUS_CORRECT,
+  TASK_STATUS_INCORRECT,
+  type SessionTask,
+  type SessionTaskAnswer,
+} from "@/modules/testing/types";
 import css from "./TopicTrainer.module.css";
 
 type TopicTrainerProps = {
@@ -11,44 +17,83 @@ type TopicTrainerProps = {
   tasks: SessionTask[];
 };
 
-/** Mock answer handler until checkAnswer (task 3.3) is wired up. */
-function mockSubmitAnswer(taskId: number, answerNumber: SessionTaskAnswer["number"]) {
-  void taskId;
-  void answerNumber;
+type CheckResult = { correct: boolean };
+
+function initialResults(tasks: SessionTask[]): Record<number, CheckResult> {
+  const results: Record<number, CheckResult> = {};
+  for (const task of tasks) {
+    if (task.status === TASK_STATUS_CORRECT)
+      results[task.mappingId] = { correct: true };
+    if (task.status === TASK_STATUS_INCORRECT)
+      results[task.mappingId] = { correct: false };
+  }
+  return results;
 }
 
 export function TopicTrainer({ sessionId, tasks }: TopicTrainerProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedByTaskId, setSelectedByTaskId] = useState<
+  const [selectedByMappingId, setSelectedByMappingId] = useState<
     Record<number, SessionTaskAnswer["number"]>
   >({});
+  const [resultsByMappingId, setResultsByMappingId] = useState(() =>
+    initialResults(tasks),
+  );
+  const [pendingMappingId, setPendingMappingId] = useState<number | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const currentTask = tasks[currentIndex];
   const total = tasks.length;
   const selectedAnswer = currentTask
-    ? selectedByTaskId[currentTask.taskId]
+    ? selectedByMappingId[currentTask.mappingId]
     : undefined;
+  const checkResult = currentTask
+    ? resultsByMappingId[currentTask.mappingId]
+    : undefined;
+  const isPending =
+    currentTask != null && pendingMappingId === currentTask.mappingId;
   const isLast = currentIndex === total - 1;
   const allAnswered =
     tasks.length > 0 &&
-    tasks.every((task) => selectedByTaskId[task.taskId] !== undefined);
+    tasks.every((task) => resultsByMappingId[task.mappingId] !== undefined);
 
   if (!currentTask) {
     return null;
   }
 
-  function handleSelect(answerNumber: SessionTaskAnswer["number"]) {
-    setSelectedByTaskId((prev) => ({
+  async function handleSelect(answerNumber: SessionTaskAnswer["number"]) {
+    if (checkResult || isPending) return;
+
+    setSelectedByMappingId((prev) => ({
       ...prev,
-      [currentTask.taskId]: answerNumber,
+      [currentTask.mappingId]: answerNumber,
     }));
-    mockSubmitAnswer(currentTask.taskId, answerNumber);
+    setErrorMessage(null);
+    setPendingMappingId(currentTask.mappingId);
+
+    const result = await checkAnswerAction({
+      sessionId,
+      mappingId: currentTask.mappingId,
+      answerNumber,
+    });
+
+    setPendingMappingId(null);
+
+    if (result.status !== "success") {
+      setErrorMessage(result.message);
+      return;
+    }
+
+    setResultsByMappingId((prev) => ({
+      ...prev,
+      [currentTask.mappingId]: { correct: result.correct },
+    }));
   }
 
   function handleNext() {
-    if (selectedAnswer === undefined) return;
+    if (checkResult === undefined) return;
     if (!isLast) {
       setCurrentIndex((index) => index + 1);
+      setErrorMessage(null);
     }
   }
 
@@ -77,9 +122,18 @@ export function TopicTrainer({ sessionId, tasks }: TopicTrainerProps) {
               type="button"
               className={clsx(
                 css.answer,
-                selectedAnswer === answer.number && css.answerSelected,
+                selectedAnswer === answer.number &&
+                  checkResult === undefined &&
+                  css.answerSelected,
+                selectedAnswer === answer.number &&
+                  checkResult?.correct === true &&
+                  css.answerCorrect,
+                selectedAnswer === answer.number &&
+                  checkResult?.correct === false &&
+                  css.answerWrong,
               )}
               onClick={() => handleSelect(answer.number)}
+              disabled={isPending || checkResult !== undefined}
               aria-pressed={selectedAnswer === answer.number}
             >
               {answer.number}. {answer.text}
@@ -88,9 +142,27 @@ export function TopicTrainer({ sessionId, tasks }: TopicTrainerProps) {
         </div>
       </article>
 
-      {selectedAnswer !== undefined ? (
+      {isPending ? (
         <p className={css.feedback} role="status">
-          Відповідь обрано. Перевірка результатів підключиться на наступній ітерації.
+          Перевіряємо відповідь…
+        </p>
+      ) : null}
+
+      {checkResult ? (
+        <p
+          className={clsx(
+            css.feedback,
+            checkResult.correct ? css.feedbackOk : css.feedbackBad,
+          )}
+          role="status"
+        >
+          {checkResult.correct ? "Вірно" : "Невірно"}
+        </p>
+      ) : null}
+
+      {errorMessage ? (
+        <p className={clsx(css.feedback, css.feedbackBad)} role="alert">
+          {errorMessage}
         </p>
       ) : null}
 
@@ -100,7 +172,7 @@ export function TopicTrainer({ sessionId, tasks }: TopicTrainerProps) {
             type="button"
             className={css.next}
             onClick={handleNext}
-            disabled={selectedAnswer === undefined}
+            disabled={checkResult === undefined || isPending}
           >
             Наступне завдання
           </button>

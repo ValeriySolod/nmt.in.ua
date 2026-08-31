@@ -92,6 +92,20 @@
   font-weight: 700;
 }
 
+.answerCorrect {
+  border-color: var(--green);
+  background: var(--green-bg);
+  color: var(--green-dark);
+  font-weight: 700;
+}
+
+.answerWrong {
+  border-color: color-mix(in srgb, crimson 55%, var(--border));
+  background: color-mix(in srgb, crimson 10%, var(--surface));
+  color: crimson;
+  font-weight: 700;
+}
+
 .answer:disabled {
   cursor: default;
 }
@@ -135,12 +149,24 @@
 .feedback {
   margin: 0;
   padding: 10px 14px;
-  border: 1px solid var(--green);
+  border: 1px solid var(--line);
   border-radius: 10px;
-  background: var(--green-bg);
-  color: var(--green-dark);
+  background: var(--surface-muted);
+  color: var(--muted);
   font-size: 0.9rem;
   font-weight: 600;
+}
+
+.feedbackOk {
+  border-color: var(--green);
+  background: var(--green-bg);
+  color: var(--green-dark);
+}
+
+.feedbackBad {
+  border-color: color-mix(in srgb, crimson 45%, var(--border));
+  background: color-mix(in srgb, crimson 10%, var(--surface));
+  color: crimson;
 }
 
 .finish {
