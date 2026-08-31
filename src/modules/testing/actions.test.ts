@@ -5,11 +5,13 @@ import { startTopicTest, TOPIC_TEST_TASK_COUNT } from "./startTopicTest";
 import {
   checkAnswerAction,
   finishTrainerSessionAction,
+  markSessionStartedAction,
   startTopicTestAction,
   type StartTopicTestActionState,
 } from "./actions";
 import { checkAnswer, CheckAnswerError } from "./checkAnswer";
 import { finishTrainerSession, FinishTrainerSessionError } from "./finishTrainerSession";
+import { markSessionStarted, MarkSessionStartedError } from "./markSessionStarted";
 
 const IDLE_STATE: StartTopicTestActionState = { status: "idle" };
 
@@ -231,5 +233,37 @@ test("finishTrainerSessionAction maps unfinished to a client-safe error", async 
   assert.deepEqual(state, {
     status: "error",
     message: "Спочатку дайте відповідь на всі завдання.",
+  });
+});
+
+test("markSessionStartedAction uses the trusted demo user and returns startTime", async () => {
+  let capturedInput: unknown;
+  const spy = (async (input: unknown) => {
+    capturedInput = input;
+    return { startTime: 1_700_000_000 };
+  }) as typeof markSessionStarted;
+
+  const state = await markSessionStartedAction(
+    { sessionId: 36 },
+    { markSessionStarted: spy },
+  );
+
+  assert.deepEqual(capturedInput, { userId: 1, sessionId: 36 });
+  assert.deepEqual(state, { status: "success", startTime: 1_700_000_000 });
+});
+
+test("markSessionStartedAction maps not_found to a client-safe error", async () => {
+  const spy = (async () => {
+    throw new MarkSessionStartedError("hidden", "not_found");
+  }) as typeof markSessionStarted;
+
+  const state = await markSessionStartedAction(
+    { sessionId: 36 },
+    { markSessionStarted: spy },
+  );
+
+  assert.deepEqual(state, {
+    status: "error",
+    message: "Сесію не знайдено.",
   });
 });

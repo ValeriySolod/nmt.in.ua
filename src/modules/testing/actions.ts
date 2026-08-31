@@ -9,12 +9,18 @@ import {
   finishTrainerSession,
   FinishTrainerSessionError,
 } from "./finishTrainerSession";
+import {
+  markSessionStarted,
+  MarkSessionStartedError,
+} from "./markSessionStarted";
 import { startTopicTest, StartTopicTestError } from "./startTopicTest";
 import type {
   CheckAnswerActionInput,
   CheckAnswerActionState,
   FinishTrainerSessionActionInput,
   FinishTrainerSessionActionState,
+  MarkSessionStartedActionInput,
+  MarkSessionStartedActionState,
 } from "./types";
 
 export type StartTopicTestActionState =
@@ -38,6 +44,10 @@ const FINISH_INVALID_INPUT_MESSAGE = "Сесію не знайдено.";
 const FINISH_NOT_FOUND_MESSAGE = "Сесію не знайдено.";
 const FINISH_UNFINISHED_MESSAGE =
   "Спочатку дайте відповідь на всі завдання.";
+const MARK_STARTED_GENERIC_ERROR_MESSAGE =
+  "Не вдалося зафіксувати час старту.";
+const MARK_STARTED_INVALID_INPUT_MESSAGE = "Сесію не знайдено.";
+const MARK_STARTED_NOT_FOUND_MESSAGE = "Сесію не знайдено.";
 
 // TODO: replace with the authenticated user's id once auth is implemented.
 // The repo has no auth/user-context source yet, so this Server Action uses
@@ -90,6 +100,8 @@ export type { CheckAnswerActionInput, CheckAnswerActionState };
 export type {
   FinishTrainerSessionActionInput,
   FinishTrainerSessionActionState,
+  MarkSessionStartedActionInput,
+  MarkSessionStartedActionState,
 };
 
 type CheckAnswerActionDeps = {
@@ -163,5 +175,39 @@ export async function finishTrainerSessionAction(
     }
     console.error("finishTrainerSessionAction: unexpected error", error);
     return { status: "error", message: FINISH_GENERIC_ERROR_MESSAGE };
+  }
+}
+
+type MarkSessionStartedActionDeps = {
+  markSessionStarted: typeof markSessionStarted;
+};
+
+/**
+ * Server Action fired on first trainer mount. User id is the trusted
+ * `DEMO_USER_ID`. Re-entry returns the existing `start_time`.
+ */
+export async function markSessionStartedAction(
+  input: MarkSessionStartedActionInput,
+  deps: MarkSessionStartedActionDeps = { markSessionStarted },
+): Promise<MarkSessionStartedActionState> {
+  try {
+    const result = await deps.markSessionStarted({
+      userId: DEMO_USER_ID,
+      sessionId: input.sessionId,
+    });
+    return { status: "success", startTime: result.startTime };
+  } catch (error) {
+    if (error instanceof MarkSessionStartedError) {
+      switch (error.code) {
+        case "invalid_input":
+          return { status: "error", message: MARK_STARTED_INVALID_INPUT_MESSAGE };
+        case "not_found":
+          return { status: "error", message: MARK_STARTED_NOT_FOUND_MESSAGE };
+        default:
+          return { status: "error", message: MARK_STARTED_GENERIC_ERROR_MESSAGE };
+      }
+    }
+    console.error("markSessionStartedAction: unexpected error", error);
+    return { status: "error", message: MARK_STARTED_GENERIC_ERROR_MESSAGE };
   }
 }
