@@ -5,7 +5,7 @@ SITE_DIR="/home/levelhst/nmt.in.ua/www"
 LOCK_DIR="${HOME}/.cache"
 LOCK_FILE="${LOCK_DIR}/nmt.in.ua.deploy.lock"
 LOG_FILE="/home/levelhst/.system/nodejs/logs/www.nmt.in.ua.log"
-DEPLOY_ARCHIVE="${DEPLOY_ARCHIVE:-/home/levelhst/nmt.in.ua/next-build.tar.gz}"
+DEPLOY_ARCHIVE="${DEPLOY_ARCHIVE:-/home/levelhst/next-build.tar.gz}"
 
 if [ ! -d "$SITE_DIR" ]; then
   echo "nmt.in.ua directory not found"
