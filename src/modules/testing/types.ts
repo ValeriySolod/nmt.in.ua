@@ -67,3 +67,11 @@ export type FinishTrainerSessionActionState =
   | { status: "success"; summary: TrainerSessionSummary }
   | { status: "error"; message: string };
 
+export type MarkSessionStartedActionInput = {
+  sessionId: number;
+};
+
+export type MarkSessionStartedActionState =
+  | { status: "success"; startTime: number }
+  | { status: "error"; message: string };
+

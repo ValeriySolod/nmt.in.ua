@@ -3,6 +3,7 @@ import {
   SESSION_STATUS_COMPLETED,
   sessionPercent,
 } from "@/modules/sessions/types";
+import { nowUnixSec, resolveSessionElapsedSec } from "./sessionElapsed";
 import { TASK_STATUS_CORRECT, TASK_STATUS_UNANSWERED } from "./types";
 import type { TrainerSessionSummary } from "./types";
 
@@ -14,6 +15,7 @@ const SQL_SELECT_SESSION = `
     ts.tasks_number,
     ts.right_number,
     ts.time,
+    ts.start_time,
     ts.session_status,
     t.name AS theme_name
   FROM task_sessions ts
@@ -31,7 +33,7 @@ const SQL_SELECT_STATUSES = `
 
 const SQL_UPDATE_SESSION = `
   UPDATE task_sessions
-  SET right_number = ?, tasks_number = ?, session_status = ?
+  SET right_number = ?, tasks_number = ?, session_status = ?, time = ?, start_time = ?
   WHERE id = ?
 `;
 
@@ -60,6 +62,7 @@ export class FinishTrainerSessionError extends Error {
 
 type FinishTrainerSessionDeps = {
   getConnection: () => Promise<SqlConnection>;
+  nowSec?: () => number;
 };
 
 type SessionRow = {
@@ -69,6 +72,7 @@ type SessionRow = {
   tasks_number: number;
   right_number: number;
   time: number;
+  start_time: number;
   session_status: number;
   theme_name: string;
 };
@@ -124,15 +128,15 @@ async function loadDefaultConnection(): Promise<SqlConnection> {
 
 /**
  * Aggregates `tasks2session` answers into `task_sessions` (`right_number`,
- * `tasks_number`, `session_status = 1`). Already-completed sessions return
- * the stored summary without a second write. `time` / `start_time` stay as
- * they are until the session timer lands.
+ * `tasks_number`, `session_status = 1`, `time = now - start_time`).
+ * Already-completed sessions return the stored summary without a second write.
  */
 export async function finishTrainerSession(
   rawInput: unknown,
   deps: FinishTrainerSessionDeps = { getConnection: loadDefaultConnection },
 ): Promise<FinishTrainerSessionResult> {
   const input = validateFinishTrainerSessionInput(rawInput);
+  const nowSec = deps.nowSec ?? nowUnixSec;
 
   try {
     const connection = await deps.getConnection();
@@ -183,11 +187,14 @@ export async function finishTrainerSession(
       const rightNumber = mappings.filter(
         (row) => row.status === TASK_STATUS_CORRECT,
       ).length;
+      const elapsed = resolveSessionElapsedSec(session.start_time, nowSec());
 
       const updated = await connection.execute(SQL_UPDATE_SESSION, [
         rightNumber,
         tasksNumber,
         SESSION_STATUS_COMPLETED,
+        elapsed.timeSec,
+        elapsed.startTime,
         session.id,
       ]);
       if (updated.affectedRows !== 1) {
@@ -203,6 +210,7 @@ export async function finishTrainerSession(
         ...session,
         right_number: rightNumber,
         tasks_number: tasksNumber,
+        time: elapsed.timeSec,
       });
     } catch (error) {
       if (!(error instanceof FinishTrainerSessionError)) {

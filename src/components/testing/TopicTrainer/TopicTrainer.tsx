@@ -7,6 +7,7 @@ import {
   checkAnswerAction,
   finishTrainerSessionAction,
 } from "@/modules/testing/actions";
+import { formatElapsedClock } from "@/modules/testing/sessionElapsed";
 import {
   TASK_STATUS_CORRECT,
   TASK_STATUS_INCORRECT,
@@ -15,6 +16,7 @@ import {
   type TrainerSessionSummary,
 } from "@/modules/testing/types";
 import { TopicTrainerSummary } from "@/components/testing/TopicTrainerSummary";
+import { useSessionTimer } from "./useSessionTimer";
 import css from "./TopicTrainer.module.css";
 
 type TopicTrainerProps = {
@@ -54,6 +56,10 @@ export function TopicTrainer({
     initialSummary,
   );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const elapsedSec = useSessionTimer({
+    sessionId,
+    enabled: summary == null,
+  });
 
   const currentTask = tasks[currentIndex];
   const total = tasks.length;
@@ -141,9 +147,18 @@ export function TopicTrainer({
           </h1>
           <p className={css.meta}>Сесія №{sessionId}</p>
         </div>
-        <p className={css.progress} aria-live="polite">
-          Завдання {currentIndex + 1} / {total}
-        </p>
+        <div className={css.badges}>
+          <p
+            className={css.progress}
+            role="timer"
+            aria-label={`Час ${formatElapsedClock(elapsedSec)}`}
+          >
+            Час: {formatElapsedClock(elapsedSec)}
+          </p>
+          <p className={css.progress} aria-live="polite">
+            Завдання {currentIndex + 1} / {total}
+          </p>
+        </div>
       </header>
 
       <article className={css.card} aria-label={`Завдання ${currentIndex + 1}`}>

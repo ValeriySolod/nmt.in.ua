@@ -27,10 +27,18 @@
   font-size: 0.9rem;
 }
 
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
 .progress {
   display: inline-flex;
   align-items: center;
   min-height: 36px;
+  margin: 0;
   padding: 6px 12px;
   border: 1px solid var(--border);
   border-radius: 999px;

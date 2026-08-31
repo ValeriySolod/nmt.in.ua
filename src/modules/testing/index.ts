@@ -29,6 +29,7 @@ export {
   startTopicTestAction,
   checkAnswerAction,
   finishTrainerSessionAction,
+  markSessionStartedAction,
   type StartTopicTestActionState,
 } from "./actions";
 export {
@@ -42,6 +43,20 @@ export type {
   CheckAnswerErrorCode,
   AnswerNumber,
 } from "./checkAnswer";
+export {
+  markSessionStarted,
+  validateMarkSessionStartedInput,
+  MarkSessionStartedError,
+} from "./markSessionStarted";
+export type {
+  MarkSessionStartedInput,
+  MarkSessionStartedResult,
+  MarkSessionStartedErrorCode,
+} from "./markSessionStarted";
+export {
+  formatElapsedClock,
+  resolveSessionElapsedSec,
+} from "./sessionElapsed";
 export {
   finishTrainerSession,
   validateFinishTrainerSessionInput,
@@ -71,6 +86,8 @@ export type {
   CheckAnswerActionState,
   FinishTrainerSessionActionInput,
   FinishTrainerSessionActionState,
+  MarkSessionStartedActionInput,
+  MarkSessionStartedActionState,
   TrainerSessionSummary,
 } from "./types";
 export {
