@@ -7,19 +7,65 @@ on:
 
 concurrency:
   group: deploy-nmt-in-ua
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   deploy:
     name: Deploy to nmt.in.ua hosting
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NEXT_PUBLIC_SITE_URL: https://nmt.in.ua
     steps:
-      - name: Deploy only nmt.in.ua
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install and build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Pack .next
+        run: tar -czf next-build.tar.gz .next
+
+      - name: Upload build archive
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: levelhst.ftp.tools
+          username: levelhst
+          key: ${{ secrets.NMT_HOSTING_SSH_KEY }}
+          fingerprint: SHA256:ozhEu5ShQNp1fRdWNdC1gvn50IXVsGQ/JriD9Ht4u6o
+          source: next-build.tar.gz
+          target: /home/levelhst/nmt.in.ua
+          overwrite: true
+          timeout: 120s
+          command_timeout: 10m
+
+      - name: Pull, unpack, and restart
         uses: appleboy/ssh-action@v1.2.2
         with:
           host: levelhst.ftp.tools
           username: levelhst
           key: ${{ secrets.NMT_HOSTING_SSH_KEY }}
           fingerprint: SHA256:ozhEu5ShQNp1fRdWNdC1gvn50IXVsGQ/JriD9Ht4u6o
-          command_timeout: 10m
-          script: /home/levelhst/nmt.in.ua/www/deploy.sh
+          command_timeout: 15m
+          script: |
+            set -euo pipefail
+            export PATH="/usr/local/node24/bin:/usr/local/bin:/usr/bin:${PATH}"
+            SITE_DIR="/home/levelhst/nmt.in.ua/www"
+            cd "$SITE_DIR"
+            while read -r pid; do
+              [ -n "$pid" ] || continue
+              kill "$pid" 2>/dev/null || true
+            done < <(pgrep -f '/home/levelhst/nmt.in.ua/www.*(npm run start|node server\.js)' || true)
+            git fetch origin main
+            git checkout main
+            git reset --hard origin/main
+            export DEPLOY_ARCHIVE="/home/levelhst/nmt.in.ua/next-build.tar.gz"
+            bash ./deploy.sh
