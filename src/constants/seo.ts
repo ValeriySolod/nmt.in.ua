@@ -1,22 +1,41 @@
 import type { Metadata } from "next";
 
 export const SITE_NAME = "Підготовка до НМТ";
+export const SITE_SHORT_NAME = "NMT Math";
 export const SITE_TAGLINE = "Тренажер і практика з математики для НМТ";
 
 export const SITE_DESCRIPTION =
-  "Онлайн-підготовка до НМТ з математики: тести за темами, результати, симулятор і навчальні матеріали. Зручний дашборд для системних тренувань.";
+  "Онлайн-підготовка до НМТ з математики: тести за темами, аналіз результатів, симулятор іспиту та задачник. Зручний дашборд для системних тренувань у форматі УЦОЯО.";
 
 export const SITE_KEYWORDS = [
   "НМТ",
   "НМТ 2026",
+  "НМТ математика",
   "підготовка до НМТ",
-  "математика",
+  "математика НМТ",
   "тести НМТ",
   "тренажер НМТ",
+  "симулятор НМТ",
   "УЦОЯО",
+  "онлайн підготовка до іспиту",
+  "завдання НМТ з математики",
+  "nmt.in.ua",
 ];
 
 export const DEFAULT_SITE_URL = "https://nmt.in.ua";
+
+export const THEME_COLOR = "#1f9d4a";
+export const BACKGROUND_COLOR = "#f4f6f8";
+
+/** Open Graph / Twitter default image (1200×630). */
+export const DEFAULT_OG_IMAGE_PATH = "/og/og-default.png";
+export const DEFAULT_OG_IMAGE_ALT =
+  "Підготовка до НМТ з математики — тренажер, тести за темами та симулятор";
+
+export const ICON_PATHS = {
+  favicon: "/favicon.svg",
+  appleTouch: "/icons/apple-touch-icon.png",
+} as const;
 
 export function getSiteUrl(): string {
   const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "");
@@ -30,28 +49,54 @@ export function absoluteUrl(path = "/"): string {
   return `${base}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
+export function defaultOgImages(): Array<{
+  url: string;
+  width: number;
+  height: number;
+  alt: string;
+  type: string;
+}> {
+  return [
+    {
+      url: DEFAULT_OG_IMAGE_PATH,
+      width: 1200,
+      height: 630,
+      alt: DEFAULT_OG_IMAGE_ALT,
+      type: "image/png",
+    },
+  ];
+}
+
 export function createPageMetadata({
   title,
   description,
   path = "/",
   noIndex = false,
+  ogImageAlt,
 }: {
   title: string;
   description: string;
   path?: string;
   noIndex?: boolean;
+  ogImageAlt?: string;
 }): Metadata {
   const url = absoluteUrl(path);
   const fullTitle = title.includes(SITE_NAME)
     ? title
     : `${title} | ${SITE_NAME}`;
   const isHome = path === "/" || path === "";
+  const ogImages = defaultOgImages();
+  const imageAlt = ogImageAlt ?? DEFAULT_OG_IMAGE_ALT;
 
   return {
-    title: isHome ? { absolute: fullTitle } : title,
+    title: isHome ? { absolute: fullTitle } : fullTitle,
     description,
     keywords: SITE_KEYWORDS,
-    alternates: { canonical: url },
+    alternates: {
+      canonical: url,
+      languages: { "uk-UA": url },
+    },
+    category: "education",
     openGraph: {
       title: fullTitle,
       description,
@@ -59,14 +104,102 @@ export function createPageMetadata({
       siteName: SITE_NAME,
       locale: "uk_UA",
       type: "website",
+      images: ogImages.map((img) => ({
+        ...img,
+        alt: imageAlt,
+      })),
     },
     twitter: {
       card: "summary_large_image",
       title: fullTitle,
       description,
+      images: [DEFAULT_OG_IMAGE_PATH],
     },
     robots: noIndex
-      ? { index: false, follow: false }
-      : { index: true, follow: true },
+      ? { index: false, follow: false, nocache: true }
+      : {
+          index: true,
+          follow: true,
+          googleBot: {
+            index: true,
+            follow: true,
+            "max-image-preview": "large",
+            "max-snippet": -1,
+            "max-video-preview": -1,
+          },
+        },
+  };
+}
+
+/** Root layout icons + PWA hints (manifest is generated separately). */
+export function siteIcons(): Metadata["icons"] {
+  return {
+    icon: [{ url: ICON_PATHS.favicon, type: "image/svg+xml" }],
+    apple: [{ url: ICON_PATHS.appleTouch, sizes: "180x180", type: "image/png" }],
+  };
+}
+
+export function buildWebsiteJsonLd() {
+  const siteUrl = getSiteUrl();
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": `${siteUrl}/#website`,
+    url: siteUrl,
+    name: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    inLanguage: "uk-UA",
+    publisher: { "@id": `${siteUrl}/#organization` },
+  };
+}
+
+export function buildOrganizationJsonLd() {
+  const siteUrl = getSiteUrl();
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": `${siteUrl}/#organization`,
+    name: SITE_NAME,
+    url: siteUrl,
+    logo: absoluteUrl(DEFAULT_OG_IMAGE_PATH),
+    description: SITE_DESCRIPTION,
+  };
+}
+
+export function buildWebApplicationJsonLd() {
+  const siteUrl = getSiteUrl();
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "@id": `${siteUrl}/#webapp`,
+    name: SITE_NAME,
+    url: siteUrl,
+    description: SITE_DESCRIPTION,
+    applicationCategory: "EducationalApplication",
+    operatingSystem: "Web",
+    browserRequirements: "Requires JavaScript",
+    inLanguage: "uk-UA",
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "UAH",
+    },
+    publisher: { "@id": `${siteUrl}/#organization` },
+  };
+}
+
+export function buildBreadcrumbJsonLd(
+  items: Array<{ name: string; path: string }>,
+) {
+  const siteUrl = getSiteUrl();
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      item: absoluteUrl(item.path),
+    })),
   };
 }
