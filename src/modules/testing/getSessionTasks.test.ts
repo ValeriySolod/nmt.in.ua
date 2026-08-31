@@ -22,7 +22,19 @@ function makeRow(index: number) {
   };
 }
 
-function makeConnection(rows: ReturnType<typeof makeRow>[]) {
+function makeSessionHeader() {
+  return {
+    id: 42,
+    theme_id: 3,
+    tasks_number: 10,
+    right_number: 0,
+    time: 0,
+    session_status: 2,
+    theme_name: "Тема",
+  };
+}
+
+function makeConnection(rows: ReturnType<typeof makeRow>[], header = makeSessionHeader()) {
   const calls: Array<{ sql: string; params?: unknown[] }> = [];
   let released = false;
 
@@ -30,6 +42,9 @@ function makeConnection(rows: ReturnType<typeof makeRow>[]) {
     beginTransaction: async () => {},
     query: async (sql, params) => {
       calls.push({ sql, params });
+      if (sql.includes("FROM task_sessions")) {
+        return [header] as never[];
+      }
       return rows as never[];
     },
     execute: async () => ({ insertId: 0, affectedRows: 0 }),
@@ -64,15 +79,19 @@ test("getSessionTasks joins tasks2session with quiz_tasks and maps client-safe f
     getConnection: async () => connection,
   });
 
-  assert.equal(calls.length, 1);
-  assert.match(calls[0]!.sql, /FROM tasks2session t2s/);
-  assert.match(calls[0]!.sql, /INNER JOIN quiz_tasks qt ON qt\.id = t2s\.task_id/);
-  assert.match(calls[0]!.sql, /WHERE t2s\.session_id = \?/);
-  assert.doesNotMatch(calls[0]!.sql, /right_answer_n/);
-  assert.doesNotMatch(calls[0]!.sql, /comments/);
+  assert.equal(calls.length, 2);
+  assert.match(calls[0]!.sql, /FROM task_sessions ts/);
   assert.deepEqual(calls[0]?.params, [42]);
+  assert.match(calls[1]!.sql, /FROM tasks2session t2s/);
+  assert.match(calls[1]!.sql, /INNER JOIN quiz_tasks qt ON qt\.id = t2s\.task_id/);
+  assert.match(calls[1]!.sql, /WHERE t2s\.session_id = \?/);
+  assert.doesNotMatch(calls[1]!.sql, /right_answer_n/);
+  assert.doesNotMatch(calls[1]!.sql, /comments/);
+  assert.deepEqual(calls[1]?.params, [42]);
 
   assert.equal(result.sessionId, 42);
+  assert.equal(result.sessionStatus, 2);
+  assert.equal(result.summary, null);
   assert.equal(result.tasks.length, 10);
   assert.deepEqual(result.tasks[0], {
     mappingId: 101,
@@ -106,4 +125,31 @@ test("getSessionTasks throws session_not_found when no rows are returned", async
       error instanceof GetSessionTasksError &&
       error.code === "session_not_found",
   );
+});
+
+test("getSessionTasks hydrates the summary when the session is already completed", async () => {
+  const rows = Array.from({ length: 2 }, (_, i) => makeRow(i + 1));
+  const { connection } = makeConnection(rows, {
+    id: 7,
+    theme_id: 4,
+    tasks_number: 2,
+    right_number: 1,
+    time: 0,
+    session_status: 1,
+    theme_name: " Синтаксис ",
+  });
+
+  const result = await getSessionTasks(7, {
+    getConnection: async () => connection,
+  });
+
+  assert.deepEqual(result.summary, {
+    sessionId: 7,
+    rightNumber: 1,
+    tasksNumber: 2,
+    percent: 50,
+    timeSec: 0,
+    themeId: 4,
+    themeName: "Синтаксис",
+  });
 });

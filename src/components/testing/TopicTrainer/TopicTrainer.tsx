@@ -3,18 +3,24 @@
 import Link from "next/link";
 import { useState } from "react";
 import clsx from "clsx";
-import { checkAnswerAction } from "@/modules/testing/actions";
+import {
+  checkAnswerAction,
+  finishTrainerSessionAction,
+} from "@/modules/testing/actions";
 import {
   TASK_STATUS_CORRECT,
   TASK_STATUS_INCORRECT,
   type SessionTask,
   type SessionTaskAnswer,
+  type TrainerSessionSummary,
 } from "@/modules/testing/types";
+import { TopicTrainerSummary } from "@/components/testing/TopicTrainerSummary";
 import css from "./TopicTrainer.module.css";
 
 type TopicTrainerProps = {
   sessionId: number;
   tasks: SessionTask[];
+  initialSummary?: TrainerSessionSummary | null;
 };
 
 type CheckResult = { correct: boolean };
@@ -30,7 +36,11 @@ function initialResults(tasks: SessionTask[]): Record<number, CheckResult> {
   return results;
 }
 
-export function TopicTrainer({ sessionId, tasks }: TopicTrainerProps) {
+export function TopicTrainer({
+  sessionId,
+  tasks,
+  initialSummary = null,
+}: TopicTrainerProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedByMappingId, setSelectedByMappingId] = useState<
     Record<number, SessionTaskAnswer["number"]>
@@ -39,6 +49,10 @@ export function TopicTrainer({ sessionId, tasks }: TopicTrainerProps) {
     initialResults(tasks),
   );
   const [pendingMappingId, setPendingMappingId] = useState<number | null>(null);
+  const [isFinishing, setIsFinishing] = useState(false);
+  const [summary, setSummary] = useState<TrainerSessionSummary | null>(
+    initialSummary,
+  );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const currentTask = tasks[currentIndex];
@@ -55,6 +69,10 @@ export function TopicTrainer({ sessionId, tasks }: TopicTrainerProps) {
   const allAnswered =
     tasks.length > 0 &&
     tasks.every((task) => resultsByMappingId[task.mappingId] !== undefined);
+
+  if (summary) {
+    return <TopicTrainerSummary summary={summary} />;
+  }
 
   if (!currentTask) {
     return null;
@@ -95,6 +113,23 @@ export function TopicTrainer({ sessionId, tasks }: TopicTrainerProps) {
       setCurrentIndex((index) => index + 1);
       setErrorMessage(null);
     }
+  }
+
+  async function handleFinish() {
+    if (!allAnswered || isFinishing || isPending) return;
+
+    setErrorMessage(null);
+    setIsFinishing(true);
+
+    const result = await finishTrainerSessionAction({ sessionId });
+    setIsFinishing(false);
+
+    if (result.status !== "success") {
+      setErrorMessage(result.message);
+      return;
+    }
+
+    setSummary(result.summary);
   }
 
   return (
@@ -178,17 +213,21 @@ export function TopicTrainer({ sessionId, tasks }: TopicTrainerProps) {
           </button>
         ) : null}
 
+        {allAnswered ? (
+          <button
+            type="button"
+            className={css.next}
+            onClick={handleFinish}
+            disabled={isFinishing || isPending}
+          >
+            {isFinishing ? "Завершуємо…" : "Завершити тест"}
+          </button>
+        ) : null}
+
         <Link href="/" className={css.backLink}>
           ← До вибору теми
         </Link>
       </div>
-
-      {isLast && allAnswered ? (
-        <p className={css.finish} role="status">
-          Усі завдання пройдено. Підсумок і збереження результатів — у наступній
-          ітерації (finishTrainerSession).
-        </p>
-      ) : null}
     </section>
   );
 }
