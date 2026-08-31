@@ -4,10 +4,12 @@ import type { SqlConnection } from "@/lib/db/mysql";
 import { startTopicTest, TOPIC_TEST_TASK_COUNT } from "./startTopicTest";
 import {
   checkAnswerAction,
+  finishTrainerSessionAction,
   startTopicTestAction,
   type StartTopicTestActionState,
 } from "./actions";
 import { checkAnswer, CheckAnswerError } from "./checkAnswer";
+import { finishTrainerSession, FinishTrainerSessionError } from "./finishTrainerSession";
 
 const IDLE_STATE: StartTopicTestActionState = { status: "idle" };
 
@@ -189,4 +191,45 @@ test("checkAnswerAction maps not_found to a client-safe error without the answer
     message: "Завдання не знайдено в цій сесії.",
   });
   assert.doesNotMatch(JSON.stringify(state), /right_answer_n/);
+});
+
+test("finishTrainerSessionAction uses the trusted demo user and returns the summary", async () => {
+  let capturedInput: unknown;
+  const summary = {
+    sessionId: 5,
+    rightNumber: 7,
+    tasksNumber: 10,
+    percent: 70,
+    timeSec: 0,
+    themeId: 3,
+    themeName: "Відмінювання",
+  };
+  const spy = (async (input: unknown) => {
+    capturedInput = input;
+    return summary;
+  }) as typeof finishTrainerSession;
+
+  const state = await finishTrainerSessionAction(
+    { sessionId: 5 },
+    { finishTrainerSession: spy },
+  );
+
+  assert.deepEqual(capturedInput, { userId: 1, sessionId: 5 });
+  assert.deepEqual(state, { status: "success", summary });
+});
+
+test("finishTrainerSessionAction maps unfinished to a client-safe error", async () => {
+  const spy = (async () => {
+    throw new FinishTrainerSessionError("hidden", "unfinished");
+  }) as typeof finishTrainerSession;
+
+  const state = await finishTrainerSessionAction(
+    { sessionId: 5 },
+    { finishTrainerSession: spy },
+  );
+
+  assert.deepEqual(state, {
+    status: "error",
+    message: "Спочатку дайте відповідь на всі завдання.",
+  });
 });

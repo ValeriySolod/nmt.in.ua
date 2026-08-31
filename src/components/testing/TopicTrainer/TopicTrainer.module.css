@@ -169,15 +169,6 @@
   color: crimson;
 }
 
-.finish {
-  margin: 0;
-  padding: 12px 14px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--surface) 88%, var(--green-bg));
-  font-weight: 650;
-}
-
 @media (min-width: 768px) {
   .answers {
     grid-template-columns: 1fr 1fr;

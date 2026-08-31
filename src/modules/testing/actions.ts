@@ -5,10 +5,16 @@ import {
   CheckAnswerError,
   type CheckAnswerResult,
 } from "./checkAnswer";
+import {
+  finishTrainerSession,
+  FinishTrainerSessionError,
+} from "./finishTrainerSession";
 import { startTopicTest, StartTopicTestError } from "./startTopicTest";
 import type {
   CheckAnswerActionInput,
   CheckAnswerActionState,
+  FinishTrainerSessionActionInput,
+  FinishTrainerSessionActionState,
 } from "./types";
 
 export type StartTopicTestActionState =
@@ -26,6 +32,12 @@ const CHECK_GENERIC_ERROR_MESSAGE =
 const CHECK_INVALID_INPUT_MESSAGE = "Оберіть один із варіантів відповіді.";
 const CHECK_NOT_FOUND_MESSAGE = "Завдання не знайдено в цій сесії.";
 const CHECK_COMPLETED_MESSAGE = "Цей тест уже завершено.";
+const FINISH_GENERIC_ERROR_MESSAGE =
+  "Не вдалося завершити тест. Спробуйте ще раз.";
+const FINISH_INVALID_INPUT_MESSAGE = "Сесію не знайдено.";
+const FINISH_NOT_FOUND_MESSAGE = "Сесію не знайдено.";
+const FINISH_UNFINISHED_MESSAGE =
+  "Спочатку дайте відповідь на всі завдання.";
 
 // TODO: replace with the authenticated user's id once auth is implemented.
 // The repo has no auth/user-context source yet, so this Server Action uses
@@ -75,6 +87,10 @@ export async function startTopicTestAction(
 }
 
 export type { CheckAnswerActionInput, CheckAnswerActionState };
+export type {
+  FinishTrainerSessionActionInput,
+  FinishTrainerSessionActionState,
+};
 
 type CheckAnswerActionDeps = {
   checkAnswer: typeof checkAnswer;
@@ -111,5 +127,41 @@ export async function checkAnswerAction(
     }
     console.error("checkAnswerAction: unexpected error", error);
     return { status: "error", message: CHECK_GENERIC_ERROR_MESSAGE };
+  }
+}
+
+type FinishTrainerSessionActionDeps = {
+  finishTrainerSession: typeof finishTrainerSession;
+};
+
+/**
+ * Server Action for "Завершити тест". User id is the trusted
+ * `DEMO_USER_ID`. Re-finishing a completed session returns the same summary.
+ */
+export async function finishTrainerSessionAction(
+  input: FinishTrainerSessionActionInput,
+  deps: FinishTrainerSessionActionDeps = { finishTrainerSession },
+): Promise<FinishTrainerSessionActionState> {
+  try {
+    const summary = await deps.finishTrainerSession({
+      userId: DEMO_USER_ID,
+      sessionId: input.sessionId,
+    });
+    return { status: "success", summary };
+  } catch (error) {
+    if (error instanceof FinishTrainerSessionError) {
+      switch (error.code) {
+        case "invalid_input":
+          return { status: "error", message: FINISH_INVALID_INPUT_MESSAGE };
+        case "not_found":
+          return { status: "error", message: FINISH_NOT_FOUND_MESSAGE };
+        case "unfinished":
+          return { status: "error", message: FINISH_UNFINISHED_MESSAGE };
+        default:
+          return { status: "error", message: FINISH_GENERIC_ERROR_MESSAGE };
+      }
+    }
+    console.error("finishTrainerSessionAction: unexpected error", error);
+    return { status: "error", message: FINISH_GENERIC_ERROR_MESSAGE };
   }
 }

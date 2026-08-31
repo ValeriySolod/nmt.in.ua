@@ -31,7 +31,11 @@ export default async function SessionPage({ params }: SessionPageProps) {
   try {
     const session = await getSessionTasks(sessionId);
     return (
-      <TopicTrainer sessionId={session.sessionId} tasks={session.tasks} />
+      <TopicTrainer
+        sessionId={session.sessionId}
+        tasks={session.tasks}
+        initialSummary={session.summary}
+      />
     );
   } catch (error) {
     if (

@@ -28,6 +28,7 @@ export type {
 export {
   startTopicTestAction,
   checkAnswerAction,
+  finishTrainerSessionAction,
   type StartTopicTestActionState,
 } from "./actions";
 export {
@@ -41,6 +42,17 @@ export type {
   CheckAnswerErrorCode,
   AnswerNumber,
 } from "./checkAnswer";
+export {
+  finishTrainerSession,
+  validateFinishTrainerSessionInput,
+  FinishTrainerSessionError,
+  toTrainerSessionSummary,
+} from "./finishTrainerSession";
+export type {
+  FinishTrainerSessionInput,
+  FinishTrainerSessionResult,
+  FinishTrainerSessionErrorCode,
+} from "./finishTrainerSession";
 export {
   getAvailableTopicThemes,
 } from "./getAvailableTopicThemes";
@@ -57,6 +69,9 @@ export type {
   SessionTaskAnswer,
   CheckAnswerActionInput,
   CheckAnswerActionState,
+  FinishTrainerSessionActionInput,
+  FinishTrainerSessionActionState,
+  TrainerSessionSummary,
 } from "./types";
 export {
   TASK_STATUS_UNANSWERED,
@@ -70,15 +85,6 @@ export type TrainerSession = {
   startedAt: string;
   answers: unknown[];
 };
-
-/** Завершити сесію й порахувати підсумок. */
-export async function finishTrainerSession(
-  sessionId: string,
-): Promise<{ correct: number; total: number; avgTimeSec: number }> {
-  void sessionId;
-  // TODO(module-3): зберегти результат, оновити статистику тем
-  throw new Error("finishTrainerSession: ще не реалізовано (модуль 3)");
-}
 
 /** Симулятор повного НМТ (окремий flow від короткого тесту). */
 export async function startNmtSimulator(): Promise<TrainerSession> {

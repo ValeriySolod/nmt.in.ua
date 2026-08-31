@@ -26,9 +26,22 @@ export type SessionTask = {
   status: number;
 };
 
+/** Client-safe session score after finish (no answer key). */
+export type TrainerSessionSummary = {
+  sessionId: number;
+  rightNumber: number;
+  tasksNumber: number;
+  percent: number;
+  timeSec: number;
+  themeId: number;
+  themeName: string;
+};
+
 export type SessionTasksResult = {
   sessionId: number;
+  sessionStatus: number;
   tasks: SessionTask[];
+  summary: TrainerSessionSummary | null;
 };
 
 /** Verified `tasks2session.status` values (team DB). */
@@ -44,5 +57,13 @@ export type CheckAnswerActionInput = {
 
 export type CheckAnswerActionState =
   | { status: "success"; correct: boolean }
+  | { status: "error"; message: string };
+
+export type FinishTrainerSessionActionInput = {
+  sessionId: number;
+};
+
+export type FinishTrainerSessionActionState =
+  | { status: "success"; summary: TrainerSessionSummary }
   | { status: "error"; message: string };
 
