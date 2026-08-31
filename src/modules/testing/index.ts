@@ -27,8 +27,32 @@ export type {
 } from "./startTopicTest";
 export {
   startTopicTestAction,
+  checkAnswerAction,
+  finishTrainerSessionAction,
   type StartTopicTestActionState,
 } from "./actions";
+export {
+  checkAnswer,
+  validateCheckAnswerInput,
+  CheckAnswerError,
+} from "./checkAnswer";
+export type {
+  CheckAnswerInput,
+  CheckAnswerResult,
+  CheckAnswerErrorCode,
+  AnswerNumber,
+} from "./checkAnswer";
+export {
+  finishTrainerSession,
+  validateFinishTrainerSessionInput,
+  FinishTrainerSessionError,
+  toTrainerSessionSummary,
+} from "./finishTrainerSession";
+export type {
+  FinishTrainerSessionInput,
+  FinishTrainerSessionResult,
+  FinishTrainerSessionErrorCode,
+} from "./finishTrainerSession";
 export {
   getAvailableTopicThemes,
 } from "./getAvailableTopicThemes";
@@ -43,6 +67,16 @@ export type {
   SessionTask,
   SessionTasksResult,
   SessionTaskAnswer,
+  CheckAnswerActionInput,
+  CheckAnswerActionState,
+  FinishTrainerSessionActionInput,
+  FinishTrainerSessionActionState,
+  TrainerSessionSummary,
+} from "./types";
+export {
+  TASK_STATUS_UNANSWERED,
+  TASK_STATUS_CORRECT,
+  TASK_STATUS_INCORRECT,
 } from "./types";
 
 export type TrainerSession = {
@@ -51,26 +85,6 @@ export type TrainerSession = {
   startedAt: string;
   answers: unknown[];
 };
-
-/** Перевірити відповідь учня на одне завдання. */
-export function checkAnswer(
-  questionId: string,
-  userAnswer: unknown,
-): { correct: boolean; score: number } {
-  void questionId;
-  void userAnswer;
-  // TODO(module-3): типи питань (одна відповідь / відповідність / коротка)
-  throw new Error("checkAnswer: ще не реалізовано (модуль 3)");
-}
-
-/** Завершити сесію й порахувати підсумок. */
-export async function finishTrainerSession(
-  sessionId: string,
-): Promise<{ correct: number; total: number; avgTimeSec: number }> {
-  void sessionId;
-  // TODO(module-3): зберегти результат, оновити статистику тем
-  throw new Error("finishTrainerSession: ще не реалізовано (модуль 3)");
-}
 
 /** Симулятор повного НМТ (окремий flow від короткого тесту). */
 export async function startNmtSimulator(): Promise<TrainerSession> {

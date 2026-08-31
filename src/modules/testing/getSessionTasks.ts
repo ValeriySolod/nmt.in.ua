@@ -1,5 +1,21 @@
 import type { SqlConnection } from "@/lib/db/mysql";
+import { SESSION_STATUS_COMPLETED } from "@/modules/sessions/types";
+import { toTrainerSessionSummary } from "./finishTrainerSession";
 import type { SessionTask, SessionTasksResult } from "./types";
+
+const SQL_SESSION_HEADER = `
+  SELECT
+    ts.id,
+    ts.theme_id,
+    ts.tasks_number,
+    ts.right_number,
+    ts.time,
+    ts.session_status,
+    t.name AS theme_name
+  FROM task_sessions ts
+  INNER JOIN themes t ON t.id = ts.theme_id
+  WHERE ts.id = ?
+`;
 
 /**
  * Loads session tasks without `right_answer_n` or `comments` — those stay
@@ -21,6 +37,16 @@ const SQL_SESSION_TASKS = `
   WHERE t2s.session_id = ?
   ORDER BY t2s.id ASC
 `;
+
+type SessionHeaderRow = {
+  id: number;
+  theme_id: number;
+  tasks_number: number;
+  right_number: number;
+  time: number;
+  session_status: number;
+  theme_name: string;
+};
 
 type SessionTaskRow = {
   mapping_id: number;
@@ -98,6 +124,19 @@ export async function getSessionTasks(
   try {
     const connection = await deps.getConnection();
     try {
+      const headers = await connection.query<SessionHeaderRow>(
+        SQL_SESSION_HEADER,
+        [validSessionId],
+      );
+      const header = headers[0];
+
+      if (!header) {
+        throw new GetSessionTasksError(
+          "Session not found or has no linked tasks.",
+          "session_not_found",
+        );
+      }
+
       const rows = await connection.query<SessionTaskRow>(SQL_SESSION_TASKS, [
         validSessionId,
       ]);
@@ -111,7 +150,12 @@ export async function getSessionTasks(
 
       return {
         sessionId: validSessionId,
+        sessionStatus: header.session_status,
         tasks: rows.map(mapRow),
+        summary:
+          header.session_status === SESSION_STATUS_COMPLETED
+            ? toTrainerSessionSummary(header)
+            : null,
       };
     } finally {
       connection.release();

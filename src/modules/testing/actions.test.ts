@@ -2,7 +2,14 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import type { SqlConnection } from "@/lib/db/mysql";
 import { startTopicTest, TOPIC_TEST_TASK_COUNT } from "./startTopicTest";
-import { startTopicTestAction, type StartTopicTestActionState } from "./actions";
+import {
+  checkAnswerAction,
+  finishTrainerSessionAction,
+  startTopicTestAction,
+  type StartTopicTestActionState,
+} from "./actions";
+import { checkAnswer, CheckAnswerError } from "./checkAnswer";
+import { finishTrainerSession, FinishTrainerSessionError } from "./finishTrainerSession";
 
 const IDLE_STATE: StartTopicTestActionState = { status: "idle" };
 
@@ -145,4 +152,84 @@ test("a second submission while one is pending is rejected, not creating a dupli
   const firstResult = await first;
   assert.equal(firstResult.status, "success");
   assert.equal(sessionInsertCount, 1);
+});
+
+test("checkAnswerAction uses the trusted demo user and returns only { correct }", async () => {
+  let capturedInput: unknown;
+  const spy = (async (input: unknown) => {
+    capturedInput = input;
+    return { correct: true };
+  }) as typeof checkAnswer;
+
+  const state = await checkAnswerAction(
+    { sessionId: 5, mappingId: 10, answerNumber: 2 },
+    { checkAnswer: spy },
+  );
+
+  assert.deepEqual(capturedInput, {
+    userId: 1,
+    sessionId: 5,
+    mappingId: 10,
+    answerNumber: 2,
+  });
+  assert.deepEqual(state, { status: "success", correct: true });
+  assert.doesNotMatch(JSON.stringify(state), /right_answer_n/);
+});
+
+test("checkAnswerAction maps not_found to a client-safe error without the answer key", async () => {
+  const spy = (async () => {
+    throw new CheckAnswerError("hidden", "not_found");
+  }) as typeof checkAnswer;
+
+  const state = await checkAnswerAction(
+    { sessionId: 9, mappingId: 1, answerNumber: 3 },
+    { checkAnswer: spy },
+  );
+
+  assert.deepEqual(state, {
+    status: "error",
+    message: "Завдання не знайдено в цій сесії.",
+  });
+  assert.doesNotMatch(JSON.stringify(state), /right_answer_n/);
+});
+
+test("finishTrainerSessionAction uses the trusted demo user and returns the summary", async () => {
+  let capturedInput: unknown;
+  const summary = {
+    sessionId: 5,
+    rightNumber: 7,
+    tasksNumber: 10,
+    percent: 70,
+    timeSec: 0,
+    themeId: 3,
+    themeName: "Відмінювання",
+  };
+  const spy = (async (input: unknown) => {
+    capturedInput = input;
+    return summary;
+  }) as typeof finishTrainerSession;
+
+  const state = await finishTrainerSessionAction(
+    { sessionId: 5 },
+    { finishTrainerSession: spy },
+  );
+
+  assert.deepEqual(capturedInput, { userId: 1, sessionId: 5 });
+  assert.deepEqual(state, { status: "success", summary });
+});
+
+test("finishTrainerSessionAction maps unfinished to a client-safe error", async () => {
+  const spy = (async () => {
+    throw new FinishTrainerSessionError("hidden", "unfinished");
+  }) as typeof finishTrainerSession;
+
+  const state = await finishTrainerSessionAction(
+    { sessionId: 5 },
+    { finishTrainerSession: spy },
+  );
+
+  assert.deepEqual(state, {
+    status: "error",
+    message: "Спочатку дайте відповідь на всі завдання.",
+  });
 });
