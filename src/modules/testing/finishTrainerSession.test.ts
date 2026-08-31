@@ -23,6 +23,7 @@ type SessionRow = {
   tasks_number: number;
   right_number: number;
   time: number;
+  start_time: number;
   session_status: number;
   theme_name: string;
 };
@@ -35,6 +36,7 @@ function makeSession(overrides: Partial<SessionRow> = {}): SessionRow {
     tasks_number: 10,
     right_number: 0,
     time: 0,
+    start_time: 1_700_000_000,
     session_status: SESSION_STATUS_CREATED,
     theme_name: " Відмінювання ",
     ...overrides,
@@ -134,6 +136,7 @@ test("aggregates correct answers and marks the session completed", async () => {
 
   const result = await finishTrainerSession(validInput, {
     getConnection: async () => mock.connection,
+    nowSec: () => 1_700_000_080,
   });
 
   assert.deepEqual(result, {
@@ -141,14 +144,21 @@ test("aggregates correct answers and marks the session completed", async () => {
     rightNumber: 6,
     tasksNumber: 10,
     percent: 60,
-    timeSec: 0,
+    timeSec: 80,
     themeId: 3,
     themeName: "Відмінювання",
   });
 
   const update = mock.calls.find((c) => c.sql.includes("UPDATE task_sessions"));
   assert.ok(update);
-  assert.deepEqual(update!.params, [6, 10, SESSION_STATUS_COMPLETED, 5]);
+  assert.deepEqual(update!.params, [
+    6,
+    10,
+    SESSION_STATUS_COMPLETED,
+    80,
+    1_700_000_000,
+    5,
+  ]);
   assert.ok(mock.isCommitted());
   assert.ok(!mock.isRolledBack());
   assert.ok(mock.isReleased());
@@ -199,13 +209,15 @@ test("returns the stored summary without UPDATE when already completed", async (
       session_status: SESSION_STATUS_COMPLETED,
       right_number: 8,
       tasks_number: 10,
-      time: 0,
+      time: 42,
+      start_time: 1_700_000_000,
     }),
     statuses: [TASK_STATUS_CORRECT],
   });
 
   const result = await finishTrainerSession(validInput, {
     getConnection: async () => mock.connection,
+    nowSec: () => 1_700_000_999,
   });
 
   assert.deepEqual(result, {
@@ -213,7 +225,7 @@ test("returns the stored summary without UPDATE when already completed", async (
     rightNumber: 8,
     tasksNumber: 10,
     percent: 80,
-    timeSec: 0,
+    timeSec: 42,
     themeId: 3,
     themeName: "Відмінювання",
   });
@@ -227,4 +239,29 @@ test("returns the stored summary without UPDATE when already completed", async (
   );
   assert.ok(mock.isCommitted());
   assert.ok(!mock.isRolledBack());
+});
+
+test("persists at least 1 second when start_time was never marked", async () => {
+  const mock = makeConnection({
+    session: makeSession({ start_time: 0 }),
+    statuses: [TASK_STATUS_CORRECT],
+  });
+  const now = 1_700_000_500;
+
+  const result = await finishTrainerSession(validInput, {
+    getConnection: async () => mock.connection,
+    nowSec: () => now,
+  });
+
+  assert.equal(result.timeSec, 1);
+  const update = mock.calls.find((c) => c.sql.includes("UPDATE task_sessions"));
+  assert.ok(update);
+  assert.deepEqual(update!.params, [
+    1,
+    1,
+    SESSION_STATUS_COMPLETED,
+    1,
+    now,
+    5,
+  ]);
 });
