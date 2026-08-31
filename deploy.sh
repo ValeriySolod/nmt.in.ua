@@ -72,7 +72,7 @@ npm install --omit=dev --no-audit --no-fund --prefer-offline
 
 if [ ! -f "$DEPLOY_ARCHIVE" ]; then
   echo "Build archive not found: $DEPLOY_ARCHIVE" >&2
-  echo "CI must upload next-build.tar.gz before running deploy.sh" >&2
+  echo "Use scripts/manual-deploy-hosting.sh from your machine instead." >&2
   exit 1
 fi
 
