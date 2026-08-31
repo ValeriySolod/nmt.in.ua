@@ -10,6 +10,9 @@ import {
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import "./globals.css";
 
+/** MySQL env is for runtime on the host; skip static prerender that hits the DB at build. */
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   ...createPageMetadata({
     title: `${SITE_NAME} — ${SITE_TAGLINE}`,
