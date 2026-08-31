@@ -16,6 +16,11 @@ jobs:
     timeout-minutes: 30
     env:
       NEXT_PUBLIC_SITE_URL: https://nmt.in.ua
+      DEPLOY_HOST: levelhst.ftp.tools
+      DEPLOY_USER: levelhst
+      # Prefer $HOME — always writable on shared hosting; SCP is often disabled.
+      REMOTE_ARCHIVE: /home/levelhst/next-build.tar.gz
+      HOST_FINGERPRINT: SHA256:ozhEu5ShQNp1fRdWNdC1gvn50IXVsGQ/JriD9Ht4u6o
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -32,20 +37,38 @@ jobs:
           npm run build
 
       - name: Pack .next
-        run: tar -czf next-build.tar.gz .next
+        run: |
+          tar -czf next-build.tar.gz .next
+          ls -lh next-build.tar.gz
 
-      - name: Upload build archive
-        uses: appleboy/scp-action@v0.1.7
+      - name: Setup SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
         with:
-          host: levelhst.ftp.tools
-          username: levelhst
-          key: ${{ secrets.NMT_HOSTING_SSH_KEY }}
-          fingerprint: SHA256:ozhEu5ShQNp1fRdWNdC1gvn50IXVsGQ/JriD9Ht4u6o
-          source: next-build.tar.gz
-          target: /home/levelhst/nmt.in.ua
-          overwrite: true
-          timeout: 120s
-          command_timeout: 10m
+          ssh-private-key: ${{ secrets.NMT_HOSTING_SSH_KEY }}
+
+      - name: Trust host key
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+          FOUND="$(ssh-keygen -lf ~/.ssh/known_hosts -E sha256 | awk '{print $2}')"
+          echo "Resolved host fingerprint(s):"
+          echo "$FOUND"
+          if ! echo "$FOUND" | grep -Fxq "$HOST_FINGERPRINT"; then
+            echo "Host fingerprint mismatch (expected ${HOST_FINGERPRINT})" >&2
+            exit 1
+          fi
+
+      - name: Upload build archive over SSH
+        run: |
+          # Shared hosting often blocks the SCP protocol; pipe over SSH exec instead.
+          ssh -o BatchMode=yes -o IdentitiesOnly=yes \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "cat > '${REMOTE_ARCHIVE}'" < next-build.tar.gz
+          ssh -o BatchMode=yes -o IdentitiesOnly=yes \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "ls -lh '${REMOTE_ARCHIVE}'"
 
       - name: Pull, unpack, and restart
         uses: appleboy/ssh-action@v1.2.2
@@ -55,6 +78,7 @@ jobs:
           key: ${{ secrets.NMT_HOSTING_SSH_KEY }}
           fingerprint: SHA256:ozhEu5ShQNp1fRdWNdC1gvn50IXVsGQ/JriD9Ht4u6o
           command_timeout: 15m
+          envs: REMOTE_ARCHIVE
           script: |
             set -euo pipefail
             export PATH="/usr/local/node24/bin:/usr/local/bin:/usr/bin:${PATH}"
@@ -67,5 +91,5 @@ jobs:
             git fetch origin main
             git checkout main
             git reset --hard origin/main
-            export DEPLOY_ARCHIVE="/home/levelhst/nmt.in.ua/next-build.tar.gz"
+            export DEPLOY_ARCHIVE="${REMOTE_ARCHIVE:-/home/levelhst/next-build.tar.gz}"
             bash ./deploy.sh
