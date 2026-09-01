@@ -26,6 +26,52 @@
   color: var(--muted);
 }
 
+.descriptionRow {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.tableControls {
+  display: flex;
+  flex: 0 0 auto;
+  justify-content: flex-start;
+}
+
+.detailsToggle {
+  min-height: 36px;
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--green-hover);
+  box-shadow: 3px 3px 0 var(--green-lift);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 700;
+  transition:
+    transform var(--t) var(--ease),
+    background var(--t) var(--ease),
+    box-shadow var(--t) var(--ease);
+}
+
+.detailsToggle:hover,
+.detailsToggle:focus-visible,
+.detailsToggle:active {
+  background:
+    radial-gradient(circle at 30% 25%, #fff 0%, transparent 45%),
+    linear-gradient(145deg, var(--green-bg), #9fe0b8);
+}
+
+.detailsToggle:hover {
+  transform: translateY(-1px);
+}
+
+.detailsToggle:active {
+  transform: translateY(1px);
+  box-shadow: 1px 1px 0 var(--green-lift);
+}
+
 .tableWrap {
   width: 100%;
   max-width: 100%;
@@ -57,9 +103,14 @@
 }
 
 .table {
+  width: 100%;
+  min-width: 0;
+  border-collapse: collapse;
+}
+
+.tableExpanded {
   width: max(100%, 1120px);
   min-width: 1120px;
-  border-collapse: collapse;
 }
 
 .table th,
@@ -176,5 +227,12 @@
   .table th,
   .table td {
     padding: 12px 14px;
+  }
+
+  .descriptionRow {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
   }
 }
