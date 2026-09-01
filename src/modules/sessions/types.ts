@@ -1,6 +1,3 @@
-export const DEMO_USER_ID = 1;
-
-/** Verified `task_sessions.session_status` values (team DB). */
 export const SESSION_STATUS_COMPLETED = 1;
 export const SESSION_STATUS_CREATED = 2;
 export const SESSION_STATUS_PLANNED = 3;

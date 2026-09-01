@@ -1,7 +1,6 @@
 import type { SqlConnection } from "@/lib/db/mysql";
 import {
   buildLearningSessionRows,
-  DEMO_USER_ID,
   type LearningSessionRow,
 } from "./types";
 
@@ -32,7 +31,7 @@ async function loadDefaultConnection(): Promise<SqlConnection> {
 }
 
 export async function getLearningSessions(
-  userId: number = DEMO_USER_ID,
+  userId: number,
   deps: GetLearningSessionsDeps = { getConnection: loadDefaultConnection },
 ): Promise<LearningSessionRow[]> {
   const connection = await deps.getConnection();

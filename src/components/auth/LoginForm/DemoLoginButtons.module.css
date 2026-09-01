@@ -1,0 +1,48 @@
+.list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgb(255 255 255 / 88%);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--t) var(--ease),
+    transform var(--t) var(--ease),
+    box-shadow var(--t) var(--ease);
+}
+
+.card:hover {
+  border-color: color-mix(in srgb, var(--green) 45%, var(--border));
+  transform: translateY(-1px);
+  box-shadow: 4px 5px 0 var(--green-lift);
+}
+
+.role {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--green-dark);
+}
+
+.name {
+  font-size: 1rem;
+  font-weight: 750;
+}
+
+.meta {
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}

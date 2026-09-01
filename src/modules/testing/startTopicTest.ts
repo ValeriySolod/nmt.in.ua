@@ -1,10 +1,12 @@
 import type { SqlConnection } from "@/lib/db/mysql";
+import {
+  parseTopicTestMode,
+  taskLimitForMode,
+  TOPIC_TEST_TASK_COUNT,
+  type TopicTestMode,
+} from "./topicTestMode";
 
-/**
- * Maximum tasks per topic-test session. If the theme bank has fewer, the
- * session uses all available tasks (but at least one is required).
- */
-export const TOPIC_TEST_TASK_COUNT = 10;
+export { TOPIC_TEST_TASK_COUNT };
 
 /** Verified `task_sessions` conventions for a topic test. */
 const SESSION_TYPE_TOPIC = 1;
@@ -21,7 +23,10 @@ const TASK_STATUS_UNANSWERED = 0;
  * Table and column names below match the schema verified directly against
  * the team's MySQL database.
  */
-const SQL_SELECT_TASKS = `SELECT id FROM quiz_tasks WHERE theme_id = ? ORDER BY RAND() LIMIT ${TOPIC_TEST_TASK_COUNT}`;
+function buildSelectTasksSql(limit: number): string {
+  return `SELECT id FROM quiz_tasks WHERE theme_id = ? ORDER BY RAND() LIMIT ${limit}`;
+}
+
 const SQL_INSERT_SESSION =
   "INSERT INTO task_sessions (user_id, session_type, theme_id, tasks_number, right_number, time, session_status, start_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 const SQL_INSERT_MAPPING_PREFIX =
@@ -30,12 +35,14 @@ const SQL_INSERT_MAPPING_PREFIX =
 export type StartTopicTestInput = {
   userId: number;
   themeId: number;
+  mode?: TopicTestMode;
 };
 
 export type StartTopicTestResult = {
   sessionId: number;
   themeId: number;
   taskIds: number[];
+  mode: TopicTestMode;
 };
 
 export type StartTopicTestErrorCode =
@@ -71,14 +78,14 @@ export function validateStartTopicTestInput(
       "invalid_input",
     );
   }
-  const { userId, themeId } = input as Record<string, unknown>;
+  const { userId, themeId, mode } = input as Record<string, unknown>;
   if (!isPositiveInt(userId) || !isPositiveInt(themeId)) {
     throw new StartTopicTestError(
       "userId and themeId must be positive integers.",
       "invalid_input",
     );
   }
-  return { userId, themeId };
+  return { userId, themeId, mode: parseTopicTestMode(mode) };
 }
 
 /** Guards against duplicate concurrent start requests from the same user. */
@@ -90,16 +97,16 @@ async function loadDefaultConnection(): Promise<SqlConnection> {
 }
 
 /**
- * Starts a topic-test session: selects up to {@link TOPIC_TEST_TASK_COUNT}
- * distinct tasks for the theme (or all available when fewer), inserts one
- * `task_sessions` row and one `tasks2session` row per task, all inside a
- * single transaction. Rolls back entirely on any failure.
+ * Starts a topic-test session: selects up to the mode limit of distinct tasks
+ * for the theme (or all available when fewer), inserts one `task_sessions` row
+ * and one `tasks2session` row per task, all inside a single transaction.
  */
 export async function startTopicTest(
   rawInput: unknown,
   deps: StartTopicTestDeps = { getConnection: loadDefaultConnection },
 ): Promise<StartTopicTestResult> {
   const input = validateStartTopicTestInput(rawInput);
+  const taskLimit = taskLimitForMode(input.mode ?? "standard");
 
   if (pendingUserIds.has(input.userId)) {
     throw new StartTopicTestError(
@@ -114,9 +121,10 @@ export async function startTopicTest(
     try {
       await connection.beginTransaction();
 
-      const tasks = await connection.query<{ id: number }>(SQL_SELECT_TASKS, [
-        input.themeId,
-      ]);
+      const tasks = await connection.query<{ id: number }>(
+        buildSelectTasksSql(taskLimit),
+        [input.themeId],
+      );
 
       const taskCount = tasks.length;
       if (taskCount === 0) {
@@ -165,6 +173,7 @@ export async function startTopicTest(
         sessionId: session.insertId,
         themeId: input.themeId,
         taskIds: tasks.map((task) => task.id),
+        mode: input.mode ?? "standard",
       };
     } catch (error) {
       if (!(error instanceof StartTopicTestError)) {

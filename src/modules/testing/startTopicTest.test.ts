@@ -6,6 +6,7 @@ import {
   StartTopicTestError,
   TOPIC_TEST_TASK_COUNT,
 } from "./startTopicTest";
+import { ULTIMATE_TASK_LIMIT } from "./topicTestMode";
 
 type Call = { sql: string; params: unknown[] };
 
@@ -26,7 +27,9 @@ function makeConnection(options: {
     query: async <T,>(sql: string, params: unknown[] = []) => {
       calls.push({ sql, params });
       if (sql.startsWith("SELECT")) {
-        return options.tasks as unknown as T[];
+        const limitMatch = sql.match(/LIMIT (\d+)$/);
+        const limit = limitMatch ? Number(limitMatch[1]) : options.tasks.length;
+        return options.tasks.slice(0, limit) as unknown as T[];
       }
       return [] as T[];
     },
@@ -129,6 +132,24 @@ test("creates a session and links exactly 10 distinct tasks from the requested t
   assert.ok(mock.isCommitted());
   assert.ok(!mock.isRolledBack());
   assert.ok(mock.isReleased());
+});
+
+test("ultimate mode selects up to 20 tasks", async () => {
+  const themeId = 6;
+  const userId = 3;
+  const tasks = tasksFor(25, themeId);
+  const mock = makeConnection({ tasks });
+
+  const result = await startTopicTest(
+    { userId, themeId, mode: "ultimate" },
+    { getConnection: async () => mock.connection },
+  );
+
+  assert.equal(result.mode, "ultimate");
+  assert.equal(result.taskIds.length, ULTIMATE_TASK_LIMIT);
+
+  const selectCall = mock.calls.find((c) => c.sql.startsWith("SELECT"));
+  assert.match(selectCall!.sql, new RegExp(`LIMIT ${ULTIMATE_TASK_LIMIT}$`));
 });
 
 test("inserts task_sessions with the exact verified numeric parameters, in order", async () => {

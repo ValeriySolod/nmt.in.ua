@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { PageFrame, SoonCard } from "@/components/dashboard/PageFrame";
 import css from "./StubPage.module.css";
 
 type StubPageProps = {
@@ -7,24 +9,21 @@ type StubPageProps = {
 
 export function StubPage({ title, description }: StubPageProps) {
   return (
-    <section className={css.section} aria-labelledby="stub-title">
-      <header className={css.intro}>
-        <p className={css.badge}>Незабаром</p>
-        <h1 id="stub-title" className={css.title}>
-          {title}
-        </h1>
-        <p className={css.lead}>{description}</p>
-      </header>
-
-      <div className={css.card} aria-hidden>
+    <PageFrame kicker="Незабаром" title={title} lead={description}>
+      <div className={css.preview} aria-hidden>
         <div className={css.skeleton} />
         <div className={css.skeleton} />
         <div className={css.skeletonWide} />
       </div>
 
-      <p className={css.hint}>
-        Розділ у розробці — зміст зʼявиться в наступних ітераціях команди.
-      </p>
-    </section>
+      <SoonCard
+        title="Розділ у розробці"
+        description="Поки що тренуйтеся на головній: тест за темою, Ultimate-режим і перегляд результатів уже доступні."
+      />
+
+      <Link href="/" className={css.cta}>
+        Перейти до тесту за темою
+      </Link>
+    </PageFrame>
   );
 }

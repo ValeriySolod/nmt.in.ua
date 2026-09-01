@@ -1,9 +1,5 @@
 import type { SqlConnection } from "@/lib/db/mysql";
-import {
-  buildTopicResultRows,
-  DEMO_USER_ID,
-  type TopicResultRow,
-} from "./types";
+import { buildTopicResultRows, type TopicResultRow } from "./types";
 
 const SQL_THEMES = `
   SELECT id, name, ord
@@ -27,9 +23,9 @@ async function loadDefaultConnection(): Promise<SqlConnection> {
   return getConnection();
 }
 
-/** Aggregated progress by theme for the demo user (until auth exists). */
+/** Aggregated progress by theme for a student. */
 export async function getTopicResults(
-  userId: number = DEMO_USER_ID,
+  userId: number,
   deps: GetTopicResultsDeps = { getConnection: loadDefaultConnection },
 ): Promise<TopicResultRow[]> {
   const connection = await deps.getConnection();
@@ -56,7 +52,6 @@ export async function getTopicResults(
 
 export {
   buildTopicResultRows,
-  DEMO_USER_ID,
   formatPercent,
   formatSpeed,
   getScoreLevel,

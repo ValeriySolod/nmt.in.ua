@@ -4,7 +4,7 @@ import {
   sessionPercent,
 } from "@/modules/sessions/types";
 import { nowUnixSec, resolveSessionElapsedSec } from "./sessionElapsed";
-import { TASK_STATUS_CORRECT, TASK_STATUS_UNANSWERED } from "./types";
+import { TASK_STATUS_CORRECT, TASK_STATUS_INCORRECT, TASK_STATUS_UNANSWERED } from "./types";
 import type { TrainerSessionSummary } from "./types";
 
 const SQL_SELECT_SESSION = `
@@ -31,6 +31,12 @@ const SQL_SELECT_STATUSES = `
   FOR UPDATE
 `;
 
+const SQL_UPDATE_UNANSWERED = `
+  UPDATE tasks2session
+  SET status = ?
+  WHERE session_id = ? AND user_id = ? AND status = ?
+`;
+
 const SQL_UPDATE_SESSION = `
   UPDATE task_sessions
   SET right_number = ?, tasks_number = ?, session_status = ?, time = ?, start_time = ?
@@ -40,6 +46,10 @@ const SQL_UPDATE_SESSION = `
 export type FinishTrainerSessionInput = {
   userId: number;
   sessionId: number;
+  /** Ultimate: treat unanswered mappings as incorrect before aggregating. */
+  markUnansweredAsIncorrect?: boolean;
+  /** Ultimate timeout: cap stored session time (seconds). */
+  capTimeSec?: number;
 };
 
 export type FinishTrainerSessionResult = TrainerSessionSummary;
@@ -175,7 +185,23 @@ export async function finishTrainerSession(
         );
       }
 
-      if (mappings.some((row) => row.status === TASK_STATUS_UNANSWERED)) {
+      if (input.markUnansweredAsIncorrect) {
+        await connection.execute(SQL_UPDATE_UNANSWERED, [
+          TASK_STATUS_INCORRECT,
+          input.sessionId,
+          input.userId,
+          TASK_STATUS_UNANSWERED,
+        ]);
+      }
+
+      const refreshedMappings = input.markUnansweredAsIncorrect
+        ? await connection.query<StatusRow>(SQL_SELECT_STATUSES, [
+            input.sessionId,
+            input.userId,
+          ])
+        : mappings;
+
+      if (refreshedMappings.some((row) => row.status === TASK_STATUS_UNANSWERED)) {
         await connection.rollback();
         throw new FinishTrainerSessionError(
           "Every task must be answered before finishing.",
@@ -183,17 +209,21 @@ export async function finishTrainerSession(
         );
       }
 
-      const tasksNumber = mappings.length;
-      const rightNumber = mappings.filter(
+      const tasksNumber = refreshedMappings.length;
+      const rightNumber = refreshedMappings.filter(
         (row) => row.status === TASK_STATUS_CORRECT,
       ).length;
       const elapsed = resolveSessionElapsedSec(session.start_time, nowSec());
+      const timeSec =
+        input.capTimeSec !== undefined
+          ? Math.min(elapsed.timeSec, input.capTimeSec)
+          : elapsed.timeSec;
 
       const updated = await connection.execute(SQL_UPDATE_SESSION, [
         rightNumber,
         tasksNumber,
         SESSION_STATUS_COMPLETED,
-        elapsed.timeSec,
+        timeSec,
         elapsed.startTime,
         session.id,
       ]);
@@ -210,7 +240,7 @@ export async function finishTrainerSession(
         ...session,
         right_number: rightNumber,
         tasks_number: tasksNumber,
-        time: elapsed.timeSec,
+        time: timeSec,
       });
     } catch (error) {
       if (!(error instanceof FinishTrainerSessionError)) {

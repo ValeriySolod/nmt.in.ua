@@ -7,7 +7,8 @@
     "build": "next build --webpack",
     "start": "node server.js",
     "lint": "eslint",
-    "test": "node --import tsx --test src/**/*.test.ts"
+    "reset-demo-student": "node scripts/reset-demo-student.mjs",
+    "test": "node --require ./test/stub-server-only.cjs --import tsx --test \"src/**/*.test.ts\" \"lib/**/*.test.js\""
   },
   "dependencies": {
     "clsx": "^2.1.1",

@@ -157,6 +157,35 @@
   min-width: 0;
 }
 
+.labelRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.linkSoon {
+  opacity: 0.88;
+}
+
+.linkSoon .icon {
+  color: var(--muted);
+  background: rgb(255 255 255 / 65%);
+}
+
+.soonBadge {
+  flex-shrink: 0;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 85%);
+  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  color: var(--muted);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .footerCard {
   display: grid;
   gap: 4px;

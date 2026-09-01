@@ -17,7 +17,7 @@ const SQL_SESSION_HEADER = `
     t.name AS theme_name
   FROM task_sessions ts
   INNER JOIN themes t ON t.id = ts.theme_id
-  WHERE ts.id = ?
+  WHERE ts.id = ? AND ts.user_id = ?
 `;
 
 /**
@@ -117,19 +117,31 @@ async function loadDefaultConnection(): Promise<SqlConnection> {
   return getConnection();
 }
 
+function validateUserId(userId: unknown): number {
+  if (!isPositiveInt(userId)) {
+    throw new GetSessionTasksError(
+      "userId must be a positive integer.",
+      "invalid_input",
+    );
+  }
+  return userId;
+}
+
 /** Returns all tasks linked to a topic-test session (client-safe fields only). */
 export async function getSessionTasks(
   sessionId: unknown,
+  userId: unknown,
   deps: GetSessionTasksDeps = { getConnection: loadDefaultConnection },
 ): Promise<SessionTasksResult> {
   const validSessionId = validateSessionId(sessionId);
+  const validUserId = validateUserId(userId);
 
   try {
     const connection = await deps.getConnection();
     try {
       const headers = await connection.query<SessionHeaderRow>(
         SQL_SESSION_HEADER,
-        [validSessionId],
+        [validSessionId, validUserId],
       );
       const header = headers[0];
 

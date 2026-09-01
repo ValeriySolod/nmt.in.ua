@@ -1,5 +1,5 @@
 import type { SqlConnection } from "@/lib/db/mysql";
-import { DEMO_USER_ID, SESSION_STATUS_COMPLETED } from "./types";
+import { SESSION_STATUS_COMPLETED } from "./types";
 
 export type CancelLearningSessionErrorCode =
   | "invalid_input"
@@ -38,10 +38,10 @@ async function loadDefaultConnection(): Promise<SqlConnection> {
   return getConnection();
 }
 
-/** Removes a non-completed session and its task mappings for the demo user. */
+/** Removes a non-completed session and its task mappings for the user. */
 export async function cancelLearningSession(
   sessionId: unknown,
-  userId: number = DEMO_USER_ID,
+  userId: number,
   deps: CancelLearningSessionDeps = { getConnection: loadDefaultConnection },
 ): Promise<void> {
   if (!isPositiveInt(sessionId)) {

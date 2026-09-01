@@ -70,6 +70,15 @@ if [ -f "\$ENV_BAK" ]; then
   chmod 640 "\$SITE/.env.production"
 fi
 
+ENV_FILE="\$SITE/.env.production"
+touch "\$ENV_FILE"
+chmod 640 "\$ENV_FILE"
+if grep -q '^MAX_BODY_BYTES=' "\$ENV_FILE"; then
+  sed -i 's/^MAX_BODY_BYTES=.*/MAX_BODY_BYTES=8388608/' "\$ENV_FILE"
+else
+  printf '\nMAX_BODY_BYTES=8388608\n' >> "\$ENV_FILE"
+fi
+
 cd "\$SITE"
 npm install --omit=dev --no-audit --no-fund --prefer-offline
 

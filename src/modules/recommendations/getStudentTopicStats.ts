@@ -1,6 +1,6 @@
 import type { SqlConnection } from "@/lib/db/mysql";
 import type { SessionRow, ThemeRow } from "@/modules/results/types";
-import { DEMO_USER_ID, SESSION_STATUS_COMPLETED } from "@/modules/sessions/types";
+import { SESSION_STATUS_COMPLETED } from "@/modules/sessions/types";
 
 import { buildStudentTopicStats, type StudentTopicStats } from "./types";
 
@@ -42,7 +42,7 @@ async function loadDefaultConnection(): Promise<SqlConnection> {
 
 /** Per-theme recommendation stats for a student, including themes with no completed sessions. */
 export async function getStudentTopicStats(
-  userId: number = DEMO_USER_ID,
+  userId: number,
   deps: GetStudentTopicStatsDeps = { getConnection: loadDefaultConnection },
 ): Promise<StudentTopicStats> {
   const connection = await deps.getConnection();

@@ -110,3 +110,35 @@ test("recommendNextActions: mid-range scores with no weak/untried topics still r
   assert.equal(result.length, 1);
   assert.equal(result[0]?.type, "problems");
 });
+
+test("recommendNextActions: solid topic A in graph recommends weak/untryed topic B", () => {
+  const result = recommendNextActions(
+    stats([
+      { themeId: 1, themeName: "Тема A", overallPercent: 85, lastPercent: 85 },
+      { themeId: 2, themeName: "Тема B", overallPercent: null, lastPercent: null },
+    ]),
+    [{ fromThemeId: 1, toThemeId: 2 }],
+  );
+
+  const graphAction = result.find(
+    (action) => action.title === "Перейдіть до теми «Тема B»",
+  );
+  assert.ok(graphAction);
+  assert.equal(graphAction?.themeId, 2);
+  assert.match(graphAction?.reason ?? "", /Тема A/);
+});
+
+test("recommendNextActions: graph skips target theme that is already solid", () => {
+  const result = recommendNextActions(
+    stats([
+      { themeId: 1, themeName: "Тема A", overallPercent: 90, lastPercent: 90 },
+      { themeId: 2, themeName: "Тема B", overallPercent: 80, lastPercent: 80 },
+    ]),
+    [{ fromThemeId: 1, toThemeId: 2 }],
+  );
+
+  assert.equal(
+    result.some((action) => action.title === "Перейдіть до теми «Тема B»"),
+    false,
+  );
+});

@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useSyncExternalStore } from "react";
+import { usePathname } from "next/navigation";
 import clsx from "clsx";
+import type { AuthUser } from "@/modules/auth/client";
 import { AppHeader } from "@/components/dashboard/AppHeader";
 import { AppSidebar } from "@/components/dashboard/AppSidebar";
 import { RecentResults } from "@/components/dashboard/RecentResults";
@@ -13,6 +15,7 @@ const STORAGE_KEY = "nmt-sidebar-open";
 type DashboardShellProps = {
   children: React.ReactNode;
   recentResults: RecentResultItem[];
+  user: AuthUser | null;
 };
 
 const listeners = new Set<() => void>();
@@ -50,7 +53,8 @@ function setSidebarOpen(next: boolean | ((prev: boolean) => boolean)) {
   emitSidebarChange();
 }
 
-export function DashboardShell({ children, recentResults }: DashboardShellProps) {
+export function DashboardShell({ children, recentResults, user }: DashboardShellProps) {
+  const pathname = usePathname();
   const sidebarOpen = useSyncExternalStore(
     subscribeSidebar,
     readSidebarOpen,
@@ -74,11 +78,16 @@ export function DashboardShell({ children, recentResults }: DashboardShellProps)
     };
   }, [sidebarOpen]);
 
+  if (pathname === "/login" || !user) {
+    return <>{children}</>;
+  }
+
   return (
     <div className={css.shell}>
       <AppHeader
         sidebarOpen={sidebarOpen}
         onToggleSidebar={() => setSidebarOpen((open) => !open)}
+        user={user}
       />
 
       {sidebarOpen ? (
@@ -99,6 +108,7 @@ export function DashboardShell({ children, recentResults }: DashboardShellProps)
         >
           <AppSidebar
             open={sidebarOpen}
+            role={user.role}
             onNavigate={() => {
               if (window.matchMedia("(max-width: 767px)").matches) {
                 setSidebarOpen(false);

@@ -2,15 +2,18 @@
 
 import Link from "next/link";
 import { SITE_NAME } from "@/constants/seo";
-import { PLACEHOLDER_USER } from "@/constants/navigation";
+import type { AuthUser } from "@/modules/auth/client";
+import { roleLabel, userInitials } from "@/modules/auth/client";
+import { logoutActionFromHeader } from "@/modules/auth/actions";
 import css from "./AppHeader.module.css";
 
 type AppHeaderProps = {
   onToggleSidebar: () => void;
   sidebarOpen: boolean;
+  user: AuthUser;
 };
 
-export function AppHeader({ onToggleSidebar, sidebarOpen }: AppHeaderProps) {
+export function AppHeader({ onToggleSidebar, sidebarOpen, user }: AppHeaderProps) {
   return (
     <header className={css.header}>
       <div className={css.wash} aria-hidden />
@@ -47,15 +50,21 @@ export function AppHeader({ onToggleSidebar, sidebarOpen }: AppHeaderProps) {
           </span>
         </Link>
 
-        <div className={css.profile} title={PLACEHOLDER_USER.displayName}>
-          <span className={css.avatar} aria-hidden>
-            {PLACEHOLDER_USER.initials}
-          </span>
-          <span className={css.profileMeta}>
-            <span className={css.profileName}>{PLACEHOLDER_USER.displayName}</span>
-            <span className={css.profileRole}>Учень</span>
-          </span>
-        </div>
+        <form action={logoutActionFromHeader} className={css.profileForm}>
+          <button
+            type="submit"
+            className={css.profile}
+            title={`${user.displayName} — вийти`}
+          >
+            <span className={css.avatar} aria-hidden>
+              {userInitials(user.displayName)}
+            </span>
+            <span className={css.profileMeta}>
+              <span className={css.profileName}>{user.displayName}</span>
+              <span className={css.profileRole}>{roleLabel(user.role)}</span>
+            </span>
+          </button>
+        </form>
       </div>
     </header>
   );

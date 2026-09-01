@@ -1,0 +1,112 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.intro {
+  display: grid;
+  gap: 8px;
+}
+
+.kicker {
+  margin: 0;
+  color: var(--subtle);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--title);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.12;
+}
+
+.lead {
+  margin: 0;
+  max-width: 44rem;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.section {
+  display: grid;
+  gap: 14px;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+
+.sectionLead {
+  margin: 0;
+  max-width: 40rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.panel {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+  border-radius: 18px;
+  background:
+    linear-gradient(165deg, rgb(255 255 255 / 96%), rgb(232 248 238 / 72%)),
+    url("/decor/formulas-ribbon.svg");
+  background-size: cover, 260px auto;
+  background-position: center, right -30px bottom -20px;
+  background-repeat: no-repeat;
+  box-shadow: 5px 6px 0 rgb(22 22 22 / 6%);
+}
+
+.soonCard {
+  display: grid;
+  gap: 8px;
+  padding: 16px 18px;
+  border: 1px dashed color-mix(in srgb, var(--border) 65%, transparent);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--surface) 92%, var(--page));
+}
+
+.soonBadge {
+  display: inline-flex;
+  align-self: flex-start;
+  margin: 0;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-muted);
+  color: var(--subtle);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.soonTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.soonText {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+@media (min-width: 768px) {
+  .panel {
+    padding: 20px;
+  }
+}

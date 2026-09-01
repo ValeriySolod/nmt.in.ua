@@ -1,6 +1,5 @@
 import type { SqlConnection } from "@/lib/db/mysql";
 import {
-  DEMO_USER_ID,
   SESSION_STATUS_COMPLETED,
   sessionPercent,
 } from "@/modules/sessions/types";
@@ -46,7 +45,7 @@ async function loadDefaultConnection(): Promise<SqlConnection> {
 
 /** Last N completed sessions for the sidebar «Останні результати». */
 export async function getRecentResults(
-  userId: number = DEMO_USER_ID,
+  userId: number,
   limit: number = 4,
   deps: GetRecentResultsDeps = { getConnection: loadDefaultConnection },
 ): Promise<RecentResultItem[]> {

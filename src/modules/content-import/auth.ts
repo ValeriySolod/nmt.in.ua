@@ -14,6 +14,12 @@ function digest(value: string): Buffer {
  * request is rejected — there is nothing safe to compare against, so an
  * absent secret must never be treated as "no auth required".
  */
+/** True when server-side import auth is configured (fail-closed when false). */
+export function isContentImportConfigured(): boolean {
+  const expected = process.env.CONTENT_IMPORT_API_KEY;
+  return typeof expected === "string" && expected.length > 0;
+}
+
 export function isAuthorizedContentImportRequest(authorizationHeader: string | null): boolean {
   const expected = process.env.CONTENT_IMPORT_API_KEY;
   if (!expected) return false;

@@ -1,7 +1,10 @@
+export type NavItemStatus = "ready" | "soon";
+
 export type NavItem = {
   href: string;
   label: string;
   description: string;
+  status: NavItemStatus;
 };
 
 /** Primary dashboard navigation — order matches product wireframe. */
@@ -10,56 +13,52 @@ export const DASHBOARD_NAV: NavItem[] = [
     href: "/",
     label: "Тест за обраною темою",
     description:
-      "Оберіть тему, кількість завдань і пройдіть короткий тренувальний тест.",
+      "Оберіть тему та режим: звичайний тест або Ultimate на час.",
+    status: "ready",
   },
   {
     href: "/results",
     label: "Результати за темами",
     description:
       "Прогрес по темах: загальний %, останні спроби та швидкість відповідей.",
+    status: "ready",
   },
   {
     href: "/sessions",
     label: "Навчальні сесії",
     description: "Історія навчальних сесій і план наступних тренувань.",
+    status: "ready",
   },
   {
     href: "/simulator",
     label: "Симулятор НМТ",
     description: "Повний варіант НМТ у форматі УЦОЯО з таймером і балами.",
+    status: "soon",
   },
   {
     href: "/materials",
     label: "Навчальні матеріали",
     description: "Конспекти, формули та пояснення до тем сертифікаційної роботи.",
+    status: "soon",
   },
   {
     href: "/problems",
     label: "Задачник",
     description: "Банк завдань для самостійної практики поза тестом.",
+    status: "soon",
   },
   {
     href: "/settings",
     label: "Налаштування",
-    description: "Профіль, тема інтерфейсу та параметри тренувань.",
+    description: "Імпорт навчального контенту та параметри облікового запису.",
+    status: "ready",
   },
   {
     href: "/consultations",
     label: "Консультації викладачів",
     description: "Запис на консультацію та спілкування з викладачами.",
+    status: "soon",
   },
-];
-
-export const PLACEHOLDER_USER = {
-  displayName: "Імʼя користувача",
-  initials: "ІК",
-};
-
-export const PLACEHOLDER_RECENT_RESULTS = [
-  { topic: "Тема 1", score: 45 },
-  { topic: "Тема 2", score: 90 },
-  { topic: "Тема 3", score: 65 },
-  { topic: "Тема 4", score: 45 },
 ];
 
 export function getNavItem(href: string): NavItem {
@@ -68,4 +67,8 @@ export function getNavItem(href: string): NavItem {
     throw new Error(`Navigation item not found: ${href}`);
   }
   return item;
+}
+
+export function isNavRouteReady(href: string): boolean {
+  return getNavItem(href).status === "ready";
 }

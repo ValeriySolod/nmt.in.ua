@@ -15,6 +15,8 @@ import { markSessionStarted, MarkSessionStartedError } from "./markSessionStarte
 
 const IDLE_STATE: StartTopicTestActionState = { status: "idle" };
 
+const mockAuth = { requireUserId: async () => 1 };
+
 function formDataWith(fields: Record<string, string>): FormData {
   const formData = new FormData();
   for (const [key, value] of Object.entries(fields)) {
@@ -25,16 +27,19 @@ function formDataWith(fields: Record<string, string>): FormData {
 
 test("ignores any client-supplied userId and always uses the trusted demo user id", async () => {
   let capturedInput: unknown;
-  const spy = (async (input: { userId: number; themeId: number }) => {
+  const spy = (async (input: { userId: number; themeId: number; mode?: string }) => {
     capturedInput = input;
-    return { sessionId: 555, themeId: input.themeId, taskIds: [] };
+    return { sessionId: 555, themeId: input.themeId, taskIds: [], mode: "standard" as const };
   }) as typeof startTopicTest;
 
   const formData = formDataWith({ themeId: "2", userId: "999" });
 
-  await startTopicTestAction(IDLE_STATE, formData, { startTopicTest: spy });
+  await startTopicTestAction(IDLE_STATE, formData, {
+    startTopicTest: spy,
+    ...mockAuth,
+  });
 
-  assert.deepEqual(capturedInput, { userId: 1, themeId: 2 });
+  assert.deepEqual(capturedInput, { userId: 1, themeId: 2, mode: "standard" });
 });
 
 test("the created session receives user_id = 1", async () => {
@@ -68,9 +73,10 @@ test("the created session receives user_id = 1", async () => {
 
   const state = await startTopicTestAction(IDLE_STATE, formData, {
     startTopicTest: (input) => startTopicTest(input, { getConnection: async () => connection }),
+    ...mockAuth,
   });
 
-  assert.deepEqual(state, { status: "success", sessionId: 777 });
+  assert.deepEqual(state, { status: "success", sessionId: 777, mode: "standard" });
 
   const sessionInsert = insertCalls.find((c) =>
     c.sql.startsWith("INSERT INTO task_sessions"),
@@ -139,6 +145,7 @@ test("a second submission while one is pending is rejected, not creating a dupli
   const runAction = (themeId: string) =>
     startTopicTestAction(IDLE_STATE, formDataWith({ themeId }), {
       startTopicTest: (input) => startTopicTest(input, { getConnection: async () => connection }),
+      ...mockAuth,
     });
 
   const first = runAction("1");
@@ -165,7 +172,7 @@ test("checkAnswerAction uses the trusted demo user and returns only { correct }"
 
   const state = await checkAnswerAction(
     { sessionId: 5, mappingId: 10, answerNumber: 2 },
-    { checkAnswer: spy },
+    { checkAnswer: spy, ...mockAuth },
   );
 
   assert.deepEqual(capturedInput, {
@@ -185,7 +192,7 @@ test("checkAnswerAction maps not_found to a client-safe error without the answer
 
   const state = await checkAnswerAction(
     { sessionId: 9, mappingId: 1, answerNumber: 3 },
-    { checkAnswer: spy },
+    { checkAnswer: spy, ...mockAuth },
   );
 
   assert.deepEqual(state, {
@@ -242,14 +249,21 @@ test("finishTrainerSessionAction uses the trusted demo user and returns summary 
         ],
         hasCompletedSessions: true,
       }),
+      recommendNextActionsForStats: async () => recommendations,
       persistRecommendations: async (_userId, actions) => ({
         actions,
         createdSessionIds: [],
       }),
+      ...mockAuth,
     },
   );
 
-  assert.deepEqual(capturedInput, { userId: 1, sessionId: 5 });
+  assert.deepEqual(capturedInput, {
+    userId: 1,
+    sessionId: 5,
+    markUnansweredAsIncorrect: undefined,
+    capTimeSec: undefined,
+  });
   assert.deepEqual(state, { status: "success", summary, recommendations });
 });
 
@@ -266,10 +280,12 @@ test("finishTrainerSessionAction maps unfinished to a client-safe error", async 
         topicScores: [],
         hasCompletedSessions: false,
       }),
+      recommendNextActionsForStats: async () => [],
       persistRecommendations: async (_userId, actions) => ({
         actions,
         createdSessionIds: [],
       }),
+      ...mockAuth,
     },
   );
 
@@ -288,7 +304,7 @@ test("markSessionStartedAction uses the trusted demo user and returns startTime"
 
   const state = await markSessionStartedAction(
     { sessionId: 36 },
-    { markSessionStarted: spy },
+    { markSessionStarted: spy, ...mockAuth },
   );
 
   assert.deepEqual(capturedInput, { userId: 1, sessionId: 36 });
@@ -302,7 +318,7 @@ test("markSessionStartedAction maps not_found to a client-safe error", async () 
 
   const state = await markSessionStartedAction(
     { sessionId: 36 },
-    { markSessionStarted: spy },
+    { markSessionStarted: spy, ...mockAuth },
   );
 
   assert.deepEqual(state, {

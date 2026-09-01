@@ -3,6 +3,8 @@
   flex-direction: column;
   gap: 20px;
   min-width: 0;
+  width: 100%;
+  max-width: 100%;
 }
 
 .intro {
@@ -25,16 +27,38 @@
 }
 
 .tableWrap {
+  width: 100%;
+  max-width: 100%;
   overflow-x: auto;
+  overflow-y: visible;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--muted) 55%, transparent) transparent;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
   box-shadow: 5px 6px 0 rgb(22 22 22 / 6%);
 }
 
+.tableWrap::-webkit-scrollbar {
+  display: block;
+  height: 10px;
+}
+
+.tableWrap::-webkit-scrollbar-track {
+  background: color-mix(in srgb, var(--line) 35%, transparent);
+  border-radius: 0 0 calc(var(--radius) - 1px) calc(var(--radius) - 1px);
+}
+
+.tableWrap::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--muted) 50%, transparent);
+  border-radius: 5px;
+}
+
 .table {
-  width: 100%;
-  min-width: 980px;
+  width: max(100%, 1120px);
+  min-width: 1120px;
   border-collapse: collapse;
 }
 
@@ -45,6 +69,7 @@
   text-align: left;
   vertical-align: middle;
   font-size: 0.88rem;
+  white-space: nowrap;
 }
 
 .table th {
@@ -60,6 +85,24 @@
 .themeCell {
   font-weight: 700;
   min-width: 10rem;
+  max-width: 18rem;
+  white-space: normal;
+}
+
+.startTimeCell {
+  min-width: 9.5rem;
+}
+
+.createdByCell {
+  min-width: 6.5rem;
+}
+
+.statusCell {
+  min-width: 6.5rem;
+}
+
+.actionsCell {
+  min-width: 9rem;
 }
 
 .statusCompleted {

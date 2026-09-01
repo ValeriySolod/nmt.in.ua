@@ -3,17 +3,15 @@
  *
  * Вхід: результати тестування учня (`StudentTopicStats`, з `getStudentTopicStats`).
  * Вихід: наступні дії (тема, тренажер, матеріали, консультація).
- *
- * Куди показувати в UI:
- * - `/results` — блок рекомендацій під таблицею прогресу
- * - `/sessions` — план наступних сесій
- * - права колонка `RecentResults` (опційно)
- * - після `finishTrainerSession` (модуль 3) → викликати `recommendNextActions`
  */
 
-import type { StudentTopicStats } from "./types";
+import type { ThemeConnectionEdge } from "./getThemeConnections";
+import { getThemeConnectionsForThemes } from "./getThemeConnections";
+import type { StudentTopicScore, StudentTopicStats } from "./types";
 
 export type { StudentTopicScore, StudentTopicStats } from "./types";
+export type { ThemeConnectionEdge } from "./getThemeConnections";
+export { getThemeConnectionsForThemes } from "./getThemeConnections";
 
 export type RecommendedAction = {
   type: "topic-test" | "simulator" | "materials" | "problems" | "consultation";
@@ -32,11 +30,80 @@ const WEAK_THRESHOLD = 40;
 const SOLID_THRESHOLD = 70;
 const MAX_WEAK_ACTIONS = 2;
 const MAX_UNTRIED_ACTIONS = 2;
+const MAX_GRAPH_ACTIONS = 2;
 const MAX_RECOMMENDATIONS = 3;
+
+function topicTestThemeIds(actions: RecommendedAction[]): Set<number> {
+  const ids = new Set<number>();
+  for (const action of actions) {
+    if (action.type === "topic-test" && typeof action.themeId === "number") {
+      ids.add(action.themeId);
+    }
+  }
+  return ids;
+}
+
+function isTopicWeakOrUntried(topic: StudentTopicScore): boolean {
+  if (topic.overallPercent === null) return true;
+  return topic.overallPercent < WEAK_THRESHOLD;
+}
+
+function appendGraphRecommendations(
+  stats: StudentTopicStats,
+  graphEdges: ThemeConnectionEdge[],
+  actions: RecommendedAction[],
+  priorityStart: number,
+): number {
+  if (graphEdges.length === 0) {
+    return priorityStart;
+  }
+
+  const topicById = new Map(
+    stats.topicScores.map((topic) => [topic.themeId, topic]),
+  );
+  const solidThemeIds = new Set(
+    stats.topicScores
+      .filter(
+        (topic) =>
+          topic.overallPercent !== null &&
+          topic.overallPercent >= SOLID_THRESHOLD,
+      )
+      .map((topic) => topic.themeId),
+  );
+  const usedThemeIds = topicTestThemeIds(actions);
+  let priority = priorityStart;
+  let graphAdded = 0;
+
+  for (const edge of graphEdges) {
+    if (graphAdded >= MAX_GRAPH_ACTIONS) break;
+    if (!solidThemeIds.has(edge.fromThemeId)) continue;
+    if (usedThemeIds.has(edge.toThemeId)) continue;
+
+    const target = topicById.get(edge.toThemeId);
+    if (!target || !isTopicWeakOrUntried(target)) continue;
+
+    const source = topicById.get(edge.fromThemeId);
+    actions.push({
+      type: "topic-test",
+      themeId: target.themeId,
+      title: `Перейдіть до теми «${target.themeName}»`,
+      reason: source
+        ? `Тема «${source.themeName}» освоєна — наступний крок за навчальним планом.`
+        : "Наступний крок за навчальним планом.",
+      href: `/?theme=${target.themeId}`,
+      priority: priority++,
+    });
+    usedThemeIds.add(target.themeId);
+    graphAdded += 1;
+  }
+
+  return priority;
+}
 
 /** Побудувати список наступних дій для учня на основі поточної статистики по темах. */
 export function recommendNextActions(
   stats: StudentTopicStats,
+  graphEdges: ThemeConnectionEdge[] = [],
 ): RecommendedAction[] {
   if (!stats.hasCompletedSessions) {
     return [];
@@ -66,7 +133,11 @@ export function recommendNextActions(
     });
   }
 
+  priority = appendGraphRecommendations(stats, graphEdges, actions, priority);
+
+  const usedThemeIds = topicTestThemeIds(actions);
   for (const topic of untried.slice(0, MAX_UNTRIED_ACTIONS)) {
+    if (usedThemeIds.has(topic.themeId)) continue;
     actions.push({
       type: "topic-test",
       themeId: topic.themeId,
@@ -75,6 +146,7 @@ export function recommendNextActions(
       href: `/?theme=${topic.themeId}`,
       priority: priority++,
     });
+    usedThemeIds.add(topic.themeId);
   }
 
   if (weak.length >= 2) {
@@ -124,4 +196,31 @@ export function recommendNextActions(
   return actions
     .sort((a, b) => a.priority - b.priority)
     .slice(0, MAX_RECOMMENDATIONS);
+}
+
+type RecommendNextActionsForStatsDeps = {
+  getThemeConnectionsForThemes: typeof getThemeConnectionsForThemes;
+};
+
+/** Loads the theme graph for solid topics and builds recommendations. */
+export async function recommendNextActionsForStats(
+  stats: StudentTopicStats,
+  deps: RecommendNextActionsForStatsDeps = {
+    getThemeConnectionsForThemes,
+  },
+): Promise<RecommendedAction[]> {
+  const solidThemeIds = stats.topicScores
+    .filter(
+      (topic) =>
+        topic.overallPercent !== null &&
+        topic.overallPercent >= SOLID_THRESHOLD,
+    )
+    .map((topic) => topic.themeId);
+
+  const graphEdges =
+    solidThemeIds.length > 0
+      ? await deps.getThemeConnectionsForThemes(solidThemeIds)
+      : [];
+
+  return recommendNextActions(stats, graphEdges);
 }

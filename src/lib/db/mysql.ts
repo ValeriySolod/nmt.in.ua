@@ -54,8 +54,20 @@ function isTransientDbError(error: unknown): boolean {
   if (!error || typeof error !== "object") {
     return false;
   }
-  const code = (error as { code?: string }).code;
-  return typeof code === "string" && TRANSIENT_DB_ERROR_CODES.has(code);
+  const record = error as { code?: string; message?: string; errno?: number };
+  if (typeof record.code === "string" && TRANSIENT_DB_ERROR_CODES.has(record.code)) {
+    return true;
+  }
+  if (record.errno === -4077 || record.errno === -104) {
+    return true;
+  }
+  const message = record.message;
+  return (
+    typeof message === "string" &&
+    (message.includes("ECONNRESET") ||
+      message.includes("ECONNREFUSED") ||
+      message.includes("PROTOCOL_CONNECTION_LOST"))
+  );
 }
 
 function resetPool(): void {
@@ -141,12 +153,16 @@ async function acquireRawConnection(): Promise<PoolConnection> {
   let lastError: unknown;
 
   for (let attempt = 1; attempt <= MAX_CONNECT_ATTEMPTS; attempt += 1) {
+    let connection: PoolConnection | undefined;
     try {
-      const connection = await getPool().getConnection();
+      connection = await getPool().getConnection();
       await connection.ping();
       return connection;
     } catch (error) {
       lastError = error;
+      if (connection) {
+        connection.destroy();
+      }
       if (attempt < MAX_CONNECT_ATTEMPTS && isTransientDbError(error)) {
         console.error(
           `mysql: connect attempt ${attempt}/${MAX_CONNECT_ATTEMPTS} failed, retrying`,

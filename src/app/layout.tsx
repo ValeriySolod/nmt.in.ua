@@ -15,6 +15,7 @@ import {
 } from "@/constants/seo";
 import { JsonLd } from "@/components/seo";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
+import { getCurrentUser } from "@/modules/auth";
 import { getRecentResults } from "@/modules/results/getRecentResults";
 import "./globals.css";
 
@@ -66,13 +67,23 @@ const structuredData = [
 ];
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const recentResults = await getRecentResults();
+  const user = await getCurrentUser();
+  let recentResults: Awaited<ReturnType<typeof getRecentResults>> = [];
+  if (user) {
+    try {
+      recentResults = await getRecentResults(user.id);
+    } catch (error) {
+      console.error("layout: getRecentResults failed", error);
+    }
+  }
 
   return (
     <html lang="uk">
       <body>
         <JsonLd data={structuredData} />
-        <DashboardShell recentResults={recentResults}>{children}</DashboardShell>
+        <DashboardShell recentResults={recentResults} user={user}>
+          {children}
+        </DashboardShell>
       </body>
     </html>
   );

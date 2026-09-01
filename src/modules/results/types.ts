@@ -9,9 +9,6 @@ export type TopicResultRow = {
 
 export type ScoreLevel = "high" | "medium" | "low" | "none";
 
-/** Demo user until auth is implemented (same as topic-test actions). */
-export const DEMO_USER_ID = 1;
-
 export function getScoreLevel(percent: number | null): ScoreLevel {
   if (percent === null) return "none";
   if (percent >= 70) return "high";

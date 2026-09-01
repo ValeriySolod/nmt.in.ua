@@ -63,6 +63,8 @@ export type CheckAnswerActionState =
 
 export type FinishTrainerSessionActionInput = {
   sessionId: number;
+  markUnansweredAsIncorrect?: boolean;
+  capTimeSec?: number;
 };
 
 import type { RecommendedAction } from "@/modules/recommendations";
@@ -74,6 +76,17 @@ export type FinishTrainerSessionActionState =
       recommendations: RecommendedAction[];
     }
   | { status: "error"; message: string };
+
+export type SkipTaskAnswerActionInput = {
+  sessionId: number;
+  mappingId: number;
+};
+
+export type SkipTaskAnswerActionState =
+  | { status: "success"; correct: false }
+  | { status: "error"; message: string };
+
+export type { TopicTestMode } from "./topicTestMode";
 
 export type MarkSessionStartedActionInput = {
   sessionId: number;

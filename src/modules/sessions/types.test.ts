@@ -7,6 +7,9 @@ import {
   SESSION_STATUS_COMPLETED,
   SESSION_STATUS_CREATED,
   SESSION_STATUS_PLANNED,
+  SESSION_TYPE_MENTOR,
+  SESSION_TYPE_USER,
+  sessionCreatedByLabel,
 } from "./types";
 
 test("resolveSessionDisplayStatus maps planned/unfinished vs. completed", () => {
@@ -100,4 +103,28 @@ test("buildLearningSessionRows formats a completed session with percent and elap
   assert.equal(rows[0]?.statusLabel, "Виконано");
   assert.equal(rows[0]?.percent, 80);
   assert.equal(rows[0]?.timeSec, 56);
+});
+
+test("sessionCreatedByLabel maps mentor sessions", () => {
+  assert.equal(sessionCreatedByLabel(SESSION_TYPE_USER), "Користувач");
+  assert.equal(sessionCreatedByLabel(SESSION_TYPE_MENTOR), "Ментор");
+});
+
+test("buildLearningSessionRows labels mentor planned session", () => {
+  const rows = buildLearningSessionRows([
+    {
+      id: 20,
+      theme_id: 4,
+      theme_name: "Графіки",
+      tasks_number: 10,
+      right_number: 0,
+      time: 0,
+      session_status: SESSION_STATUS_PLANNED,
+      session_type: SESSION_TYPE_MENTOR,
+      start_time: 0,
+    },
+  ]);
+
+  assert.equal(rows[0]?.createdByLabel, "Ментор");
+  assert.equal(rows[0]?.status, "planned");
 });
