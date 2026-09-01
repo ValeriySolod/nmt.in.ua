@@ -52,7 +52,7 @@ test("getLearningSessions resolves the theme name via the themes join on task_se
   const calls: { sql: string }[] = [];
   const spyConnection: SqlConnection = {
     ...connection,
-    query: async <T,>(sql: string, params: unknown[] = []) => {
+    query: async <T,>(sql: string) => {
       calls.push({ sql });
       return [] as unknown as T[];
     },

@@ -5,6 +5,7 @@ import {
   getSessionTasks,
   GetSessionTasksError,
 } from "@/modules/testing/getSessionTasks";
+import type { SessionTasksResult } from "@/modules/testing/types";
 
 type SessionPageProps = {
   params: Promise<{ id: string }>;
@@ -20,23 +21,9 @@ export async function generateMetadata({ params }: SessionPageProps) {
   });
 }
 
-export default async function SessionPage({ params }: SessionPageProps) {
-  const { id } = await params;
-  const sessionId = Number(id);
-
-  if (!Number.isInteger(sessionId) || sessionId <= 0) {
-    notFound();
-  }
-
+async function loadSession(sessionId: number): Promise<SessionTasksResult> {
   try {
-    const session = await getSessionTasks(sessionId);
-    return (
-      <TopicTrainer
-        sessionId={session.sessionId}
-        tasks={session.tasks}
-        initialSummary={session.summary}
-      />
-    );
+    return await getSessionTasks(sessionId);
   } catch (error) {
     if (
       error instanceof GetSessionTasksError &&
@@ -46,4 +33,23 @@ export default async function SessionPage({ params }: SessionPageProps) {
     }
     throw error;
   }
+}
+
+export default async function SessionPage({ params }: SessionPageProps) {
+  const { id } = await params;
+  const sessionId = Number(id);
+
+  if (!Number.isInteger(sessionId) || sessionId <= 0) {
+    notFound();
+  }
+
+  const session = await loadSession(sessionId);
+
+  return (
+    <TopicTrainer
+      sessionId={session.sessionId}
+      tasks={session.tasks}
+      initialSummary={session.summary}
+    />
+  );
 }

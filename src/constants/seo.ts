@@ -191,7 +191,6 @@ export function buildWebApplicationJsonLd() {
 export function buildBreadcrumbJsonLd(
   items: Array<{ name: string; path: string }>,
 ) {
-  const siteUrl = getSiteUrl();
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
