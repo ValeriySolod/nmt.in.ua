@@ -1,0 +1,55 @@
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-muted);
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    border-color var(--t) var(--ease),
+    background-color var(--t) var(--ease),
+    color var(--t) var(--ease);
+}
+
+.tab:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.tabActive {
+  border-color: var(--green);
+  background: var(--green-bg);
+  color: var(--green-dark);
+}
+
+.tabUltimate:not(.tabActive) {
+  border-color: color-mix(in srgb, var(--ultimate) 28%, var(--border));
+  color: var(--ultimate-dark);
+}
+
+.tabUltimate.tabActive {
+  border-color: color-mix(in srgb, var(--ultimate) 55%, var(--border));
+  background: var(--ultimate-bg);
+  color: var(--ultimate-dark);
+}
+
+.tabsStretch {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  width: 100%;
+}
+
+.tabsStretch .tab {
+  width: 100%;
+  justify-content: center;
+}

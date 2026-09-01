@@ -1,12 +1,10 @@
 /**
  * Модуль 3 — тести та інтерактивні тренажери.
  *
- * UI вже є як оболонка:
- * - `/` → `TopicTestStart` (тест за темою)
- * - `/simulator` → StubPage (симулятор НМТ)
- * - `/problems` → StubPage (задачник)
- *
- * Підключайте логіку сюди + у відповідні компоненти/hooks.
+ * Реалізовано:
+ * - `/` → TopicTestStart (звичайний + Ultimate)
+ * - `/session/[id]` → TopicTrainer
+ * - `/simulator`, `/problems`, `/materials` → заглушки (скоро)
  */
 
 export type TopicTestConfig = {

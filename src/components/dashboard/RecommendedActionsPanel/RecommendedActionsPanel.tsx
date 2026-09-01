@@ -1,4 +1,5 @@
 import Link from "next/link";
+import clsx from "clsx";
 import type { RecommendedAction } from "@/modules/recommendations";
 import css from "./RecommendedActionsPanel.module.css";
 
@@ -12,23 +13,27 @@ const ACTION_ICONS: Record<RecommendedAction["type"], string> = {
 
 type RecommendedActionsPanelProps = {
   actions: RecommendedAction[];
+  title?: string;
+  lead?: string;
+  className?: string;
 };
 
 export function RecommendedActionsPanel({
   actions,
+  title = "Рекомендовані дії",
+  lead = "Наступні кроки, підібрані на основі ваших поточних результатів.",
+  className,
 }: RecommendedActionsPanelProps) {
   return (
     <section
-      className={css.recommendedActions}
+      className={clsx(css.recommendedActions, className)}
       aria-labelledby="recommended-actions-title"
     >
       <header className={css.intro}>
         <h2 id="recommended-actions-title" className={css.title}>
-          Рекомендовані дії
+          {title}
         </h2>
-        <p className={css.lead}>
-          Наступні кроки, підібрані на основі ваших поточних результатів.
-        </p>
+        <p className={css.lead}>{lead}</p>
       </header>
 
       {actions.length === 0 ? (
@@ -41,7 +46,7 @@ export function RecommendedActionsPanel({
       ) : (
         <ul className={css.list}>
           {actions.map((action, index) => (
-            <li key={`${action.type}-${index}`} className={css.card}>
+            <li key={`${action.type}-${action.themeId ?? index}`} className={css.card}>
               <span className={css.icon} aria-hidden>
                 {ACTION_ICONS[action.type]}
               </span>

@@ -47,7 +47,8 @@ test("recommendNextActions: untried topic -> topic-test recommendation to try it
     (a) => a.title === "Спробуйте тему «Тема B»",
   );
   assert.ok(untriedAction);
-  assert.equal(untriedAction?.href, "/");
+  assert.equal(untriedAction?.href, "/?theme=2");
+  assert.equal(untriedAction?.themeId, 2);
 });
 
 test("recommendNextActions: all topics solid and attempted -> recommends simulator", () => {
@@ -72,6 +73,20 @@ test("recommendNextActions: two or more weak topics -> recommends consultation",
   assert.ok(result.some((a) => a.type === "consultation"));
 });
 
+test("recommendNextActions: actions are limited to top 3 by priority", () => {
+  const result = recommendNextActions(
+    stats([
+      { themeId: 1, themeName: "A", overallPercent: 10, lastPercent: 10 },
+      { themeId: 2, themeName: "B", overallPercent: 15, lastPercent: 15 },
+      { themeId: 3, themeName: "C", overallPercent: 20, lastPercent: 20 },
+      { themeId: 4, themeName: "D", overallPercent: null, lastPercent: null },
+      { themeId: 5, themeName: "E", overallPercent: null, lastPercent: null },
+    ]),
+  );
+
+  assert.equal(result.length, 3);
+});
+
 test("recommendNextActions: actions are always sorted by priority ascending", () => {
   const result = recommendNextActions(
     stats([
@@ -94,4 +109,36 @@ test("recommendNextActions: mid-range scores with no weak/untried topics still r
 
   assert.equal(result.length, 1);
   assert.equal(result[0]?.type, "problems");
+});
+
+test("recommendNextActions: solid topic A in graph recommends weak/untryed topic B", () => {
+  const result = recommendNextActions(
+    stats([
+      { themeId: 1, themeName: "Тема A", overallPercent: 85, lastPercent: 85 },
+      { themeId: 2, themeName: "Тема B", overallPercent: null, lastPercent: null },
+    ]),
+    [{ fromThemeId: 1, toThemeId: 2 }],
+  );
+
+  const graphAction = result.find(
+    (action) => action.title === "Перейдіть до теми «Тема B»",
+  );
+  assert.ok(graphAction);
+  assert.equal(graphAction?.themeId, 2);
+  assert.match(graphAction?.reason ?? "", /Тема A/);
+});
+
+test("recommendNextActions: graph skips target theme that is already solid", () => {
+  const result = recommendNextActions(
+    stats([
+      { themeId: 1, themeName: "Тема A", overallPercent: 90, lastPercent: 90 },
+      { themeId: 2, themeName: "Тема B", overallPercent: 80, lastPercent: 80 },
+    ]),
+    [{ fromThemeId: 1, toThemeId: 2 }],
+  );
+
+  assert.equal(
+    result.some((action) => action.title === "Перейдіть до теми «Тема B»"),
+    false,
+  );
 });

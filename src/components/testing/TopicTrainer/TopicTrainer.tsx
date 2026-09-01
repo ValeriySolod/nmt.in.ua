@@ -1,13 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import clsx from "clsx";
 import {
   checkAnswerAction,
   finishTrainerSessionAction,
+  getSessionMistakeReviewAction,
+  skipTaskAnswerAction,
 } from "@/modules/testing/actions";
+import type { SessionMistakeItem } from "@/modules/testing/getSessionMistakeReview";
 import { formatElapsedClock } from "@/modules/testing/sessionElapsed";
+import {
+  ULTIMATE_DURATION_SEC,
+  ULTIMATE_TIMER_WARNING_SEC,
+  type TopicTestMode,
+} from "@/modules/testing/topicTestMode";
 import {
   TASK_STATUS_CORRECT,
   TASK_STATUS_INCORRECT,
@@ -15,7 +23,9 @@ import {
   type SessionTaskAnswer,
   type TrainerSessionSummary,
 } from "@/modules/testing/types";
+import type { RecommendedAction } from "@/modules/recommendations";
 import { TopicTrainerSummary } from "@/components/testing/TopicTrainerSummary";
+import { useCountdownTimer } from "./useCountdownTimer";
 import { useSessionTimer } from "./useSessionTimer";
 import css from "./TopicTrainer.module.css";
 
@@ -23,6 +33,8 @@ type TopicTrainerProps = {
   sessionId: number;
   tasks: SessionTask[];
   initialSummary?: TrainerSessionSummary | null;
+  initialRecommendations?: RecommendedAction[];
+  mode?: TopicTestMode;
 };
 
 type CheckResult = { correct: boolean };
@@ -42,7 +54,10 @@ export function TopicTrainer({
   sessionId,
   tasks,
   initialSummary = null,
+  initialRecommendations = [],
+  mode = "standard",
 }: TopicTrainerProps) {
+  const isUltimate = mode === "ultimate";
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedByMappingId, setSelectedByMappingId] = useState<
     Record<number, SessionTaskAnswer["number"]>
@@ -55,10 +70,57 @@ export function TopicTrainer({
   const [summary, setSummary] = useState<TrainerSessionSummary | null>(
     initialSummary,
   );
+  const [recommendations, setRecommendations] = useState<RecommendedAction[]>(
+    initialRecommendations,
+  );
+  const [mistakes, setMistakes] = useState<SessionMistakeItem[]>([]);
+  const [timedOut, setTimedOut] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const finishingRef = useRef(false);
+
   const elapsedSec = useSessionTimer({
     sessionId,
-    enabled: summary == null,
+    enabled: !isUltimate && summary == null,
+  });
+
+  const finishUltimate = useCallback(
+    async (options: { timedOut?: boolean } = {}) => {
+      if (finishingRef.current || summary) return;
+      finishingRef.current = true;
+      setIsFinishing(true);
+      setErrorMessage(null);
+      if (options.timedOut) setTimedOut(true);
+
+      const result = await finishTrainerSessionAction({
+        sessionId,
+        markUnansweredAsIncorrect: true,
+        capTimeSec: options.timedOut ? ULTIMATE_DURATION_SEC : undefined,
+      });
+      setIsFinishing(false);
+
+      if (result.status !== "success") {
+        finishingRef.current = false;
+        setErrorMessage(result.message);
+        return;
+      }
+
+      const review = await getSessionMistakeReviewAction(sessionId);
+      setMistakes(review);
+      setSummary(result.summary);
+      setRecommendations(result.recommendations);
+    },
+    [sessionId, summary],
+  );
+
+  const handleTimeExpired = useCallback(() => {
+    void finishUltimate({ timedOut: true });
+  }, [finishUltimate]);
+
+  const remainingSec = useCountdownTimer({
+    sessionId,
+    enabled: isUltimate && summary == null,
+    durationSec: ULTIMATE_DURATION_SEC,
+    onExpire: handleTimeExpired,
   });
 
   const currentTask = tasks[currentIndex];
@@ -77,15 +139,39 @@ export function TopicTrainer({
     tasks.every((task) => resultsByMappingId[task.mappingId] !== undefined);
 
   if (summary) {
-    return <TopicTrainerSummary summary={summary} />;
+    return (
+      <TopicTrainerSummary
+        summary={summary}
+        recommendations={recommendations}
+        mode={mode}
+        timedOut={timedOut}
+        mistakes={mistakes}
+      />
+    );
   }
 
   if (!currentTask) {
     return null;
   }
 
+  function advanceAfterAnswer(mappingId: number, correct: boolean) {
+    setResultsByMappingId((prev) => ({
+      ...prev,
+      [mappingId]: { correct },
+    }));
+
+    if (isUltimate) {
+      if (isLast) {
+        void finishUltimate();
+        return;
+      }
+      setCurrentIndex((index) => index + 1);
+      setErrorMessage(null);
+    }
+  }
+
   async function handleSelect(answerNumber: SessionTaskAnswer["number"]) {
-    if (checkResult || isPending) return;
+    if (checkResult || isPending || isFinishing) return;
 
     setSelectedByMappingId((prev) => ({
       ...prev,
@@ -107,10 +193,36 @@ export function TopicTrainer({
       return;
     }
 
+    if (isUltimate) {
+      advanceAfterAnswer(currentTask.mappingId, result.correct);
+      return;
+    }
+
     setResultsByMappingId((prev) => ({
       ...prev,
       [currentTask.mappingId]: { correct: result.correct },
     }));
+  }
+
+  async function handleSkip() {
+    if (!isUltimate || checkResult || isPending || isFinishing) return;
+
+    setErrorMessage(null);
+    setPendingMappingId(currentTask.mappingId);
+
+    const result = await skipTaskAnswerAction({
+      sessionId,
+      mappingId: currentTask.mappingId,
+    });
+
+    setPendingMappingId(null);
+
+    if (result.status !== "success") {
+      setErrorMessage(result.message);
+      return;
+    }
+
+    advanceAfterAnswer(currentTask.mappingId, false);
   }
 
   function handleNext() {
@@ -136,24 +248,48 @@ export function TopicTrainer({
     }
 
     setSummary(result.summary);
+    setRecommendations(result.recommendations);
   }
+
+  async function handleAbortUltimate() {
+    if (
+      !window.confirm(
+        "Завершити Ultimate-тестування? Невідповідені завдання будуть зараховані як помилки.",
+      )
+    ) {
+      return;
+    }
+    await finishUltimate();
+  }
+
+  const timerLabel = isUltimate
+    ? formatElapsedClock(remainingSec)
+    : formatElapsedClock(elapsedSec);
+  const timerWarning = isUltimate && remainingSec <= ULTIMATE_TIMER_WARNING_SEC;
 
   return (
     <section className={css.topicTrainer} aria-labelledby="topic-trainer-title">
       <header className={css.header}>
         <div>
           <h1 id="topic-trainer-title" className={css.title}>
-            Тест за темою
+            {isUltimate ? "Ultimate — тест за темою" : "Тест за темою"}
           </h1>
           <p className={css.meta}>Сесія №{sessionId}</p>
         </div>
         <div className={css.badges}>
+          {isUltimate ? (
+            <p className={clsx(css.modeBadge, css.modeUltimate)}>Ultimate</p>
+          ) : null}
           <p
-            className={css.progress}
+            className={clsx(css.progress, timerWarning && css.progressWarning)}
             role="timer"
-            aria-label={`Час ${formatElapsedClock(elapsedSec)}`}
+            aria-label={
+              isUltimate
+                ? `Залишилось ${timerLabel}`
+                : `Час ${timerLabel}`
+            }
           >
-            Час: {formatElapsedClock(elapsedSec)}
+            {isUltimate ? "Залишилось" : "Час"}: {timerLabel}
           </p>
           <p className={css.progress} aria-live="polite">
             Завдання {currentIndex + 1} / {total}
@@ -173,17 +309,19 @@ export function TopicTrainer({
               className={clsx(
                 css.answer,
                 selectedAnswer === answer.number &&
-                  checkResult === undefined &&
+                  (isUltimate ? checkResult === undefined : true) &&
                   css.answerSelected,
-                selectedAnswer === answer.number &&
+                !isUltimate &&
+                  selectedAnswer === answer.number &&
                   checkResult?.correct === true &&
                   css.answerCorrect,
-                selectedAnswer === answer.number &&
+                !isUltimate &&
+                  selectedAnswer === answer.number &&
                   checkResult?.correct === false &&
                   css.answerWrong,
               )}
               onClick={() => handleSelect(answer.number)}
-              disabled={isPending || checkResult !== undefined}
+              disabled={isPending || checkResult !== undefined || isFinishing}
               aria-pressed={selectedAnswer === answer.number}
             >
               {answer.number}. {answer.text}
@@ -194,11 +332,11 @@ export function TopicTrainer({
 
       {isPending ? (
         <p className={css.feedback} role="status">
-          Перевіряємо відповідь…
+          {isUltimate ? "Зберігаємо відповідь…" : "Перевіряємо відповідь…"}
         </p>
       ) : null}
 
-      {checkResult ? (
+      {!isUltimate && checkResult ? (
         <p
           className={clsx(
             css.feedback,
@@ -217,27 +355,47 @@ export function TopicTrainer({
       ) : null}
 
       <div className={css.actions}>
-        {!isLast ? (
-          <button
-            type="button"
-            className={css.next}
-            onClick={handleNext}
-            disabled={checkResult === undefined || isPending}
-          >
-            Наступне завдання
-          </button>
-        ) : null}
+        {isUltimate ? (
+          <>
+            {checkResult === undefined && !isFinishing ? (
+              <button type="button" className={css.skip} onClick={handleSkip}>
+                Пропустити
+              </button>
+            ) : null}
+            <button
+              type="button"
+              className={css.abort}
+              onClick={handleAbortUltimate}
+              disabled={isFinishing || isPending}
+            >
+              Завершити тестування
+            </button>
+          </>
+        ) : (
+          <>
+            {!isLast ? (
+              <button
+                type="button"
+                className={css.next}
+                onClick={handleNext}
+                disabled={checkResult === undefined || isPending}
+              >
+                Наступне завдання
+              </button>
+            ) : null}
 
-        {allAnswered ? (
-          <button
-            type="button"
-            className={css.next}
-            onClick={handleFinish}
-            disabled={isFinishing || isPending}
-          >
-            {isFinishing ? "Завершуємо…" : "Завершити тест"}
-          </button>
-        ) : null}
+            {allAnswered ? (
+              <button
+                type="button"
+                className={css.next}
+                onClick={handleFinish}
+                disabled={isFinishing || isPending}
+              >
+                {isFinishing ? "Завершуємо…" : "Завершити тест"}
+              </button>
+            ) : null}
+          </>
+        )}
 
         <Link href="/" className={css.backLink}>
           ← До вибору теми

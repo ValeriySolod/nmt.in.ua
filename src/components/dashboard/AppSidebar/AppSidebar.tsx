@@ -4,11 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import { DASHBOARD_NAV } from "@/constants/navigation";
+import type { UserRole } from "@/modules/auth/client";
+import { canImportContent } from "@/modules/auth/client";
 import css from "./AppSidebar.module.css";
 
 type AppSidebarProps = {
   open: boolean;
   onNavigate: () => void;
+  role: UserRole;
 };
 
 const NAV_ICONS: Record<string, string> = {
@@ -22,8 +25,11 @@ const NAV_ICONS: Record<string, string> = {
   "/consultations": "✉",
 };
 
-export function AppSidebar({ open, onNavigate }: AppSidebarProps) {
+export function AppSidebar({ open, onNavigate, role }: AppSidebarProps) {
   const pathname = usePathname();
+  const navItems = DASHBOARD_NAV.filter(
+    (item) => item.href !== "/settings" || canImportContent(role),
+  );
 
   return (
     <aside
@@ -43,18 +49,23 @@ export function AppSidebar({ open, onNavigate }: AppSidebarProps) {
 
         <nav className={css.nav}>
           <ul className={css.list}>
-            {DASHBOARD_NAV.map((item) => {
+            {navItems.map((item) => {
               const active =
                 item.href === "/"
                   ? pathname === "/"
                   : pathname === item.href ||
                     pathname.startsWith(`${item.href}/`);
+              const isSoon = item.status === "soon";
 
               return (
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className={clsx(css.link, active && css.active)}
+                    className={clsx(
+                      css.link,
+                      active && css.active,
+                      isSoon && css.linkSoon,
+                    )}
                     aria-current={active ? "page" : undefined}
                     onClick={onNavigate}
                     tabIndex={open ? undefined : -1}
@@ -62,7 +73,14 @@ export function AppSidebar({ open, onNavigate }: AppSidebarProps) {
                     <span className={css.icon} aria-hidden>
                       {NAV_ICONS[item.href] ?? "•"}
                     </span>
-                    <span className={css.label}>{item.label}</span>
+                    <span className={css.labelRow}>
+                      <span className={css.label}>{item.label}</span>
+                      {isSoon ? (
+                        <span className={css.soonBadge} aria-label="Незабаром">
+                          скоро
+                        </span>
+                      ) : null}
+                    </span>
                   </Link>
                 </li>
               );

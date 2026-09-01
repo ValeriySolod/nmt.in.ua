@@ -1,0 +1,48 @@
+.topicTrainerMistakeReview {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 750;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 12px;
+}
+
+.item {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, crimson 25%, var(--border));
+  border-radius: 10px;
+  background: color-mix(in srgb, crimson 6%, var(--surface));
+}
+
+.itemName {
+  margin: 0;
+  font-weight: 700;
+}
+
+.itemText {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.comment {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}

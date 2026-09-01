@@ -11,6 +11,8 @@ git clone https://github.com/tony-kobs/nmt.in.ua.git
 cd nmt.in.ua
 git checkout dev
 npm install
+cp .env.example .env.local
+# заповни DB_* та секрети (див. розділ «Змінні середовища»)
 npm run dev
 ```
 
@@ -25,9 +27,74 @@ npm run dev
 | `npm run dev` | локальна розробка |
 | `npm run build` | продакшен-збірка (Webpack) |
 | `npm start` | запуск зібраного сайту через `server.js` |
+| `npm test` | unit-тести (192 кейси) |
 | `npm run lint` | перевірка ESLint |
+| `npm run reset-demo-student` | скинути сесії/результати demo-student (`user_id=1`) |
 
-## Стилі
+## Що вже працює end-to-end
+
+| Область | Статус |
+| --- | --- |
+| Дашборд | Header, Sidebar, SEO, `RecentResults` у sidebar |
+| Імпорт контенту | `POST /api/import` + форма на `/settings` |
+| Тест за темою | `/` → `/session/[id]` — звичайний (10 завдань) і **Ultimate** (20 завдань, 20 хв) |
+| Результати | `/results` — таблиця прогресу + рекомендації |
+| Сесії | `/sessions` — історія, auto-сесії, mentor-сесії (Старт/×) |
+| Рекомендації | після finish, на `/results`, при reopen завершеної сесії |
+| Граф тем | `theme_connections` → наступна тема в рекомендаціях |
+| Mentor API | `POST /api/admin/sessions` — planned-сесія від ментора |
+| Auth | `/login`, ролі student/teacher/admin, cookie-сесія, демо-акаунти |
+
+**Заглушки (скоро):** `/simulator`, `/problems`, `/materials`, `/consultations`.
+
+## Змінні середовища
+
+Скопіюй `.env.example` → `.env.local` (локально) або `.env.production` (хостинг). Секрети не комітити.
+
+| Змінна | Призначення |
+| --- | --- |
+| `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` | MySQL |
+| `NEXT_PUBLIC_SITE_URL` | canonical URL для SEO |
+| `CONTENT_IMPORT_API_KEY` | Bearer для `POST /api/import` і Server Action імпорту (admin) |
+| `ADMIN_API_KEY` | Bearer для `POST /api/admin/sessions` |
+| `SESSION_SECRET` | HMAC-секрет для cookie `nmt_session` (обовʼязково в production) |
+| `MAX_BODY_BYTES` | ліміт тіла HTTP на `server.js` (дефолт 8388608) |
+
+Якщо `CONTENT_IMPORT_API_KEY` або `ADMIN_API_KEY` не задані — відповідні ендпоінти відхиляють **усі** запити (`401`, fail-closed).
+
+### Демо-облікові записи
+
+Після першого входу таблиця `app_users` створюється автоматично (legacy `users` на хостингу не чіпаємо). Для перевірки:
+
+| Логін | Пароль | Роль | Можливості |
+| --- | --- | --- | --- |
+| `demo-student` | `demo123` | Учень | тести, результати, власні сесії |
+| `demo-teacher` | `demo123` | Викладач | + призначення mentor-сесій на `/sessions` |
+| `demo-admin` | `demo123` | Адмін | + імпорт контенту на `/settings` |
+
+На `/login` є кнопки швидкого входу для кожної ролі.
+
+**Скидання демо-даних:** старі тести до auth писалися з `user_id=1`, тому вони «прилипають» до demo-student. Очистити:
+
+```bash
+npm run reset-demo-student
+```
+
+Або SQL: `scripts/sql/002_reset_demo_student.sql`.
+
+## Auth (модуль 5)
+
+| Що | Де |
+| --- | --- |
+| Вхід / вихід | `/login`, cookie `nmt_session` |
+| Ролі | `student`, `teacher`, `admin` |
+| Облікові записи | таблиця `app_users` (окремо від legacy `users` на хостингу) |
+| Middleware | редірект на `/login`; `/settings` — лише admin |
+| Mentor UI | `/sessions` — панель призначення для teacher/admin |
+
+`userId` у Server Actions береться з сесії (`requireUserId()`), не з FormData.
+
+---
 
 Нові компоненти стилізуйте через CSS Modules:
 
@@ -39,6 +106,8 @@ import styles from "./page.module.css";
 
 Глобальний reset і змінні кольорів — у `src/app/globals.css`. Tailwind не використовуємо.
 
+Спільні UI-примітиви: `PageFrame`, `ModeTabs` у `src/components/dashboard/` та `src/components/ui/`.
+
 ## Гілки
 
 Працюйте тільки з `dev`. У `main` напряму пушити не можна.
@@ -46,139 +115,87 @@ import styles from "./page.module.css";
 ```bash
 git checkout dev
 git pull origin dev
-```
-
-Нову задачу краще робити в окремій гілці від `dev`:
-
-```bash
-git checkout dev
-git pull origin dev
 git checkout -b feature/коротка-назва
 ```
 
-Після роботи:
-
-```bash
-git add .
-git commit -m "Коротко, навіщо зміна"
-git push -u origin HEAD
-```
-
-Далі відкрийте pull request:
-
-1. `feature/...` → `dev` — перевірка й код-рев’ю
-2. `dev` → `main` — реліз на прод
-
-Мердж у `main` можливий лише через pull request.
+Після роботи — commit, push, PR `feature/...` → `dev`, потім `dev` → `main` для релізу.
 
 ## Деплой
 
-Два середовища:
-
 | Середовище | Як оновлюється |
 | --- | --- |
-| **Vercel** | автоматично з push/merge у `main` (Production branch у Vercel) |
-| **nmt.in.ua (ukraine.com.ua)** | **вручну** через SSH — GitHub Actions на хостинг **не** деплоїть |
+| **Vercel** | автоматично з push/merge у `main` |
+| **nmt.in.ua (ukraine.com.ua)** | **вручну** через SSH — `bash scripts/manual-deploy-hosting.sh` |
 
-`dev` ні на Vercel production, ні на shared-хостинг сам по собі не виводить прод.
+Env на shared-хостингу: `/home/levelhst/nmt.in.ua/www/.env.production`.
 
-### Vercel (`main`)
-
-Стандартна практика: `main` = production, preview — з PR/гілок. У Vercel задай env (`DB_*`, `NEXT_PUBLIC_SITE_URL`, `CONTENT_IMPORT_API_KEY` тощо) у Project → Settings → Environment Variables.
-
-### Shared-хостинг (ручний деплой)
-
-З локальної машини (Git Bash), після merge у `main`:
-
-```bash
-bash scripts/manual-deploy-hosting.sh
-```
-
-Скрипт: `npm ci` + `npm run build` локально → архів по SSH → `npm install --omit=dev` на сервері → restart Node.  
-`.env.production` на сервері зберігається (backup/restore); у git не комітити.
-
-Env на хості: `/home/levelhst/nmt.in.ua/www/.env.production` (копія з `.env.example` / локального `.env.local`).
-
-`deploy.sh` на сервері — допоміжний скрипт для перезапуску; основний шлях — `scripts/manual-deploy-hosting.sh`.
+Обовʼязкові секрети на prod: `DB_*`, `SESSION_SECRET`, `CONTENT_IMPORT_API_KEY`, `ADMIN_API_KEY`, `MAX_BODY_BYTES=8388608`.
 
 ## Безпека (без Cloudflare)
 
-На shared-хостингу немає root/iptables і edge-WAF. Об’ємний L3/L4 DDoS цим репо не зупинити — захист у коді відсікає сканери, флуд з одного IP і типові probe-шляхи до важкого рендеру Next.
+На shared-хостингу немає edge-WAF. У коді:
 
-У коді вже є:
+- `server.js` — `.env.production`, ліміт тіла (`MAX_BODY_BYTES`, дефолт 8 МіБ), early `413`
+- `src/middleware.ts` — rate limit + auth guard + блок probe-шляхів
+- `next.config.ts` — security headers (CSP, HSTS, …)
+- Bearer auth на admin/import API — `timingSafeEqual` після SHA-256
 
-- `server.js` — early `404` на шкідливі path, ліміт тіла (`MAX_BODY_BYTES`, за замовчуванням 64 КіБ), ліміт одночасних запитів, коротші HTTP-таймаути
-- `src/middleware.ts` — rate limit по IP + блок probe-шляхів (`429` / `404`)
-- `next.config.ts` — security headers (CSP, HSTS, frame deny, nosniff)
-- `public/robots.txt` — Disallow для типових CMS-шляхів
-
-**`MAX_BODY_BYTES` і `POST /api/import`.** Дефолтний ліміт тіла запиту в `server.js` (64 КіБ) значно менший за максимальний **заявлений** розмір запиту імпорту (8 МіБ, `MAX_REQUEST_BODY_BYTES` у `src/modules/content-import/schema.ts`) — на проді сервер відхилить будь-який реальний CSV/JSON-імпорт ще до Next.js. Щоб імпорт працював, задайте в оточенні хостингу `MAX_BODY_BYTES` **не нижче** за `MAX_REQUEST_BODY_BYTES` — рекомендоване значення `8388608` (8 МіБ), див. `.env.example`. Це число вже включає запас під multipart-накладні витрати (межі частин, заголовки) понад ліміт **вмісту файлів** (5 МіБ, `MAX_TOTAL_UPLOAD_BYTES`) — саме тому 8 МіБ і 5 МіБ це два різних ліміти на різних рівнях, а не одне й те саме число. Ліміт сервера має завжди залишатися не нижчим за ліміт застосунку; занижувати існуючий захист `server.js` не можна.
-
-### Чеклист панелі хостингу (adm.tools)
-
-1. Node.js → для nmt.in.ua увімкни **«Додавати до команди запуску параметри»**: `--port=3000 --host=127.1.10.37`
-2. SSL для домену увімкнений
-3. SSH: лише ключі; пароль вимкни, якщо панель дозволяє
-4. `.env.production` у `www/` — так (не в git); секрети не комітити
-5. Якщо в тарифі є ModSecurity / антибот / ліміт запитів — увімкни для сайту
-6. Після «Перезапустити» перевір, що https://nmt.in.ua відкривається (не 502)
+`MAX_BODY_BYTES` має бути ≥ `MAX_REQUEST_BODY_BYTES` (8 МіБ у `src/modules/content-import/schema.ts`). Скрипт `scripts/ensure-hosting-max-body-bytes.sh` виставляє `8388608` на хостингу.
 
 ## Структура
 
 ```
-src/app/                      маршрути дашборду + SEO metadata
-src/app/api/import/           HTTP API для модуля 2 (імпорт)
-src/components/dashboard/     Header, Sidebar, stubs UI
-src/constants/                навігація, SEO
-src/modules/content-import/   модуль 2 — CSV/JSON → БД
-src/modules/testing/          модуль 3 — тести / тренажери
-src/modules/recommendations/  модуль 4 — рекомендації
-src/middleware.ts             rate limit + блок probe-шляхів
-src/lib/security.ts           спільні правила path/IP
-public/                       статичні файли, decor/, robots.txt
-server.js                     hardened запуск на хостингу
-deploy.sh                     перезапуск на хостингу (допоміжний)
-scripts/manual-deploy-hosting.sh  ручний деплой на ukraine.com.ua
+src/app/                          маршрути дашборду + SEO metadata
+src/app/login/                    форма входу + демо-кнопки
+src/app/api/import/               POST імпорт CSV/JSON
+src/app/api/admin/sessions/       POST призначення mentor-сесії
+src/app/session/[id]/             інтерактивний тренажер
+src/components/auth/              LoginForm, DemoLoginButtons
+src/components/dashboard/         Header, Sidebar, PageFrame, таблиці
+src/components/testing/           TopicTrainer, summary, Ultimate UI
+src/constants/                    навігація, SEO
+src/modules/auth/                 app_users, cookie-сесія, ролі
+src/modules/content-import/     модуль 2 — CSV/JSON → БД
+src/modules/testing/              модуль 3 — сесії, відповіді, finish
+src/modules/recommendations/      модуль 4 — stats, rules, graph, persist
+src/modules/sessions/             список сесій, createMentorSession
+src/modules/admin/                auth для admin API
+src/middleware.ts                 rate limit + auth + probe paths
+server.js                         hardened запуск на хостингу
+scripts/manual-deploy-hosting.sh  ручний деплой
+scripts/reset-demo-student.mjs    очистка сесій demo-student
+scripts/sql/                      DDL для app_users, reset demo
+docs/mentor-tasks.md              pending-таски для команди
 ```
 
-## Модулі команди — куди підключатись
+## Архітектура
 
-Працюйте від `dev` у гілках `feat/...`. Тонкі сторінки в `src/app/` лише рендерять UI; бізнес-логіка — у `src/modules/*` (як у [nmt-test-frontend](https://github.com/tony-kobs/nmt-test-frontend): logic не в `app/`).
+- Тонкі сторінки в `src/app/` — лише рендер UI і metadata.
+- Бізнес-логіка — у `src/modules/*` (не в `app/`).
+- Server Actions для форм; HTTP API для machine-to-machine (імпорт, admin).
 
-### 2. Імпорт (CSV, JSON → БД)
+---
+
+## Модуль 2. Імпорт (CSV, JSON → БД)
 
 | Що | Де |
 | --- | --- |
-| Методи парсингу й запису в БД | [`src/modules/content-import/`](src/modules/content-import/) — `runContentImport` (фасад), `importToDatabase` |
-| HTTP endpoint | [`src/app/api/import/route.ts`](src/app/api/import/route.ts) — `POST` (реалізовано) |
-| UI (опційно) | майбутня адмінка або блок у `/settings` |
+| Парсинг і запис у БД | [`src/modules/content-import/`](src/modules/content-import/) |
+| HTTP API | [`src/app/api/import/route.ts`](src/app/api/import/route.ts) |
+| UI | [`/settings`](src/app/settings/page.tsx) — CSV/JSON через Server Action |
 
-Реалізовано: `POST /api/import` приймає `multipart/form-data` у двох форматах.
-
-#### Авторизація
-
-Ендпоінт захищений спільним секретом. Кожен запит має містити:
+### Авторизація
 
 ```
 Authorization: Bearer <CONTENT_IMPORT_API_KEY>
 ```
 
-`CONTENT_IMPORT_API_KEY` задається лише на сервері (`.env.local`, ніколи не в репозиторії — див. `.env.example`). Якщо змінна не задана, ендпоінт відхиляє **всі** запити (`401`) — це навмисний fail-closed режим, а не тимчасовий обхід авторизації. Порівняння секрету — константного часу (`crypto.timingSafeEqual` після SHA-256), секрет ніколи не потрапляє в логи чи відповідь.
+### Формат запиту — рівно одна форма
 
-#### Формат запиту — рівно одна форма
+- **CSV:** поля `themes`, `themeConnections`, `quizTasks`
+- **JSON:** поля `file` + `format=json`
 
-Дозволено рівно один із двох наборів полів форми, без домішування, дублікатів чи зайвих полів:
-
-- CSV: лише `themes`, `themeConnections`, `quizTasks`;
-- JSON: лише `file` і `format`.
-
-Запит, що змішує поля обох форматів, дублює поле, або містить невідоме поле — відхиляється (`400`).
-
-#### Формат 1 — три CSV-файли
-
-Поля форми: `themes`, `themeConnections`, `quizTasks` (кожне — файл).
-
-Точні заголовки колонок (порядок важливий):
+Заголовки CSV:
 
 ```
 themes.csv:            id,name,description,ord
@@ -194,109 +211,125 @@ curl -X POST http://localhost:3000/api/import \
   -F "quizTasks=@quiz_tasks.csv;type=text/csv"
 ```
 
-#### Формат 2 — один JSON-файл
-
-Поля форми: `file` (JSON-файл) + `format=json`.
-
-Схема документа (ключі об'єктів збігаються з назвами колонок БД):
+JSON-схема:
 
 ```json
 {
   "themes": [{ "id": 1, "name": "...", "description": "...", "ord": 1 }],
   "themeConnections": [{ "id": 1, "vertex_start": 1, "vertex_finish": 2 }],
-  "quizTasks": [
-    {
-      "id": 1,
-      "name": "...",
-      "task_text": "...",
-      "theme_id": 1,
-      "answer_1": "...",
-      "answer_2": "...",
-      "answer_3": "...",
-      "answer_4": "...",
-      "right_answer_n": 1,
-      "comments": "..."
-    }
-  ]
+  "quizTasks": [{ "id": 1, "name": "...", "task_text": "...", "theme_id": 1, "answer_1": "...", "answer_2": "...", "answer_3": "...", "answer_4": "...", "right_answer_n": 1, "comments": "..." }]
 }
 ```
 
+### Коди відповіді
+
+| Код | Причина |
+| --- | --- |
+| `200` | успішний імпорт |
+| `400` | валідація / некоректна форма |
+| `401` | немає або невірний Bearer |
+| `413` | перевищено ліміт тіла (8 МіБ) або файлів (5 МіБ) |
+| `415` | непідтримуваний формат |
+| `500` | помилка сервера/БД (без витоку деталей) |
+
+Запис — одна транзакція: `themes → theme_connections → quiz_tasks`.
+
+---
+
+## Модуль 3. Тести + тренажери
+
+| Що | Де |
+| --- | --- |
+| Старт topic-test | `startTopicTest`, `startTopicTestAction` — [`src/modules/testing/`](src/modules/testing/) |
+| Planned-сесії | `startPlannedSession` — auto/mentor рядки на `/sessions` |
+| Тренажер | [`TopicTrainer`](src/components/testing/TopicTrainer/) на `/session/[id]` |
+| Ultimate | 20 завдань, 20 хв, без підказок до кінця, розбір помилок |
+| Симулятор НМТ | `/simulator` — **заглушка** (`startNmtSimulator` ще не реалізовано) |
+| Задачник | `/problems` — **заглушка** |
+
+Режими на головній (`/`):
+
+- **Звичайний** — до 10 випадкових завдань, миттєвий розбір після кожної відповіді.
+- **Ultimate** — до 20 завдань, таймер 20 хв, підсумок і розбір помилок наприкінці.
+
+```ts
+import {
+  startTopicTest,
+  checkAnswer,
+  finishTrainerSession,
+} from "@/modules/testing";
+```
+
+---
+
+## Модуль 4. Рекомендації
+
+| Що | Де |
+| --- | --- |
+| Статистика учня | `getStudentTopicStats` |
+| Правила | `recommendNextActions`, `recommendNextActionsForStats` |
+| Граф тем | `getThemeConnectionsForThemes` — ребра `vertex_start → vertex_finish` |
+| Auto-сесії | `persistRecommendations` — planned `session_type=2` |
+| Mentor-сесії | `createMentorSession` + admin API — `session_type=3` |
+| UI | `/results`, після finish, reopen completed `/session/[id]` |
+
+Правила (скорочено): слабкі теми → повторний тест; невипробувані → спробувати; освоєна тема A за графом → тест теми B; 2+ слабких → консультація; усе solid → симулятор.
+
+### Admin API — призначення mentor-сесії
+
+```
+POST /api/admin/sessions
+Authorization: Bearer <ADMIN_API_KEY>
+Content-Type: application/json
+
+{ "userId": 1, "themeId": 2 }
+```
+
+Відповідь: `{ "ok": true, "sessionId": 42, "created": true }` (`201`) або `created: false` якщо planned mentor-сесія вже існує (`200`).
+
 ```bash
-curl -X POST http://localhost:3000/api/import \
-  -H "Authorization: Bearer $CONTENT_IMPORT_API_KEY" \
-  -F "file=@import.json;type=application/json" \
-  -F "format=json"
+curl -X POST http://localhost:3000/api/admin/sessions \
+  -H "Authorization: Bearer $ADMIN_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"userId": 1, "themeId": 2}'
 ```
 
-#### Відповідь і коди статусів
-
-- `200` — успішний імпорт: `{ "ok": true, "inserted": {...}, "updated": {...}, "totalInserted": n, "totalUpdated": n }`.
-- `400` — некоректний вхід або помилка валідації (включно зі змішаним форматом, дублікатами чи невідомими полями форми): `{ "ok": false, "errors": ["..."] }`.
-- `401` — відсутній або невірний `Authorization: Bearer` (включно з випадком, коли `CONTENT_IMPORT_API_KEY` не задано на сервері).
-- `413` — перевищено один із двох лімітів розміру. Перевіряється двічі: спочатку за заголовком `Content-Length` — до розбору `multipart/form-data` — проти `MAX_REQUEST_BODY_BYTES` (8 МіБ, `src/modules/content-import/schema.ts`), який покриває весь HTTP-body **разом** з multipart-межами й заголовками частин; а потім, після розбору, за фактичним сумарним розміром завантажених файлів (`File.size`) проти `MAX_TOTAL_UPLOAD_BYTES` (5 МіБ, той самий файл) — саме цей ліміт стосується лише вмісту файлів. Другу перевірку не можна пропустити навіть коли перша пройшла, бо `Content-Length` може бути відсутнім або невірним.
-- `415` — непідтримуваний формат запиту (немає розпізнаваних полів форми, або `format` вказано неправильно).
-- `500` — неочікувана помилка сервера/БД. Клієнту повертається лише фіксоване повідомлення; SQL, хост, креденшли й інші деталі ніколи не потрапляють ані у відповідь, ані в логи (`console.error` пише лише операцію й санітизовану категорію помилки).
-
-Валідація перед відкриттям з'єднання з БД: обов'язкові/невідомі поля, цілочисельні значення в межах `INT` MySQL (-2147483648..2147483647), довжина рядків (varchar(100)/varchar(50)), `right_answer_n` у діапазоні 1..4, унікальність id у межах датасету, порожні датасети, а також посилання `quiz_tasks.theme_id` і `theme_connections.vertex_start/vertex_finish` — мають вказувати на тему, яка вже існує в БД або імпортується в цьому ж запиті.
-
-Первинні `id` та посилання на теми (`theme_id`, `vertex_start`, `vertex_finish`) мають бути додатними (`>= 1`). `ord` — порядковий номер теми; `0` є коректним значенням (перша позиція), недопустимі лише від'ємні числа.
-
-Увесь запис виконується в одній транзакції в порядку `themes → theme_connections → quiz_tasks` (upsert за первинним ключем); будь-яка помилка валідації чи SQL відкочує весь імпорт повністю.
-
-Код: [`src/modules/content-import/`](src/modules/content-import/) (`csv.ts`, `json.ts`, `validate.ts`, `db.ts`, `auth.ts`, `logging.ts`, `index.ts`) + [`src/app/api/import/route.ts`](src/app/api/import/route.ts).
-
-### 3. Тести + інтерактивні тренажери
-
-| Що | Де |
-| --- | --- |
-| Логіка сесій / перевірка відповідей | [`src/modules/testing/index.ts`](src/modules/testing/index.ts) — `startTopicTest`, `checkAnswer`, `finishTrainerSession`, `startNmtSimulator` |
-| UI «Тест за темою» | [`src/components/dashboard/TopicTestStart`](src/components/dashboard/TopicTestStart) + маршрут `/` |
-| Симулятор НМТ | маршрут `/simulator` → замінити `StubPage` на ваш UI |
-| Задачник | маршрут `/problems` → замінити `StubPage` |
-
-Як зробити:
-
-1. На «Старт» у `TopicTestStart` викликати `startTopicTest({ topicId, questionCount })`.
-2. Рендер питання / відповідей — нові компоненти в `src/components/testing/` (або `trainers/`).
-3. Після відповіді — `checkAnswer`; по завершенню — `finishTrainerSession`.
-4. Повний НМТ — `startNmtSimulator` і сторінка `/simulator`.
-5. Банк питань береться з БД (після модуля 2) або тимчасово з `src/data/`.
+На `/sessions` рядок з «Ким створено» = **Ментор**, статус **Заплановано**, кнопки **Старт** / **×**.
 
 ```ts
-import { startTopicTest, checkAnswer, finishTrainerSession } from "@/modules/testing";
+import {
+  recommendNextActionsForStats,
+  persistRecommendations,
+} from "@/modules/recommendations";
 ```
 
-### 4. Рекомендаційна система
+---
 
-| Що | Де |
-| --- | --- |
-| Алгоритм рекомендацій | [`src/modules/recommendations/index.ts`](src/modules/recommendations/index.ts) — `recommendNextActions`, `persistRecommendations` |
-| Показ у UI | `/results`, `/sessions`; опційно `RecentResults` |
-| Тригер | після `finishTrainerSession` (модуль 3) передати snapshot результатів |
+## Мапа маршрутів
 
-Як зробити:
-
-1. Зібрати `StudentResultSnapshot` (бали по темах, час).
-2. `recommendNextActions(snapshot)` → список дій з `href` на існуючі маршрути (`/`, `/materials`, `/consultations`, …).
-3. Відрендерити картки рекомендацій на `/results` (і за потреби `/sessions`).
-4. За потреби зберегти через `persistRecommendations` на сервері.
-
-```ts
-import { recommendNextActions } from "@/modules/recommendations";
-
-const actions = recommendNextActions(snapshot);
-```
-
-### Швидка мапа маршрутів → модуль
-
-| Маршрут | Заглушка зараз | Модуль |
+| Маршрут | Стан | Модуль |
 | --- | --- | --- |
-| `/` | `TopicTestStart` | 3 (+ дані з 2) |
-| `/results` | `StubPage` | 4 (+ статистика з 3) |
-| `/sessions` | `StubPage` | 3, 4 |
-| `/simulator` | `StubPage` | 3 |
-| `/materials` | `StubPage` | контент (після 2) |
-| `/problems` | `StubPage` | 3 |
-| `/settings` | `StubPage` | профіль; опційно UI імпорту (2) |
-| `/consultations` | `StubPage` | дія з рекомендацій (4) |
-| `POST /api/import` | реалізовано | 2 |
+| `/login` | Вхід, демо-акаунти | 5 |
+| `/` | Topic-test (standard + Ultimate) | 3 |
+| `/session/[id]` | TopicTrainer | 3 |
+| `/results` | Таблиця + рекомендації | 3, 4 |
+| `/sessions` | Історія + planned (auto/mentor) + mentor assign | 3, 4, 5 |
+| `/settings` | Імпорт контенту (admin) | 2, 5 |
+| `/simulator` | Заглушка | 3 (pending) |
+| `/problems` | Заглушка | 3 (pending) |
+| `/materials` | Заглушка | контент |
+| `/consultations` | Заглушка | 4 (дія) |
+| `POST /api/import` | Реалізовано | 2 |
+| `POST /api/admin/sessions` | Реалізовано | 4 |
+
+---
+
+## Тести
+
+```bash
+npm test
+```
+
+Покриття: import API, content-import validation/DB, testing actions, auth (password, session token), recommendations (включно з графом), sessions, admin API, SEO helpers.
+
+Pending-робота для команди — [`docs/mentor-tasks.md`](docs/mentor-tasks.md).

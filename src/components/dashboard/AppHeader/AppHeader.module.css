@@ -175,6 +175,17 @@
   letter-spacing: 0.02em;
 }
 
+.profileForm {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.profileForm .profile {
+  cursor: pointer;
+}
+
 .profile {
   display: inline-flex;
   align-items: center;

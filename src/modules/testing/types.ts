@@ -42,6 +42,8 @@ export type SessionTasksResult = {
   sessionStatus: number;
   tasks: SessionTask[];
   summary: TrainerSessionSummary | null;
+  /** Planned auto/mentor row without task mappings yet — needs `startPlannedSession`. */
+  isPlannedWithoutTasks?: boolean;
 };
 
 /** Verified `tasks2session.status` values (team DB). */
@@ -61,11 +63,30 @@ export type CheckAnswerActionState =
 
 export type FinishTrainerSessionActionInput = {
   sessionId: number;
+  markUnansweredAsIncorrect?: boolean;
+  capTimeSec?: number;
 };
 
+import type { RecommendedAction } from "@/modules/recommendations";
+
 export type FinishTrainerSessionActionState =
-  | { status: "success"; summary: TrainerSessionSummary }
+  | {
+      status: "success";
+      summary: TrainerSessionSummary;
+      recommendations: RecommendedAction[];
+    }
   | { status: "error"; message: string };
+
+export type SkipTaskAnswerActionInput = {
+  sessionId: number;
+  mappingId: number;
+};
+
+export type SkipTaskAnswerActionState =
+  | { status: "success"; correct: false }
+  | { status: "error"; message: string };
+
+export type { TopicTestMode } from "./topicTestMode";
 
 export type MarkSessionStartedActionInput = {
   sessionId: number;

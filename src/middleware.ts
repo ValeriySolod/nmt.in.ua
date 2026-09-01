@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { clientIp, isBlockedPath } from "@/lib/security";
+import {
+  SESSION_COOKIE_NAME,
+  verifySessionToken,
+} from "@/modules/auth/sessionToken";
 
 type Bucket = { count: number; resetAt: number };
 
@@ -41,7 +45,50 @@ function limitFor(pathname: string): number {
   return LIMIT_PAGE;
 }
 
-export function middleware(request: NextRequest) {
+const PUBLIC_PATHS = ["/login"];
+
+function isPublicPath(pathname: string): boolean {
+  return PUBLIC_PATHS.some(
+    (path) => pathname === path || pathname.startsWith(`${path}/`),
+  );
+}
+
+function requiresAdmin(pathname: string): boolean {
+  return pathname === "/settings" || pathname.startsWith("/settings/");
+}
+
+async function authGuard(request: NextRequest): Promise<NextResponse | null> {
+  const { pathname } = request.nextUrl;
+
+  if (
+    isPublicPath(pathname) ||
+    pathname.startsWith("/api/") ||
+    pathname.startsWith("/_next")
+  ) {
+    return null;
+  }
+
+  const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
+  const session = token ? await verifySessionToken(token) : null;
+
+  if (!session) {
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = "/login";
+    loginUrl.searchParams.set("next", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  if (requiresAdmin(pathname) && session.role !== "admin") {
+    const home = request.nextUrl.clone();
+    home.pathname = "/";
+    home.search = "";
+    return NextResponse.redirect(home);
+  }
+
+  return null;
+}
+
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (isBlockedPath(pathname)) {
@@ -73,6 +120,9 @@ export function middleware(request: NextRequest) {
       },
     });
   }
+
+  const authResponse = await authGuard(request);
+  if (authResponse) return authResponse;
 
   return NextResponse.next();
 }

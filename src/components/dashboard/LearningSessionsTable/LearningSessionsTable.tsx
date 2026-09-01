@@ -85,7 +85,7 @@ export function LearningSessionsTable({ rows }: LearningSessionsTableProps) {
           Сесій поки немає. Запустіть тест на головній сторінці.
         </p>
       ) : (
-        <div className={css.tableWrap}>
+        <div className={css.tableWrap} tabIndex={0} aria-label="Таблиця сесій, прокручуйте горизонтально">
           <table className={css.table}>
             <thead>
               <tr>
@@ -112,14 +112,14 @@ export function LearningSessionsTable({ rows }: LearningSessionsTableProps) {
                   <td>{formatPercent(row.percent)}</td>
                   <td>{formatDurationSeconds(row.timeSec)}</td>
                   <td>{formatTimePerTask(row.timePerTaskSec)}</td>
-                  <td>{row.startTimeLabel}</td>
-                  <td>{row.createdByLabel}</td>
-                  <td>
+                  <td className={css.startTimeCell}>{row.startTimeLabel}</td>
+                  <td className={css.createdByCell}>{row.createdByLabel}</td>
+                  <td className={css.statusCell}>
                     <span className={clsx(statusClass(row.status))}>
                       {row.statusLabel}
                     </span>
                   </td>
-                  <td>
+                  <td className={css.actionsCell}>
                     <SessionActions row={row} />
                   </td>
                 </tr>
@@ -130,8 +130,8 @@ export function LearningSessionsTable({ rows }: LearningSessionsTableProps) {
       )}
 
       <p className={css.hint}>
-        Заплановані сесії «Авто» / «Ментор» зʼявляться після модуля
-        рекомендацій.
+        Заплановані сесії «Авто» зʼявляються після завершення тестів зі
+        слабким результатом. Натисніть «Старт», щоб розпочати.
       </p>
     </section>
   );

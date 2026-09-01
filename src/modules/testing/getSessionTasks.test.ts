@@ -75,13 +75,13 @@ test("getSessionTasks joins tasks2session with quiz_tasks and maps client-safe f
   const rows = Array.from({ length: 10 }, (_, i) => makeRow(i + 1));
   const { connection, calls, isReleased } = makeConnection(rows);
 
-  const result = await getSessionTasks(42, {
+  const result = await getSessionTasks(42, 1, {
     getConnection: async () => connection,
   });
 
   assert.equal(calls.length, 2);
   assert.match(calls[0]!.sql, /FROM task_sessions ts/);
-  assert.deepEqual(calls[0]?.params, [42]);
+  assert.deepEqual(calls[0]?.params, [42, 1]);
   assert.match(calls[1]!.sql, /FROM tasks2session t2s/);
   assert.match(calls[1]!.sql, /INNER JOIN quiz_tasks qt ON qt\.id = t2s\.task_id/);
   assert.match(calls[1]!.sql, /WHERE t2s\.session_id = \?/);
@@ -113,12 +113,30 @@ test("getSessionTasks joins tasks2session with quiz_tasks and maps client-safe f
   assert.doesNotMatch(serialized, /comments/);
 });
 
-test("getSessionTasks throws session_not_found when no rows are returned", async () => {
+test("getSessionTasks returns planned-without-tasks marker for empty planned sessions", async () => {
+  const { connection } = makeConnection([], {
+    ...makeSessionHeader(),
+    session_status: 3,
+    tasks_number: 10,
+  });
+
+  const result = await getSessionTasks(99, 1, {
+    getConnection: async () => connection,
+  });
+
+  assert.equal(result.sessionId, 99);
+  assert.equal(result.sessionStatus, 3);
+  assert.deepEqual(result.tasks, []);
+  assert.equal(result.summary, null);
+  assert.equal(result.isPlannedWithoutTasks, true);
+});
+
+test("getSessionTasks throws session_not_found when session exists but has no tasks and is not planned", async () => {
   const { connection } = makeConnection([]);
 
   await assert.rejects(
     () =>
-      getSessionTasks(99, {
+      getSessionTasks(99, 1, {
         getConnection: async () => connection,
       }),
     (error: unknown) =>
@@ -139,7 +157,7 @@ test("getSessionTasks hydrates the summary when the session is already completed
     theme_name: " Синтаксис ",
   });
 
-  const result = await getSessionTasks(7, {
+  const result = await getSessionTasks(7, 1, {
     getConnection: async () => connection,
   });
 

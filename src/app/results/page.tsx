@@ -2,10 +2,10 @@ import { RecommendedActionsPanel } from "@/components/dashboard/RecommendedActio
 import { TopicResultsTable } from "@/components/dashboard/TopicResultsTable";
 import { getNavItem } from "@/constants/navigation";
 import { createPageMetadata } from "@/constants/seo";
+import { requireUserId } from "@/modules/auth";
 import { getStudentTopicStats } from "@/modules/recommendations/getStudentTopicStats";
-import { recommendNextActions } from "@/modules/recommendations";
+import { recommendNextActionsForStats } from "@/modules/recommendations";
 import { getTopicResults } from "@/modules/results/getTopicResults";
-
 const item = getNavItem("/results");
 
 export const metadata = createPageMetadata({
@@ -15,11 +15,11 @@ export const metadata = createPageMetadata({
 });
 
 export default async function ResultsPage() {
+  const userId = await requireUserId();
   const [rows, topicStats] = await Promise.all([
-    getTopicResults(),
-    getStudentTopicStats(),
-  ]);
-  const actions = recommendNextActions(topicStats);
+    getTopicResults(userId),
+    getStudentTopicStats(userId),
+  ]);  const actions = await recommendNextActionsForStats(topicStats);
 
   return (
     <>
