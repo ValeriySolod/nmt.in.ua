@@ -11,7 +11,9 @@ export type RecentResultItem = {
   score: number;
 };
 
-const SQL_RECENT_RESULTS = `
+/** MySQL prepared statements do not accept `LIMIT ?` — inline a validated int. */
+function buildRecentResultsSql(limit: number): string {
+  return `
   SELECT
     ts.id,
     t.name AS theme_name,
@@ -22,8 +24,9 @@ const SQL_RECENT_RESULTS = `
   WHERE ts.user_id = ?
     AND ts.session_status = ?
   ORDER BY ts.id DESC
-  LIMIT ?
+  LIMIT ${limit}
 `;
+}
 
 type RecentResultRow = {
   id: number;
@@ -51,11 +54,10 @@ export async function getRecentResults(
 
   const connection = await deps.getConnection();
   try {
-    const rows = await connection.query<RecentResultRow>(SQL_RECENT_RESULTS, [
-      userId,
-      SESSION_STATUS_COMPLETED,
-      safeLimit,
-    ]);
+    const rows = await connection.query<RecentResultRow>(
+      buildRecentResultsSql(safeLimit),
+      [userId, SESSION_STATUS_COMPLETED],
+    );
 
     return rows.map((row) => ({
       sessionId: row.id,

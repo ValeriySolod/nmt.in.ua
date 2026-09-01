@@ -11,7 +11,8 @@ test("getRecentResults maps completed sessions to sidebar items", async () => {
     beginTransaction: async () => {},
     query: async (sql, params) => {
       assert.match(sql, /session_status = \?/);
-      assert.deepEqual(params, [1, SESSION_STATUS_COMPLETED, 4]);
+      assert.match(sql, /LIMIT 4\b/);
+      assert.deepEqual(params, [1, SESSION_STATUS_COMPLETED]);
       return [
         {
           id: 99,
