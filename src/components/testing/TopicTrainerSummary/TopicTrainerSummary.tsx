@@ -1,16 +1,22 @@
 "use client";
 
 import Link from "next/link";
+import { RecommendedActionsPanel } from "@/components/dashboard/RecommendedActionsPanel";
 import { formatPercent } from "@/modules/results/types";
+import type { RecommendedAction } from "@/modules/recommendations";
 import { formatDurationSeconds } from "@/modules/sessions/types";
 import type { TrainerSessionSummary } from "@/modules/testing/types";
 import css from "./TopicTrainerSummary.module.css";
 
 type TopicTrainerSummaryProps = {
   summary: TrainerSessionSummary;
+  recommendations?: RecommendedAction[];
 };
 
-export function TopicTrainerSummary({ summary }: TopicTrainerSummaryProps) {
+export function TopicTrainerSummary({
+  summary,
+  recommendations = [],
+}: TopicTrainerSummaryProps) {
   return (
     <section className={css.summary} aria-labelledby="trainer-summary-title">
       <header className={css.intro}>
@@ -38,6 +44,13 @@ export function TopicTrainerSummary({ summary }: TopicTrainerSummaryProps) {
           <dd>{formatDurationSeconds(summary.timeSec)}</dd>
         </div>
       </dl>
+
+      <RecommendedActionsPanel
+        actions={recommendations}
+        title="Рекомендуємо далі"
+        lead="Наступні кроки на основі вашого результату."
+        className={css.recommendations}
+      />
 
       <nav className={css.links} aria-label="Що далі">
         <Link href="/results" className={css.primary}>

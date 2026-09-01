@@ -47,7 +47,8 @@ test("recommendNextActions: untried topic -> topic-test recommendation to try it
     (a) => a.title === "Спробуйте тему «Тема B»",
   );
   assert.ok(untriedAction);
-  assert.equal(untriedAction?.href, "/");
+  assert.equal(untriedAction?.href, "/?theme=2");
+  assert.equal(untriedAction?.themeId, 2);
 });
 
 test("recommendNextActions: all topics solid and attempted -> recommends simulator", () => {
@@ -70,6 +71,20 @@ test("recommendNextActions: two or more weak topics -> recommends consultation",
   );
 
   assert.ok(result.some((a) => a.type === "consultation"));
+});
+
+test("recommendNextActions: actions are limited to top 3 by priority", () => {
+  const result = recommendNextActions(
+    stats([
+      { themeId: 1, themeName: "A", overallPercent: 10, lastPercent: 10 },
+      { themeId: 2, themeName: "B", overallPercent: 15, lastPercent: 15 },
+      { themeId: 3, themeName: "C", overallPercent: 20, lastPercent: 20 },
+      { themeId: 4, themeName: "D", overallPercent: null, lastPercent: null },
+      { themeId: 5, themeName: "E", overallPercent: null, lastPercent: null },
+    ]),
+  );
+
+  assert.equal(result.length, 3);
 });
 
 test("recommendNextActions: actions are always sorted by priority ascending", () => {

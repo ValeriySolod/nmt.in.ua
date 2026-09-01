@@ -21,12 +21,18 @@ export type RecommendedAction = {
   reason: string;
   href: string;
   priority: number;
+  /** Present for `topic-test` actions — used when persisting planned auto sessions. */
+  themeId?: number;
 };
+
+export { persistRecommendations } from "./persistRecommendations";
+export type { PersistRecommendationsResult } from "./persistRecommendations";
 
 const WEAK_THRESHOLD = 40;
 const SOLID_THRESHOLD = 70;
 const MAX_WEAK_ACTIONS = 2;
 const MAX_UNTRIED_ACTIONS = 2;
+const MAX_RECOMMENDATIONS = 3;
 
 /** Побудувати список наступних дій для учня на основі поточної статистики по темах. */
 export function recommendNextActions(
@@ -52,9 +58,10 @@ export function recommendNextActions(
   for (const topic of weak.slice(0, MAX_WEAK_ACTIONS)) {
     actions.push({
       type: "topic-test",
+      themeId: topic.themeId,
       title: `Повторіть тему «${topic.themeName}»`,
       reason: `Останній результат: ${Math.round(topic.overallPercent as number)}%. Варто попрактикуватися ще раз.`,
-      href: "/",
+      href: `/?theme=${topic.themeId}`,
       priority: priority++,
     });
   }
@@ -62,9 +69,20 @@ export function recommendNextActions(
   for (const topic of untried.slice(0, MAX_UNTRIED_ACTIONS)) {
     actions.push({
       type: "topic-test",
+      themeId: topic.themeId,
       title: `Спробуйте тему «${topic.themeName}»`,
       reason: "Ви ще не проходили цю тему — почніть з короткого тесту.",
-      href: "/",
+      href: `/?theme=${topic.themeId}`,
+      priority: priority++,
+    });
+  }
+
+  if (weak.length >= 2) {
+    actions.push({
+      type: "consultation",
+      title: "Запишіться на консультацію",
+      reason: "Декілька тем потребують додаткової підтримки викладача.",
+      href: "/consultations",
       priority: priority++,
     });
   }
@@ -93,16 +111,6 @@ export function recommendNextActions(
     });
   }
 
-  if (weak.length >= 2) {
-    actions.push({
-      type: "consultation",
-      title: "Запишіться на консультацію",
-      reason: "Декілька тем потребують додаткової підтримки викладача.",
-      href: "/consultations",
-      priority: priority++,
-    });
-  }
-
   if (actions.length === 0) {
     actions.push({
       type: "problems",
@@ -113,16 +121,7 @@ export function recommendNextActions(
     });
   }
 
-  return actions.sort((a, b) => a.priority - b.priority);
-}
-
-/** Зберегти / закешувати рекомендації (сервер). */
-export async function persistRecommendations(
-  userId: string,
-  actions: RecommendedAction[],
-): Promise<void> {
-  void userId;
-  void actions;
-  // TODO(module-4): запис у БД
-  throw new Error("persistRecommendations: ще не реалізовано (модуль 4)");
+  return actions
+    .sort((a, b) => a.priority - b.priority)
+    .slice(0, MAX_RECOMMENDATIONS);
 }

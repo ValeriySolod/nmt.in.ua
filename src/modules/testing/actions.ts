@@ -1,6 +1,12 @@
 "use server";
 
 import {
+  recommendNextActions,
+  persistRecommendations,
+} from "@/modules/recommendations";
+import { getStudentTopicStats } from "@/modules/recommendations/getStudentTopicStats";
+import { revalidatePath } from "next/cache";
+import {
   checkAnswer,
   CheckAnswerError,
   type CheckAnswerResult,
@@ -144,6 +150,14 @@ export async function checkAnswerAction(
 
 type FinishTrainerSessionActionDeps = {
   finishTrainerSession: typeof finishTrainerSession;
+  getStudentTopicStats: typeof getStudentTopicStats;
+  persistRecommendations: typeof persistRecommendations;
+};
+
+const defaultFinishDeps: FinishTrainerSessionActionDeps = {
+  finishTrainerSession,
+  getStudentTopicStats,
+  persistRecommendations,
 };
 
 /**
@@ -152,14 +166,30 @@ type FinishTrainerSessionActionDeps = {
  */
 export async function finishTrainerSessionAction(
   input: FinishTrainerSessionActionInput,
-  deps: FinishTrainerSessionActionDeps = { finishTrainerSession },
+  deps: FinishTrainerSessionActionDeps = defaultFinishDeps,
 ): Promise<FinishTrainerSessionActionState> {
   try {
     const summary = await deps.finishTrainerSession({
       userId: DEMO_USER_ID,
       sessionId: input.sessionId,
     });
-    return { status: "success", summary };
+
+    const stats = await deps.getStudentTopicStats(DEMO_USER_ID);
+    const rawActions = recommendNextActions(stats);
+    const { actions: recommendations } = await deps.persistRecommendations(
+      DEMO_USER_ID,
+      rawActions,
+    );
+
+    try {
+      revalidatePath("/results");
+      revalidatePath("/sessions");
+      revalidatePath("/");
+    } catch {
+      // No-op outside a Next.js request context (unit tests).
+    }
+
+    return { status: "success", summary, recommendations };
   } catch (error) {
     if (error instanceof FinishTrainerSessionError) {
       switch (error.code) {

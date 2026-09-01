@@ -195,7 +195,7 @@ test("checkAnswerAction maps not_found to a client-safe error without the answer
   assert.doesNotMatch(JSON.stringify(state), /right_answer_n/);
 });
 
-test("finishTrainerSessionAction uses the trusted demo user and returns the summary", async () => {
+test("finishTrainerSessionAction uses the trusted demo user and returns summary with recommendations", async () => {
   let capturedInput: unknown;
   const summary = {
     sessionId: 5,
@@ -206,6 +206,16 @@ test("finishTrainerSessionAction uses the trusted demo user and returns the summ
     themeId: 3,
     themeName: "Відмінювання",
   };
+  const recommendations = [
+    {
+      type: "simulator" as const,
+      title: "Спробуйте повний симулятор НМТ",
+      reason:
+        "Всі теми опрацьовані на хорошому рівні — час перевірити результат у форматі УЦОЯО.",
+      href: "/simulator",
+      priority: 1,
+    },
+  ];
   const spy = (async (input: unknown) => {
     capturedInput = input;
     return summary;
@@ -213,11 +223,34 @@ test("finishTrainerSessionAction uses the trusted demo user and returns the summ
 
   const state = await finishTrainerSessionAction(
     { sessionId: 5 },
-    { finishTrainerSession: spy },
+    {
+      finishTrainerSession: spy,
+      getStudentTopicStats: async () => ({
+        topicScores: [
+          {
+            themeId: 1,
+            themeName: "A",
+            overallPercent: 90,
+            lastPercent: 90,
+          },
+          {
+            themeId: 2,
+            themeName: "B",
+            overallPercent: 75,
+            lastPercent: 75,
+          },
+        ],
+        hasCompletedSessions: true,
+      }),
+      persistRecommendations: async (_userId, actions) => ({
+        actions,
+        createdSessionIds: [],
+      }),
+    },
   );
 
   assert.deepEqual(capturedInput, { userId: 1, sessionId: 5 });
-  assert.deepEqual(state, { status: "success", summary });
+  assert.deepEqual(state, { status: "success", summary, recommendations });
 });
 
 test("finishTrainerSessionAction maps unfinished to a client-safe error", async () => {
@@ -227,7 +260,17 @@ test("finishTrainerSessionAction maps unfinished to a client-safe error", async 
 
   const state = await finishTrainerSessionAction(
     { sessionId: 5 },
-    { finishTrainerSession: spy },
+    {
+      finishTrainerSession: spy,
+      getStudentTopicStats: async () => ({
+        topicScores: [],
+        hasCompletedSessions: false,
+      }),
+      persistRecommendations: async (_userId, actions) => ({
+        actions,
+        createdSessionIds: [],
+      }),
+    },
   );
 
   assert.deepEqual(state, {

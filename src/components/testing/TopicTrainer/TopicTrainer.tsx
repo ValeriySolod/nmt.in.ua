@@ -15,6 +15,7 @@ import {
   type SessionTaskAnswer,
   type TrainerSessionSummary,
 } from "@/modules/testing/types";
+import type { RecommendedAction } from "@/modules/recommendations";
 import { TopicTrainerSummary } from "@/components/testing/TopicTrainerSummary";
 import { useSessionTimer } from "./useSessionTimer";
 import css from "./TopicTrainer.module.css";
@@ -55,6 +56,9 @@ export function TopicTrainer({
   const [summary, setSummary] = useState<TrainerSessionSummary | null>(
     initialSummary,
   );
+  const [recommendations, setRecommendations] = useState<RecommendedAction[]>(
+    [],
+  );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const elapsedSec = useSessionTimer({
     sessionId,
@@ -77,7 +81,9 @@ export function TopicTrainer({
     tasks.every((task) => resultsByMappingId[task.mappingId] !== undefined);
 
   if (summary) {
-    return <TopicTrainerSummary summary={summary} />;
+    return (
+      <TopicTrainerSummary summary={summary} recommendations={recommendations} />
+    );
   }
 
   if (!currentTask) {
@@ -136,6 +142,7 @@ export function TopicTrainer({
     }
 
     setSummary(result.summary);
+    setRecommendations(result.recommendations);
   }
 
   return (

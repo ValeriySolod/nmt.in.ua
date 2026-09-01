@@ -1,5 +1,8 @@
 import type { SqlConnection } from "@/lib/db/mysql";
-import { SESSION_STATUS_COMPLETED } from "@/modules/sessions/types";
+import {
+  SESSION_STATUS_COMPLETED,
+  SESSION_STATUS_PLANNED,
+} from "@/modules/sessions/types";
 import { toTrainerSessionSummary } from "./finishTrainerSession";
 import type { SessionTask, SessionTasksResult } from "./types";
 
@@ -142,6 +145,15 @@ export async function getSessionTasks(
       ]);
 
       if (rows.length === 0) {
+        if (header.session_status === SESSION_STATUS_PLANNED) {
+          return {
+            sessionId: validSessionId,
+            sessionStatus: header.session_status,
+            tasks: [],
+            summary: null,
+            isPlannedWithoutTasks: true,
+          };
+        }
         throw new GetSessionTasksError(
           "Session not found or has no linked tasks.",
           "session_not_found",

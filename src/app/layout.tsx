@@ -15,6 +15,7 @@ import {
 } from "@/constants/seo";
 import { JsonLd } from "@/components/seo";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
+import { getRecentResults } from "@/modules/results/getRecentResults";
 import "./globals.css";
 
 /** MySQL env is for runtime on the host; skip static prerender that hits the DB at build. */
@@ -64,12 +65,14 @@ const structuredData = [
   buildWebApplicationJsonLd(),
 ];
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const recentResults = await getRecentResults();
+
   return (
     <html lang="uk">
       <body>
         <JsonLd data={structuredData} />
-        <DashboardShell>{children}</DashboardShell>
+        <DashboardShell recentResults={recentResults}>{children}</DashboardShell>
       </body>
     </html>
   );

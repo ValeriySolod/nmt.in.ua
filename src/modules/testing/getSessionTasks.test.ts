@@ -113,7 +113,25 @@ test("getSessionTasks joins tasks2session with quiz_tasks and maps client-safe f
   assert.doesNotMatch(serialized, /comments/);
 });
 
-test("getSessionTasks throws session_not_found when no rows are returned", async () => {
+test("getSessionTasks returns planned-without-tasks marker for empty planned sessions", async () => {
+  const { connection } = makeConnection([], {
+    ...makeSessionHeader(),
+    session_status: 3,
+    tasks_number: 10,
+  });
+
+  const result = await getSessionTasks(99, {
+    getConnection: async () => connection,
+  });
+
+  assert.equal(result.sessionId, 99);
+  assert.equal(result.sessionStatus, 3);
+  assert.deepEqual(result.tasks, []);
+  assert.equal(result.summary, null);
+  assert.equal(result.isPlannedWithoutTasks, true);
+});
+
+test("getSessionTasks throws session_not_found when session exists but has no tasks and is not planned", async () => {
   const { connection } = makeConnection([]);
 
   await assert.rejects(

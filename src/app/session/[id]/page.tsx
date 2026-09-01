@@ -1,10 +1,15 @@
 import { notFound } from "next/navigation";
 import { TopicTrainer } from "@/components/testing/TopicTrainer";
 import { createPageMetadata } from "@/constants/seo";
+import { DEMO_USER_ID } from "@/modules/sessions/types";
 import {
   getSessionTasks,
   GetSessionTasksError,
 } from "@/modules/testing/getSessionTasks";
+import {
+  startPlannedSession,
+  StartPlannedSessionError,
+} from "@/modules/testing/startPlannedSession";
 import type { SessionTasksResult } from "@/modules/testing/types";
 
 type SessionPageProps = {
@@ -35,6 +40,22 @@ async function loadSession(sessionId: number): Promise<SessionTasksResult> {
   }
 }
 
+async function activatePlannedSession(sessionId: number): Promise<void> {
+  try {
+    await startPlannedSession({ sessionId, userId: DEMO_USER_ID });
+  } catch (error) {
+    if (error instanceof StartPlannedSessionError) {
+      if (error.code === "not_found" || error.code === "invalid_input") {
+        notFound();
+      }
+      if (error.code === "insufficient_tasks") {
+        throw error;
+      }
+    }
+    throw error;
+  }
+}
+
 export default async function SessionPage({ params }: SessionPageProps) {
   const { id } = await params;
   const sessionId = Number(id);
@@ -43,7 +64,12 @@ export default async function SessionPage({ params }: SessionPageProps) {
     notFound();
   }
 
-  const session = await loadSession(sessionId);
+  let session = await loadSession(sessionId);
+
+  if (session.isPlannedWithoutTasks) {
+    await activatePlannedSession(sessionId);
+    session = await loadSession(sessionId);
+  }
 
   return (
     <TopicTrainer

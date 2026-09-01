@@ -5,12 +5,14 @@ import clsx from "clsx";
 import { AppHeader } from "@/components/dashboard/AppHeader";
 import { AppSidebar } from "@/components/dashboard/AppSidebar";
 import { RecentResults } from "@/components/dashboard/RecentResults";
+import type { RecentResultItem } from "@/modules/results/getRecentResults";
 import css from "./DashboardShell.module.css";
 
 const STORAGE_KEY = "nmt-sidebar-open";
 
 type DashboardShellProps = {
   children: React.ReactNode;
+  recentResults: RecentResultItem[];
 };
 
 const listeners = new Set<() => void>();
@@ -48,7 +50,7 @@ function setSidebarOpen(next: boolean | ((prev: boolean) => boolean)) {
   emitSidebarChange();
 }
 
-export function DashboardShell({ children }: DashboardShellProps) {
+export function DashboardShell({ children, recentResults }: DashboardShellProps) {
   const sidebarOpen = useSyncExternalStore(
     subscribeSidebar,
     readSidebarOpen,
@@ -107,7 +109,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
 
         <div className={css.content}>
           <main className={css.main}>{children}</main>
-          <RecentResults />
+          <RecentResults items={recentResults} />
         </div>
       </div>
     </div>
