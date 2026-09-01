@@ -6,7 +6,6 @@ import {
   SITE_NAME,
   SITE_SHORT_NAME,
   THEME_COLOR,
-  absoluteUrl,
 } from "@/constants/seo";
 
 export default function manifest(): MetadataRoute.Manifest {

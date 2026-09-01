@@ -26,14 +26,7 @@ function formatPercent(percent: number | null): string {
 }
 
 function statusClass(status: LearningSessionRow["status"]): string {
-  switch (status) {
-    case "completed":
-      return css.statusCompleted;
-    case "planned":
-      return css.statusPlanned;
-    default:
-      return css.statusInProgress;
-  }
+  return status === "completed" ? css.statusCompleted : css.statusPlanned;
 }
 
 function SessionActions({ row }: { row: LearningSessionRow }) {

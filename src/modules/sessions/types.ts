@@ -10,7 +10,7 @@ export const SESSION_TYPE_USER = 1;
 export const SESSION_TYPE_AUTO = 2;
 export const SESSION_TYPE_MENTOR = 3;
 
-export type SessionDisplayStatus = "completed" | "planned" | "in_progress";
+export type SessionDisplayStatus = "completed" | "planned";
 
 export type LearningSessionRow = {
   id: number;
@@ -56,15 +56,18 @@ export function sessionTimePerTask(
   return timeSec / tasksNumber;
 }
 
+/**
+ * The UI only distinguishes finished vs. not: any session that is not
+ * completed — whether it's system-planned (`SESSION_STATUS_PLANNED`) or a
+ * user-started session still missing answers/time — reads as "planned" and
+ * gets a start/continue action on `/sessions`.
+ */
 export function resolveSessionDisplayStatus(
   session: Pick<
     TaskSessionRecord,
     "session_status" | "tasks_number" | "right_number" | "time"
   >,
 ): SessionDisplayStatus {
-  if (session.session_status === SESSION_STATUS_PLANNED) {
-    return "planned";
-  }
   if (
     session.session_status === SESSION_STATUS_COMPLETED ||
     (session.tasks_number > 0 &&
@@ -73,7 +76,7 @@ export function resolveSessionDisplayStatus(
   ) {
     return "completed";
   }
-  return "in_progress";
+  return "planned";
 }
 
 export function sessionStatusLabel(status: SessionDisplayStatus): string {
@@ -82,8 +85,6 @@ export function sessionStatusLabel(status: SessionDisplayStatus): string {
       return "Виконано";
     case "planned":
       return "Заплановано";
-    default:
-      return "Створено";
   }
 }
 
