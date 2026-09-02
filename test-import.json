@@ -1,0 +1,31 @@
+{
+  "themes": [
+    {
+      "id": 99901,
+      "name": "Smoke test theme",
+      "description": "Temporary theme for import smoke test",
+      "ord": 999
+    }
+  ],
+  "themeConnections": [
+    {
+      "id": 99901,
+      "vertex_start": 99901,
+      "vertex_finish": 99901
+    }
+  ],
+  "quizTasks": [
+    {
+      "id": 99901,
+      "name": "Smoke test question",
+      "task_text": "2 + 2 = ?",
+      "theme_id": 99901,
+      "answer_1": "3",
+      "answer_2": "4",
+      "answer_3": "5",
+      "answer_4": "6",
+      "right_answer_n": 5,
+      "comments": "smoke test"
+    }
+  ]
+}
