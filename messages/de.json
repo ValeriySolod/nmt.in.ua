@@ -190,7 +190,16 @@
     "actions": "Aktionen",
     "start": "Start",
     "cancelSession": "Sitzung {id} abbrechen",
-    "hint": "Geplante „Auto“-Sitzungen erscheinen nach Tests mit einem schwachen Ergebnis. Klicke auf „Start“, um zu beginnen."
+    "hint": "Geplante „Auto“-Sitzungen erscheinen nach Tests mit einem schwachen Ergebnis. Klicke auf „Start“, um zu beginnen.",
+    "statuses": {
+      "completed": "Abgeschlossen",
+      "planned": "Geplant"
+    },
+    "createdByValues": {
+      "auto": "Auto",
+      "mentor": "Mentor",
+      "user": "Benutzer"
+    }
   },
   "LoginForm": {
     "kicker": "Anmelden",

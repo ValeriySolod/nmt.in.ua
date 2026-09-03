@@ -190,7 +190,16 @@
     "actions": "Actions",
     "start": "Start",
     "cancelSession": "Cancel session {id}",
-    "hint": "Planned “Auto” sessions appear after completing tests with a low result. Click “Start” to begin."
+    "hint": "Planned “Auto” sessions appear after completing tests with a low result. Click “Start” to begin.",
+    "statuses": {
+      "completed": "Completed",
+      "planned": "Planned"
+    },
+    "createdByValues": {
+      "auto": "Auto",
+      "mentor": "Mentor",
+      "user": "User"
+    }
   },
   "LoginForm": {
     "kicker": "Sign in",

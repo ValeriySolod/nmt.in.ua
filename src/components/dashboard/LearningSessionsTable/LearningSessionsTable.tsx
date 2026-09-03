@@ -114,10 +114,12 @@ export function LearningSessionsTable({ rows }: LearningSessionsTableProps) {
                   <td>{formatDurationSeconds(row.timeSec)}</td>
                   <td>{formatTimePerTask(row.timePerTaskSec)}</td>
                   <td className={css.startTimeCell}>{row.startTimeLabel}</td>
-                  <td className={css.createdByCell}>{row.createdByLabel}</td>
+                  <td className={css.createdByCell}>
+                    {t(`createdByValues.${row.createdBy}`)}
+                  </td>
                   <td className={css.statusCell}>
                     <span className={clsx(statusClass(row.status))}>
-                      {row.statusLabel}
+                      {t(`statuses.${row.status}`)}
                     </span>
                   </td>
                   <td className={css.actionsCell}>
