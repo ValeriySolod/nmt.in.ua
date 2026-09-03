@@ -1,5 +1,104 @@
 {
   "Dashboard": {
     "hideMenu": "Hide menu"
+  },
+  "Header": {
+    "hideSidebar": "Hide sidebar",
+    "showSidebar": "Show sidebar",
+    "hideMenu": "Hide menu",
+    "showMenu": "Show menu",
+    "goHome": "Go to homepage",
+    "tagline": "mathematics · practice · progress",
+    "logout": "log out",
+    "roles": {
+      "student": "Student",
+      "teacher": "Teacher",
+      "admin": "Admin"
+    }
+  },
+  "Sidebar": {
+    "ariaLabel": "Dashboard navigation",
+    "kicker": "Learning menu",
+    "hint": "Choose a section and practice consistently",
+    "soon": "soon",
+    "soonLabel": "Coming soon",
+    "footer": "Formulas at hand — progress ahead",
+    "nav": {
+      "home": "Test by selected topic",
+      "results": "Results by topic",
+      "sessions": "Learning sessions",
+      "simulator": "NMT Simulator",
+      "materials": "Learning materials",
+      "problems": "Problem bank",
+      "settings": "Settings",
+      "consultations": "Teacher consultations"
+    }
+  },
+  "RecentResults": {
+    "title": "Recent results",
+    "empty": "Results will appear after your first tests."
+  },
+  "Common": {
+    "soon": "Coming soon"
+  },
+  "RecommendedActions": {
+    "title": "Recommended actions",
+    "lead": "Next steps selected based on your current results.",
+    "empty": "Complete your first test to get recommendations.",
+    "goToTest": "Go to test",
+    "go": "Go"
+  },
+  "MentorAssign": {
+    "title": "Assign a mentor session",
+    "lead": "A teacher or admin can schedule a training session for a student. The session will appear in the student's list with the status “planned”.",
+    "student": "Student",
+    "topic": "Topic",
+    "saving": "Saving…",
+    "assign": "Assign",
+    "created": "Mentor session #{sessionId} has been created.",
+    "alreadyPlanned": "Mentor session #{sessionId} was already planned."
+  },
+  "StubPage": {
+    "soon": "Coming soon",
+    "developmentTitle": "Section under development",
+    "developmentDescription": "For now, you can practice on the home page: topic tests, Ultimate mode, and results are already available.",
+    "goToTest": "Go to topic test"
+  },
+  "Navigation": {
+    "simulator": {
+      "title": "NMT Simulator",
+      "description": "A full NMT simulation in the UCEQA format with a timer and scoring."
+    },
+    "materials": {
+      "title": "Learning materials",
+      "description": "Notes, formulas, and explanations for the topics covered in the certification test."
+    },
+    "problems": {
+      "title": "Problem bank",
+      "description": "A collection of problems for independent practice outside the test."
+    },
+    "consultations": {
+      "title": "Teacher consultations",
+      "description": "Book a consultation and communicate with teachers."
+    }
+  },
+  "TopicTestStart": {
+    "title": "Test by selected topic",
+    "leadStandard": "up to {count} random tasks with instant explanations.",
+    "leadUltimate": "up to {count} tasks, 20 minutes, with no hints until the end of the test.",
+    "noThemes": "There are currently no topics with tasks in the database. Add tasks by importing them on the settings page.",
+    "selectTopic": "Choose a topic",
+    "mode": "Mode",
+    "testMode": "Test mode",
+    "tasks": "Tasks",
+    "taskCount": "Tasks to complete: {count} of {total}",
+    "redirecting": "Opening the test…",
+    "loading": "Loading…",
+    "start": "Start",
+    "startUltimate": "Start Ultimate",
+    "modes": {
+      "standard": "Standard",
+      "ultimate": "Ultimate"
+    }
   }
 }

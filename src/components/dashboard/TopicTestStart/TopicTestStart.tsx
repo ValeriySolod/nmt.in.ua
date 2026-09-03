@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useActionState, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import clsx from "clsx";
@@ -24,11 +25,6 @@ import css from "./TopicTestStart.module.css";
 
 const INITIAL_STATE: StartTopicTestActionState = { status: "idle" };
 
-const MODE_OPTIONS = [
-  { id: "standard" as const, label: "Звичайний" },
-  { id: "ultimate" as const, label: "Ultimate", tone: "ultimate" as const },
-];
-
 function formatThemeLabel(index: number, theme: AvailableTopicTheme): string {
   return `${index + 1}. ${theme.name}`;
 }
@@ -39,7 +35,20 @@ type TopicTestStartProps = {
 };
 
 /** “Тест за обраною темою” — standard or Ultimate mode. */
-export function TopicTestStart({ themes, initialThemeId }: TopicTestStartProps) {
+export function TopicTestStart({
+  themes,
+  initialThemeId,
+}: TopicTestStartProps) {
+  const t = useTranslations("TopicTestStart");
+  const modeOptions = [
+    { id: "standard" as const, label: t("modes.standard") },
+    {
+      id: "ultimate" as const,
+      label: t("modes.ultimate"),
+      tone: "ultimate" as const,
+    },
+  ];
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const [state, formAction, pending] = useActionState(
@@ -64,8 +73,7 @@ export function TopicTestStart({ themes, initialThemeId }: TopicTestStartProps) 
     urlThemeId ?? initialThemeId,
   );
   const [overrideThemeId, setOverrideThemeId] = useState<number | null>(null);
-  const selectedThemeId =
-    overrideThemeId ?? derivedThemeId ?? themeIds[0] ?? 0;
+  const selectedThemeId = overrideThemeId ?? derivedThemeId ?? themeIds[0] ?? 0;
 
   const selectedTheme =
     themes.find((theme) => theme.id === selectedThemeId) ?? themes[0];
@@ -75,26 +83,26 @@ export function TopicTestStart({ themes, initialThemeId }: TopicTestStartProps) 
 
   return (
     <PageFrame
-      title="Тест за обраною темою"
+      title={t("title")}
       lead={
         <>
-          <strong>Звичайний</strong> — до {TOPIC_TEST_TASK_COUNT} випадкових
-          завдань з миттєвим розбором. <strong>Ultimate</strong> — до{" "}
-          {ULTIMATE_TASK_LIMIT} завдань, 20 хвилин, без підказок до кінця тесту.
+          <strong>{t("modes.standard")}</strong> —{" "}
+          {t("leadStandard", { count: TOPIC_TEST_TASK_COUNT })}{" "}
+          <strong>{t("modes.ultimate")}</strong> —{" "}
+          {t("leadUltimate", { count: ULTIMATE_TASK_LIMIT })}
         </>
       }
     >
       {!hasThemes ? (
         <p className={css.error} role="status">
-          Зараз немає тем із завданнями в базі. Додайте завдання через імпорт на
-          сторінці налаштувань.
+          {t("noThemes")}
         </p>
       ) : (
         <PagePanel className={css.panel}>
           <form className={css.controls} action={formAction}>
             <div className={css.fields}>
               <label className={css.field}>
-                <span className={css.label}>Обери тему</span>
+                <span className={css.label}>{t("selectTopic")}</span>
                 <select
                   className={css.select}
                   name="themeId"
@@ -114,13 +122,13 @@ export function TopicTestStart({ themes, initialThemeId }: TopicTestStartProps) 
 
               <div className={css.optionsRow}>
                 <div className={clsx(css.field, css.fieldMode)}>
-                  <span className={css.label}>Режим</span>
+                  <span className={css.label}>{t("mode")}</span>
                   <ModeTabs
                     value={mode}
                     onChange={setMode}
-                    options={MODE_OPTIONS}
+                    options={modeOptions}
                     disabled={controlsDisabled}
-                    ariaLabel="Режим тесту"
+                    ariaLabel={t("testMode")}
                     stretch
                     className={css.modeTabs}
                   />
@@ -128,10 +136,13 @@ export function TopicTestStart({ themes, initialThemeId }: TopicTestStartProps) 
                 </div>
 
                 <div className={clsx(css.field, css.fieldCount)}>
-                  <span className={css.label}>Завдань</span>
+                  <span className={css.label}>{t("tasks")}</span>
                   <div
                     className={css.countBadge}
-                    aria-label={`Пройти завдань: ${tasksToRun} з ${bankSize}`}
+                    aria-label={t("taskCount", {
+                      count: tasksToRun,
+                      total: bankSize,
+                    })}
                   >
                     <span className={css.countFraction}>
                       <span className={css.countNum}>{tasksToRun}</span>
@@ -147,16 +158,19 @@ export function TopicTestStart({ themes, initialThemeId }: TopicTestStartProps) 
 
             <button
               type="submit"
-              className={clsx(css.start, mode === "ultimate" && css.startUltimate)}
+              className={clsx(
+                css.start,
+                mode === "ultimate" && css.startUltimate,
+              )}
               disabled={controlsDisabled || tasksToRun === 0}
             >
               {isRedirecting
-                ? "Переходимо до тесту…"
+                ? t("redirecting")
                 : pending
-                  ? "Завантаження…"
+                  ? t("loading")
                   : mode === "ultimate"
-                    ? "Старт Ultimate"
-                    : "Старт"}
+                    ? t("startUltimate")
+                    : t("start")}
             </button>
           </form>
         </PagePanel>

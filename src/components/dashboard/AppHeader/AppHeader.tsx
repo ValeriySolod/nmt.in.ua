@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { SITE_NAME } from "@/constants/seo";
 import type { AuthUser } from "@/modules/auth/client";
-import { roleLabel, userInitials } from "@/modules/auth/client";
+import { userInitials } from "@/modules/auth/client";
 import { logoutActionFromHeader } from "@/modules/auth/actions";
 import { LanguageSwitcher } from "@/components/dashboard/LanguageSwitcher/LanguageSwitcher";
+import { useTranslations } from "next-intl";
 import css from "./AppHeader.module.css";
 
 type AppHeaderProps = {
@@ -19,6 +20,7 @@ export function AppHeader({
   sidebarOpen,
   user,
 }: AppHeaderProps) {
+  const t = useTranslations("Header");
   return (
     <header className={css.header}>
       <div className={css.wash} aria-hidden />
@@ -31,8 +33,8 @@ export function AppHeader({
           onClick={onToggleSidebar}
           aria-expanded={sidebarOpen}
           aria-controls="dashboard-sidebar"
-          aria-label={sidebarOpen ? "Сховати сайдбар" : "Показати сайдбар"}
-          title={sidebarOpen ? "Сховати меню" : "Показати меню"}
+          aria-label={sidebarOpen ? t("hideSidebar") : t("showSidebar")}
+          title={sidebarOpen ? t("hideMenu") : t("showMenu")}
         >
           <span className={css.toggleGlyph} data-open={sidebarOpen} aria-hidden>
             <i />
@@ -44,16 +46,14 @@ export function AppHeader({
         <Link
           href="/"
           className={css.brand}
-          aria-label={`${SITE_NAME} — на головну`}
+          aria-label={`${SITE_NAME} — ${t("goHome")}`}
         >
           <span className={css.logo} aria-hidden>
             <span className={css.logoEq}>∑</span>
           </span>
           <span className={css.brandCopy}>
             <span className={css.brandText}>{SITE_NAME}</span>
-            <span className={css.brandSub}>
-              математика · практика · прогрес
-            </span>
+            <span className={css.brandSub}>{t("tagline")}</span>
           </span>
         </Link>
 
@@ -63,14 +63,16 @@ export function AppHeader({
             <button
               type="submit"
               className={css.profile}
-              title={`${user.displayName} — вийти`}
+              title={`${user.displayName} — ${t("logout")}`}
             >
               <span className={css.avatar} aria-hidden>
                 {userInitials(user.displayName)}
               </span>
               <span className={css.profileMeta}>
                 <span className={css.profileName}>{user.displayName}</span>
-                <span className={css.profileRole}>{roleLabel(user.role)}</span>
+                <span className={css.profileRole}>
+                  {t(`roles.${user.role}`)}
+                </span>
               </span>
             </button>
           </form>

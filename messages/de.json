@@ -1,5 +1,104 @@
 {
   "Dashboard": {
     "hideMenu": "Menü ausblenden"
+  },
+  "Header": {
+    "hideSidebar": "Seitenleiste ausblenden",
+    "showSidebar": "Seitenleiste anzeigen",
+    "hideMenu": "Menü ausblenden",
+    "showMenu": "Menü anzeigen",
+    "goHome": "Zur Startseite",
+    "tagline": "Mathematik · Übung · Fortschritt",
+    "logout": "abmelden",
+    "roles": {
+      "student": "Schüler",
+      "teacher": "Lehrer",
+      "admin": "Admin"
+    }
+  },
+  "Sidebar": {
+    "ariaLabel": "Dashboard-Navigation",
+    "kicker": "Lernmenü",
+    "hint": "Wähle einen Bereich und übe regelmäßig",
+    "soon": "bald",
+    "soonLabel": "Demnächst",
+    "footer": "Formeln zur Hand — Fortschritt voraus",
+    "nav": {
+      "home": "Test zum ausgewählten Thema",
+      "results": "Ergebnisse nach Themen",
+      "sessions": "Lernsitzungen",
+      "simulator": "NMT-Simulator",
+      "materials": "Lernmaterialien",
+      "problems": "Aufgabenbank",
+      "settings": "Einstellungen",
+      "consultations": "Lehrerberatungen"
+    }
+  },
+  "RecentResults": {
+    "title": "Letzte Ergebnisse",
+    "empty": "Die Ergebnisse erscheinen nach deinen ersten Tests."
+  },
+  "Common": {
+    "soon": "Demnächst"
+  },
+  "RecommendedActions": {
+    "title": "Empfohlene Aktionen",
+    "lead": "Nächste Schritte basierend auf deinen aktuellen Ergebnissen.",
+    "empty": "Absolviere deinen ersten Test, um Empfehlungen zu erhalten.",
+    "goToTest": "Zum Test",
+    "go": "Öffnen"
+  },
+  "MentorAssign": {
+    "title": "Mentor-Sitzung zuweisen",
+    "lead": "Ein Lehrer oder Administrator kann eine Trainingseinheit für einen Schüler planen. Die Sitzung erscheint in der Liste des Schülers mit dem Status „geplant“.",
+    "student": "Schüler",
+    "topic": "Thema",
+    "saving": "Wird gespeichert…",
+    "assign": "Zuweisen",
+    "created": "Mentor-Sitzung #{sessionId} wurde erstellt.",
+    "alreadyPlanned": "Mentor-Sitzung #{sessionId} war bereits geplant."
+  },
+  "StubPage": {
+    "soon": "Demnächst",
+    "developmentTitle": "Bereich in Entwicklung",
+    "developmentDescription": "Übe vorerst auf der Startseite: Thementests, der Ultimate-Modus und die Ergebnisse sind bereits verfügbar.",
+    "goToTest": "Zum Thementest"
+  },
+  "Navigation": {
+    "simulator": {
+      "title": "NMT-Simulator",
+      "description": "Eine vollständige NMT-Simulation im UCEQA-Format mit Timer und Punktewertung."
+    },
+    "materials": {
+      "title": "Lernmaterialien",
+      "description": "Zusammenfassungen, Formeln und Erklärungen zu den Themen der Zertifizierungsprüfung."
+    },
+    "problems": {
+      "title": "Aufgabenbank",
+      "description": "Eine Aufgabensammlung zum selbstständigen Üben außerhalb des Tests."
+    },
+    "consultations": {
+      "title": "Lehrerberatungen",
+      "description": "Buche eine Beratung und tausche dich mit Lehrkräften aus."
+    }
+  },
+  "TopicTestStart": {
+    "title": "Test zum ausgewählten Thema",
+    "leadStandard": "bis zu {count} zufällige Aufgaben mit sofortiger Erklärung.",
+    "leadUltimate": "bis zu {count} Aufgaben, 20 Minuten, ohne Hinweise bis zum Ende des Tests.",
+    "noThemes": "Derzeit gibt es keine Themen mit Aufgaben in der Datenbank. Füge Aufgaben über den Import auf der Einstellungsseite hinzu.",
+    "selectTopic": "Thema auswählen",
+    "mode": "Modus",
+    "testMode": "Testmodus",
+    "tasks": "Aufgaben",
+    "taskCount": "Zu bearbeitende Aufgaben: {count} von {total}",
+    "redirecting": "Test wird geöffnet…",
+    "loading": "Wird geladen…",
+    "start": "Start",
+    "startUltimate": "Ultimate starten",
+    "modes": {
+      "standard": "Standard",
+      "ultimate": "Ultimate"
+    }
   }
 }

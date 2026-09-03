@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 import clsx from "clsx";
 import type { StudentOption } from "@/modules/auth/types";
 import {
@@ -23,6 +24,7 @@ export function MentorAssignPanel({
   students,
   defaultUserId,
 }: MentorAssignPanelProps) {
+  const t = useTranslations("MentorAssign");
   const [state, formAction, pending] = useActionState(
     assignMentorSessionAction,
     INITIAL,
@@ -35,17 +37,15 @@ export function MentorAssignPanel({
   return (
     <section className={css.panel} aria-labelledby="mentor-assign-title">
       <h2 id="mentor-assign-title" className={css.title}>
-        Призначити mentor-сесію
+        {t("title")}
       </h2>
-      <p className={css.lead}>
-        Викладач або адмін може запланувати тренування для учня. Сесія зʼявиться
-        у списку учня зі статусом «заплановано».
-      </p>
+
+      <p className={css.lead}>{t("lead")}</p>
 
       <form action={formAction} className={css.form}>
         <div className={css.row}>
           <label className={css.field}>
-            <span className={css.label}>Учень</span>
+            <span className={css.label}>{t("student")}</span>
             <select
               name="userId"
               className={css.select}
@@ -62,7 +62,7 @@ export function MentorAssignPanel({
           </label>
 
           <label className={css.field}>
-            <span className={css.label}>Тема</span>
+            <span className={css.label}>{t("topic")}</span>
             <select
               name="themeId"
               className={css.select}
@@ -79,7 +79,7 @@ export function MentorAssignPanel({
           </label>
 
           <button type="submit" className={css.submit} disabled={pending}>
-            {pending ? "Зберігаємо…" : "Призначити"}
+            {pending ? t("saving") : t("assign")}
           </button>
         </div>
       </form>
@@ -87,8 +87,8 @@ export function MentorAssignPanel({
       {state.status === "success" ? (
         <p className={clsx(css.alert, css.success)} role="status">
           {state.created
-            ? `Mentor-сесію #${state.sessionId} створено.`
-            : `Mentor-сесія #${state.sessionId} уже була запланована.`}
+            ? t("created", { sessionId: state.sessionId })
+            : t("alreadyPlanned", { sessionId: state.sessionId })}
         </p>
       ) : null}
 

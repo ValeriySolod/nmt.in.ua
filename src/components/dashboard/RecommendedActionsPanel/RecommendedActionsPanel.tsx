@@ -1,6 +1,8 @@
+"use client";
 import Link from "next/link";
 import clsx from "clsx";
 import type { RecommendedAction } from "@/modules/recommendations";
+import { useTranslations } from "next-intl";
 import css from "./RecommendedActionsPanel.module.css";
 
 const ACTION_ICONS: Record<RecommendedAction["type"], string> = {
@@ -20,10 +22,15 @@ type RecommendedActionsPanelProps = {
 
 export function RecommendedActionsPanel({
   actions,
-  title = "Рекомендовані дії",
-  lead = "Наступні кроки, підібрані на основі ваших поточних результатів.",
+  title,
+  lead,
   className,
 }: RecommendedActionsPanelProps) {
+  const t = useTranslations("RecommendedActions");
+
+  const resolvedTitle = title ?? t("title");
+
+  const resolvedLead = lead ?? t("lead");
   return (
     <section
       className={clsx(css.recommendedActions, className)}
@@ -31,22 +38,25 @@ export function RecommendedActionsPanel({
     >
       <header className={css.intro}>
         <h2 id="recommended-actions-title" className={css.title}>
-          {title}
+          {resolvedTitle}
         </h2>
-        <p className={css.lead}>{lead}</p>
+        <p className={css.lead}>{resolvedLead}</p>
       </header>
 
       {actions.length === 0 ? (
         <p className={css.empty} role="status">
-          Пройдіть перший тест, щоб отримати рекомендації.{" "}
+          {t("empty")}
           <Link href="/" className={css.emptyLink}>
-            Перейти до тесту
+            {t("goToTest")}
           </Link>
         </p>
       ) : (
         <ul className={css.list}>
           {actions.map((action, index) => (
-            <li key={`${action.type}-${action.themeId ?? index}`} className={css.card}>
+            <li
+              key={`${action.type}-${action.themeId ?? index}`}
+              className={css.card}
+            >
               <span className={css.icon} aria-hidden>
                 {ACTION_ICONS[action.type]}
               </span>
@@ -55,7 +65,7 @@ export function RecommendedActionsPanel({
                 <p className={css.reason}>{action.reason}</p>
               </div>
               <Link href={action.href} className={css.action}>
-                Перейти
+                {t("go")}
               </Link>
             </li>
           ))}

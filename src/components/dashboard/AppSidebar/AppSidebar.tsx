@@ -6,6 +6,7 @@ import clsx from "clsx";
 import { DASHBOARD_NAV } from "@/constants/navigation";
 import type { UserRole } from "@/modules/auth/client";
 import { canImportContent } from "@/modules/auth/client";
+import { useTranslations } from "next-intl";
 import css from "./AppSidebar.module.css";
 
 type AppSidebarProps = {
@@ -25,7 +26,19 @@ const NAV_ICONS: Record<string, string> = {
   "/consultations": "✉",
 };
 
+const NAV_KEYS: Record<string, string> = {
+  "/": "home",
+  "/results": "results",
+  "/sessions": "sessions",
+  "/simulator": "simulator",
+  "/materials": "materials",
+  "/problems": "problems",
+  "/settings": "settings",
+  "/consultations": "consultations",
+};
+
 export function AppSidebar({ open, onNavigate, role }: AppSidebarProps) {
+  const t = useTranslations("Sidebar");
   const pathname = usePathname();
   const navItems = DASHBOARD_NAV.filter(
     (item) => item.href !== "/settings" || canImportContent(role),
@@ -35,7 +48,7 @@ export function AppSidebar({ open, onNavigate, role }: AppSidebarProps) {
     <aside
       id="dashboard-sidebar"
       className={clsx(css.sidebar, open ? css.open : css.closed)}
-      aria-label="Навігація дашборду"
+      aria-label={t("ariaLabel")}
       aria-hidden={!open}
       inert={!open}
     >
@@ -43,8 +56,8 @@ export function AppSidebar({ open, onNavigate, role }: AppSidebarProps) {
         <div className={css.decor} aria-hidden />
 
         <div className={css.top}>
-          <p className={css.kicker}>Меню навчання</p>
-          <p className={css.hint}>Обирай розділ і тренуйся системно</p>
+          <p className={css.kicker}>{t("kicker")}</p>
+          <p className={css.hint}>{t("hint")}</p>
         </div>
 
         <nav className={css.nav}>
@@ -74,10 +87,15 @@ export function AppSidebar({ open, onNavigate, role }: AppSidebarProps) {
                       {NAV_ICONS[item.href] ?? "•"}
                     </span>
                     <span className={css.labelRow}>
-                      <span className={css.label}>{item.label}</span>
+                      <span className={css.label}>
+                        {t(`nav.${NAV_KEYS[item.href]}`)}
+                      </span>
                       {isSoon ? (
-                        <span className={css.soonBadge} aria-label="Незабаром">
-                          скоро
+                        <span
+                          className={css.soonBadge}
+                          aria-label={t("soonLabel")}
+                        >
+                          {t("soon")}
                         </span>
                       ) : null}
                     </span>
@@ -90,7 +108,7 @@ export function AppSidebar({ open, onNavigate, role }: AppSidebarProps) {
 
         <div className={css.footerCard} aria-hidden>
           <span className={css.footerFormula}>a² + b² = c²</span>
-          <span className={css.footerNote}>Формули поруч — прогрес попереду</span>
+          <span className={css.footerNote}>{t("footer")}</span>
         </div>
       </div>
     </aside>
