@@ -60,7 +60,7 @@ function SessionActions({ row }: { row: LearningSessionRow }) {
       </form>
       {state.status === "error" ? (
         <span className={css.error} role="alert">
-          {state.message}
+          {t(`errors.${state.code}`)}
         </span>
       ) : null}
     </div>

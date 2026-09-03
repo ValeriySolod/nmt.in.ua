@@ -56,7 +56,10 @@
     "saving": "Wird gespeichert…",
     "assign": "Zuweisen",
     "created": "Mentor-Sitzung #{sessionId} wurde erstellt.",
-    "alreadyPlanned": "Mentor-Sitzung #{sessionId} war bereits geplant."
+    "alreadyPlanned": "Mentor-Sitzung #{sessionId} war bereits geplant.",
+    "errors": {
+      "generic": "Die Mentor-Sitzung konnte nicht zugewiesen werden. Überprüfe das Thema und den Schüler."
+    }
   },
   "StubPage": {
     "soon": "Demnächst",
@@ -199,6 +202,12 @@
       "auto": "Auto",
       "mentor": "Mentor",
       "user": "Benutzer"
+    },
+    "errors": {
+      "notFound": "Sitzung nicht gefunden.",
+      "notCancelable": "Eine abgeschlossene Sitzung kann nicht abgebrochen werden.",
+      "invalidInput": "Ungültige Sitzungs-ID.",
+      "generic": "Die Sitzung konnte nicht abgebrochen werden. Bitte versuche es erneut."
     }
   },
   "LoginForm": {

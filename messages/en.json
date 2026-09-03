@@ -56,7 +56,10 @@
     "saving": "Saving…",
     "assign": "Assign",
     "created": "Mentor session #{sessionId} has been created.",
-    "alreadyPlanned": "Mentor session #{sessionId} was already planned."
+    "alreadyPlanned": "Mentor session #{sessionId} was already planned.",
+    "errors": {
+      "generic": "Could not assign the mentor session. Check the topic and student."
+    }
   },
   "StubPage": {
     "soon": "Coming soon",
@@ -199,6 +202,12 @@
       "auto": "Auto",
       "mentor": "Mentor",
       "user": "User"
+    },
+    "errors": {
+      "notFound": "Session not found.",
+      "notCancelable": "A completed session cannot be canceled.",
+      "invalidInput": "Invalid session ID.",
+      "generic": "Could not cancel the session. Please try again."
     }
   },
   "LoginForm": {

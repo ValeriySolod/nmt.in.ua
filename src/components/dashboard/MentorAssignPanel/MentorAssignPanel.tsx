@@ -94,7 +94,7 @@ export function MentorAssignPanel({
 
       {state.status === "error" ? (
         <p className={clsx(css.alert, css.error)} role="alert">
-          {state.message}
+          {t(`errors.${state.code}`)}
         </p>
       ) : null}
     </section>

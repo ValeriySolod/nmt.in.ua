@@ -56,7 +56,10 @@
     "saving": "Зберігаємо…",
     "assign": "Призначити",
     "created": "Mentor-сесію #{sessionId} створено.",
-    "alreadyPlanned": "Mentor-сесія #{sessionId} уже була запланована."
+    "alreadyPlanned": "Mentor-сесія #{sessionId} уже була запланована.",
+    "errors": {
+      "generic": "Не вдалося призначити mentor-сесію. Перевірте тему та учня."
+    }
   },
   "StubPage": {
     "soon": "Незабаром",
@@ -199,6 +202,12 @@
       "auto": "Авто",
       "mentor": "Ментор",
       "user": "Користувач"
+    },
+    "errors": {
+      "notFound": "Сесію не знайдено.",
+      "notCancelable": "Виконану сесію не можна скасувати.",
+      "invalidInput": "Невірний ідентифікатор сесії.",
+      "generic": "Не вдалося скасувати сесію. Спробуйте ще раз."
     }
   },
   "LoginForm": {
