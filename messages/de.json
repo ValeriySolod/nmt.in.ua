@@ -191,5 +191,30 @@
     "start": "Start",
     "cancelSession": "Sitzung {id} abbrechen",
     "hint": "Geplante „Auto“-Sitzungen erscheinen nach Tests mit einem schwachen Ergebnis. Klicke auf „Start“, um zu beginnen."
+  },
+  "LoginForm": {
+    "kicker": "Anmelden",
+    "title": "NMT-Lernbereich",
+    "lead": "Melde dich als Schüler, Lehrkraft oder Administrator an. Unten stehen Demo-Konten zum Testen zur Verfügung.",
+    "login": "Login",
+    "password": "Passwort",
+    "signingIn": "Anmeldung…",
+    "signIn": "Anmelden",
+    "demoTitle": "Demo-Konten",
+    "demoPassword": "Passwort für alle Demo-Konten:",
+    "roles": {
+      "student": "Schüler",
+      "teacher": "Lehrkraft",
+      "admin": "Admin"
+    },
+    "demoAccounts": {
+      "student": "Tests, Ergebnisse und Sitzungen",
+      "teacher": "Zuweisung von Mentor-Sitzungen",
+      "admin": "Content-Import und Einstellungen"
+    },
+    "errors": {
+      "requiredFields": "Gib Login und Passwort ein.",
+      "invalidCredentials": "Ungültiger Login oder ungültiges Passwort."
+    }
   }
 }
