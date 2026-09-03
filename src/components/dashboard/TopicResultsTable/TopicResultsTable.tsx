@@ -5,6 +5,7 @@ import {
   getScoreLevel,
   type TopicResultRow,
 } from "@/modules/results/types";
+import { getTranslations } from "next-intl/server";
 import css from "./TopicResultsTable.module.css";
 
 type TopicResultsTableProps = {
@@ -24,27 +25,26 @@ function metricClass(percent: number | null): string {
   }
 }
 
-export function TopicResultsTable({ rows }: TopicResultsTableProps) {
+export async function TopicResultsTable({ rows }: TopicResultsTableProps) {
+  const t = await getTranslations("TopicResultsTable");
   return (
     <section className={css.topicResults} aria-labelledby="topic-results-title">
       <header className={css.intro}>
         <h1 id="topic-results-title" className={css.title}>
-          Результати за темами
+          {t("title")}
         </h1>
-        <p className={css.lead}>
-          Прогрес по темах: загальний відсоток, останні спроби та середня
-          швидкість відповідей.
-        </p>
+
+        <p className={css.lead}>{t("lead")}</p>
       </header>
 
       <div className={css.tableWrap}>
         <table className={css.table}>
           <thead>
             <tr>
-              <th scope="col">Тема</th>
-              <th scope="col">Всього</th>
-              <th scope="col">Останні 3 тести</th>
-              <th scope="col">Швидкість, с/завдання</th>
+              <th scope="col">{t("topic")}</th>
+              <th scope="col">{t("overall")}</th>
+              <th scope="col">{t("lastThree")}</th>
+              <th scope="col">{t("speed")}</th>
             </tr>
           </thead>
           <tbody>
@@ -75,10 +75,7 @@ export function TopicResultsTable({ rows }: TopicResultsTableProps) {
         </table>
       </div>
 
-      <p className={css.hint}>
-        Порожні комірки — теми без завершених спроб. Кольори: зелений ≥70%,
-        жовтий 40–69%, червоний &lt;40%.
-      </p>
+      <p className={css.hint}>{t("hint")}</p>
     </section>
   );
 }

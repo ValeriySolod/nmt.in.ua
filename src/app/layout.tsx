@@ -17,6 +17,8 @@ import { JsonLd } from "@/components/seo";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { getCurrentUser } from "@/modules/auth";
 import { getRecentResults } from "@/modules/results/getRecentResults";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
 
 /** MySQL env is for runtime on the host; skip static prerender that hits the DB at build. */
@@ -67,6 +69,9 @@ const structuredData = [
 ];
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   const user = await getCurrentUser();
   let recentResults: Awaited<ReturnType<typeof getRecentResults>> = [];
   if (user) {
@@ -78,12 +83,14 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   }
 
   return (
-    <html lang="uk">
+    <html lang={locale}>
       <body>
-        <JsonLd data={structuredData} />
-        <DashboardShell recentResults={recentResults} user={user}>
-          {children}
-        </DashboardShell>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <JsonLd data={structuredData} />
+          <DashboardShell recentResults={recentResults} user={user}>
+            {children}
+          </DashboardShell>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

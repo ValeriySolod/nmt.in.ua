@@ -1,12 +1,22 @@
-import { getNavItem } from "@/constants/navigation";
+import { getTranslations } from "next-intl/server";
 import { StubPage } from "./StubPage";
 
+const NAV_KEYS = {
+  "/simulator": "simulator",
+  "/materials": "materials",
+  "/problems": "problems",
+  "/consultations": "consultations",
+} as const;
+
 type NavStubPageProps = {
-  href: string;
+  href: keyof typeof NAV_KEYS;
 };
 
-/** Renders a nav-backed stub screen in the shared dashboard style. */
-export function NavStubPage({ href }: NavStubPageProps) {
-  const item = getNavItem(href);
-  return <StubPage title={item.label} description={item.description} />;
+export async function NavStubPage({ href }: NavStubPageProps) {
+  const t = await getTranslations("Navigation");
+  const key = NAV_KEYS[href];
+
+  return (
+    <StubPage title={t(`${key}.title`)} description={t(`${key}.description`)} />
+  );
 }

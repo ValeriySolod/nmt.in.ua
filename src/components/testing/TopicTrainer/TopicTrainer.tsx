@@ -27,6 +27,7 @@ import type { RecommendedAction } from "@/modules/recommendations";
 import { TopicTrainerSummary } from "@/components/testing/TopicTrainerSummary";
 import { useCountdownTimer } from "./useCountdownTimer";
 import { useSessionTimer } from "./useSessionTimer";
+import { useLocale, useTranslations } from "next-intl";
 import css from "./TopicTrainer.module.css";
 
 type TopicTrainerProps = {
@@ -77,6 +78,8 @@ export function TopicTrainer({
   const [timedOut, setTimedOut] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const finishingRef = useRef(false);
+  const t = useTranslations("TopicTrainer");
+  const locale = useLocale() as "uk" | "en" | "de";
 
   const elapsedSec = useSessionTimer({
     sessionId,
@@ -93,6 +96,7 @@ export function TopicTrainer({
 
       const result = await finishTrainerSessionAction({
         sessionId,
+        locale,
         markUnansweredAsIncorrect: true,
         capTimeSec: options.timedOut ? ULTIMATE_DURATION_SEC : undefined,
       });
@@ -100,7 +104,7 @@ export function TopicTrainer({
 
       if (result.status !== "success") {
         finishingRef.current = false;
-        setErrorMessage(result.message);
+        setErrorMessage(t(`errors.finish.${result.code}`));
         return;
       }
 
@@ -109,7 +113,7 @@ export function TopicTrainer({
       setSummary(result.summary);
       setRecommendations(result.recommendations);
     },
-    [sessionId, summary],
+    [sessionId, summary, locale, t],
   );
 
   const handleTimeExpired = useCallback(() => {
@@ -189,7 +193,7 @@ export function TopicTrainer({
     setPendingMappingId(null);
 
     if (result.status !== "success") {
-      setErrorMessage(result.message);
+      setErrorMessage(t(`errors.checkAnswer.${result.code}`));
       return;
     }
 
@@ -218,7 +222,7 @@ export function TopicTrainer({
     setPendingMappingId(null);
 
     if (result.status !== "success") {
-      setErrorMessage(result.message);
+      setErrorMessage(t(`errors.skip.${result.code}`));
       return;
     }
 
@@ -239,11 +243,11 @@ export function TopicTrainer({
     setErrorMessage(null);
     setIsFinishing(true);
 
-    const result = await finishTrainerSessionAction({ sessionId });
+    const result = await finishTrainerSessionAction({ sessionId, locale });
     setIsFinishing(false);
 
     if (result.status !== "success") {
-      setErrorMessage(result.message);
+      setErrorMessage(t(`errors.finish.${result.code}`));
       return;
     }
 
@@ -252,11 +256,7 @@ export function TopicTrainer({
   }
 
   async function handleAbortUltimate() {
-    if (
-      !window.confirm(
-        "Завершити Ultimate-тестування? Невідповідені завдання будуть зараховані як помилки.",
-      )
-    ) {
+    if (!window.confirm(t("confirmAbortUltimate"))) {
       return;
     }
     await finishUltimate();
@@ -272,9 +272,9 @@ export function TopicTrainer({
       <header className={css.header}>
         <div>
           <h1 id="topic-trainer-title" className={css.title}>
-            {isUltimate ? "Ultimate — тест за темою" : "Тест за темою"}
+            {isUltimate ? t("ultimateTitle") : t("title")}
           </h1>
-          <p className={css.meta}>Сесія №{sessionId}</p>
+          <p className={css.meta}>{t("session", { id: sessionId })}</p>
         </div>
         <div className={css.badges}>
           {isUltimate ? (
@@ -285,23 +285,30 @@ export function TopicTrainer({
             role="timer"
             aria-label={
               isUltimate
-                ? `Залишилось ${timerLabel}`
-                : `Час ${timerLabel}`
+                ? t("remainingAria", { time: timerLabel })
+                : t("timeAria", { time: timerLabel })
             }
           >
-            {isUltimate ? "Залишилось" : "Час"}: {timerLabel}
+            {isUltimate ? t("remaining") : t("time")}: {timerLabel}
           </p>
           <p className={css.progress} aria-live="polite">
-            Завдання {currentIndex + 1} / {total}
+            {t("taskProgress", { current: currentIndex + 1, total })}
           </p>
         </div>
       </header>
 
-      <article className={css.card} aria-label={`Завдання ${currentIndex + 1}`}>
+      <article
+        className={css.card}
+        aria-label={t("taskAria", { number: currentIndex + 1 })}
+      >
         <h2 className={css.taskName}>{currentTask.name}</h2>
         <p className={css.taskText}>{currentTask.taskText}</p>
 
-        <div className={css.answers} role="group" aria-label="Варіанти відповіді">
+        <div
+          className={css.answers}
+          role="group"
+          aria-label={t("answerOptions")}
+        >
           {currentTask.answers.map((answer) => (
             <button
               key={answer.number}
@@ -332,7 +339,7 @@ export function TopicTrainer({
 
       {isPending ? (
         <p className={css.feedback} role="status">
-          {isUltimate ? "Зберігаємо відповідь…" : "Перевіряємо відповідь…"}
+          {isUltimate ? t("savingAnswer") : t("checkingAnswer")}
         </p>
       ) : null}
 
@@ -344,7 +351,7 @@ export function TopicTrainer({
           )}
           role="status"
         >
-          {checkResult.correct ? "Вірно" : "Невірно"}
+          {checkResult.correct ? t("correct") : t("incorrect")}
         </p>
       ) : null}
 
@@ -359,7 +366,7 @@ export function TopicTrainer({
           <>
             {checkResult === undefined && !isFinishing ? (
               <button type="button" className={css.skip} onClick={handleSkip}>
-                Пропустити
+                {t("skip")}
               </button>
             ) : null}
             <button
@@ -368,7 +375,7 @@ export function TopicTrainer({
               onClick={handleAbortUltimate}
               disabled={isFinishing || isPending}
             >
-              Завершити тестування
+              {t("abort")}
             </button>
           </>
         ) : (
@@ -380,7 +387,7 @@ export function TopicTrainer({
                 onClick={handleNext}
                 disabled={checkResult === undefined || isPending}
               >
-                Наступне завдання
+                {t("next")}
               </button>
             ) : null}
 
@@ -391,14 +398,14 @@ export function TopicTrainer({
                 onClick={handleFinish}
                 disabled={isFinishing || isPending}
               >
-                {isFinishing ? "Завершуємо…" : "Завершити тест"}
+                {isFinishing ? t("finishing") : t("finish")}
               </button>
             ) : null}
           </>
         )}
 
         <Link href="/" className={css.backLink}>
-          ← До вибору теми
+          ← {t("backToTopics")}
         </Link>
       </div>
     </section>

@@ -9,6 +9,8 @@ export const SESSION_TYPE_MENTOR = 3;
 
 export type SessionDisplayStatus = "completed" | "planned";
 
+export type SessionCreatedBy = "auto" | "mentor" | "user";
+
 export type LearningSessionRow = {
   id: number;
   rowNumber: number;
@@ -21,6 +23,7 @@ export type LearningSessionRow = {
   timePerTaskSec: number | null;
   startTimeLabel: string;
   createdByLabel: string;
+  createdBy: SessionCreatedBy;
   status: SessionDisplayStatus;
   statusLabel: string;
 };
@@ -85,6 +88,17 @@ export function sessionStatusLabel(status: SessionDisplayStatus): string {
   }
 }
 
+export function resolveSessionCreatedBy(sessionType: number): SessionCreatedBy {
+  switch (sessionType) {
+    case SESSION_TYPE_AUTO:
+      return "auto";
+    case SESSION_TYPE_MENTOR:
+      return "mentor";
+    default:
+      return "user";
+  }
+}
+
 export function sessionCreatedByLabel(sessionType: number): string {
   switch (sessionType) {
     case SESSION_TYPE_AUTO:
@@ -134,11 +148,9 @@ export function buildLearningSessionRows(
       rightNumber: session.right_number,
       percent: sessionPercent(session.tasks_number, session.right_number),
       timeSec: session.time,
-      timePerTaskSec: sessionTimePerTask(
-        session.tasks_number,
-        session.time,
-      ),
+      timePerTaskSec: sessionTimePerTask(session.tasks_number, session.time),
       startTimeLabel: formatSessionStartTime(session.start_time),
+      createdBy: resolveSessionCreatedBy(session.session_type),
       createdByLabel: sessionCreatedByLabel(session.session_type),
       status,
       statusLabel: sessionStatusLabel(status),

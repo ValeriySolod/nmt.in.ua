@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useActionState } from "react";
 import clsx from "clsx";
 import { DEMO_ACCOUNTS } from "@/modules/auth/client";
@@ -14,24 +15,22 @@ type LoginFormProps = {
 };
 
 export function LoginForm({ nextPath }: LoginFormProps) {
+  const t = useTranslations("LoginForm");
   const [state, formAction, pending] = useActionState(loginAction, INITIAL);
 
   return (
     <div className={css.wrap}>
       <header className={css.intro}>
-        <p className={css.kicker}>Вхід</p>
-        <h1 className={css.title}>Навчальний кабінет NMT</h1>
-        <p className={css.lead}>
-          Увійдіть як учень, викладач або адмін. Для перевірки доступні демо-облікові
-          записи нижче.
-        </p>
+        <p className={css.kicker}>{t("kicker")}</p>
+        <h1 className={css.title}>{t("title")}</h1>
+        <p className={css.lead}>{t("lead")}</p>
       </header>
 
       <form className={css.form} action={formAction}>
         <input type="hidden" name="next" value={nextPath} />
 
         <label className={css.field}>
-          <span className={css.label}>Логін</span>
+          <span className={css.label}>{t("login")}</span>
           <input
             className={css.input}
             name="login"
@@ -42,7 +41,7 @@ export function LoginForm({ nextPath }: LoginFormProps) {
         </label>
 
         <label className={css.field}>
-          <span className={css.label}>Пароль</span>
+          <span className={css.label}>{t("password")}</span>
           <input
             className={css.input}
             type="password"
@@ -55,20 +54,24 @@ export function LoginForm({ nextPath }: LoginFormProps) {
 
         {state.status === "error" ? (
           <p className={clsx(css.alert, css.alertError)} role="alert">
-            {state.message}
+            {t(`errors.${state.code}`)}
           </p>
         ) : null}
 
         <button type="submit" className={css.submit} disabled={pending}>
-          {pending ? "Вхід…" : "Увійти"}
+          {pending ? t("signingIn") : t("signIn")}
         </button>
       </form>
 
       <section className={css.demo} aria-labelledby="demo-login-title">
         <h2 id="demo-login-title" className={css.demoTitle}>
-          Демо для перевірки
+          {t("demoTitle")}
         </h2>
-        <p className={css.demoLead}>Пароль для всіх демо-акаунтів: <strong>demo123</strong></p>
+
+        <p className={css.demoLead}>
+          {t("demoPassword")} <strong>demo123</strong>
+        </p>
+
         <DemoLoginButtons nextPath={nextPath} accounts={DEMO_ACCOUNTS} />
       </section>
     </div>

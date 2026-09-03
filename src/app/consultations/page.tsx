@@ -1,7 +1,11 @@
-import { NavStubPage, createStubPageMetadata } from "@/components/dashboard/StubPage";
+import {
+  NavStubPage,
+  createStubPageMetadata,
+} from "@/components/dashboard/StubPage";
 
-const { metadata } = createStubPageMetadata("/consultations");
-export { metadata };
+export async function generateMetadata() {
+  return createStubPageMetadata("/consultations", "consultations");
+}
 
 export default function ConsultationsPage() {
   return <NavStubPage href="/consultations" />;

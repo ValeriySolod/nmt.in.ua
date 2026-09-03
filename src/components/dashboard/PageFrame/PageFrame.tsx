@@ -1,4 +1,5 @@
 import clsx from "clsx";
+import { getTranslations } from "next-intl/server";
 import css from "./PageFrame.module.css";
 
 type PageFrameProps = {
@@ -59,16 +60,17 @@ export function PagePanel({
   return <div className={clsx(css.panel, className)}>{children}</div>;
 }
 
-export function SoonCard({
+export async function SoonCard({
   title,
   description,
 }: {
   title: string;
   description: string;
 }) {
+  const t = await getTranslations("Common");
   return (
     <div className={css.soonCard}>
-      <p className={css.soonBadge}>Незабаром</p>
+      <p className={css.soonBadge}>{t("soon")}</p>
       <h3 className={css.soonTitle}>{title}</h3>
       <p className={css.soonText}>{description}</p>
     </div>

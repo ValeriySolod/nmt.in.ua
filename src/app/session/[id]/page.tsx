@@ -16,6 +16,7 @@ import {
 } from "@/modules/testing/startPlannedSession";
 import { parseTopicTestMode } from "@/modules/testing/topicTestMode";
 import type { SessionTasksResult } from "@/modules/testing/types";
+import { getTranslations } from "next-intl/server";
 
 type SessionPageProps = {
   params: Promise<{ id: string }>;
@@ -24,9 +25,11 @@ type SessionPageProps = {
 
 export async function generateMetadata({ params }: SessionPageProps) {
   const { id } = await params;
+  const t = await getTranslations("Metadata.session");
+
   return createPageMetadata({
-    title: "Проходження тесту",
-    description: "Інтерактивний тренажер: завдання тесту за обраною темою.",
+    title: t("title"),
+    description: t("description"),
     path: `/session/${id}`,
     noIndex: true,
   });
@@ -39,7 +42,7 @@ function readModeParam(raw: string | string[] | undefined): string | undefined {
 
 async function loadSession(
   sessionId: number,
-  userId: number
+  userId: number,
 ): Promise<SessionTasksResult> {
   try {
     return await getSessionTasks(sessionId, userId);
@@ -56,7 +59,7 @@ async function loadSession(
 
 async function activatePlannedSession(
   sessionId: number,
-  userId: number
+  userId: number,
 ): Promise<void> {
   try {
     await startPlannedSession({ sessionId, userId });
@@ -93,6 +96,8 @@ export default async function SessionPage({
 
   const userId = await requireUserId();
 
+  const t = await getTranslations("Recommendations");
+
   let session = await loadSession(sessionId, userId);
 
   if (session.isPlannedWithoutTasks) {
@@ -102,7 +107,10 @@ export default async function SessionPage({
 
   const initialRecommendations =
     session.sessionStatus === SESSION_STATUS_COMPLETED && session.summary
-      ? await recommendNextActionsForStats(await getStudentTopicStats(userId))
+      ? await recommendNextActionsForStats(
+          await getStudentTopicStats(userId),
+          t,
+        )
       : [];
 
   return isNmt ? (

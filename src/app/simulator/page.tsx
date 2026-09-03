@@ -1,8 +1,3 @@
-// import {
-//   NavStubPage,
-//   createStubPageMetadata,
-// } from "@/components/dashboard/StubPage";
-
 "use client";
 
 import { useActionState, useEffect } from "react";
@@ -24,7 +19,7 @@ export default function SimulatorPage() {
 
   const [state, formAction, isPending] = useActionState(
     startNmtSimulatorAction,
-    initialState
+    initialState,
   );
 
   useEffect(() => {

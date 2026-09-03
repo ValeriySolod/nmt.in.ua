@@ -33,6 +33,11 @@ const MAX_UNTRIED_ACTIONS = 2;
 const MAX_GRAPH_ACTIONS = 2;
 const MAX_RECOMMENDATIONS = 3;
 
+export type RecommendationTranslator = (
+  key: string,
+  values?: Record<string, string | number>,
+) => string;
+
 function topicTestThemeIds(actions: RecommendedAction[]): Set<number> {
   const ids = new Set<number>();
   for (const action of actions) {
@@ -53,6 +58,7 @@ function appendGraphRecommendations(
   graphEdges: ThemeConnectionEdge[],
   actions: RecommendedAction[],
   priorityStart: number,
+  t: RecommendationTranslator,
 ): number {
   if (graphEdges.length === 0) {
     return priorityStart;
@@ -86,10 +92,10 @@ function appendGraphRecommendations(
     actions.push({
       type: "topic-test",
       themeId: target.themeId,
-      title: `Перейдіть до теми «${target.themeName}»`,
+      title: t("goToTopic", { theme: target.themeName }),
       reason: source
-        ? `Тема «${source.themeName}» освоєна — наступний крок за навчальним планом.`
-        : "Наступний крок за навчальним планом.",
+        ? t("graphReason", { theme: source.themeName })
+        : t("graphReasonFallback"),
       href: `/?theme=${target.themeId}`,
       priority: priority++,
     });
@@ -104,6 +110,7 @@ function appendGraphRecommendations(
 export function recommendNextActions(
   stats: StudentTopicStats,
   graphEdges: ThemeConnectionEdge[] = [],
+  t: RecommendationTranslator,
 ): RecommendedAction[] {
   if (!stats.hasCompletedSessions) {
     return [];
@@ -117,7 +124,9 @@ export function recommendNextActions(
   );
   const weak = attempted
     .filter((topic) => (topic.overallPercent as number) < WEAK_THRESHOLD)
-    .sort((a, b) => (a.overallPercent as number) - (b.overallPercent as number));
+    .sort(
+      (a, b) => (a.overallPercent as number) - (b.overallPercent as number),
+    );
 
   const actions: RecommendedAction[] = [];
   let priority = 1;
@@ -126,14 +135,22 @@ export function recommendNextActions(
     actions.push({
       type: "topic-test",
       themeId: topic.themeId,
-      title: `Повторіть тему «${topic.themeName}»`,
-      reason: `Останній результат: ${Math.round(topic.overallPercent as number)}%. Варто попрактикуватися ще раз.`,
+      title: t("repeatTopic", { theme: topic.themeName }),
+      reason: t("weakTopicReason", {
+        percent: Math.round(topic.overallPercent as number),
+      }),
       href: `/?theme=${topic.themeId}`,
       priority: priority++,
     });
   }
 
-  priority = appendGraphRecommendations(stats, graphEdges, actions, priority);
+  priority = appendGraphRecommendations(
+    stats,
+    graphEdges,
+    actions,
+    priority,
+    t,
+  );
 
   const usedThemeIds = topicTestThemeIds(actions);
   for (const topic of untried.slice(0, MAX_UNTRIED_ACTIONS)) {
@@ -141,8 +158,8 @@ export function recommendNextActions(
     actions.push({
       type: "topic-test",
       themeId: topic.themeId,
-      title: `Спробуйте тему «${topic.themeName}»`,
-      reason: "Ви ще не проходили цю тему — почніть з короткого тесту.",
+      title: t("tryTopic", { theme: topic.themeName }),
+      reason: t("untriedReason"),
       href: `/?theme=${topic.themeId}`,
       priority: priority++,
     });
@@ -152,8 +169,8 @@ export function recommendNextActions(
   if (weak.length >= 2) {
     actions.push({
       type: "consultation",
-      title: "Запишіться на консультацію",
-      reason: "Декілька тем потребують додаткової підтримки викладача.",
+      title: t("consultationTitle"),
+      reason: t("consultationReason"),
       href: "/consultations",
       priority: priority++,
     });
@@ -162,8 +179,8 @@ export function recommendNextActions(
   if (weak.length > 0) {
     actions.push({
       type: "materials",
-      title: "Повторіть теоретичні матеріали",
-      reason: "У слабких темах допоможе конспект перед повторним тестом.",
+      title: t("materialsTitle"),
+      reason: t("materialsReason"),
       href: "/materials",
       priority: priority++,
     });
@@ -175,9 +192,8 @@ export function recommendNextActions(
   if (untried.length === 0 && weak.length === 0 && solidCount > 0) {
     actions.push({
       type: "simulator",
-      title: "Спробуйте повний симулятор НМТ",
-      reason:
-        "Всі теми опрацьовані на хорошому рівні — час перевірити результат у форматі УЦОЯО.",
+      title: t("simulatorTitle"),
+      reason: t("simulatorReason"),
       href: "/simulator",
       priority: priority++,
     });
@@ -186,8 +202,8 @@ export function recommendNextActions(
   if (actions.length === 0) {
     actions.push({
       type: "problems",
-      title: "Практикуйте додаткові задачі",
-      reason: "Ваш прогрес стабільний — закріпіть його практикою в задачнику.",
+      title: t("problemsTitle"),
+      reason: t("problemsReason"),
       href: "/problems",
       priority: priority++,
     });
@@ -205,6 +221,7 @@ type RecommendNextActionsForStatsDeps = {
 /** Loads the theme graph for solid topics and builds recommendations. */
 export async function recommendNextActionsForStats(
   stats: StudentTopicStats,
+  t: RecommendationTranslator,
   deps: RecommendNextActionsForStatsDeps = {
     getThemeConnectionsForThemes,
   },
@@ -222,5 +239,5 @@ export async function recommendNextActionsForStats(
       ? await deps.getThemeConnectionsForThemes(solidThemeIds)
       : [];
 
-  return recommendNextActions(stats, graphEdges);
+  return recommendNextActions(stats, graphEdges, t);
 }

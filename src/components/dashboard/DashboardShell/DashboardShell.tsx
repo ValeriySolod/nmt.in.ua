@@ -8,6 +8,7 @@ import { AppHeader } from "@/components/dashboard/AppHeader";
 import { AppSidebar } from "@/components/dashboard/AppSidebar";
 import { RecentResults } from "@/components/dashboard/RecentResults";
 import type { RecentResultItem } from "@/modules/results/getRecentResults";
+import { useTranslations } from "next-intl";
 import css from "./DashboardShell.module.css";
 
 const STORAGE_KEY = "nmt-sidebar-open";
@@ -53,7 +54,13 @@ function setSidebarOpen(next: boolean | ((prev: boolean) => boolean)) {
   emitSidebarChange();
 }
 
-export function DashboardShell({ children, recentResults, user }: DashboardShellProps) {
+export function DashboardShell({
+  children,
+  recentResults,
+  user,
+}: DashboardShellProps) {
+  const t = useTranslations("Dashboard");
+
   const pathname = usePathname();
   const sidebarOpen = useSyncExternalStore(
     subscribeSidebar,
@@ -94,7 +101,7 @@ export function DashboardShell({ children, recentResults, user }: DashboardShell
         <button
           type="button"
           className={css.backdrop}
-          aria-label="Сховати меню"
+          aria-label={t("hideMenu")}
           onClick={() => setSidebarOpen(false)}
         />
       ) : null}

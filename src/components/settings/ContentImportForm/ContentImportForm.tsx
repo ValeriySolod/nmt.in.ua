@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useActionState, useState } from "react";
 import clsx from "clsx";
 import { PagePanel, PageSection } from "@/components/dashboard/PageFrame";
@@ -14,48 +15,38 @@ const INITIAL_STATE: ContentImportActionState = { status: "idle" };
 
 type ImportMode = "csv" | "json";
 
-const IMPORT_MODE_OPTIONS = [
-  { id: "csv" as const, label: "Три CSV" },
-  { id: "json" as const, label: "Один JSON" },
-];
-
 type ContentImportFormProps = {
   importEnabled: boolean;
 };
 
-function formatCounts(counts: {
-  themes: number;
-  themeConnections: number;
-  quizTasks: number;
-}): string {
-  return `теми ${counts.themes}, звʼязки ${counts.themeConnections}, завдання ${counts.quizTasks}`;
-}
-
 /** Browser UI for CSV/JSON content import via a Server Action. */
 export function ContentImportForm({ importEnabled }: ContentImportFormProps) {
+  const t = useTranslations("ContentImportForm");
   const [mode, setMode] = useState<ImportMode>("csv");
-  const [state, formAction, pending] = useActionState(contentImportAction, INITIAL_STATE);
+  const [state, formAction, pending] = useActionState(
+    contentImportAction,
+    INITIAL_STATE,
+  );
+
+  const importModeOptions = [
+    { id: "csv" as const, label: t("modes.csv") },
+    { id: "json" as const, label: t("modes.json") },
+  ];
 
   const disabled = !importEnabled || pending;
-  const showUnauthorized =
-    !importEnabled || state.status === "unauthorized";
+  const showUnauthorized = !importEnabled || state.status === "unauthorized";
 
   return (
-    <PageSection
-      id="content-import-title"
-      title="Імпорт контенту"
-      lead="Завантажте три CSV-файли або один JSON-документ з темами, звʼязками та завданнями. Ключ API залишається на сервері — браузер його не бачить."
-    >
+    <PageSection id="content-import-title" title={t("title")} lead={t("lead")}>
       {showUnauthorized ? (
         <p className={clsx(css.alert, css.alertError)} role="alert">
-          Імпорт недоступний: на сервері не налаштовано ключ{" "}
-          <code>CONTENT_IMPORT_API_KEY</code>.
+          {t("unavailable")} <code>CONTENT_IMPORT_API_KEY</code>.
         </p>
       ) : null}
 
       {state.status === "error" ? (
         <div className={clsx(css.alert, css.alertError)} role="alert">
-          <p className={css.hint}>Помилки валідації:</p>
+          <p className={css.hint}>{t("validationErrors")}</p>
           <ul className={css.errorList}>
             {state.errors.map((message) => (
               <li key={message}>{message}</li>
@@ -66,15 +57,29 @@ export function ContentImportForm({ importEnabled }: ContentImportFormProps) {
 
       {state.status === "success" ? (
         <div className={clsx(css.alert, css.alertSuccess)} role="status">
-          <p>Імпорт успішний.</p>
+          <p>{t("success")}</p>
           <dl className={css.summary}>
             <div>
-              <dt>Додано</dt>
-              <dd>{formatCounts(state.inserted)} (усього {state.totalInserted})</dd>
+              <dt>{t("inserted")}</dt>
+              <dd>
+                {t("counts", {
+                  themes: state.inserted.themes,
+                  connections: state.inserted.themeConnections,
+                  tasks: state.inserted.quizTasks,
+                })}{" "}
+                ({t("total", { count: state.totalInserted })})
+              </dd>
             </div>
             <div>
-              <dt>Оновлено</dt>
-              <dd>{formatCounts(state.updated)} (усього {state.totalUpdated})</dd>
+              <dt>{t("updated")}</dt>
+              <dd>
+                {t("counts", {
+                  themes: state.updated.themes,
+                  connections: state.updated.themeConnections,
+                  tasks: state.updated.quizTasks,
+                })}{" "}
+                ({t("total", { count: state.totalUpdated })})
+              </dd>
             </div>
           </dl>
         </div>
@@ -84,9 +89,9 @@ export function ContentImportForm({ importEnabled }: ContentImportFormProps) {
         <ModeTabs
           value={mode}
           onChange={setMode}
-          options={IMPORT_MODE_OPTIONS}
+          options={importModeOptions}
           disabled={disabled}
-          ariaLabel="Формат імпорту"
+          ariaLabel={t("formatAria")}
         />
 
         {mode === "csv" ? (
@@ -95,7 +100,7 @@ export function ContentImportForm({ importEnabled }: ContentImportFormProps) {
               <label className={css.label} htmlFor="import-themes">
                 themes.csv
               </label>
-              <p className={css.hint}>Колонки: id, name, description, ord</p>
+              <p className={css.hint}>{t("themesColumns")}</p>
               <input
                 id="import-themes"
                 className={css.fileInput}
@@ -110,7 +115,7 @@ export function ContentImportForm({ importEnabled }: ContentImportFormProps) {
               <label className={css.label} htmlFor="import-theme-connections">
                 theme_connections.csv
               </label>
-              <p className={css.hint}>Колонки: id, vertex_start, vertex_finish</p>
+              <p className={css.hint}>{t("connectionsColumns")}</p>
               <input
                 id="import-theme-connections"
                 className={css.fileInput}
@@ -125,10 +130,7 @@ export function ContentImportForm({ importEnabled }: ContentImportFormProps) {
               <label className={css.label} htmlFor="import-quiz-tasks">
                 quiz_tasks.csv
               </label>
-              <p className={css.hint}>
-                Колонки: id, name, task_text, theme_id, answer_1…answer_4,
-                right_answer_n, comments
-              </p>
+              <p className={css.hint}>{t("tasksColumns")}</p>
               <input
                 id="import-quiz-tasks"
                 className={css.fileInput}
@@ -140,7 +142,7 @@ export function ContentImportForm({ importEnabled }: ContentImportFormProps) {
               />
             </div>
             <button type="submit" className={css.submit} disabled={disabled}>
-              {pending ? "Імпорт…" : "Імпортувати CSV"}
+              {pending ? t("importing") : t("importCsv")}
             </button>
           </form>
         ) : (
@@ -150,9 +152,7 @@ export function ContentImportForm({ importEnabled }: ContentImportFormProps) {
               <label className={css.label} htmlFor="import-json">
                 import.json
               </label>
-              <p className={css.hint}>
-                Обʼєкт з масивами themes, themeConnections, quizTasks (див. README).
-              </p>
+              <p className={css.hint}>{t("jsonHint")}</p>
               <input
                 id="import-json"
                 className={css.fileInput}
@@ -164,7 +164,7 @@ export function ContentImportForm({ importEnabled }: ContentImportFormProps) {
               />
             </div>
             <button type="submit" className={css.submit} disabled={disabled}>
-              {pending ? "Імпорт…" : "Імпортувати JSON"}
+              {pending ? t("importing") : t("importJson")}
             </button>
           </form>
         )}

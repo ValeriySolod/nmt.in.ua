@@ -6,6 +6,7 @@ import { requireUserId } from "@/modules/auth";
 import { getStudentTopicStats } from "@/modules/recommendations/getStudentTopicStats";
 import { recommendNextActionsForStats } from "@/modules/recommendations";
 import { getTopicResults } from "@/modules/results/getTopicResults";
+import { getTranslations } from "next-intl/server";
 const item = getNavItem("/results");
 
 export const metadata = createPageMetadata({
@@ -16,10 +17,14 @@ export const metadata = createPageMetadata({
 
 export default async function ResultsPage() {
   const userId = await requireUserId();
+  const t = await getTranslations("Recommendations");
+
   const [rows, topicStats] = await Promise.all([
     getTopicResults(userId),
     getStudentTopicStats(userId),
-  ]);  const actions = await recommendNextActionsForStats(topicStats);
+  ]);
+
+  const actions = await recommendNextActionsForStats(topicStats, t);
 
   return (
     <>

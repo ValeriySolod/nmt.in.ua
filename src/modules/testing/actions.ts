@@ -3,6 +3,7 @@
 import {
   recommendNextActionsForStats,
   persistRecommendations,
+  type RecommendationTranslator,
 } from "@/modules/recommendations";
 import { getStudentTopicStats } from "@/modules/recommendations/getStudentTopicStats";
 import { requireUserId } from "@/modules/auth";
@@ -37,41 +38,37 @@ import type {
   SkipTaskAnswerActionInput,
   SkipTaskAnswerActionState,
 } from "./types";
+import { getTranslations } from "next-intl/server";
+
+export type StartTopicTestErrorCode =
+  | "insufficientTasks"
+  | "alreadyInProgress"
+  | "invalidInput"
+  | "generic";
 
 import { startNmtSimulator, StartNmtSimulatorError } from "./startNmtSimulator";
 
 export type StartTopicTestActionState =
   | { status: "idle" }
-  | { status: "error"; message: string }
+  | { status: "error"; code: StartTopicTestErrorCode }
   | { status: "success"; sessionId: number; mode: TopicTestMode };
-
-const GENERIC_ERROR_MESSAGE = "Не вдалося запустити тест. Спробуйте ще раз.";
-const INSUFFICIENT_TASKS_MESSAGE =
-  "Для цієї теми поки що немає завдань у банку питань.";
-const IN_PROGRESS_MESSAGE = "Запит уже виконується — зачекайте.";
-const INVALID_INPUT_MESSAGE = "Оберіть тему, щоб почати тест.";
-const CHECK_GENERIC_ERROR_MESSAGE =
-  "Не вдалося перевірити відповідь. Спробуйте ще раз.";
-const CHECK_INVALID_INPUT_MESSAGE = "Оберіть один із варіантів відповіді.";
-const CHECK_NOT_FOUND_MESSAGE = "Завдання не знайдено в цій сесії.";
-const CHECK_COMPLETED_MESSAGE = "Цей тест уже завершено.";
-const FINISH_GENERIC_ERROR_MESSAGE =
-  "Не вдалося завершити тест. Спробуйте ще раз.";
-const FINISH_INVALID_INPUT_MESSAGE = "Сесію не знайдено.";
-const FINISH_NOT_FOUND_MESSAGE = "Сесію не знайдено.";
-const FINISH_UNFINISHED_MESSAGE = "Спочатку дайте відповідь на всі завдання.";
-const SKIP_GENERIC_ERROR_MESSAGE = "Не вдалося пропустити завдання.";
-const SKIP_NOT_FOUND_MESSAGE = "Завдання не знайдено в цій сесії.";
-const SKIP_COMPLETED_MESSAGE = "Цей тест уже завершено.";
-const MARK_STARTED_GENERIC_ERROR_MESSAGE = "Не вдалося зафіксувати час старту.";
-const MARK_STARTED_INVALID_INPUT_MESSAGE = "Сесію не знайдено.";
-const MARK_STARTED_NOT_FOUND_MESSAGE = "Сесію не знайдено.";
 
 type AuthDeps = {
   requireUserId: typeof requireUserId;
 };
 
 const defaultAuthDeps: AuthDeps = { requireUserId };
+
+async function getRecommendationTranslator(
+  locale: "uk" | "en" | "de",
+): Promise<RecommendationTranslator> {
+  const t = await getTranslations({
+    locale,
+    namespace: "Recommendations",
+  });
+
+  return (key, values) => t(key as never, values as never);
+}
 
 type StartTopicTestActionDeps = AuthDeps & {
   startTopicTest: typeof startTopicTest;
@@ -84,7 +81,7 @@ type StartTopicTestActionDeps = AuthDeps & {
 export async function startTopicTestAction(
   _prevState: StartTopicTestActionState,
   formData: FormData,
-  deps: StartTopicTestActionDeps = { startTopicTest, ...defaultAuthDeps }
+  deps: StartTopicTestActionDeps = { startTopicTest, ...defaultAuthDeps },
 ): Promise<StartTopicTestActionState> {
   const themeId = Number(formData.get("themeId"));
   const mode = parseTopicTestMode(formData.get("mode"));
@@ -105,17 +102,21 @@ export async function startTopicTestAction(
     if (error instanceof StartTopicTestError) {
       switch (error.code) {
         case "insufficient_tasks":
-          return { status: "error", message: INSUFFICIENT_TASKS_MESSAGE };
+          return { status: "error", code: "insufficientTasks" };
+
         case "already_in_progress":
-          return { status: "error", message: IN_PROGRESS_MESSAGE };
+          return { status: "error", code: "alreadyInProgress" };
+
         case "invalid_input":
-          return { status: "error", message: INVALID_INPUT_MESSAGE };
+          return { status: "error", code: "invalidInput" };
+
         default:
-          return { status: "error", message: GENERIC_ERROR_MESSAGE };
+          return { status: "error", code: "generic" };
       }
     }
+
     console.error("startTopicTestAction: unexpected error", error);
-    return { status: "error", message: GENERIC_ERROR_MESSAGE };
+    return { status: "error", code: "generic" };
   }
 }
 
@@ -134,7 +135,7 @@ const NMT_SIMULATOR_IN_PROGRESS = "Запит уже виконується — 
 
 export async function startNmtSimulatorAction(
   _prevState: StartNmtSimulatorActionState,
-  _formData: FormData
+  _formData: FormData,
 ): Promise<StartNmtSimulatorActionState> {
   try {
     const userId = await requireUserId();
@@ -198,7 +199,7 @@ type CheckAnswerActionDeps = AuthDeps & {
  */
 export async function checkAnswerAction(
   input: CheckAnswerActionInput,
-  deps: CheckAnswerActionDeps = { checkAnswer, ...defaultAuthDeps }
+  deps: CheckAnswerActionDeps = { checkAnswer, ...defaultAuthDeps },
 ): Promise<CheckAnswerActionState> {
   try {
     const userId = await deps.requireUserId();
@@ -213,17 +214,21 @@ export async function checkAnswerAction(
     if (error instanceof CheckAnswerError) {
       switch (error.code) {
         case "invalid_input":
-          return { status: "error", message: CHECK_INVALID_INPUT_MESSAGE };
+          return { status: "error", code: "invalidInput" };
+
         case "not_found":
-          return { status: "error", message: CHECK_NOT_FOUND_MESSAGE };
+          return { status: "error", code: "notFound" };
+
         case "session_completed":
-          return { status: "error", message: CHECK_COMPLETED_MESSAGE };
+          return { status: "error", code: "sessionCompleted" };
+
         default:
-          return { status: "error", message: CHECK_GENERIC_ERROR_MESSAGE };
+          return { status: "error", code: "generic" };
       }
     }
+
     console.error("checkAnswerAction: unexpected error", error);
-    return { status: "error", message: CHECK_GENERIC_ERROR_MESSAGE };
+    return { status: "error", code: "generic" };
   }
 }
 
@@ -232,6 +237,9 @@ type FinishTrainerSessionActionDeps = AuthDeps & {
   getStudentTopicStats: typeof getStudentTopicStats;
   recommendNextActionsForStats: typeof recommendNextActionsForStats;
   persistRecommendations: typeof persistRecommendations;
+  getRecommendationTranslator?: (
+    locale: "uk" | "en" | "de",
+  ) => Promise<RecommendationTranslator>;
 };
 
 const defaultFinishDeps: FinishTrainerSessionActionDeps = {
@@ -239,6 +247,7 @@ const defaultFinishDeps: FinishTrainerSessionActionDeps = {
   getStudentTopicStats,
   recommendNextActionsForStats,
   persistRecommendations,
+  getRecommendationTranslator,
   ...defaultAuthDeps,
 };
 
@@ -248,7 +257,7 @@ const defaultFinishDeps: FinishTrainerSessionActionDeps = {
  */
 export async function finishTrainerSessionAction(
   input: FinishTrainerSessionActionInput,
-  deps: FinishTrainerSessionActionDeps = defaultFinishDeps
+  deps: FinishTrainerSessionActionDeps = defaultFinishDeps,
 ): Promise<FinishTrainerSessionActionState> {
   try {
     const userId = await deps.requireUserId();
@@ -260,10 +269,21 @@ export async function finishTrainerSessionAction(
     });
 
     const stats = await deps.getStudentTopicStats(userId);
-    const rawActions = await deps.recommendNextActionsForStats(stats);
+
+    const locale =
+      input.locale === "en" || input.locale === "de" || input.locale === "uk"
+        ? input.locale
+        : "uk";
+
+    const translatorFactory =
+      deps.getRecommendationTranslator ?? getRecommendationTranslator;
+
+    const t = await translatorFactory(locale);
+
+    const rawActions = await deps.recommendNextActionsForStats(stats, t);
     const { actions: recommendations } = await deps.persistRecommendations(
       userId,
-      rawActions
+      rawActions,
     );
 
     try {
@@ -279,17 +299,21 @@ export async function finishTrainerSessionAction(
     if (error instanceof FinishTrainerSessionError) {
       switch (error.code) {
         case "invalid_input":
-          return { status: "error", message: FINISH_INVALID_INPUT_MESSAGE };
+          return { status: "error", code: "invalidInput" };
+
         case "not_found":
-          return { status: "error", message: FINISH_NOT_FOUND_MESSAGE };
+          return { status: "error", code: "notFound" };
+
         case "unfinished":
-          return { status: "error", message: FINISH_UNFINISHED_MESSAGE };
+          return { status: "error", code: "unfinished" };
+
         default:
-          return { status: "error", message: FINISH_GENERIC_ERROR_MESSAGE };
+          return { status: "error", code: "generic" };
       }
     }
+
     console.error("finishTrainerSessionAction: unexpected error", error);
-    return { status: "error", message: FINISH_GENERIC_ERROR_MESSAGE };
+    return { status: "error", code: "generic" };
   }
 }
 
@@ -302,7 +326,7 @@ export async function markSessionStartedAction(
   deps: MarkSessionStartedActionDeps = {
     markSessionStarted,
     ...defaultAuthDeps,
-  }
+  },
 ): Promise<MarkSessionStartedActionState> {
   try {
     const userId = await deps.requireUserId();
@@ -315,21 +339,18 @@ export async function markSessionStartedAction(
     if (error instanceof MarkSessionStartedError) {
       switch (error.code) {
         case "invalid_input":
-          return {
-            status: "error",
-            message: MARK_STARTED_INVALID_INPUT_MESSAGE,
-          };
+          return { status: "error", code: "invalidInput" };
+
         case "not_found":
-          return { status: "error", message: MARK_STARTED_NOT_FOUND_MESSAGE };
+          return { status: "error", code: "notFound" };
+
         default:
-          return {
-            status: "error",
-            message: MARK_STARTED_GENERIC_ERROR_MESSAGE,
-          };
+          return { status: "error", code: "generic" };
       }
     }
+
     console.error("markSessionStartedAction: unexpected error", error);
-    return { status: "error", message: MARK_STARTED_GENERIC_ERROR_MESSAGE };
+    return { status: "error", code: "generic" };
   }
 }
 
@@ -339,7 +360,7 @@ type SkipTaskAnswerActionDeps = AuthDeps & {
 
 export async function skipTaskAnswerAction(
   input: SkipTaskAnswerActionInput,
-  deps: SkipTaskAnswerActionDeps = { skipTaskAnswer, ...defaultAuthDeps }
+  deps: SkipTaskAnswerActionDeps = { skipTaskAnswer, ...defaultAuthDeps },
 ): Promise<SkipTaskAnswerActionState> {
   try {
     const userId = await deps.requireUserId();
@@ -353,20 +374,23 @@ export async function skipTaskAnswerAction(
     if (error instanceof SkipTaskAnswerError) {
       switch (error.code) {
         case "not_found":
-          return { status: "error", message: SKIP_NOT_FOUND_MESSAGE };
+          return { status: "error", code: "notFound" };
+
         case "session_completed":
-          return { status: "error", message: SKIP_COMPLETED_MESSAGE };
+          return { status: "error", code: "sessionCompleted" };
+
         default:
-          return { status: "error", message: SKIP_GENERIC_ERROR_MESSAGE };
+          return { status: "error", code: "generic" };
       }
     }
+
     console.error("skipTaskAnswerAction: unexpected error", error);
-    return { status: "error", message: SKIP_GENERIC_ERROR_MESSAGE };
+    return { status: "error", code: "generic" };
   }
 }
 
 export async function getSessionMistakeReviewAction(
-  sessionId: number
+  sessionId: number,
 ): Promise<SessionMistakeItem[]> {
   const userId = await requireUserId();
   return getSessionMistakeReview(sessionId, userId);
