@@ -100,5 +100,28 @@
       "standard": "Standard",
       "ultimate": "Ultimate"
     }
+  },
+  "Recommendations": {
+    "goToTopic": "Continue to the topic “{theme}”",
+    "graphReason": "The topic “{theme}” has been mastered — this is the next step in your learning plan.",
+    "graphReasonFallback": "This is the next step in your learning plan.",
+
+    "repeatTopic": "Review the topic “{theme}”",
+    "weakTopicReason": "Your latest result is {percent}%. It's worth practicing this topic again.",
+
+    "tryTopic": "Try the topic “{theme}”",
+    "untriedReason": "You haven't tried this topic yet — start with a short test.",
+
+    "consultationTitle": "Book a consultation",
+    "consultationReason": "Several topics could benefit from additional support from a teacher.",
+
+    "materialsTitle": "Review the learning materials",
+    "materialsReason": "Reviewing the notes can help before retaking tests on weaker topics.",
+
+    "simulatorTitle": "Try the full NMT simulator",
+    "simulatorReason": "You've covered all topics well — it's time to test yourself in the full NMT format.",
+
+    "problemsTitle": "Practice additional problems",
+    "problemsReason": "Your progress is steady — reinforce it with additional practice."
   }
 }

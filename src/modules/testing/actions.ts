@@ -20,16 +20,13 @@ import {
   markSessionStarted,
   MarkSessionStartedError,
 } from "./markSessionStarted";
-import {
-  startTopicTest,
-  StartTopicTestError,
-} from "./startTopicTest";
+import { startTopicTest, StartTopicTestError } from "./startTopicTest";
 import { parseTopicTestMode, type TopicTestMode } from "./topicTestMode";
+import { skipTaskAnswer, SkipTaskAnswerError } from "./skipTaskAnswer";
 import {
-  skipTaskAnswer,
-  SkipTaskAnswerError,
-} from "./skipTaskAnswer";
-import { getSessionMistakeReview, type SessionMistakeItem } from "./getSessionMistakeReview";
+  getSessionMistakeReview,
+  type SessionMistakeItem,
+} from "./getSessionMistakeReview";
 import type {
   CheckAnswerActionInput,
   CheckAnswerActionState,
@@ -40,6 +37,7 @@ import type {
   SkipTaskAnswerActionInput,
   SkipTaskAnswerActionState,
 } from "./types";
+import { getTranslations } from "next-intl/server";
 
 export type StartTopicTestActionState =
   | { status: "idle" }
@@ -60,13 +58,11 @@ const FINISH_GENERIC_ERROR_MESSAGE =
   "Не вдалося завершити тест. Спробуйте ще раз.";
 const FINISH_INVALID_INPUT_MESSAGE = "Сесію не знайдено.";
 const FINISH_NOT_FOUND_MESSAGE = "Сесію не знайдено.";
-const FINISH_UNFINISHED_MESSAGE =
-  "Спочатку дайте відповідь на всі завдання.";
+const FINISH_UNFINISHED_MESSAGE = "Спочатку дайте відповідь на всі завдання.";
 const SKIP_GENERIC_ERROR_MESSAGE = "Не вдалося пропустити завдання.";
 const SKIP_NOT_FOUND_MESSAGE = "Завдання не знайдено в цій сесії.";
 const SKIP_COMPLETED_MESSAGE = "Цей тест уже завершено.";
-const MARK_STARTED_GENERIC_ERROR_MESSAGE =
-  "Не вдалося зафіксувати час старту.";
+const MARK_STARTED_GENERIC_ERROR_MESSAGE = "Не вдалося зафіксувати час старту.";
 const MARK_STARTED_INVALID_INPUT_MESSAGE = "Сесію не знайдено.";
 const MARK_STARTED_NOT_FOUND_MESSAGE = "Сесію не знайдено.";
 
@@ -99,7 +95,11 @@ export async function startTopicTestAction(
       themeId,
       mode,
     });
-    return { status: "success", sessionId: result.sessionId, mode: result.mode };
+    return {
+      status: "success",
+      sessionId: result.sessionId,
+      mode: result.mode,
+    };
   } catch (error) {
     if (error instanceof StartTopicTestError) {
       switch (error.code) {
@@ -201,7 +201,19 @@ export async function finishTrainerSessionAction(
     });
 
     const stats = await deps.getStudentTopicStats(userId);
-    const rawActions = await deps.recommendNextActionsForStats(stats);
+
+    const locale =
+      input.locale === "en" || input.locale === "de" || input.locale === "uk"
+        ? input.locale
+        : "uk";
+
+    const t = await getTranslations({
+      locale,
+
+      namespace: "Recommendations",
+    });
+
+    const rawActions = await deps.recommendNextActionsForStats(stats, t);
     const { actions: recommendations } = await deps.persistRecommendations(
       userId,
       rawActions,
@@ -240,7 +252,10 @@ type MarkSessionStartedActionDeps = AuthDeps & {
 
 export async function markSessionStartedAction(
   input: MarkSessionStartedActionInput,
-  deps: MarkSessionStartedActionDeps = { markSessionStarted, ...defaultAuthDeps },
+  deps: MarkSessionStartedActionDeps = {
+    markSessionStarted,
+    ...defaultAuthDeps,
+  },
 ): Promise<MarkSessionStartedActionState> {
   try {
     const userId = await deps.requireUserId();
@@ -253,11 +268,17 @@ export async function markSessionStartedAction(
     if (error instanceof MarkSessionStartedError) {
       switch (error.code) {
         case "invalid_input":
-          return { status: "error", message: MARK_STARTED_INVALID_INPUT_MESSAGE };
+          return {
+            status: "error",
+            message: MARK_STARTED_INVALID_INPUT_MESSAGE,
+          };
         case "not_found":
           return { status: "error", message: MARK_STARTED_NOT_FOUND_MESSAGE };
         default:
-          return { status: "error", message: MARK_STARTED_GENERIC_ERROR_MESSAGE };
+          return {
+            status: "error",
+            message: MARK_STARTED_GENERIC_ERROR_MESSAGE,
+          };
       }
     }
     console.error("markSessionStartedAction: unexpected error", error);

@@ -15,6 +15,7 @@ import {
 } from "@/modules/testing/startPlannedSession";
 import { parseTopicTestMode } from "@/modules/testing/topicTestMode";
 import type { SessionTasksResult } from "@/modules/testing/types";
+import { getTranslations } from "next-intl/server";
 
 type SessionPageProps = {
   params: Promise<{ id: string }>;
@@ -53,7 +54,10 @@ async function loadSession(
   }
 }
 
-async function activatePlannedSession(sessionId: number, userId: number): Promise<void> {
+async function activatePlannedSession(
+  sessionId: number,
+  userId: number,
+): Promise<void> {
   try {
     await startPlannedSession({ sessionId, userId });
   } catch (error) {
@@ -85,6 +89,8 @@ export default async function SessionPage({
 
   const userId = await requireUserId();
 
+  const t = await getTranslations("Recommendations");
+
   let session = await loadSession(sessionId, userId);
 
   if (session.isPlannedWithoutTasks) {
@@ -94,7 +100,10 @@ export default async function SessionPage({
 
   const initialRecommendations =
     session.sessionStatus === SESSION_STATUS_COMPLETED && session.summary
-      ? await recommendNextActionsForStats(await getStudentTopicStats(userId))
+      ? await recommendNextActionsForStats(
+          await getStudentTopicStats(userId),
+          t,
+        )
       : [];
 
   return (

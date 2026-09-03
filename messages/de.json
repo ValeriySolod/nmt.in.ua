@@ -100,5 +100,28 @@
       "standard": "Standard",
       "ultimate": "Ultimate"
     }
+  },
+  "Recommendations": {
+    "goToTopic": "Weiter zum Thema „{theme}“",
+    "graphReason": "Das Thema „{theme}“ wurde erfolgreich bearbeitet — dies ist der nächste Schritt in deinem Lernplan.",
+    "graphReasonFallback": "Dies ist der nächste Schritt in deinem Lernplan.",
+
+    "repeatTopic": "Wiederhole das Thema „{theme}“",
+    "weakTopicReason": "Dein letztes Ergebnis beträgt {percent} %. Es lohnt sich, dieses Thema noch einmal zu üben.",
+
+    "tryTopic": "Probiere das Thema „{theme}“ aus",
+    "untriedReason": "Du hast dieses Thema noch nicht bearbeitet — beginne mit einem kurzen Test.",
+
+    "consultationTitle": "Buche eine Beratung",
+    "consultationReason": "Mehrere Themen könnten zusätzliche Unterstützung durch eine Lehrkraft gebrauchen.",
+
+    "materialsTitle": "Wiederhole die Lernmaterialien",
+    "materialsReason": "Bei schwächeren Themen kann eine Wiederholung der Lernmaterialien vor dem nächsten Test helfen.",
+
+    "simulatorTitle": "Probiere den vollständigen NMT-Simulator",
+    "simulatorReason": "Du hast alle Themen auf einem guten Niveau bearbeitet — jetzt kannst du dein Wissen im vollständigen NMT-Format testen.",
+
+    "problemsTitle": "Übe zusätzliche Aufgaben",
+    "problemsReason": "Dein Fortschritt ist stabil — festige dein Wissen mit zusätzlichen Aufgaben."
   }
 }

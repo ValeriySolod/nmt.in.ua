@@ -27,6 +27,7 @@ import type { RecommendedAction } from "@/modules/recommendations";
 import { TopicTrainerSummary } from "@/components/testing/TopicTrainerSummary";
 import { useCountdownTimer } from "./useCountdownTimer";
 import { useSessionTimer } from "./useSessionTimer";
+import { useLocale } from "next-intl";
 import css from "./TopicTrainer.module.css";
 
 type TopicTrainerProps = {
@@ -77,6 +78,7 @@ export function TopicTrainer({
   const [timedOut, setTimedOut] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const finishingRef = useRef(false);
+  const locale = useLocale() as "uk" | "en" | "de";
 
   const elapsedSec = useSessionTimer({
     sessionId,
@@ -93,6 +95,7 @@ export function TopicTrainer({
 
       const result = await finishTrainerSessionAction({
         sessionId,
+        locale,
         markUnansweredAsIncorrect: true,
         capTimeSec: options.timedOut ? ULTIMATE_DURATION_SEC : undefined,
       });
@@ -109,7 +112,7 @@ export function TopicTrainer({
       setSummary(result.summary);
       setRecommendations(result.recommendations);
     },
-    [sessionId, summary],
+    [sessionId, summary, locale],
   );
 
   const handleTimeExpired = useCallback(() => {
@@ -239,7 +242,7 @@ export function TopicTrainer({
     setErrorMessage(null);
     setIsFinishing(true);
 
-    const result = await finishTrainerSessionAction({ sessionId });
+    const result = await finishTrainerSessionAction({ sessionId, locale });
     setIsFinishing(false);
 
     if (result.status !== "success") {
@@ -284,9 +287,7 @@ export function TopicTrainer({
             className={clsx(css.progress, timerWarning && css.progressWarning)}
             role="timer"
             aria-label={
-              isUltimate
-                ? `Залишилось ${timerLabel}`
-                : `Час ${timerLabel}`
+              isUltimate ? `Залишилось ${timerLabel}` : `Час ${timerLabel}`
             }
           >
             {isUltimate ? "Залишилось" : "Час"}: {timerLabel}
@@ -301,7 +302,11 @@ export function TopicTrainer({
         <h2 className={css.taskName}>{currentTask.name}</h2>
         <p className={css.taskText}>{currentTask.taskText}</p>
 
-        <div className={css.answers} role="group" aria-label="Варіанти відповіді">
+        <div
+          className={css.answers}
+          role="group"
+          aria-label="Варіанти відповіді"
+        >
           {currentTask.answers.map((answer) => (
             <button
               key={answer.number}

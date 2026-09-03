@@ -11,12 +11,52 @@ function stats(
   return { topicScores, hasCompletedSessions };
 }
 
+const translations: Record<string, string> = {
+  goToTopic: "Перейдіть до теми «{theme}»",
+  graphReason: "Тема «{theme}» освоєна — наступний крок за навчальним планом.",
+  graphReasonFallback: "Наступний крок за навчальним планом.",
+  repeatTopic: "Повторіть тему «{theme}»",
+  weakTopicReason:
+    "Останній результат: {percent}%. Варто попрактикуватися ще раз.",
+  tryTopic: "Спробуйте тему «{theme}»",
+  untriedReason: "Ви ще не проходили цю тему — почніть з короткого тесту.",
+  consultationTitle: "Запишіться на консультацію",
+  consultationReason: "Декілька тем потребують додаткової підтримки викладача.",
+  materialsTitle: "Повторіть теоретичні матеріали",
+  materialsReason: "У слабких темах допоможе конспект перед повторним тестом.",
+  simulatorTitle: "Спробуйте повний симулятор НМТ",
+  simulatorReason:
+    "Всі теми опрацьовані на хорошому рівні — час перевірити результат у форматі УЦОЯО.",
+  problemsTitle: "Практикуйте додаткові задачі",
+  problemsReason:
+    "Ваш прогрес стабільний — закріпіть його практикою в задачнику.",
+};
+
+function t(key: string, values?: Record<string, string | number>): string {
+  let result = translations[key] ?? key;
+
+  for (const [name, value] of Object.entries(values ?? {})) {
+    result = result.replace(`{${name}}`, String(value));
+  }
+
+  return result;
+}
+
 test("recommendNextActions: no completed sessions -> empty recommendations (no-attempt empty state)", () => {
   const result = recommendNextActions(
     stats(
-      [{ themeId: 1, themeName: "Тема A", overallPercent: null, lastPercent: null }],
+      [
+        {
+          themeId: 1,
+          themeName: "Тема A",
+          overallPercent: null,
+          lastPercent: null,
+        },
+      ],
       false,
     ),
+    [],
+    t,
   );
 
   assert.deepEqual(result, []);
@@ -28,6 +68,8 @@ test("recommendNextActions: weak topic -> topic-test recommendation sorted by lo
       { themeId: 1, themeName: "Тема A", overallPercent: 30, lastPercent: 30 },
       { themeId: 2, themeName: "Тема B", overallPercent: 10, lastPercent: 10 },
     ]),
+    [],
+    t,
   );
 
   const topicTestActions = result.filter((a) => a.type === "topic-test");
@@ -39,8 +81,15 @@ test("recommendNextActions: untried topic -> topic-test recommendation to try it
   const result = recommendNextActions(
     stats([
       { themeId: 1, themeName: "Тема A", overallPercent: 80, lastPercent: 80 },
-      { themeId: 2, themeName: "Тема B", overallPercent: null, lastPercent: null },
+      {
+        themeId: 2,
+        themeName: "Тема B",
+        overallPercent: null,
+        lastPercent: null,
+      },
     ]),
+    [],
+    t,
   );
 
   const untriedAction = result.find(
@@ -57,6 +106,8 @@ test("recommendNextActions: all topics solid and attempted -> recommends simulat
       { themeId: 1, themeName: "Тема A", overallPercent: 90, lastPercent: 90 },
       { themeId: 2, themeName: "Тема B", overallPercent: 75, lastPercent: 75 },
     ]),
+    [],
+    t,
   );
 
   assert.ok(result.some((a) => a.type === "simulator"));
@@ -68,6 +119,8 @@ test("recommendNextActions: two or more weak topics -> recommends consultation",
       { themeId: 1, themeName: "Тема A", overallPercent: 20, lastPercent: 20 },
       { themeId: 2, themeName: "Тема B", overallPercent: 25, lastPercent: 25 },
     ]),
+    [],
+    t,
   );
 
   assert.ok(result.some((a) => a.type === "consultation"));
@@ -82,6 +135,8 @@ test("recommendNextActions: actions are limited to top 3 by priority", () => {
       { themeId: 4, themeName: "D", overallPercent: null, lastPercent: null },
       { themeId: 5, themeName: "E", overallPercent: null, lastPercent: null },
     ]),
+    [],
+    t,
   );
 
   assert.equal(result.length, 3);
@@ -91,8 +146,15 @@ test("recommendNextActions: actions are always sorted by priority ascending", ()
   const result = recommendNextActions(
     stats([
       { themeId: 1, themeName: "Тема A", overallPercent: 20, lastPercent: 20 },
-      { themeId: 2, themeName: "Тема B", overallPercent: null, lastPercent: null },
+      {
+        themeId: 2,
+        themeName: "Тема B",
+        overallPercent: null,
+        lastPercent: null,
+      },
     ]),
+    [],
+    t,
   );
 
   const priorities = result.map((a) => a.priority);
@@ -105,6 +167,8 @@ test("recommendNextActions: mid-range scores with no weak/untried topics still r
     stats([
       { themeId: 1, themeName: "Тема A", overallPercent: 55, lastPercent: 55 },
     ]),
+    [],
+    t,
   );
 
   assert.equal(result.length, 1);
@@ -115,9 +179,15 @@ test("recommendNextActions: solid topic A in graph recommends weak/untryed topic
   const result = recommendNextActions(
     stats([
       { themeId: 1, themeName: "Тема A", overallPercent: 85, lastPercent: 85 },
-      { themeId: 2, themeName: "Тема B", overallPercent: null, lastPercent: null },
+      {
+        themeId: 2,
+        themeName: "Тема B",
+        overallPercent: null,
+        lastPercent: null,
+      },
     ]),
     [{ fromThemeId: 1, toThemeId: 2 }],
+    t,
   );
 
   const graphAction = result.find(
@@ -135,6 +205,7 @@ test("recommendNextActions: graph skips target theme that is already solid", () 
       { themeId: 2, themeName: "Тема B", overallPercent: 80, lastPercent: 80 },
     ]),
     [{ fromThemeId: 1, toThemeId: 2 }],
+    t,
   );
 
   assert.equal(

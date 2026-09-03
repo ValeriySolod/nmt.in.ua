@@ -63,6 +63,7 @@ export type CheckAnswerActionState =
 
 export type FinishTrainerSessionActionInput = {
   sessionId: number;
+  locale?: "uk" | "en" | "de";
   markUnansweredAsIncorrect?: boolean;
   capTimeSec?: number;
 };
@@ -95,4 +96,3 @@ export type MarkSessionStartedActionInput = {
 export type MarkSessionStartedActionState =
   | { status: "success"; startTime: number }
   | { status: "error"; message: string };
-
