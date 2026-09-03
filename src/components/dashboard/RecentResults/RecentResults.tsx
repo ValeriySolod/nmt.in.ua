@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import type { RecentResultItem } from "@/modules/results/getRecentResults";
 import css from "./RecentResults.module.css";
 
@@ -6,11 +9,14 @@ type RecentResultsProps = {
 };
 
 export function RecentResults({ items }: RecentResultsProps) {
+  const t = useTranslations("RecentResults");
+
   return (
-    <aside className={css.panel} aria-label="Останні результати">
-      <h2 className={css.title}>Останні результати</h2>
+    <aside className={css.panel} aria-label={t("title")}>
+      <h2 className={css.title}>{t("title")}</h2>
+
       {items.length === 0 ? (
-        <p className={css.hint}>Дані зʼявляться після перших тестів.</p>
+        <p className={css.hint}>{t("empty")}</p>
       ) : (
         <ul className={css.list}>
           {items.map((item) => (

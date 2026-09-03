@@ -1,7 +1,11 @@
-import { NavStubPage, createStubPageMetadata } from "@/components/dashboard/StubPage";
+import {
+  NavStubPage,
+  createStubPageMetadata,
+} from "@/components/dashboard/StubPage";
 
-const { metadata } = createStubPageMetadata("/materials");
-export { metadata };
+export async function generateMetadata() {
+  return createStubPageMetadata("/materials", "materials");
+}
 
 export default function MaterialsPage() {
   return <NavStubPage href="/materials" />;

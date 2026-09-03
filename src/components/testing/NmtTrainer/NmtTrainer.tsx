@@ -97,7 +97,7 @@ export function NmtTrainer({
     });
 
     if (result.status === "error") {
-      setError(result.message);
+      setError(result.code);
       return;
     }
 
@@ -122,7 +122,7 @@ export function NmtTrainer({
     });
 
     if (result.status === "error") {
-      setError(result.message);
+      setError(result.code);
       setIsFinishing(false);
       return;
     }

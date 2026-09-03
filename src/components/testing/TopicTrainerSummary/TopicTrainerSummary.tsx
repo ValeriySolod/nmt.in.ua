@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import { TopicTrainerMistakeReview } from "@/components/testing/TopicTrainerMistakeReview";
 import type { SessionMistakeItem } from "@/modules/testing/getSessionMistakeReview";
 import type { TopicTestMode } from "@/modules/testing/topicTestMode";
@@ -24,20 +27,24 @@ export function TopicTrainerSummary({
   timedOut = false,
   mistakes = [],
 }: TopicTrainerSummaryProps) {
+  const t = useTranslations("TopicTrainerSummary");
   const isUltimate = mode === "ultimate";
 
   return (
     <section className={css.summary} aria-labelledby="trainer-summary-title">
       <header className={css.intro}>
         <h1 id="trainer-summary-title" className={css.title}>
-          {isUltimate ? "Ultimate — підсумок" : "Підсумок тесту"}
+          {isUltimate ? t("ultimateTitle") : t("title")}
         </h1>
         <p className={css.lead}>
-          Тема «{summary.themeName}». Сесія №{summary.sessionId}.
+          {t("summary", {
+            theme: summary.themeName,
+            sessionId: summary.sessionId,
+          })}
           {isUltimate ? (
             <>
               {" "}
-              {timedOut ? "Час вийшов." : "Тест завершено."} Розбір помилок — нижче.
+              {timedOut ? t("timedOut") : t("completed")} {t("mistakesBelow")}
             </>
           ) : null}
         </p>
@@ -45,41 +52,48 @@ export function TopicTrainerSummary({
 
       <dl className={css.stats}>
         <div className={css.stat}>
-          <dt>Вірно</dt>
+          <dt>{t("correct")}</dt>
           <dd>
             {summary.rightNumber} / {summary.tasksNumber}
           </dd>
         </div>
+
         <div className={css.stat}>
-          <dt>Результат</dt>
+          <dt>{t("result")}</dt>
           <dd>{formatPercent(summary.percent)}</dd>
         </div>
+
         <div className={css.stat}>
-          <dt>Час</dt>
+          <dt>{t("time")}</dt>
           <dd>{formatDurationSeconds(summary.timeSec)}</dd>
         </div>
       </dl>
 
       {isUltimate && mistakes.length > 0 ? (
-        <TopicTrainerMistakeReview mistakes={mistakes} />
+        <TopicTrainerMistakeReview
+          mistakes={mistakes}
+          title={t("mistakeReview", { count: mistakes.length })}
+        />
       ) : null}
 
       <RecommendedActionsPanel
         actions={recommendations}
-        title="Рекомендуємо далі"
-        lead="Наступні кроки на основі вашого результату."
+        title={t("recommendationsTitle")}
+        lead={t("recommendationsLead")}
         className={css.recommendations}
       />
 
-      <nav className={css.links} aria-label="Що далі">
+      <nav className={css.links} aria-label={t("nextSteps")}>
         <Link href="/results" className={css.primary}>
-          Результати за темами
+          {t("results")}
         </Link>
+
         <Link href="/sessions" className={css.secondary}>
-          Мої сесії
+          {t("sessions")}
         </Link>
+
         <Link href="/" className={css.secondary}>
-          Новий тест
+          {t("newTest")}
         </Link>
       </nav>
     </section>

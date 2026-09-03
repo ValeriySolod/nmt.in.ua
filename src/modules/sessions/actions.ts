@@ -8,17 +8,23 @@ import {
   CancelLearningSessionError,
 } from "./cancelLearningSession";
 
+export type CancelLearningSessionErrorCode =
+  | "notFound"
+  | "notCancelable"
+  | "invalidInput"
+  | "generic";
+
+export type AssignMentorSessionErrorCode = "generic";
+
 export type CancelLearningSessionActionState =
   | { status: "idle" }
-  | { status: "error"; message: string }
+  | { status: "error"; code: CancelLearningSessionErrorCode }
   | { status: "success" };
 
 export type AssignMentorSessionActionState =
   | { status: "idle" }
-  | { status: "error"; message: string }
+  | { status: "error"; code: AssignMentorSessionErrorCode }
   | { status: "success"; sessionId: number; created: boolean };
-
-const GENERIC_ERROR = "Не вдалося скасувати сесію. Спробуйте ще раз.";
 
 type CancelDeps = {
   cancelLearningSession: typeof cancelLearningSession;
@@ -49,20 +55,21 @@ export async function cancelLearningSessionAction(
     if (error instanceof CancelLearningSessionError) {
       switch (error.code) {
         case "not_found":
-          return { status: "error", message: "Сесію не знайдено." };
+          return { status: "error", code: "notFound" };
+
         case "not_cancelable":
-          return {
-            status: "error",
-            message: "Виконану сесію не можна скасувати.",
-          };
+          return { status: "error", code: "notCancelable" };
+
         case "invalid_input":
-          return { status: "error", message: "Невірний ідентифікатор сесії." };
+          return { status: "error", code: "invalidInput" };
+
         default:
-          return { status: "error", message: GENERIC_ERROR };
+          return { status: "error", code: "generic" };
       }
     }
+
     console.error("cancelLearningSessionAction: unexpected error", error);
-    return { status: "error", message: GENERIC_ERROR };
+    return { status: "error", code: "generic" };
   }
 }
 
@@ -88,7 +95,7 @@ export async function assignMentorSessionAction(
     console.error("assignMentorSessionAction: unexpected error", error);
     return {
       status: "error",
-      message: "Не вдалося призначити mentor-сесію. Перевірте тему та учня.",
+      code: "generic",
     };
   }
 }

@@ -10,11 +10,11 @@ import {
 } from "./getCurrentUser";
 import { findUserByLogin } from "./users";
 
+export type LoginErrorCode = "requiredFields" | "invalidCredentials";
+
 export type LoginActionState =
   | { status: "idle" }
-  | { status: "error"; message: string };
-
-const INVALID_CREDENTIALS = "Невірний логін або пароль.";
+  | { status: "error"; code: LoginErrorCode };
 
 export async function loginAction(
   _prev: LoginActionState,
@@ -25,19 +25,23 @@ export async function loginAction(
   const nextPath = String(formData.get("next") ?? "/").trim() || "/";
 
   if (!login || !password) {
-    return { status: "error", message: "Введіть логін і пароль." };
+    return { status: "error", code: "requiredFields" };
   }
 
   const user = await findUserByLogin(login);
+
   if (!user || !verifyPassword(password, user.passwordHash)) {
-    return { status: "error", message: INVALID_CREDENTIALS };
+    return { status: "error", code: "invalidCredentials" };
   }
 
   await setSessionCookie(user);
   redirect(nextPath.startsWith("/") ? nextPath : "/");
 }
 
-export async function demoLoginAction(login: string, nextPath = "/"): Promise<void> {
+export async function demoLoginAction(
+  login: string,
+  nextPath = "/",
+): Promise<void> {
   const user = await findUserByLogin(login);
   if (!user) {
     redirect("/login");
