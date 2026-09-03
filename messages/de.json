@@ -216,5 +216,28 @@
       "requiredFields": "Gib Login und Passwort ein.",
       "invalidCredentials": "Ungültiger Login oder ungültiges Passwort."
     }
+  },
+  "ContentImportForm": {
+    "title": "Content-Import",
+    "lead": "Lade drei CSV-Dateien oder ein JSON-Dokument mit Themen, Verbindungen und Aufgaben hoch. Der API-Schlüssel bleibt auf dem Server und ist im Browser nicht sichtbar.",
+    "unavailable": "Import nicht verfügbar: Der folgende Schlüssel ist auf dem Server nicht konfiguriert:",
+    "validationErrors": "Validierungsfehler:",
+    "success": "Import erfolgreich.",
+    "inserted": "Hinzugefügt",
+    "updated": "Aktualisiert",
+    "counts": "Themen {themes}, Verbindungen {connections}, Aufgaben {tasks}",
+    "total": "insgesamt {count}",
+    "formatAria": "Importformat",
+    "themesColumns": "Spalten: id, name, description, ord",
+    "connectionsColumns": "Spalten: id, vertex_start, vertex_finish",
+    "tasksColumns": "Spalten: id, name, task_text, theme_id, answer_1…answer_4, right_answer_n, comments",
+    "importing": "Import läuft…",
+    "importCsv": "CSV importieren",
+    "jsonHint": "Ein Objekt mit den Arrays themes, themeConnections und quizTasks (siehe README).",
+    "importJson": "JSON importieren",
+    "modes": {
+      "csv": "Drei CSV-Dateien",
+      "json": "Eine JSON-Datei"
+    }
   }
 }

@@ -216,5 +216,28 @@
       "requiredFields": "Enter your login and password.",
       "invalidCredentials": "Invalid login or password."
     }
+  },
+  "ContentImportForm": {
+    "title": "Content import",
+    "lead": "Upload three CSV files or one JSON document containing topics, connections, and tasks. The API key remains on the server and is not exposed to the browser.",
+    "unavailable": "Import is unavailable: the following key is not configured on the server:",
+    "validationErrors": "Validation errors:",
+    "success": "Import successful.",
+    "inserted": "Added",
+    "updated": "Updated",
+    "counts": "topics {themes}, connections {connections}, tasks {tasks}",
+    "total": "total {count}",
+    "formatAria": "Import format",
+    "themesColumns": "Columns: id, name, description, ord",
+    "connectionsColumns": "Columns: id, vertex_start, vertex_finish",
+    "tasksColumns": "Columns: id, name, task_text, theme_id, answer_1…answer_4, right_answer_n, comments",
+    "importing": "Importing…",
+    "importCsv": "Import CSV",
+    "jsonHint": "An object containing the themes, themeConnections, and quizTasks arrays (see README).",
+    "importJson": "Import JSON",
+    "modes": {
+      "csv": "Three CSV files",
+      "json": "One JSON file"
+    }
   }
 }

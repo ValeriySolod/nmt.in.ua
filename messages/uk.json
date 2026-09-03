@@ -216,5 +216,28 @@
       "requiredFields": "Введіть логін і пароль.",
       "invalidCredentials": "Невірний логін або пароль."
     }
+  },
+  "ContentImportForm": {
+    "title": "Імпорт контенту",
+    "lead": "Завантажте три CSV-файли або один JSON-документ з темами, звʼязками та завданнями. Ключ API залишається на сервері — браузер його не бачить.",
+    "unavailable": "Імпорт недоступний: на сервері не налаштовано ключ",
+    "validationErrors": "Помилки валідації:",
+    "success": "Імпорт успішний.",
+    "inserted": "Додано",
+    "updated": "Оновлено",
+    "counts": "теми {themes}, звʼязки {connections}, завдання {tasks}",
+    "total": "усього {count}",
+    "formatAria": "Формат імпорту",
+    "themesColumns": "Колонки: id, name, description, ord",
+    "connectionsColumns": "Колонки: id, vertex_start, vertex_finish",
+    "tasksColumns": "Колонки: id, name, task_text, theme_id, answer_1…answer_4, right_answer_n, comments",
+    "importing": "Імпорт…",
+    "importCsv": "Імпортувати CSV",
+    "jsonHint": "Обʼєкт з масивами themes, themeConnections, quizTasks (див. README).",
+    "importJson": "Імпортувати JSON",
+    "modes": {
+      "csv": "Три CSV",
+      "json": "Один JSON"
+    }
   }
 }
