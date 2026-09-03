@@ -51,10 +51,7 @@ export type {
   MarkSessionStartedResult,
   MarkSessionStartedErrorCode,
 } from "./markSessionStarted";
-export {
-  formatElapsedClock,
-  resolveSessionElapsedSec,
-} from "./sessionElapsed";
+export { formatElapsedClock, resolveSessionElapsedSec } from "./sessionElapsed";
 export {
   finishTrainerSession,
   validateFinishTrainerSessionInput,
@@ -66,9 +63,7 @@ export type {
   FinishTrainerSessionResult,
   FinishTrainerSessionErrorCode,
 } from "./finishTrainerSession";
-export {
-  getAvailableTopicThemes,
-} from "./getAvailableTopicThemes";
+export { getAvailableTopicThemes } from "./getAvailableTopicThemes";
 export {
   getSessionTasks,
   GetSessionTasksError,
@@ -102,7 +97,10 @@ export type TrainerSession = {
 };
 
 /** Симулятор повного НМТ (окремий flow від короткого тесту). */
-export async function startNmtSimulator(): Promise<TrainerSession> {
-  // TODO(module-3): повний варіант 22 завдання / таймер
-  throw new Error("startNmtSimulator: ще не реалізовано (модуль 3)");
-}
+
+export {
+  startNmtSimulator,
+  StartNmtSimulatorError,
+  NMT_SIMULATOR_TASK_COUNT,
+  SESSION_TYPE_NMT_SIMULATOR,
+} from "./startNmtSimulator";
