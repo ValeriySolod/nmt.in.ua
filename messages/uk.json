@@ -123,5 +123,46 @@
 
     "problemsTitle": "Практикуйте додаткові задачі",
     "problemsReason": "Ваш прогрес стабільний — закріпіть його практикою в задачнику."
+  },
+  "TopicTrainer": {
+    "confirmAbortUltimate": "Завершити Ultimate-тестування? Невідповідені завдання будуть зараховані як помилки.",
+    "ultimateTitle": "Ultimate — тест за темою",
+    "title": "Тест за темою",
+    "session": "Сесія №{id}",
+    "remaining": "Залишилось",
+    "time": "Час",
+    "remainingAria": "Залишилось {time}",
+    "timeAria": "Час {time}",
+    "taskProgress": "Завдання {current} / {total}",
+    "taskAria": "Завдання {number}",
+    "answerOptions": "Варіанти відповіді",
+    "savingAnswer": "Зберігаємо відповідь…",
+    "checkingAnswer": "Перевіряємо відповідь…",
+    "correct": "Вірно",
+    "incorrect": "Невірно",
+    "skip": "Пропустити",
+    "abort": "Завершити тестування",
+    "next": "Наступне завдання",
+    "finishing": "Завершуємо…",
+    "finish": "Завершити тест",
+    "backToTopics": "До вибору теми"
+  },
+  "TopicTrainerSummary": {
+    "ultimateTitle": "Ultimate — підсумок",
+    "title": "Підсумок тесту",
+    "summary": "Тема «{theme}». Сесія №{sessionId}.",
+    "timedOut": "Час вийшов.",
+    "completed": "Тест завершено.",
+    "mistakesBelow": "Розбір помилок — нижче.",
+    "correct": "Вірно",
+    "result": "Результат",
+    "time": "Час",
+    "recommendationsTitle": "Рекомендуємо далі",
+    "recommendationsLead": "Наступні кроки на основі вашого результату.",
+    "nextSteps": "Що далі",
+    "results": "Результати за темами",
+    "sessions": "Мої сесії",
+    "newTest": "Новий тест",
+    "mistakeReview": "Розбір помилок ({count})"
   }
 }

@@ -10,8 +10,14 @@ import {
   type StartTopicTestActionState,
 } from "./actions";
 import { checkAnswer, CheckAnswerError } from "./checkAnswer";
-import { finishTrainerSession, FinishTrainerSessionError } from "./finishTrainerSession";
-import { markSessionStarted, MarkSessionStartedError } from "./markSessionStarted";
+import {
+  finishTrainerSession,
+  FinishTrainerSessionError,
+} from "./finishTrainerSession";
+import {
+  markSessionStarted,
+  MarkSessionStartedError,
+} from "./markSessionStarted";
 
 const IDLE_STATE: StartTopicTestActionState = { status: "idle" };
 
@@ -27,9 +33,18 @@ function formDataWith(fields: Record<string, string>): FormData {
 
 test("ignores any client-supplied userId and always uses the trusted demo user id", async () => {
   let capturedInput: unknown;
-  const spy = (async (input: { userId: number; themeId: number; mode?: string }) => {
+  const spy = (async (input: {
+    userId: number;
+    themeId: number;
+    mode?: string;
+  }) => {
     capturedInput = input;
-    return { sessionId: 555, themeId: input.themeId, taskIds: [], mode: "standard" as const };
+    return {
+      sessionId: 555,
+      themeId: input.themeId,
+      taskIds: [],
+      mode: "standard" as const,
+    };
   }) as typeof startTopicTest;
 
   const formData = formDataWith({ themeId: "2", userId: "999" });
@@ -50,7 +65,7 @@ test("the created session receives user_id = 1", async () => {
   const insertCalls: { sql: string; params: unknown[] }[] = [];
   const connection: SqlConnection = {
     beginTransaction: async () => {},
-    query: async <T,>(sql: string) => {
+    query: async <T>(sql: string) => {
       if (sql.startsWith("SELECT")) return tasks as unknown as T[];
       return [] as T[];
     },
@@ -72,11 +87,16 @@ test("the created session receives user_id = 1", async () => {
   const formData = formDataWith({ themeId: "3" });
 
   const state = await startTopicTestAction(IDLE_STATE, formData, {
-    startTopicTest: (input) => startTopicTest(input, { getConnection: async () => connection }),
+    startTopicTest: (input) =>
+      startTopicTest(input, { getConnection: async () => connection }),
     ...mockAuth,
   });
 
-  assert.deepEqual(state, { status: "success", sessionId: 777, mode: "standard" });
+  assert.deepEqual(state, {
+    status: "success",
+    sessionId: 777,
+    mode: "standard",
+  });
 
   const sessionInsert = insertCalls.find((c) =>
     c.sql.startsWith("INSERT INTO task_sessions"),
@@ -123,7 +143,7 @@ test("a second submission while one is pending is rejected, not creating a dupli
     beginTransaction: async () => {
       await gate;
     },
-    query: async <T,>(sql: string) => {
+    query: async <T>(sql: string) => {
       if (sql.startsWith("SELECT")) return tasks as unknown as T[];
       return [] as T[];
     },
@@ -144,7 +164,8 @@ test("a second submission while one is pending is rejected, not creating a dupli
 
   const runAction = (themeId: string) =>
     startTopicTestAction(IDLE_STATE, formDataWith({ themeId }), {
-      startTopicTest: (input) => startTopicTest(input, { getConnection: async () => connection }),
+      startTopicTest: (input) =>
+        startTopicTest(input, { getConnection: async () => connection }),
       ...mockAuth,
     });
 
@@ -250,6 +271,7 @@ test("finishTrainerSessionAction uses the trusted demo user and returns summary 
         hasCompletedSessions: true,
       }),
       recommendNextActionsForStats: async () => recommendations,
+      getRecommendationTranslator: async () => (key) => key,
       persistRecommendations: async (_userId, actions) => ({
         actions,
         createdSessionIds: [],

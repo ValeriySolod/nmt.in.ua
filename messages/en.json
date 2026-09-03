@@ -123,5 +123,46 @@
 
     "problemsTitle": "Practice additional problems",
     "problemsReason": "Your progress is steady — reinforce it with additional practice."
+  },
+  "TopicTrainer": {
+    "confirmAbortUltimate": "Finish the Ultimate test? Unanswered tasks will be counted as incorrect.",
+    "ultimateTitle": "Ultimate — topic test",
+    "title": "Topic test",
+    "session": "Session #{id}",
+    "remaining": "Remaining",
+    "time": "Time",
+    "remainingAria": "{time} remaining",
+    "timeAria": "Time {time}",
+    "taskProgress": "Task {current} / {total}",
+    "taskAria": "Task {number}",
+    "answerOptions": "Answer options",
+    "savingAnswer": "Saving answer…",
+    "checkingAnswer": "Checking answer…",
+    "correct": "Correct",
+    "incorrect": "Incorrect",
+    "skip": "Skip",
+    "abort": "Finish test",
+    "next": "Next task",
+    "finishing": "Finishing…",
+    "finish": "Finish test",
+    "backToTopics": "Back to topic selection"
+  },
+  "TopicTrainerSummary": {
+    "ultimateTitle": "Ultimate — summary",
+    "title": "Test summary",
+    "summary": "Topic “{theme}”. Session #{sessionId}.",
+    "timedOut": "Time is up.",
+    "completed": "Test completed.",
+    "mistakesBelow": "Review your mistakes below.",
+    "correct": "Correct",
+    "result": "Result",
+    "time": "Time",
+    "recommendationsTitle": "Recommended next steps",
+    "recommendationsLead": "Next steps based on your result.",
+    "nextSteps": "What's next",
+    "results": "Results by topic",
+    "sessions": "My sessions",
+    "newTest": "New test",
+    "mistakeReview": "Mistake review ({count})"
   }
 }

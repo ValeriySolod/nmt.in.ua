@@ -3,6 +3,7 @@
 import {
   recommendNextActionsForStats,
   persistRecommendations,
+  type RecommendationTranslator,
 } from "@/modules/recommendations";
 import { getStudentTopicStats } from "@/modules/recommendations/getStudentTopicStats";
 import { requireUserId } from "@/modules/auth";
@@ -71,6 +72,17 @@ type AuthDeps = {
 };
 
 const defaultAuthDeps: AuthDeps = { requireUserId };
+
+async function getRecommendationTranslator(
+  locale: "uk" | "en" | "de",
+): Promise<RecommendationTranslator> {
+  const t = await getTranslations({
+    locale,
+    namespace: "Recommendations",
+  });
+
+  return (key, values) => t(key as never, values as never);
+}
 
 type StartTopicTestActionDeps = AuthDeps & {
   startTopicTest: typeof startTopicTest;
@@ -173,6 +185,9 @@ type FinishTrainerSessionActionDeps = AuthDeps & {
   getStudentTopicStats: typeof getStudentTopicStats;
   recommendNextActionsForStats: typeof recommendNextActionsForStats;
   persistRecommendations: typeof persistRecommendations;
+  getRecommendationTranslator?: (
+    locale: "uk" | "en" | "de",
+  ) => Promise<RecommendationTranslator>;
 };
 
 const defaultFinishDeps: FinishTrainerSessionActionDeps = {
@@ -180,6 +195,7 @@ const defaultFinishDeps: FinishTrainerSessionActionDeps = {
   getStudentTopicStats,
   recommendNextActionsForStats,
   persistRecommendations,
+  getRecommendationTranslator,
   ...defaultAuthDeps,
 };
 
@@ -207,11 +223,10 @@ export async function finishTrainerSessionAction(
         ? input.locale
         : "uk";
 
-    const t = await getTranslations({
-      locale,
+    const translatorFactory =
+      deps.getRecommendationTranslator ?? getRecommendationTranslator;
 
-      namespace: "Recommendations",
-    });
+    const t = await translatorFactory(locale);
 
     const rawActions = await deps.recommendNextActionsForStats(stats, t);
     const { actions: recommendations } = await deps.persistRecommendations(
