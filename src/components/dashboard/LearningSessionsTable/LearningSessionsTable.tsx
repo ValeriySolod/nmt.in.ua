@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import clsx from "clsx";
 import {
   cancelLearningSessionAction,
@@ -69,6 +69,8 @@ function SessionActions({ row }: { row: LearningSessionRow }) {
 
 export function LearningSessionsTable({ rows }: LearningSessionsTableProps) {
   const t = useTranslations("LearningSessionsTable");
+  const [showExtendedInfo, setShowExtendedInfo] = useState(false);
+
   return (
     <section
       className={css.learningSessions}
@@ -79,6 +81,28 @@ export function LearningSessionsTable({ rows }: LearningSessionsTableProps) {
           {t("title")}
         </h1>
         <p className={css.lead}>{t("lead")}</p>
+        <div className={css.descriptionRow}>
+          <p className={css.lead}>
+            Історія тестових сесій і заплановані тренування. Старт відкриває
+            проходження тесту за темою.
+          </p>
+
+          {rows.length > 0 ? (
+            <div className={css.tableControls}>
+              <button
+                type="button"
+                className={css.detailsToggle}
+                aria-expanded={showExtendedInfo}
+                aria-controls="learning-sessions-table"
+                onClick={() => setShowExtendedInfo((current) => !current)}
+              >
+                {showExtendedInfo
+                  ? "Стисла інформація"
+                  : "Розширена інформація"}
+              </button>
+            </div>
+          ) : null}
+        </div>
       </header>
 
       {rows.length === 0 ? (
@@ -101,6 +125,43 @@ export function LearningSessionsTable({ rows }: LearningSessionsTableProps) {
                 <th scope="col">{t("createdBy")}</th>
                 <th scope="col">{t("status")}</th>
                 <th scope="col">{t("actions")}</th>
+        <div
+          id="learning-sessions-table"
+          className={css.tableWrap}
+          tabIndex={showExtendedInfo ? 0 : undefined}
+          aria-label={
+            showExtendedInfo
+              ? "Розширена таблиця сесій, прокручуйте горизонтально"
+              : "Скорочена таблиця сесій"
+          }
+        >
+          <table
+            className={clsx(
+              css.table,
+              showExtendedInfo && css.tableExpanded,
+            )}
+          >
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Назва теми</th>
+                {showExtendedInfo ? (
+                  <>
+                    <th scope="col">Завдань</th>
+                    <th scope="col">Вірно</th>
+                  </>
+                ) : null}
+                <th scope="col">%</th>
+                {showExtendedInfo ? <th scope="col">Час, с</th> : null}
+                <th scope="col">Час/тест</th>
+                {showExtendedInfo ? (
+                  <>
+                    <th scope="col">Дата/час старту</th>
+                    <th scope="col">Ким створено</th>
+                  </>
+                ) : null}
+                <th scope="col">Статус</th>
+                <th scope="col">Дії</th>
               </tr>
             </thead>
             <tbody>
@@ -108,15 +169,31 @@ export function LearningSessionsTable({ rows }: LearningSessionsTableProps) {
                 <tr key={row.id}>
                   <td>{row.rowNumber}</td>
                   <td className={css.themeCell}>{row.themeName}</td>
-                  <td>{row.tasksNumber}</td>
-                  <td>{row.rightNumber}</td>
+                  {showExtendedInfo ? (
+                    <>
+                      <td>{row.tasksNumber}</td>
+                      <td>{row.rightNumber}</td>
+                    </>
+                  ) : null}
                   <td>{formatPercent(row.percent)}</td>
-                  <td>{formatDurationSeconds(row.timeSec)}</td>
+                  {showExtendedInfo ? (
+                    <td>{formatDurationSeconds(row.timeSec)}</td>
+                  ) : null}
                   <td>{formatTimePerTask(row.timePerTaskSec)}</td>
                   <td className={css.startTimeCell}>{row.startTimeLabel}</td>
                   <td className={css.createdByCell}>
                     {t(`createdByValues.${row.createdBy}`)}
                   </td>
+                  {showExtendedInfo ? (
+                    <>
+                      <td className={css.startTimeCell}>
+                        {row.startTimeLabel}
+                      </td>
+                      <td className={css.createdByCell}>
+                        {row.createdByLabel}
+                      </td>
+                    </>
+                  ) : null}
                   <td className={css.statusCell}>
                     <span className={clsx(statusClass(row.status))}>
                       {t(`statuses.${row.status}`)}
