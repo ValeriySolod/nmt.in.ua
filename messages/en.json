@@ -164,5 +164,32 @@
     "sessions": "My sessions",
     "newTest": "New test",
     "mistakeReview": "Mistake review ({count})"
+  },
+  "TopicResultsTable": {
+    "title": "Results by topic",
+    "lead": "Progress by topic: overall score, recent attempts, and average response speed.",
+    "topic": "Topic",
+    "overall": "Overall",
+    "lastThree": "Last 3 tests",
+    "speed": "Speed, sec/task",
+    "hint": "Empty cells indicate topics without completed attempts. Colors: green ≥70%, yellow 40–69%, red <40%."
+  },
+  "LearningSessionsTable": {
+    "title": "Learning sessions",
+    "lead": "History of test sessions and planned training sessions. Start opens the topic test.",
+    "empty": "There are no sessions yet. Start a test from the home page.",
+    "tableAria": "Sessions table, scroll horizontally",
+    "theme": "Topic",
+    "tasks": "Tasks",
+    "correct": "Correct",
+    "timeSeconds": "Time, sec",
+    "timePerTest": "Time/test",
+    "startDate": "Start date/time",
+    "createdBy": "Created by",
+    "status": "Status",
+    "actions": "Actions",
+    "start": "Start",
+    "cancelSession": "Cancel session {id}",
+    "hint": "Planned “Auto” sessions appear after completing tests with a low result. Click “Start” to begin."
   }
 }

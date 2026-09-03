@@ -164,5 +164,32 @@
     "sessions": "Meine Sitzungen",
     "newTest": "Neuer Test",
     "mistakeReview": "Fehleranalyse ({count})"
+  },
+  "TopicResultsTable": {
+    "title": "Ergebnisse nach Thema",
+    "lead": "Fortschritt nach Thema: Gesamtergebnis, letzte Versuche und durchschnittliche Antwortgeschwindigkeit.",
+    "topic": "Thema",
+    "overall": "Gesamt",
+    "lastThree": "Letzte 3 Tests",
+    "speed": "Geschwindigkeit, Sek./Aufgabe",
+    "hint": "Leere Felder zeigen Themen ohne abgeschlossene Versuche. Farben: Grün ≥70%, Gelb 40–69%, Rot <40%."
+  },
+  "LearningSessionsTable": {
+    "title": "Lernsitzungen",
+    "lead": "Verlauf der Testsitzungen und geplanten Trainings. Mit „Start“ wird der Test zum Thema geöffnet.",
+    "empty": "Noch keine Sitzungen vorhanden. Starte einen Test auf der Startseite.",
+    "tableAria": "Sitzungstabelle, horizontal scrollen",
+    "theme": "Thema",
+    "tasks": "Aufgaben",
+    "correct": "Richtig",
+    "timeSeconds": "Zeit, Sek.",
+    "timePerTest": "Zeit/Test",
+    "startDate": "Startdatum/-zeit",
+    "createdBy": "Erstellt von",
+    "status": "Status",
+    "actions": "Aktionen",
+    "start": "Start",
+    "cancelSession": "Sitzung {id} abbrechen",
+    "hint": "Geplante „Auto“-Sitzungen erscheinen nach Tests mit einem schwachen Ergebnis. Klicke auf „Start“, um zu beginnen."
   }
 }

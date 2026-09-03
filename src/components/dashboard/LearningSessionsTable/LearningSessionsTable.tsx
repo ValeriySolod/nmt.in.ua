@@ -12,6 +12,7 @@ import {
   formatDurationSeconds,
   formatTimePerTask,
 } from "@/modules/sessions/types";
+import { useTranslations } from "next-intl";
 import css from "./LearningSessionsTable.module.css";
 
 const CANCEL_INITIAL: CancelLearningSessionActionState = { status: "idle" };
@@ -30,6 +31,8 @@ function statusClass(status: LearningSessionRow["status"]): string {
 }
 
 function SessionActions({ row }: { row: LearningSessionRow }) {
+  const t = useTranslations("LearningSessionsTable");
+
   const [state, formAction, pending] = useActionState(
     cancelLearningSessionAction,
     CANCEL_INITIAL,
@@ -42,7 +45,7 @@ function SessionActions({ row }: { row: LearningSessionRow }) {
   return (
     <div className={css.actions}>
       <Link href={`/session/${row.id}`} className={css.startLink}>
-        Старт
+        {t("start")}
       </Link>
       <form action={formAction}>
         <input type="hidden" name="sessionId" value={row.id} />
@@ -50,7 +53,7 @@ function SessionActions({ row }: { row: LearningSessionRow }) {
           type="submit"
           className={css.cancelButton}
           disabled={pending}
-          aria-label={`Скасувати сесію ${row.id}`}
+          aria-label={t("cancelSession", { id: row.id })}
         >
           ×
         </button>
@@ -65,6 +68,7 @@ function SessionActions({ row }: { row: LearningSessionRow }) {
 }
 
 export function LearningSessionsTable({ rows }: LearningSessionsTableProps) {
+  const t = useTranslations("LearningSessionsTable");
   return (
     <section
       className={css.learningSessions}
@@ -72,34 +76,31 @@ export function LearningSessionsTable({ rows }: LearningSessionsTableProps) {
     >
       <header className={css.intro}>
         <h1 id="learning-sessions-title" className={css.title}>
-          Навчальні сесії
+          {t("title")}
         </h1>
-        <p className={css.lead}>
-          Історія тестових сесій і заплановані тренування. Старт відкриває
-          проходження тесту за темою.
-        </p>
+        <p className={css.lead}>{t("lead")}</p>
       </header>
 
       {rows.length === 0 ? (
         <p className={css.empty} role="status">
-          Сесій поки немає. Запустіть тест на головній сторінці.
+          {t("empty")}
         </p>
       ) : (
-        <div className={css.tableWrap} tabIndex={0} aria-label="Таблиця сесій, прокручуйте горизонтально">
+        <div className={css.tableWrap} tabIndex={0} aria-label={t("tableAria")}>
           <table className={css.table}>
             <thead>
               <tr>
                 <th scope="col">#</th>
-                <th scope="col">Назва теми</th>
-                <th scope="col">Завдань</th>
-                <th scope="col">Вірно</th>
+                <th scope="col">{t("theme")}</th>
+                <th scope="col">{t("tasks")}</th>
+                <th scope="col">{t("correct")}</th>
                 <th scope="col">%</th>
-                <th scope="col">Час, с</th>
-                <th scope="col">Час/тест</th>
-                <th scope="col">Дата/час старту</th>
-                <th scope="col">Ким створено</th>
-                <th scope="col">Статус</th>
-                <th scope="col">Дії</th>
+                <th scope="col">{t("timeSeconds")}</th>
+                <th scope="col">{t("timePerTest")}</th>
+                <th scope="col">{t("startDate")}</th>
+                <th scope="col">{t("createdBy")}</th>
+                <th scope="col">{t("status")}</th>
+                <th scope="col">{t("actions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -129,10 +130,7 @@ export function LearningSessionsTable({ rows }: LearningSessionsTableProps) {
         </div>
       )}
 
-      <p className={css.hint}>
-        Заплановані сесії «Авто» зʼявляються після завершення тестів зі
-        слабким результатом. Натисніть «Старт», щоб розпочати.
-      </p>
+      <p className={css.hint}>{t("hint")}</p>
     </section>
   );
 }
