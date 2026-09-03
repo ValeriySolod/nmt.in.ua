@@ -80,13 +80,8 @@ export function LearningSessionsTable({ rows }: LearningSessionsTableProps) {
         <h1 id="learning-sessions-title" className={css.title}>
           {t("title")}
         </h1>
-        <p className={css.lead}>{t("lead")}</p>
         <div className={css.descriptionRow}>
-          <p className={css.lead}>
-            Історія тестових сесій і заплановані тренування. Старт відкриває
-            проходження тесту за темою.
-          </p>
-
+          <p className={css.lead}>{t("lead")}</p>
           {rows.length > 0 ? (
             <div className={css.tableControls}>
               <button
@@ -96,9 +91,7 @@ export function LearningSessionsTable({ rows }: LearningSessionsTableProps) {
                 aria-controls="learning-sessions-table"
                 onClick={() => setShowExtendedInfo((current) => !current)}
               >
-                {showExtendedInfo
-                  ? "Стисла інформація"
-                  : "Розширена інформація"}
+                {showExtendedInfo ? t("compactInfo") : t("extendedInfo")}
               </button>
             </div>
           ) : null}
@@ -110,58 +103,40 @@ export function LearningSessionsTable({ rows }: LearningSessionsTableProps) {
           {t("empty")}
         </p>
       ) : (
-        <div className={css.tableWrap} tabIndex={0} aria-label={t("tableAria")}>
-          <table className={css.table}>
-            <thead>
-              <tr>
-                <th scope="col">#</th>
-                <th scope="col">{t("theme")}</th>
-                <th scope="col">{t("tasks")}</th>
-                <th scope="col">{t("correct")}</th>
-                <th scope="col">%</th>
-                <th scope="col">{t("timeSeconds")}</th>
-                <th scope="col">{t("timePerTest")}</th>
-                <th scope="col">{t("startDate")}</th>
-                <th scope="col">{t("createdBy")}</th>
-                <th scope="col">{t("status")}</th>
-                <th scope="col">{t("actions")}</th>
         <div
           id="learning-sessions-table"
           className={css.tableWrap}
           tabIndex={showExtendedInfo ? 0 : undefined}
           aria-label={
-            showExtendedInfo
-              ? "Розширена таблиця сесій, прокручуйте горизонтально"
-              : "Скорочена таблиця сесій"
+            showExtendedInfo ? t("tableAriaExtended") : t("tableAria")
           }
         >
           <table
-            className={clsx(
-              css.table,
-              showExtendedInfo && css.tableExpanded,
-            )}
+            className={clsx(css.table, showExtendedInfo && css.tableExpanded)}
           >
             <thead>
               <tr>
                 <th scope="col">#</th>
-                <th scope="col">Назва теми</th>
+                <th scope="col">{t("theme")}</th>
                 {showExtendedInfo ? (
                   <>
-                    <th scope="col">Завдань</th>
-                    <th scope="col">Вірно</th>
+                    <th scope="col">{t("tasks")}</th>
+                    <th scope="col">{t("correct")}</th>
                   </>
                 ) : null}
                 <th scope="col">%</th>
-                {showExtendedInfo ? <th scope="col">Час, с</th> : null}
-                <th scope="col">Час/тест</th>
+                {showExtendedInfo ? (
+                  <th scope="col">{t("timeSeconds")}</th>
+                ) : null}
+                <th scope="col">{t("timePerTest")}</th>
                 {showExtendedInfo ? (
                   <>
-                    <th scope="col">Дата/час старту</th>
-                    <th scope="col">Ким створено</th>
+                    <th scope="col">{t("startDate")}</th>
+                    <th scope="col">{t("createdBy")}</th>
                   </>
                 ) : null}
-                <th scope="col">Статус</th>
-                <th scope="col">Дії</th>
+                <th scope="col">{t("status")}</th>
+                <th scope="col">{t("actions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -180,17 +155,13 @@ export function LearningSessionsTable({ rows }: LearningSessionsTableProps) {
                     <td>{formatDurationSeconds(row.timeSec)}</td>
                   ) : null}
                   <td>{formatTimePerTask(row.timePerTaskSec)}</td>
-                  <td className={css.startTimeCell}>{row.startTimeLabel}</td>
-                  <td className={css.createdByCell}>
-                    {t(`createdByValues.${row.createdBy}`)}
-                  </td>
                   {showExtendedInfo ? (
                     <>
                       <td className={css.startTimeCell}>
                         {row.startTimeLabel}
                       </td>
                       <td className={css.createdByCell}>
-                        {row.createdByLabel}
+                        {t(`createdByValues.${row.createdBy}`)}
                       </td>
                     </>
                   ) : null}
