@@ -102,6 +102,12 @@
     "modes": {
       "standard": "Standard",
       "ultimate": "Ultimate"
+    },
+    "errors": {
+      "insufficientTasks": "There are no tasks available for this topic yet.",
+      "alreadyInProgress": "A request is already in progress. Please wait.",
+      "invalidInput": "Select a topic to start the test.",
+      "generic": "Could not start the test. Please try again."
     }
   },
   "Recommendations": {
@@ -148,7 +154,26 @@
     "next": "Next task",
     "finishing": "Finishing…",
     "finish": "Finish test",
-    "backToTopics": "Back to topic selection"
+    "backToTopics": "Back to topic selection",
+    "errors": {
+      "checkAnswer": {
+        "invalidInput": "Select one of the answer options.",
+        "notFound": "The task was not found in this session.",
+        "sessionCompleted": "This test has already been completed.",
+        "generic": "Could not check the answer. Please try again."
+      },
+      "finish": {
+        "invalidInput": "Session not found.",
+        "notFound": "Session not found.",
+        "unfinished": "Answer all tasks before finishing the test.",
+        "generic": "Could not finish the test. Please try again."
+      },
+      "skip": {
+        "notFound": "The task was not found in this session.",
+        "sessionCompleted": "This test has already been completed.",
+        "generic": "Could not skip the task."
+      }
+    }
   },
   "TopicTrainerSummary": {
     "ultimateTitle": "Ultimate — summary",

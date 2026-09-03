@@ -40,32 +40,16 @@ import type {
 } from "./types";
 import { getTranslations } from "next-intl/server";
 
+export type StartTopicTestErrorCode =
+  | "insufficientTasks"
+  | "alreadyInProgress"
+  | "invalidInput"
+  | "generic";
+
 export type StartTopicTestActionState =
   | { status: "idle" }
-  | { status: "error"; message: string }
+  | { status: "error"; code: StartTopicTestErrorCode }
   | { status: "success"; sessionId: number; mode: TopicTestMode };
-
-const GENERIC_ERROR_MESSAGE = "Не вдалося запустити тест. Спробуйте ще раз.";
-const INSUFFICIENT_TASKS_MESSAGE =
-  "Для цієї теми поки що немає завдань у банку питань.";
-const IN_PROGRESS_MESSAGE = "Запит уже виконується — зачекайте.";
-const INVALID_INPUT_MESSAGE = "Оберіть тему, щоб почати тест.";
-const CHECK_GENERIC_ERROR_MESSAGE =
-  "Не вдалося перевірити відповідь. Спробуйте ще раз.";
-const CHECK_INVALID_INPUT_MESSAGE = "Оберіть один із варіантів відповіді.";
-const CHECK_NOT_FOUND_MESSAGE = "Завдання не знайдено в цій сесії.";
-const CHECK_COMPLETED_MESSAGE = "Цей тест уже завершено.";
-const FINISH_GENERIC_ERROR_MESSAGE =
-  "Не вдалося завершити тест. Спробуйте ще раз.";
-const FINISH_INVALID_INPUT_MESSAGE = "Сесію не знайдено.";
-const FINISH_NOT_FOUND_MESSAGE = "Сесію не знайдено.";
-const FINISH_UNFINISHED_MESSAGE = "Спочатку дайте відповідь на всі завдання.";
-const SKIP_GENERIC_ERROR_MESSAGE = "Не вдалося пропустити завдання.";
-const SKIP_NOT_FOUND_MESSAGE = "Завдання не знайдено в цій сесії.";
-const SKIP_COMPLETED_MESSAGE = "Цей тест уже завершено.";
-const MARK_STARTED_GENERIC_ERROR_MESSAGE = "Не вдалося зафіксувати час старту.";
-const MARK_STARTED_INVALID_INPUT_MESSAGE = "Сесію не знайдено.";
-const MARK_STARTED_NOT_FOUND_MESSAGE = "Сесію не знайдено.";
 
 type AuthDeps = {
   requireUserId: typeof requireUserId;
@@ -116,17 +100,21 @@ export async function startTopicTestAction(
     if (error instanceof StartTopicTestError) {
       switch (error.code) {
         case "insufficient_tasks":
-          return { status: "error", message: INSUFFICIENT_TASKS_MESSAGE };
+          return { status: "error", code: "insufficientTasks" };
+
         case "already_in_progress":
-          return { status: "error", message: IN_PROGRESS_MESSAGE };
+          return { status: "error", code: "alreadyInProgress" };
+
         case "invalid_input":
-          return { status: "error", message: INVALID_INPUT_MESSAGE };
+          return { status: "error", code: "invalidInput" };
+
         default:
-          return { status: "error", message: GENERIC_ERROR_MESSAGE };
+          return { status: "error", code: "generic" };
       }
     }
+
     console.error("startTopicTestAction: unexpected error", error);
-    return { status: "error", message: GENERIC_ERROR_MESSAGE };
+    return { status: "error", code: "generic" };
   }
 }
 
@@ -166,17 +154,21 @@ export async function checkAnswerAction(
     if (error instanceof CheckAnswerError) {
       switch (error.code) {
         case "invalid_input":
-          return { status: "error", message: CHECK_INVALID_INPUT_MESSAGE };
+          return { status: "error", code: "invalidInput" };
+
         case "not_found":
-          return { status: "error", message: CHECK_NOT_FOUND_MESSAGE };
+          return { status: "error", code: "notFound" };
+
         case "session_completed":
-          return { status: "error", message: CHECK_COMPLETED_MESSAGE };
+          return { status: "error", code: "sessionCompleted" };
+
         default:
-          return { status: "error", message: CHECK_GENERIC_ERROR_MESSAGE };
+          return { status: "error", code: "generic" };
       }
     }
+
     console.error("checkAnswerAction: unexpected error", error);
-    return { status: "error", message: CHECK_GENERIC_ERROR_MESSAGE };
+    return { status: "error", code: "generic" };
   }
 }
 
@@ -247,17 +239,21 @@ export async function finishTrainerSessionAction(
     if (error instanceof FinishTrainerSessionError) {
       switch (error.code) {
         case "invalid_input":
-          return { status: "error", message: FINISH_INVALID_INPUT_MESSAGE };
+          return { status: "error", code: "invalidInput" };
+
         case "not_found":
-          return { status: "error", message: FINISH_NOT_FOUND_MESSAGE };
+          return { status: "error", code: "notFound" };
+
         case "unfinished":
-          return { status: "error", message: FINISH_UNFINISHED_MESSAGE };
+          return { status: "error", code: "unfinished" };
+
         default:
-          return { status: "error", message: FINISH_GENERIC_ERROR_MESSAGE };
+          return { status: "error", code: "generic" };
       }
     }
+
     console.error("finishTrainerSessionAction: unexpected error", error);
-    return { status: "error", message: FINISH_GENERIC_ERROR_MESSAGE };
+    return { status: "error", code: "generic" };
   }
 }
 
@@ -283,21 +279,18 @@ export async function markSessionStartedAction(
     if (error instanceof MarkSessionStartedError) {
       switch (error.code) {
         case "invalid_input":
-          return {
-            status: "error",
-            message: MARK_STARTED_INVALID_INPUT_MESSAGE,
-          };
+          return { status: "error", code: "invalidInput" };
+
         case "not_found":
-          return { status: "error", message: MARK_STARTED_NOT_FOUND_MESSAGE };
+          return { status: "error", code: "notFound" };
+
         default:
-          return {
-            status: "error",
-            message: MARK_STARTED_GENERIC_ERROR_MESSAGE,
-          };
+          return { status: "error", code: "generic" };
       }
     }
+
     console.error("markSessionStartedAction: unexpected error", error);
-    return { status: "error", message: MARK_STARTED_GENERIC_ERROR_MESSAGE };
+    return { status: "error", code: "generic" };
   }
 }
 
@@ -321,15 +314,18 @@ export async function skipTaskAnswerAction(
     if (error instanceof SkipTaskAnswerError) {
       switch (error.code) {
         case "not_found":
-          return { status: "error", message: SKIP_NOT_FOUND_MESSAGE };
+          return { status: "error", code: "notFound" };
+
         case "session_completed":
-          return { status: "error", message: SKIP_COMPLETED_MESSAGE };
+          return { status: "error", code: "sessionCompleted" };
+
         default:
-          return { status: "error", message: SKIP_GENERIC_ERROR_MESSAGE };
+          return { status: "error", code: "generic" };
       }
     }
+
     console.error("skipTaskAnswerAction: unexpected error", error);
-    return { status: "error", message: SKIP_GENERIC_ERROR_MESSAGE };
+    return { status: "error", code: "generic" };
   }
 }
 

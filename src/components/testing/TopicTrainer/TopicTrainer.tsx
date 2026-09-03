@@ -104,7 +104,7 @@ export function TopicTrainer({
 
       if (result.status !== "success") {
         finishingRef.current = false;
-        setErrorMessage(result.message);
+        setErrorMessage(t(`errors.finish.${result.code}`));
         return;
       }
 
@@ -113,7 +113,7 @@ export function TopicTrainer({
       setSummary(result.summary);
       setRecommendations(result.recommendations);
     },
-    [sessionId, summary, locale],
+    [sessionId, summary, locale, t],
   );
 
   const handleTimeExpired = useCallback(() => {
@@ -193,7 +193,7 @@ export function TopicTrainer({
     setPendingMappingId(null);
 
     if (result.status !== "success") {
-      setErrorMessage(result.message);
+      setErrorMessage(t(`errors.checkAnswer.${result.code}`));
       return;
     }
 
@@ -222,7 +222,7 @@ export function TopicTrainer({
     setPendingMappingId(null);
 
     if (result.status !== "success") {
-      setErrorMessage(result.message);
+      setErrorMessage(t(`errors.skip.${result.code}`));
       return;
     }
 
@@ -247,7 +247,7 @@ export function TopicTrainer({
     setIsFinishing(false);
 
     if (result.status !== "success") {
-      setErrorMessage(result.message);
+      setErrorMessage(t(`errors.finish.${result.code}`));
       return;
     }
 

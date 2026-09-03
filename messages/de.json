@@ -102,6 +102,12 @@
     "modes": {
       "standard": "Standard",
       "ultimate": "Ultimate"
+    },
+    "errors": {
+      "insufficientTasks": "Für dieses Thema sind noch keine Aufgaben verfügbar.",
+      "alreadyInProgress": "Eine Anfrage wird bereits ausgeführt. Bitte warte.",
+      "invalidInput": "Wähle ein Thema aus, um den Test zu starten.",
+      "generic": "Der Test konnte nicht gestartet werden. Bitte versuche es erneut."
     }
   },
   "Recommendations": {
@@ -148,7 +154,26 @@
     "next": "Nächste Aufgabe",
     "finishing": "Wird beendet…",
     "finish": "Test beenden",
-    "backToTopics": "Zur Themenauswahl"
+    "backToTopics": "Zur Themenauswahl",
+    "errors": {
+      "checkAnswer": {
+        "invalidInput": "Wähle eine der Antwortmöglichkeiten aus.",
+        "notFound": "Die Aufgabe wurde in dieser Sitzung nicht gefunden.",
+        "sessionCompleted": "Dieser Test wurde bereits abgeschlossen.",
+        "generic": "Die Antwort konnte nicht überprüft werden. Bitte versuche es erneut."
+      },
+      "finish": {
+        "invalidInput": "Sitzung nicht gefunden.",
+        "notFound": "Sitzung nicht gefunden.",
+        "unfinished": "Beantworte zuerst alle Aufgaben.",
+        "generic": "Der Test konnte nicht abgeschlossen werden. Bitte versuche es erneut."
+      },
+      "skip": {
+        "notFound": "Die Aufgabe wurde in dieser Sitzung nicht gefunden.",
+        "sessionCompleted": "Dieser Test wurde bereits abgeschlossen.",
+        "generic": "Die Aufgabe konnte nicht übersprungen werden."
+      }
+    }
   },
   "TopicTrainerSummary": {
     "ultimateTitle": "Ultimate — Zusammenfassung",

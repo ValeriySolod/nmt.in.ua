@@ -57,10 +57,15 @@ export type CheckAnswerActionInput = {
   answerNumber: 1 | 2 | 3 | 4;
 };
 
+export type CheckAnswerErrorCode =
+  | "invalidInput"
+  | "notFound"
+  | "sessionCompleted"
+  | "generic";
+
 export type CheckAnswerActionState =
   | { status: "success"; correct: boolean }
-  | { status: "error"; message: string };
-
+  | { status: "error"; code: CheckAnswerErrorCode };
 export type FinishTrainerSessionActionInput = {
   sessionId: number;
   locale?: "uk" | "en" | "de";
@@ -70,22 +75,33 @@ export type FinishTrainerSessionActionInput = {
 
 import type { RecommendedAction } from "@/modules/recommendations";
 
+export type FinishTrainerSessionErrorCode =
+  | "invalidInput"
+  | "notFound"
+  | "unfinished"
+  | "generic";
+
 export type FinishTrainerSessionActionState =
   | {
       status: "success";
       summary: TrainerSessionSummary;
       recommendations: RecommendedAction[];
     }
-  | { status: "error"; message: string };
+  | { status: "error"; code: FinishTrainerSessionErrorCode };
 
 export type SkipTaskAnswerActionInput = {
   sessionId: number;
   mappingId: number;
 };
 
+export type SkipTaskAnswerErrorCode =
+  | "notFound"
+  | "sessionCompleted"
+  | "generic";
+
 export type SkipTaskAnswerActionState =
   | { status: "success"; correct: false }
-  | { status: "error"; message: string };
+  | { status: "error"; code: SkipTaskAnswerErrorCode };
 
 export type { TopicTestMode } from "./topicTestMode";
 
@@ -93,6 +109,11 @@ export type MarkSessionStartedActionInput = {
   sessionId: number;
 };
 
+export type MarkSessionStartedErrorCode =
+  | "invalidInput"
+  | "notFound"
+  | "generic";
+
 export type MarkSessionStartedActionState =
   | { status: "success"; startTime: number }
-  | { status: "error"; message: string };
+  | { status: "error"; code: MarkSessionStartedErrorCode };

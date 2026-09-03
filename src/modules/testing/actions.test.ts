@@ -173,10 +173,10 @@ test("a second submission while one is pending is rejected, not creating a dupli
   const second = await runAction("1");
 
   assert.equal(second.status, "error");
-  assert.equal(
-    second.status === "error" ? second.message : undefined,
-    "Запит уже виконується — зачекайте.",
-  );
+
+  if (second.status === "error") {
+    assert.equal(second.code, "alreadyInProgress");
+  }
 
   releaseFirst();
   const firstResult = await first;
@@ -218,7 +218,7 @@ test("checkAnswerAction maps not_found to a client-safe error without the answer
 
   assert.deepEqual(state, {
     status: "error",
-    message: "Завдання не знайдено в цій сесії.",
+    code: "notFound",
   });
   assert.doesNotMatch(JSON.stringify(state), /right_answer_n/);
 });
@@ -313,7 +313,7 @@ test("finishTrainerSessionAction maps unfinished to a client-safe error", async 
 
   assert.deepEqual(state, {
     status: "error",
-    message: "Спочатку дайте відповідь на всі завдання.",
+    code: "unfinished",
   });
 });
 
@@ -345,6 +345,6 @@ test("markSessionStartedAction maps not_found to a client-safe error", async () 
 
   assert.deepEqual(state, {
     status: "error",
-    message: "Сесію не знайдено.",
+    code: "notFound",
   });
 });

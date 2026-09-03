@@ -178,7 +178,7 @@ export function TopicTestStart({
 
       {state.status === "error" ? (
         <p className={css.error} role="alert">
-          {state.message}
+          {t(`errors.${state.code}`)}
         </p>
       ) : null}
     </PageFrame>
