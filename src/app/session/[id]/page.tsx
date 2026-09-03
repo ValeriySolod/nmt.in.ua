@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { TopicTrainer } from "@/components/testing/TopicTrainer";
+import { NmtTrainer } from "@/components/testing/NmtTrainer";
 import { createPageMetadata } from "@/constants/seo";
 import { recommendNextActionsForStats } from "@/modules/recommendations";
 import { getStudentTopicStats } from "@/modules/recommendations/getStudentTopicStats";
@@ -38,7 +39,7 @@ function readModeParam(raw: string | string[] | undefined): string | undefined {
 
 async function loadSession(
   sessionId: number,
-  userId: number,
+  userId: number
 ): Promise<SessionTasksResult> {
   try {
     return await getSessionTasks(sessionId, userId);
@@ -53,7 +54,10 @@ async function loadSession(
   }
 }
 
-async function activatePlannedSession(sessionId: number, userId: number): Promise<void> {
+async function activatePlannedSession(
+  sessionId: number,
+  userId: number
+): Promise<void> {
   try {
     await startPlannedSession({ sessionId, userId });
   } catch (error) {
@@ -75,13 +79,17 @@ export default async function SessionPage({
 }: SessionPageProps) {
   const { id } = await params;
   const query = await searchParams;
+
   const sessionId = Number(id);
 
   if (!Number.isInteger(sessionId) || sessionId <= 0) {
     notFound();
   }
 
-  const mode = parseTopicTestMode(readModeParam(query.mode));
+  const rawMode = readModeParam(query.mode);
+
+  const isNmt = rawMode === "nmt";
+  const mode = parseTopicTestMode(rawMode);
 
   const userId = await requireUserId();
 
@@ -97,9 +105,15 @@ export default async function SessionPage({
       ? await recommendNextActionsForStats(await getStudentTopicStats(userId))
       : [];
 
-  return (
+  return isNmt ? (
+    <NmtTrainer
+      sessionId={sessionId}
+      tasks={session.tasks}
+      initialSummary={session.summary}
+    />
+  ) : (
     <TopicTrainer
-      sessionId={session.sessionId}
+      sessionId={sessionId}
       tasks={session.tasks}
       initialSummary={session.summary}
       initialRecommendations={initialRecommendations}

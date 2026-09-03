@@ -20,16 +20,13 @@ import {
   markSessionStarted,
   MarkSessionStartedError,
 } from "./markSessionStarted";
-import {
-  startTopicTest,
-  StartTopicTestError,
-} from "./startTopicTest";
+import { startTopicTest, StartTopicTestError } from "./startTopicTest";
 import { parseTopicTestMode, type TopicTestMode } from "./topicTestMode";
+import { skipTaskAnswer, SkipTaskAnswerError } from "./skipTaskAnswer";
 import {
-  skipTaskAnswer,
-  SkipTaskAnswerError,
-} from "./skipTaskAnswer";
-import { getSessionMistakeReview, type SessionMistakeItem } from "./getSessionMistakeReview";
+  getSessionMistakeReview,
+  type SessionMistakeItem,
+} from "./getSessionMistakeReview";
 import type {
   CheckAnswerActionInput,
   CheckAnswerActionState,
@@ -40,6 +37,8 @@ import type {
   SkipTaskAnswerActionInput,
   SkipTaskAnswerActionState,
 } from "./types";
+
+import { startNmtSimulator, StartNmtSimulatorError } from "./startNmtSimulator";
 
 export type StartTopicTestActionState =
   | { status: "idle" }
@@ -60,13 +59,11 @@ const FINISH_GENERIC_ERROR_MESSAGE =
   "Не вдалося завершити тест. Спробуйте ще раз.";
 const FINISH_INVALID_INPUT_MESSAGE = "Сесію не знайдено.";
 const FINISH_NOT_FOUND_MESSAGE = "Сесію не знайдено.";
-const FINISH_UNFINISHED_MESSAGE =
-  "Спочатку дайте відповідь на всі завдання.";
+const FINISH_UNFINISHED_MESSAGE = "Спочатку дайте відповідь на всі завдання.";
 const SKIP_GENERIC_ERROR_MESSAGE = "Не вдалося пропустити завдання.";
 const SKIP_NOT_FOUND_MESSAGE = "Завдання не знайдено в цій сесії.";
 const SKIP_COMPLETED_MESSAGE = "Цей тест уже завершено.";
-const MARK_STARTED_GENERIC_ERROR_MESSAGE =
-  "Не вдалося зафіксувати час старту.";
+const MARK_STARTED_GENERIC_ERROR_MESSAGE = "Не вдалося зафіксувати час старту.";
 const MARK_STARTED_INVALID_INPUT_MESSAGE = "Сесію не знайдено.";
 const MARK_STARTED_NOT_FOUND_MESSAGE = "Сесію не знайдено.";
 
@@ -87,7 +84,7 @@ type StartTopicTestActionDeps = AuthDeps & {
 export async function startTopicTestAction(
   _prevState: StartTopicTestActionState,
   formData: FormData,
-  deps: StartTopicTestActionDeps = { startTopicTest, ...defaultAuthDeps },
+  deps: StartTopicTestActionDeps = { startTopicTest, ...defaultAuthDeps }
 ): Promise<StartTopicTestActionState> {
   const themeId = Number(formData.get("themeId"));
   const mode = parseTopicTestMode(formData.get("mode"));
@@ -99,7 +96,11 @@ export async function startTopicTestAction(
       themeId,
       mode,
     });
-    return { status: "success", sessionId: result.sessionId, mode: result.mode };
+    return {
+      status: "success",
+      sessionId: result.sessionId,
+      mode: result.mode,
+    };
   } catch (error) {
     if (error instanceof StartTopicTestError) {
       switch (error.code) {
@@ -115,6 +116,64 @@ export async function startTopicTestAction(
     }
     console.error("startTopicTestAction: unexpected error", error);
     return { status: "error", message: GENERIC_ERROR_MESSAGE };
+  }
+}
+
+export type StartNmtSimulatorActionState =
+  | { status: "idle" }
+  | { status: "error"; message: string }
+  | { status: "success"; sessionId: number };
+
+const NMT_SIMULATOR_GENERIC_ERROR =
+  "Не вдалося запустити симулятор. Спробуйте ще раз.";
+
+const NMT_SIMULATOR_INSUFFICIENT_TASKS =
+  "Недостатньо завдань для запуску симулятора.";
+
+const NMT_SIMULATOR_IN_PROGRESS = "Запит уже виконується — зачекайте.";
+
+export async function startNmtSimulatorAction(
+  _prevState: StartNmtSimulatorActionState,
+  _formData: FormData
+): Promise<StartNmtSimulatorActionState> {
+  try {
+    const userId = await requireUserId();
+
+    const result = await startNmtSimulator(userId);
+
+    return {
+      status: "success",
+      sessionId: result.sessionId,
+    };
+  } catch (error) {
+    if (error instanceof StartNmtSimulatorError) {
+      switch (error.code) {
+        case "insufficient_tasks":
+          return {
+            status: "error",
+            message: NMT_SIMULATOR_INSUFFICIENT_TASKS,
+          };
+
+        case "already_in_progress":
+          return {
+            status: "error",
+            message: NMT_SIMULATOR_IN_PROGRESS,
+          };
+
+        default:
+          return {
+            status: "error",
+            message: NMT_SIMULATOR_GENERIC_ERROR,
+          };
+      }
+    }
+
+    console.error("startNmtSimulatorAction: Сталася помилка", error);
+
+    return {
+      status: "error",
+      message: NMT_SIMULATOR_GENERIC_ERROR,
+    };
   }
 }
 
@@ -139,7 +198,7 @@ type CheckAnswerActionDeps = AuthDeps & {
  */
 export async function checkAnswerAction(
   input: CheckAnswerActionInput,
-  deps: CheckAnswerActionDeps = { checkAnswer, ...defaultAuthDeps },
+  deps: CheckAnswerActionDeps = { checkAnswer, ...defaultAuthDeps }
 ): Promise<CheckAnswerActionState> {
   try {
     const userId = await deps.requireUserId();
@@ -189,7 +248,7 @@ const defaultFinishDeps: FinishTrainerSessionActionDeps = {
  */
 export async function finishTrainerSessionAction(
   input: FinishTrainerSessionActionInput,
-  deps: FinishTrainerSessionActionDeps = defaultFinishDeps,
+  deps: FinishTrainerSessionActionDeps = defaultFinishDeps
 ): Promise<FinishTrainerSessionActionState> {
   try {
     const userId = await deps.requireUserId();
@@ -204,7 +263,7 @@ export async function finishTrainerSessionAction(
     const rawActions = await deps.recommendNextActionsForStats(stats);
     const { actions: recommendations } = await deps.persistRecommendations(
       userId,
-      rawActions,
+      rawActions
     );
 
     try {
@@ -240,7 +299,10 @@ type MarkSessionStartedActionDeps = AuthDeps & {
 
 export async function markSessionStartedAction(
   input: MarkSessionStartedActionInput,
-  deps: MarkSessionStartedActionDeps = { markSessionStarted, ...defaultAuthDeps },
+  deps: MarkSessionStartedActionDeps = {
+    markSessionStarted,
+    ...defaultAuthDeps,
+  }
 ): Promise<MarkSessionStartedActionState> {
   try {
     const userId = await deps.requireUserId();
@@ -253,11 +315,17 @@ export async function markSessionStartedAction(
     if (error instanceof MarkSessionStartedError) {
       switch (error.code) {
         case "invalid_input":
-          return { status: "error", message: MARK_STARTED_INVALID_INPUT_MESSAGE };
+          return {
+            status: "error",
+            message: MARK_STARTED_INVALID_INPUT_MESSAGE,
+          };
         case "not_found":
           return { status: "error", message: MARK_STARTED_NOT_FOUND_MESSAGE };
         default:
-          return { status: "error", message: MARK_STARTED_GENERIC_ERROR_MESSAGE };
+          return {
+            status: "error",
+            message: MARK_STARTED_GENERIC_ERROR_MESSAGE,
+          };
       }
     }
     console.error("markSessionStartedAction: unexpected error", error);
@@ -271,7 +339,7 @@ type SkipTaskAnswerActionDeps = AuthDeps & {
 
 export async function skipTaskAnswerAction(
   input: SkipTaskAnswerActionInput,
-  deps: SkipTaskAnswerActionDeps = { skipTaskAnswer, ...defaultAuthDeps },
+  deps: SkipTaskAnswerActionDeps = { skipTaskAnswer, ...defaultAuthDeps }
 ): Promise<SkipTaskAnswerActionState> {
   try {
     const userId = await deps.requireUserId();
@@ -298,7 +366,7 @@ export async function skipTaskAnswerAction(
 }
 
 export async function getSessionMistakeReviewAction(
-  sessionId: number,
+  sessionId: number
 ): Promise<SessionMistakeItem[]> {
   const userId = await requireUserId();
   return getSessionMistakeReview(sessionId, userId);
