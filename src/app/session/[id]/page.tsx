@@ -24,9 +24,11 @@ type SessionPageProps = {
 
 export async function generateMetadata({ params }: SessionPageProps) {
   const { id } = await params;
+  const t = await getTranslations("Metadata.session");
+
   return createPageMetadata({
-    title: "Проходження тесту",
-    description: "Інтерактивний тренажер: завдання тесту за обраною темою.",
+    title: t("title"),
+    description: t("description"),
     path: `/session/${id}`,
     noIndex: true,
   });

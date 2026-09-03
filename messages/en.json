@@ -14,7 +14,8 @@
       "student": "Student",
       "teacher": "Teacher",
       "admin": "Admin"
-    }
+    },
+    "siteName": "NMT Preparation"
   },
   "Sidebar": {
     "ariaLabel": "Dashboard navigation",
@@ -282,5 +283,43 @@
       "csv": "Three CSV files",
       "json": "One JSON file"
     }
+  },
+  "Metadata": {
+    "home": {
+      "title": "Test by Selected Topic",
+      "description": "NMT practice test by selected topic: choose a topic, the number of tasks, and start practicing."
+    },
+    "login": {
+      "title": "Sign In",
+      "description": "Sign in to your NMT learning dashboard."
+    },
+    "session": {
+      "title": "Taking a Test",
+      "description": "Interactive trainer with test tasks for the selected topic."
+    },
+    "settings": {
+      "title": "Settings",
+      "description": "Learning content import and account settings."
+    },
+    "materials": {
+      "title": "Learning Materials",
+      "description": "Notes, formulas, and explanations for the certification test topics."
+    },
+    "problems": {
+      "title": "Problem Bank",
+      "description": "A collection of tasks for independent practice outside the test."
+    },
+    "simulator": {
+      "title": "NMT Simulator",
+      "description": "A full NMT practice exam with a timer and scoring."
+    },
+    "consultations": {
+      "title": "Teacher Consultations",
+      "description": "Book a consultation and communicate with teachers."
+    }
+  },
+  "SettingsPage": {
+    "title": "Settings",
+    "description": "Learning content import and account settings."
   }
 }

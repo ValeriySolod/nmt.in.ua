@@ -1,12 +1,17 @@
+import { getTranslations } from "next-intl/server";
 import { LoginForm } from "@/components/auth/LoginForm/LoginForm";
 import { createPageMetadata } from "@/constants/seo";
 
-export const metadata = createPageMetadata({
-  title: "Вхід",
-  description: "Увійдіть до навчального кабінету NMT.",
-  path: "/login",
-  noIndex: true,
-});
+export async function generateMetadata() {
+  const t = await getTranslations("Metadata.login");
+
+  return createPageMetadata({
+    title: t("title"),
+    description: t("description"),
+    path: "/login",
+    noIndex: true,
+  });
+}
 
 type LoginPageProps = {
   searchParams: Promise<{ next?: string | string[] }>;

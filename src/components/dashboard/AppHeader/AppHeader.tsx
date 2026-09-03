@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { SITE_NAME } from "@/constants/seo";
 import type { AuthUser } from "@/modules/auth/client";
 import { userInitials } from "@/modules/auth/client";
 import { logoutActionFromHeader } from "@/modules/auth/actions";
@@ -46,13 +45,13 @@ export function AppHeader({
         <Link
           href="/"
           className={css.brand}
-          aria-label={`${SITE_NAME} — ${t("goHome")}`}
+          aria-label={`${t("siteName")} — ${t("goHome")}`}
         >
           <span className={css.logo} aria-hidden>
             <span className={css.logoEq}>∑</span>
           </span>
           <span className={css.brandCopy}>
-            <span className={css.brandText}>{SITE_NAME}</span>
+            <span className={css.brandText}>{t("siteName")}</span>
             <span className={css.brandSub}>{t("tagline")}</span>
           </span>
         </Link>

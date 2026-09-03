@@ -14,7 +14,8 @@
       "student": "Schüler",
       "teacher": "Lehrer",
       "admin": "Admin"
-    }
+    },
+    "siteName": "NMT-Vorbereitung"
   },
   "Sidebar": {
     "ariaLabel": "Dashboard-Navigation",
@@ -282,5 +283,43 @@
       "csv": "Drei CSV-Dateien",
       "json": "Eine JSON-Datei"
     }
+  },
+  "Metadata": {
+    "home": {
+      "title": "Test zum ausgewählten Thema",
+      "description": "NMT-Übungstest zum ausgewählten Thema: Wähle ein Thema und die Anzahl der Aufgaben und beginne mit dem Üben."
+    },
+    "login": {
+      "title": "Anmelden",
+      "description": "Melde dich in deinem NMT-Lernbereich an."
+    },
+    "session": {
+      "title": "Test durchführen",
+      "description": "Interaktiver Trainer mit Testaufgaben zum ausgewählten Thema."
+    },
+    "settings": {
+      "title": "Einstellungen",
+      "description": "Import von Lerninhalten und Kontoeinstellungen."
+    },
+    "materials": {
+      "title": "Lernmaterialien",
+      "description": "Zusammenfassungen, Formeln und Erklärungen zu den Themen der Zertifizierungsprüfung."
+    },
+    "problems": {
+      "title": "Aufgabensammlung",
+      "description": "Eine Sammlung von Aufgaben zum selbstständigen Üben außerhalb des Tests."
+    },
+    "simulator": {
+      "title": "NMT-Simulator",
+      "description": "Eine vollständige NMT-Prüfungssimulation mit Timer und Bewertung."
+    },
+    "consultations": {
+      "title": "Lehrerberatung",
+      "description": "Buche eine Beratung und kommuniziere mit Lehrkräften."
+    }
+  },
+  "SettingsPage": {
+    "title": "Einstellungen",
+    "description": "Import von Lerninhalten und Kontoeinstellungen."
   }
 }
