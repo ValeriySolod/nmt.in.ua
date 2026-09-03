@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { TopicTrainer } from "@/components/testing/TopicTrainer";
+import { NmtTrainer } from "@/components/testing/NmtTrainer";
 import { createPageMetadata } from "@/constants/seo";
 import { recommendNextActionsForStats } from "@/modules/recommendations";
 import { getStudentTopicStats } from "@/modules/recommendations/getStudentTopicStats";
@@ -81,13 +82,17 @@ export default async function SessionPage({
 }: SessionPageProps) {
   const { id } = await params;
   const query = await searchParams;
+
   const sessionId = Number(id);
 
   if (!Number.isInteger(sessionId) || sessionId <= 0) {
     notFound();
   }
 
-  const mode = parseTopicTestMode(readModeParam(query.mode));
+  const rawMode = readModeParam(query.mode);
+
+  const isNmt = rawMode === "nmt";
+  const mode = parseTopicTestMode(rawMode);
 
   const userId = await requireUserId();
 
@@ -108,9 +113,15 @@ export default async function SessionPage({
         )
       : [];
 
-  return (
+  return isNmt ? (
+    <NmtTrainer
+      sessionId={sessionId}
+      tasks={session.tasks}
+      initialSummary={session.summary}
+    />
+  ) : (
     <TopicTrainer
-      sessionId={session.sessionId}
+      sessionId={sessionId}
       tasks={session.tasks}
       initialSummary={session.summary}
       initialRecommendations={initialRecommendations}
