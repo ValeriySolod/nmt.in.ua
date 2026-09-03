@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import {
   checkAnswerAction,
@@ -36,6 +37,7 @@ export function NmtTrainer({
   tasks,
   initialSummary,
 }: NmtTrainerProps) {
+  const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const [answered, setAnswered] = useState<Record<number, number>>({});
@@ -52,32 +54,56 @@ export function NmtTrainer({
 
   const isFinished = Boolean(initialSummary) || tasks.length === 0;
 
+  const finish = useCallback(async () => {
+    if (isFinishing || isFinished) {
+      return;
+    }
+
+    setIsFinishing(true);
+    setError(null);
+
+    const result = await finishTrainerSessionAction({
+      sessionId,
+      markUnansweredAsIncorrect: true,
+      capTimeSec: NMT_DURATION_SEC,
+    });
+
+    if (result.status === "error") {
+      setError(result.code);
+      setIsFinishing(false);
+      return;
+    }
+
+    router.push(`/results?sessionId=${sessionId}`);
+  }, [isFinishing, isFinished, router, sessionId]);
+
+  const finishRef = useRef(finish);
+
+  useEffect(() => {
+    finishRef.current = finish;
+  }, [finish]);
+
   useEffect(() => {
     if (isFinished) {
       return;
     }
 
-    const timer = window.setInterval(() => {
-      setRemainingSeconds((value) => {
-        if (value <= 1) {
-          window.clearInterval(timer);
-          return 0;
-        }
+    let remaining = NMT_DURATION_SEC;
 
-        return value - 1;
-      });
+    const timer = window.setInterval(() => {
+      remaining -= 1;
+      setRemainingSeconds(remaining);
+
+      if (remaining <= 0) {
+        window.clearInterval(timer);
+        void finishRef.current();
+      }
     }, 1000);
 
     return () => window.clearInterval(timer);
   }, [isFinished]);
 
   const isTimeOver = remainingSeconds <= 0;
-
-  useEffect(() => {
-    if (isTimeOver && !isFinishing && !isFinished) {
-      void finish();
-    }
-  }, [isTimeOver, isFinishing, isFinished]);
 
   async function handleAnswer(answerNumber: 1 | 2 | 3 | 4) {
     if (!currentTask || isFinishing || isTimeOver) {
@@ -105,29 +131,6 @@ export function NmtTrainer({
       ...previous,
       [currentTask.mappingId]: answerNumber,
     }));
-  }
-
-  async function finish() {
-    if (isFinishing || isFinished) {
-      return;
-    }
-
-    setIsFinishing(true);
-    setError(null);
-
-    const result = await finishTrainerSessionAction({
-      sessionId,
-      markUnansweredAsIncorrect: true,
-      capTimeSec: NMT_DURATION_SEC,
-    });
-
-    if (result.status === "error") {
-      setError(result.code);
-      setIsFinishing(false);
-      return;
-    }
-
-    window.location.href = `/results?sessionId=${sessionId}`;
   }
 
   function goTo(index: number) {
