@@ -324,5 +324,37 @@
   "SettingsPage": {
     "title": "Settings",
     "description": "Learning content import and account settings."
+  },
+  "simulator": {
+    "eyebrow": "NMT",
+    "title": "NMT Simulator",
+    "description": "Try taking the test in the NMT simulation format.",
+    "tasks": "Tasks",
+    "timer": "Timer",
+    "result": "Result",
+    "preparing": "Preparing test...",
+    "start": "Start test",
+    "errors": {
+      "insufficientTasks": "There are not enough tasks to start the simulator.",
+      "alreadyInProgress": "The request is already in progress. Please wait.",
+      "generic": "Failed to start the simulator. Please try again."
+    }
+  },
+  "nmtTrainer": {
+    "title": "NMT Simulator",
+    "taskProgress": "Task {current} of {total}",
+    "tasks": "Tasks",
+    "answered": "Answered: {answered}/{total}",
+    "finishing": "Finishing...",
+    "finishTest": "Finish test",
+    "back": "Back",
+    "next": "Next",
+    "errors": {
+      "unfinished": "Complete all tasks before finishing the test.",
+      "invalidInput": "Invalid data.",
+      "notFound": "The session or task was not found.",
+      "sessionCompleted": "This session has already been completed.",
+      "generic": "An error occurred. Please try again."
+    }
   }
 }

@@ -324,5 +324,37 @@
   "SettingsPage": {
     "title": "Einstellungen",
     "description": "Import von Lerninhalten und Kontoeinstellungen."
+  },
+  "simulator": {
+    "eyebrow": "NMT",
+    "title": "NMT-Simulator",
+    "description": "Versuche, den Test im NMT-Simulationsformat zu absolvieren.",
+    "tasks": "Aufgaben",
+    "timer": "Timer",
+    "result": "Ergebnis",
+    "preparing": "Test wird vorbereitet...",
+    "start": "Test starten",
+    "errors": {
+      "insufficientTasks": "Es sind nicht genügend Aufgaben vorhanden, um den Simulator zu starten.",
+      "alreadyInProgress": "Die Anfrage wird bereits verarbeitet. Bitte warten Sie.",
+      "generic": "Der Simulator konnte nicht gestartet werden. Bitte versuchen Sie es erneut."
+    }
+  },
+  "nmtTrainer": {
+    "title": "NMT-Simulator",
+    "taskProgress": "Aufgabe {current} von {total}",
+    "tasks": "Aufgaben",
+    "answered": "Beantwortet: {answered}/{total}",
+    "finishing": "Wird beendet...",
+    "finishTest": "Test beenden",
+    "back": "Zurück",
+    "next": "Weiter",
+    "errors": {
+      "unfinished": "Bearbeiten Sie alle Aufgaben, bevor Sie den Test beenden.",
+      "invalidInput": "Ungültige Daten.",
+      "notFound": "Die Sitzung oder Aufgabe wurde nicht gefunden.",
+      "sessionCompleted": "Diese Sitzung wurde bereits abgeschlossen.",
+      "generic": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
+    }
   }
 }
