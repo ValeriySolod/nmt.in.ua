@@ -4,7 +4,6 @@ import Link from "next/link";
 import type { AuthUser } from "@/modules/auth/client";
 import { userInitials } from "@/modules/auth/client";
 import { logoutActionFromHeader } from "@/modules/auth/actions";
-import { LanguageSwitcher } from "@/components/dashboard/LanguageSwitcher/LanguageSwitcher";
 import { useTranslations } from "next-intl";
 import css from "./AppHeader.module.css";
 
@@ -22,9 +21,6 @@ export function AppHeader({
   const t = useTranslations("Header");
   return (
     <header className={css.header}>
-      <div className={css.wash} aria-hidden />
-      <div className={css.ribbon} aria-hidden />
-
       <div className={css.inner}>
         <button
           type="button"
@@ -45,7 +41,7 @@ export function AppHeader({
         <Link
           href="/"
           className={css.brand}
-          aria-label={`${t("siteName")} — ${t("goHome")}`}
+          aria-label={t("siteName")}
         >
           <span className={css.logo} aria-hidden>
             <span className={css.logoEq}>∑</span>
@@ -57,7 +53,10 @@ export function AppHeader({
         </Link>
 
         <div className={css.actions}>
-          <LanguageSwitcher />
+          <Link href="/welcome" className={css.homeLink}>
+            <span className={css.homeLinkShort}>{t("goHomeShort")}</span>
+            <span className={css.homeLinkFull}>{t("goHome")}</span>
+          </Link>
           <form action={logoutActionFromHeader} className={css.profileForm}>
             <button
               type="submit"

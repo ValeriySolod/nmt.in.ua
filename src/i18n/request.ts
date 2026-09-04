@@ -1,8 +1,13 @@
+import uk from "../../messages/uk.json";
+import en from "../../messages/en.json";
+import de from "../../messages/de.json";
 import { cookies, headers } from "next/headers";
 import { getRequestConfig } from "next-intl/server";
 
 const locales = ["uk", "en", "de"] as const;
 type Locale = (typeof locales)[number];
+
+const catalogs: Record<Locale, typeof uk> = { uk, en, de };
 
 const DEFAULT_LOCALE: Locale = "uk";
 const LOCALE_COOKIE = "NEXT_LOCALE";
@@ -41,6 +46,6 @@ export default getRequestConfig(async () => {
 
   return {
     locale,
-    messages: (await import(`../../messages/${locale}.json`)).default,
+    messages: catalogs[locale],
   };
 });

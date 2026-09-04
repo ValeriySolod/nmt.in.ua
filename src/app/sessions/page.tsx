@@ -2,7 +2,9 @@ import { LearningSessionsTable } from "@/components/dashboard/LearningSessionsTa
 import { MentorAssignPanel } from "@/components/dashboard/MentorAssignPanel";
 import { getNavItem } from "@/constants/navigation";
 import { createPageMetadata } from "@/constants/seo";
-import { canAssignMentorSessions, listStudents, requireUser } from "@/modules/auth";
+import { canAssignMentorSessions } from "@/modules/auth/types";
+import { listStudents } from "@/modules/auth/users";
+import { requireUser } from "@/modules/auth/getCurrentUser";
 import { getAvailableTopicThemes } from "@/modules/testing/getAvailableTopicThemes";
 import { getLearningSessions } from "@/modules/sessions/getLearningSessions";
 

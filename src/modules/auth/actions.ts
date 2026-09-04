@@ -2,13 +2,20 @@
 
 import { redirect } from "next/navigation";
 
+import { safeInternalPath } from "@/lib/safeInternalPath";
+import { isDemoAccountLogin, isDemoLoginEnabled } from "./demoLogin";
 import { verifyPassword } from "./password";
 import {
   clearSessionCookie,
   requireUser,
   setSessionCookie,
 } from "./getCurrentUser";
-import { findUserByLogin } from "./users";
+import { createUser, CreateUserError, findUserByLogin } from "./users";
+import {
+  PASSWORD_MAX_LEN,
+  validateRegistrationInput,
+  type RegistrationFieldError,
+} from "./validateRegistration";
 
 export type LoginErrorCode = "requiredFields" | "invalidCredentials";
 
@@ -16,16 +23,24 @@ export type LoginActionState =
   | { status: "idle" }
   | { status: "error"; code: LoginErrorCode };
 
+export type RegisterActionState =
+  | { status: "idle" }
+  | { status: "error"; code: RegistrationFieldError | "serverError" };
+
 export async function loginAction(
   _prev: LoginActionState,
   formData: FormData,
 ): Promise<LoginActionState> {
   const login = String(formData.get("login") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  const nextPath = String(formData.get("next") ?? "/").trim() || "/";
+  const nextPath = safeInternalPath(formData.get("next"));
 
   if (!login || !password) {
     return { status: "error", code: "requiredFields" };
+  }
+
+  if (password.length > PASSWORD_MAX_LEN) {
+    return { status: "error", code: "invalidCredentials" };
   }
 
   const user = await findUserByLogin(login);
@@ -35,19 +50,62 @@ export async function loginAction(
   }
 
   await setSessionCookie(user);
-  redirect(nextPath.startsWith("/") ? nextPath : "/");
+  redirect(nextPath);
+}
+
+/**
+ * Public self-registration. Always creates a student account, then signs in.
+ * Teacher/admin remain demo-only (or admin-provisioned later).
+ */
+export async function registerAction(
+  _prev: RegisterActionState,
+  formData: FormData,
+): Promise<RegisterActionState> {
+  const nextPath = safeInternalPath(formData.get("next"));
+  const validated = validateRegistrationInput({
+    login: String(formData.get("login") ?? ""),
+    displayName: String(formData.get("displayName") ?? ""),
+    password: String(formData.get("password") ?? ""),
+    passwordConfirm: String(formData.get("passwordConfirm") ?? ""),
+  });
+
+  if (!validated.ok) {
+    return { status: "error", code: validated.code };
+  }
+
+  try {
+    const user = await createUser({
+      login: validated.value.login,
+      displayName: validated.value.displayName,
+      password: validated.value.password,
+      role: "student",
+    });
+    await setSessionCookie(user);
+  } catch (error) {
+    if (error instanceof CreateUserError && error.code === "login_taken") {
+      return { status: "error", code: "loginTaken" };
+    }
+    console.error("registerAction: unexpected error", error);
+    return { status: "error", code: "serverError" };
+  }
+
+  redirect(nextPath);
 }
 
 export async function demoLoginAction(
   login: string,
   nextPath = "/",
 ): Promise<void> {
+  if (!isDemoLoginEnabled() || !isDemoAccountLogin(login)) {
+    redirect("/login");
+  }
+
   const user = await findUserByLogin(login);
   if (!user) {
     redirect("/login");
   }
   await setSessionCookie(user);
-  redirect(nextPath.startsWith("/") ? nextPath : "/");
+  redirect(safeInternalPath(nextPath));
 }
 
 export async function logoutAction(): Promise<void> {

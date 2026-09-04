@@ -1,23 +1,37 @@
 .switcher {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-pill);
+  background: rgb(253 251 244 / 72%);
 }
 
 .button {
+  min-width: 36px;
+  min-height: 36px;
+  padding: 4px 6px;
   border: 0;
+  border-radius: var(--radius-pill);
   background: transparent;
-  cursor: pointer;
+  color: var(--muted);
   font: inherit;
-  padding: 2px 6px;
-  opacity: 0.6;
+  font-size: var(--fs-kicker);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
 }
 
 .button[data-active="true"] {
-  font-weight: 700;
-  opacity: 1;
+  background: var(--grad-mint);
+  color: var(--green-dark);
 }
 
 .button:disabled {
   cursor: default;
+}
+
+.button:hover:not(:disabled) {
+  color: var(--green-dark);
 }

@@ -4,7 +4,7 @@ import { NmtTrainer } from "@/components/testing/NmtTrainer";
 import { createPageMetadata } from "@/constants/seo";
 import { recommendNextActionsForStats } from "@/modules/recommendations";
 import { getStudentTopicStats } from "@/modules/recommendations/getStudentTopicStats";
-import { requireUserId } from "@/modules/auth";
+import { requireUserId } from "@/modules/auth/getCurrentUser";
 import { SESSION_STATUS_COMPLETED } from "@/modules/sessions/types";
 import {
   getSessionTasks,

@@ -31,11 +31,13 @@ export default function SimulatorPage() {
   }, [state, router]);
 
   return (
-    <main className={styles.page}>
-      <section className={styles.card}>
+    <section className={styles.page} aria-labelledby="simulator-title">
+      <div className={styles.card}>
         <span className={styles.eyebrow}>{t("eyebrow")}</span>
 
-        <h1 className={styles.title}>{t("title")}</h1>
+        <h1 id="simulator-title" className={styles.title}>
+          {t("title")}
+        </h1>
 
         <p className={styles.description}>{t("description")}</p>
 
@@ -69,7 +71,7 @@ export default function SimulatorPage() {
             {isPending ? t("preparing") : t("start")}
           </button>
         </form>
-      </section>
-    </main>
+      </div>
+    </section>
   );
 }

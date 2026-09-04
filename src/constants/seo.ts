@@ -24,8 +24,8 @@ export const SITE_KEYWORDS = [
 
 export const DEFAULT_SITE_URL = "https://nmt.in.ua";
 
-export const THEME_COLOR = "#1f9d4a";
-export const BACKGROUND_COLOR = "#f4f6f8";
+export const THEME_COLOR = "#1f8f45";
+export const BACKGROUND_COLOR = "#efe8d7";
 
 /** Open Graph / Twitter default image (1200×630). */
 export const DEFAULT_OG_IMAGE_PATH = "/og/og-default.png";

@@ -53,8 +53,6 @@ export function AppSidebar({ open, onNavigate, role }: AppSidebarProps) {
       inert={!open}
     >
       <div className={css.scrollInner}>
-        <div className={css.decor} aria-hidden />
-
         <div className={css.top}>
           <p className={css.kicker}>{t("kicker")}</p>
           <p className={css.hint}>{t("hint")}</p>
