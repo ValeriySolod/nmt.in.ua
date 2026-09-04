@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import {
   checkAnswerAction,
@@ -37,6 +38,7 @@ export function NmtTrainer({
   tasks,
   initialSummary,
 }: NmtTrainerProps) {
+  const t = useTranslations("nmtTrainer");
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -151,10 +153,13 @@ export function NmtTrainer({
     <section className={styles.wrapper}>
       <header className={styles.header}>
         <div>
-          <p className={styles.label}>Симулятор НМТ</p>
+          <p className={styles.label}>{t("title")}</p>
 
           <h1>
-            Завдання {currentIndex + 1} з {tasks.length}
+            {t("taskProgress", {
+              current: currentIndex + 1,
+              total: tasks.length,
+            })}
           </h1>
         </div>
 
@@ -200,7 +205,7 @@ export function NmtTrainer({
         </div>
 
         <aside className={styles.navigation}>
-          <h2>Завдання</h2>
+          <h2>{t("tasks")}</h2>
 
           <div className={styles.grid}>
             {tasks.map((task, index) => {
@@ -222,7 +227,10 @@ export function NmtTrainer({
           </div>
 
           <p className={styles.counter}>
-            Відповіді: {answeredCount}/{tasks.length}
+            {t("answered", {
+              answered: answeredCount,
+              total: tasks.length,
+            })}
           </p>
 
           <button
@@ -231,7 +239,7 @@ export function NmtTrainer({
             onClick={() => void finish()}
             disabled={isFinishing}
           >
-            {isFinishing ? "Завершення..." : "Завершити тест"}
+            {isFinishing ? t("finishing") : t("finishTest")}
           </button>
         </aside>
       </div>
@@ -242,7 +250,7 @@ export function NmtTrainer({
           onClick={() => goTo(currentIndex - 1)}
           disabled={currentIndex === 0}
         >
-          ← Назад
+          ← {t("back")}
         </button>
 
         <button
@@ -250,11 +258,11 @@ export function NmtTrainer({
           onClick={() => goTo(currentIndex + 1)}
           disabled={currentIndex === tasks.length - 1}
         >
-          Далі →
+          {t("next")} →
         </button>
       </footer>
 
-      {error && <p className={styles.error}>{error}</p>}
+      {error && <p className={styles.error}>{t(`errors.${error}`)}</p>}
     </section>
   );
 }
