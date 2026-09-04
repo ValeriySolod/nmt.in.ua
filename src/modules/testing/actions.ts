@@ -120,18 +120,15 @@ export async function startTopicTestAction(
   }
 }
 
+export type StartNmtSimulatorErrorCode =
+  | "insufficientTasks"
+  | "alreadyInProgress"
+  | "generic";
+
 export type StartNmtSimulatorActionState =
   | { status: "idle" }
-  | { status: "error"; message: string }
+  | { status: "error"; code: StartNmtSimulatorErrorCode }
   | { status: "success"; sessionId: number };
-
-const NMT_SIMULATOR_GENERIC_ERROR =
-  "Не вдалося запустити симулятор. Спробуйте ще раз.";
-
-const NMT_SIMULATOR_INSUFFICIENT_TASKS =
-  "Недостатньо завдань для запуску симулятора.";
-
-const NMT_SIMULATOR_IN_PROGRESS = "Запит уже виконується — зачекайте.";
 
 export async function startNmtSimulatorAction(
   _prevState: StartNmtSimulatorActionState,
@@ -152,28 +149,28 @@ export async function startNmtSimulatorAction(
         case "insufficient_tasks":
           return {
             status: "error",
-            message: NMT_SIMULATOR_INSUFFICIENT_TASKS,
+            code: "insufficientTasks",
           };
 
         case "already_in_progress":
           return {
             status: "error",
-            message: NMT_SIMULATOR_IN_PROGRESS,
+            code: "alreadyInProgress",
           };
 
         default:
           return {
             status: "error",
-            message: NMT_SIMULATOR_GENERIC_ERROR,
+            code: "generic",
           };
       }
     }
 
-    console.error("startNmtSimulatorAction: Сталася помилка", error);
+    console.error("startNmtSimulatorAction: unexpected error", error);
 
     return {
       status: "error",
-      message: NMT_SIMULATOR_GENERIC_ERROR,
+      code: "generic",
     };
   }
 }
