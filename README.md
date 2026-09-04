@@ -43,9 +43,9 @@ npm run dev
 | Рекомендації | після finish, на `/results`, при reopen завершеної сесії |
 | Граф тем | `theme_connections` → наступна тема в рекомендаціях |
 | Mentor API | `POST /api/admin/sessions` — planned-сесія від ментора |
-| Auth | `/login`, ролі student/teacher/admin, cookie-сесія, демо-акаунти |
+| Auth | `/` вітальна (гость), `/login`, `/register`, ролі, демо-акаунти |
 
-**Заглушки (скоро):** `/simulator`, `/problems`, `/materials`, `/consultations`.
+**Заглушки (скоро):** `/problems`, `/materials`, `/consultations`.
 
 ## Змінні середовища
 
@@ -54,6 +54,7 @@ npm run dev
 | Змінна | Призначення |
 | --- | --- |
 | `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` | MySQL |
+| `DB_CONNECTION_LIMIT`, `DB_CONNECT_TIMEOUT_MS`, `DB_MAX_IDLE`, `DB_IDLE_TIMEOUT_MS` | тюнінг пулу; `DB_IDLE_TIMEOUT_MS` тримати нижче `wait_timeout` сервера |
 | `NEXT_PUBLIC_SITE_URL` | canonical URL для SEO |
 | `CONTENT_IMPORT_API_KEY` | Bearer для `POST /api/import` і Server Action імпорту (admin) |
 | `ADMIN_API_KEY` | Bearer для `POST /api/admin/sessions` |
@@ -72,7 +73,7 @@ npm run dev
 | `demo-teacher` | `demo123` | Викладач | + призначення mentor-сесій на `/sessions` |
 | `demo-admin` | `demo123` | Адмін | + імпорт контенту на `/settings` |
 
-На `/login` є кнопки швидкого входу для кожної ролі.
+На `/login` є кнопки швидкого входу для кожної ролі. Нові учні реєструються на `/register` (роль `student`, авто-вхід після створення).
 
 **Скидання демо-даних:** старі тести до auth писалися з `user_id=1`, тому вони «прилипають» до demo-student. Очистити:
 
@@ -87,9 +88,10 @@ npm run reset-demo-student
 | Що | Де |
 | --- | --- |
 | Вхід / вихід | `/login`, cookie `nmt_session` |
+| Реєстрація | `/register` — публічна, лише роль `student` |
 | Ролі | `student`, `teacher`, `admin` |
 | Облікові записи | таблиця `app_users` (окремо від legacy `users` на хостингу) |
-| Middleware | редірект на `/login`; `/settings` — лише admin |
+| Middleware | редірект на `/login`; публічні `/`, `/welcome`, `/login`, `/register` і статика з `public/`; `/settings` — лише admin |
 | Mentor UI | `/sessions` — панель призначення для teacher/admin |
 
 `userId` у Server Actions береться з сесії (`requireUserId()`), не з FormData.
@@ -104,9 +106,28 @@ import styles from "./page.module.css";
 <div className={styles.page}>...</div>
 ```
 
-Глобальний reset і змінні кольорів — у `src/app/globals.css`. Tailwind не використовуємо.
+Глобальний reset і дизайн-токени — у `src/app/globals.css`. Tailwind не використовуємо.
 
-Спільні UI-примітиви: `PageFrame`, `ModeTabs` у `src/components/dashboard/` та `src/components/ui/`.
+Спільні UI-примітиви: `PageFrame`, `ModeTabs`, `Reveal` у `src/components/dashboard/` та `src/components/ui/`.
+
+## Дизайн-система
+
+Правила верстки — `.cursor/rules/design-system.mdc` (читати перед будь-якою версткою; оновлювати після кожної секції).
+
+- **Mobile-first**, брейкпоінти `375 / 768 / 1240 / 1440 / 1920`, тільки `min-width`-медіа.
+- Між брейкпоінтами все гумове через `clamp()`: типографіка (`--fs-*`), ритм (`--space-*`,
+  `--section-y`, `--container-pad`), контейнер (`--container-max`).
+- Кольори, радіуси, тіні, градієнти (`--grad-brand`, `--grad-aurora`, `--grad-glass`, `--grad-ink`, `--grad-ultimate`)
+  беруться з `:root`; локальних дублікатів не заводимо.
+- Палітра — теплий «старий зошит»: фон `--page #efe8d7`, поверхні `--surface #fdfbf4`.
+  Чистий `#fff` не використовуємо.
+- Публічний лендінг: `src/components/welcome/*` — секції `LandingHeader`, `Hero`, `Features`,
+  `Steps`, `Faq`, `CtaBanner`, `LandingFooter`; спільні стилі — `welcome/landing.module.css`.
+- Кабінет після входу: `src/components/dashboard/*` — той самий візуал (`DashboardShell`,
+  `AppHeader`, `AppSidebar`, `PageFrame`, домашня `TopicTestStart`).
+- Сторінки `/login` і `/register` — спільний каркас `components/auth/AuthShell` + `auth.module.css`.
+- Scroll-reveal — `components/ui/Reveal` на IntersectionObserver, без зовнішніх бібліотек;
+  вимикається через `prefers-reduced-motion`.
 
 ## Гілки
 
@@ -147,10 +168,14 @@ Env на shared-хостингу: `/home/levelhst/nmt.in.ua/www/.env.production`
 ```
 src/app/                          маршрути дашборду + SEO metadata
 src/app/login/                    форма входу + демо-кнопки
+src/app/register/                 реєстрація учня
+src/app/welcome/                  вітальна (завжди, без кабінетного хрома)
 src/app/api/import/               POST імпорт CSV/JSON
 src/app/api/admin/sessions/       POST призначення mentor-сесії
 src/app/session/[id]/             інтерактивний тренажер
-src/components/auth/              LoginForm, DemoLoginButtons
+src/components/auth/              AuthShell, LoginForm, RegisterForm, DemoLoginButtons
+src/components/welcome/           публічний лендінг (секції + landing.module.css)
+src/components/ui/                Reveal, ModeTabs
 src/components/dashboard/         Header, Sidebar, PageFrame, таблиці
 src/components/testing/           TopicTrainer, summary, Ultimate UI
 src/constants/                    навігація, SEO
@@ -173,6 +198,11 @@ docs/mentor-tasks.md              pending-таски для команди
 - Тонкі сторінки в `src/app/` — лише рендер UI і metadata.
 - Бізнес-логіка — у `src/modules/*` (не в `app/`).
 - Server Actions для форм; HTTP API для machine-to-machine (імпорт, admin).
+- Доступ до MySQL — тільки через `getConnection()` з `src/lib/db/mysql.ts`: пул один на процес
+  (живе на `globalThis`, щоб HMR його не дублював), кожне з'єднання перевіряється `ping()` і при
+  обриві знищується та береться наступне (3 спроби з бекофом). Мертвий сокет не валить весь пул.
+- `getCurrentUser()` мемоізовано через `react.cache` — один запит користувача на рендер, а не
+  окремий на layout / `generateMetadata` / сторінку.
 
 ---
 
@@ -244,7 +274,7 @@ JSON-схема:
 | Planned-сесії | `startPlannedSession` — auto/mentor рядки на `/sessions` |
 | Тренажер | [`TopicTrainer`](src/components/testing/TopicTrainer/) на `/session/[id]` |
 | Ultimate | 20 завдань, 20 хв, без підказок до кінця, розбір помилок |
-| Симулятор НМТ | `/simulator` — **заглушка** (`startNmtSimulator` ще не реалізовано) |
+| Симулятор НМТ | `/simulator` — `startNmtSimulatorAction` + `NmtTrainer` |
 | Задачник | `/problems` — **заглушка** |
 
 Режими на головній (`/`):
@@ -309,13 +339,15 @@ import {
 
 | Маршрут | Стан | Модуль |
 | --- | --- | --- |
+| `/` | Вітальна (гость) / Topic-test (учень) | 1, 3, 5 |
+| `/welcome` | Вітальна (завжди, і для увійшлих) | 1 |
 | `/login` | Вхід, демо-акаунти | 5 |
-| `/` | Topic-test (standard + Ultimate) | 3 |
+| `/register` | Реєстрація учня | 5 |
 | `/session/[id]` | TopicTrainer | 3 |
 | `/results` | Таблиця + рекомендації | 3, 4 |
 | `/sessions` | Історія + planned (auto/mentor) + mentor assign | 3, 4, 5 |
 | `/settings` | Імпорт контенту (admin) | 2, 5 |
-| `/simulator` | Заглушка | 3 (pending) |
+| `/simulator` | Симулятор НМТ | 3 |
 | `/problems` | Заглушка | 3 (pending) |
 | `/materials` | Заглушка | контент |
 | `/consultations` | Заглушка | 4 (дія) |

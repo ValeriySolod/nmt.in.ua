@@ -20,6 +20,28 @@ export {
   requireUser,
   requireUserId,
 } from "./getCurrentUser";
-export type { LoginActionState } from "./actions";
-export { loginAction, logoutAction, demoLoginAction } from "./actions";
-export { ensureAuthSchema, findUserById, findUserByLogin, listStudents } from "./users";
+export type { LoginActionState, RegisterActionState } from "./actions";
+export {
+  loginAction,
+  registerAction,
+  logoutAction,
+  demoLoginAction,
+} from "./actions";
+export {
+  ensureAuthSchema,
+  findUserById,
+  findUserByLogin,
+  listStudents,
+  createUser,
+  CreateUserError,
+} from "./users";
+export type { CreateUserInput } from "./users";
+export {
+  validateRegistrationInput,
+  PASSWORD_MIN_LEN,
+  PASSWORD_MAX_LEN,
+} from "./validateRegistration";
+export type {
+  RegistrationFieldError,
+  RegistrationInput,
+} from "./validateRegistration";

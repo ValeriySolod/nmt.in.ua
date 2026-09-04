@@ -14,7 +14,12 @@ export type SqlConnection = {
   release(): void;
 };
 
-let pool: Pool | undefined;
+/**
+ * The pool lives on globalThis so Turbopack HMR reuses it instead of leaking a new
+ * pool (and a new batch of sockets) on every module re-evaluation in dev.
+ */
+type DbGlobal = typeof globalThis & { __nmtMysqlPool?: Pool };
+const dbGlobal = globalThis as DbGlobal;
 
 /** Remote shared MySQL often drops idle sockets — retry these at connect/query time. */
 const TRANSIENT_DB_ERROR_CODES = new Set([
@@ -24,9 +29,13 @@ const TRANSIENT_DB_ERROR_CODES = new Set([
   "EPIPE",
   "PROTOCOL_CONNECTION_LOST",
   "PROTOCOL_ENQUEUE_AFTER_FATAL_ERROR",
+  "POOL_CLOSED",
 ]);
 
 const MAX_CONNECT_ATTEMPTS = 3;
+const RETRY_BACKOFF_MS = 120;
+
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 function readEnv(name: string): string {
   const value = process.env[name];
@@ -66,45 +75,72 @@ function isTransientDbError(error: unknown): boolean {
     typeof message === "string" &&
     (message.includes("ECONNRESET") ||
       message.includes("ECONNREFUSED") ||
-      message.includes("PROTOCOL_CONNECTION_LOST"))
+      message.includes("PROTOCOL_CONNECTION_LOST") ||
+      message.includes("Pool is closed"))
   );
 }
 
-function resetPool(): void {
-  const current = pool;
-  pool = undefined;
-  if (current) {
-    void current.end().catch(() => undefined);
+function isPoolClosedError(error: unknown): boolean {
+  if (!error || typeof error !== "object") {
+    return false;
   }
+  const record = error as { code?: string; message?: string };
+  return (
+    record.code === "POOL_CLOSED" ||
+    (typeof record.message === "string" && record.message.includes("Pool is closed"))
+  );
+}
+
+/**
+ * Drops the pool only if it is still the current one. Without the identity check two
+ * concurrent renders racing on the same dead socket would end the pool twice, and the
+ * second `end()` makes every request already waiting on `getConnection()` fail with
+ * "Pool is closed."
+ */
+function resetPool(stale: Pool): void {
+  if (dbGlobal.__nmtMysqlPool !== stale) {
+    return;
+  }
+  dbGlobal.__nmtMysqlPool = undefined;
+  void stale.end().catch(() => undefined);
 }
 
 function getPool(): Pool {
-  if (!pool) {
-    pool = mysql.createPool({
-      host: readEnv("DB_HOST"),
-      port: readPositiveIntEnv("DB_PORT", 3306),
-      user: readEnv("DB_USER"),
-      password: readEnv("DB_PASSWORD"),
-      database: readEnv("DB_NAME"),
-      waitForConnections: true,
-      connectionLimit: readPositiveIntEnv("DB_CONNECTION_LIMIT", 10),
-      connectTimeout: readPositiveIntEnv("DB_CONNECT_TIMEOUT_MS", 15_000),
-      enableKeepAlive: true,
-      keepAliveInitialDelay: 0,
-      charset: "utf8mb4",
-    });
-
-    (pool as mysql.Pool & { on(event: "error", listener: (error: Error) => void): void }).on(
-      "error",
-      (error) => {
-        if (isTransientDbError(error)) {
-          console.error("mysql pool: transient error, resetting pool", error);
-          resetPool();
-        }
-      },
-    );
+  const existing = dbGlobal.__nmtMysqlPool;
+  if (existing) {
+    return existing;
   }
-  return pool;
+
+  const created = mysql.createPool({
+    host: readEnv("DB_HOST"),
+    port: readPositiveIntEnv("DB_PORT", 3306),
+    user: readEnv("DB_USER"),
+    password: readEnv("DB_PASSWORD"),
+    database: readEnv("DB_NAME"),
+    waitForConnections: true,
+    connectionLimit: readPositiveIntEnv("DB_CONNECTION_LIMIT", 10),
+    connectTimeout: readPositiveIntEnv("DB_CONNECT_TIMEOUT_MS", 15_000),
+    // Shared hosting closes idle sessions on its own `wait_timeout`; recycle ours first
+    // so the pool hands out live sockets instead of ones the server already dropped.
+    maxIdle: readPositiveIntEnv("DB_MAX_IDLE", 4),
+    idleTimeout: readPositiveIntEnv("DB_IDLE_TIMEOUT_MS", 30_000),
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 0,
+    charset: "utf8mb4",
+    ...(process.env.DB_SSL === "1" ? { ssl: {} } : {}),
+  });
+
+  (created as mysql.Pool & { on(event: "error", listener: (error: Error) => void): void }).on(
+    "error",
+    (error) => {
+      // A dead socket is a per-connection problem: `acquireRawConnection` destroys it and
+      // retries. Ending the whole pool here would take down unrelated in-flight requests.
+      console.error("mysql pool error", error);
+    },
+  );
+
+  dbGlobal.__nmtMysqlPool = created;
+  return created;
 }
 
 function wrap(connection: PoolConnection): SqlConnection {
@@ -153,25 +189,29 @@ async function acquireRawConnection(): Promise<PoolConnection> {
   let lastError: unknown;
 
   for (let attempt = 1; attempt <= MAX_CONNECT_ATTEMPTS; attempt += 1) {
+    const pool = getPool();
     let connection: PoolConnection | undefined;
     try {
-      connection = await getPool().getConnection();
+      connection = await pool.getConnection();
       await connection.ping();
       return connection;
     } catch (error) {
       lastError = error;
+      // destroy() evicts the dead socket from the pool; release() would hand it back out.
       if (connection) {
         connection.destroy();
       }
-      if (attempt < MAX_CONNECT_ATTEMPTS && isTransientDbError(error)) {
-        console.error(
-          `mysql: connect attempt ${attempt}/${MAX_CONNECT_ATTEMPTS} failed, retrying`,
-          error,
-        );
-        resetPool();
-        continue;
+      if (attempt >= MAX_CONNECT_ATTEMPTS || !isTransientDbError(error)) {
+        throw error;
       }
-      throw error;
+      if (isPoolClosedError(error)) {
+        resetPool(pool);
+      }
+      console.error(
+        `mysql: connect attempt ${attempt}/${MAX_CONNECT_ATTEMPTS} failed, retrying`,
+        error,
+      );
+      await sleep(RETRY_BACKOFF_MS * attempt);
     }
   }
 

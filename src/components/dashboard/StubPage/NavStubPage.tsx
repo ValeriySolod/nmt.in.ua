@@ -2,7 +2,6 @@ import { getTranslations } from "next-intl/server";
 import { StubPage } from "./StubPage";
 
 const NAV_KEYS = {
-  "/simulator": "simulator",
   "/materials": "materials",
   "/problems": "problems",
   "/consultations": "consultations",

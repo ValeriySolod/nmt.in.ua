@@ -1,46 +1,66 @@
+.accent {
+  background: var(--grad-brand);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-md);
+  align-items: stretch;
+}
+
+.formTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-h3);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
 .controls {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 20px;
+  gap: var(--space-lg);
   width: 100%;
-  max-width: 34rem;
-  margin: 0 auto;
 }
 
 .fields {
   display: grid;
-  gap: 18px;
+  gap: var(--space-lg);
   width: 100%;
 }
 
 .field {
   display: grid;
-  gap: 8px;
+  gap: var(--space-sm);
 }
 
 .label {
-  font-size: 0.82rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
   color: var(--subtle);
+  font-size: var(--fs-kicker);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .select {
   width: 100%;
   min-height: 48px;
   padding: 12px 40px 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background:
-    var(--surface-muted)
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23162024' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
-    no-repeat right 14px center;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-md);
   appearance: none;
-  font-size: 1rem;
-  font-weight: 650;
+  background:
+    var(--surface)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%231f2320' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    no-repeat right 14px center;
   color: var(--ink);
+  font-size: var(--fs-body);
+  font-weight: 650;
   cursor: pointer;
   transition:
     border-color var(--t) var(--ease),
@@ -48,20 +68,20 @@
 }
 
 .select:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--green) 45%, var(--border));
+  border-color: rgb(31 143 69 / 45%);
 }
 
 .select:focus-visible {
   outline: none;
   border-color: var(--green);
-  box-shadow: 0 0 0 3px var(--green-lift);
+  box-shadow: var(--ring);
 }
 
 .optionsRow {
   display: grid;
-  gap: 14px;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   align-items: start;
+  gap: var(--space-lg);
 }
 
 .fieldMode {
@@ -69,28 +89,25 @@
 }
 
 .fieldCount {
-  justify-items: center;
-}
-
-.fieldCount .label {
-  width: 100%;
-  text-align: center;
+  justify-items: stretch;
 }
 
 .modeTabs button {
   min-height: 48px;
+  padding-inline: 18px;
 }
 
 .countBadge {
   display: grid;
   place-items: center;
   width: 100%;
-  height: 48px;
+  min-width: 6.5rem;
+  min-height: 48px;
   margin: 0;
-  padding: 0 10px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: rgb(255 255 255 / 88%);
+  padding: 0 14px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-md);
+  background: var(--surface);
   box-sizing: border-box;
 }
 
@@ -104,97 +121,170 @@
 }
 
 .countNum {
-  font-size: 1.3rem;
-  font-weight: 800;
   color: var(--green-dark);
+  font-family: var(--font-display);
+  font-size: var(--fs-h3);
+  font-weight: 700;
 }
 
 .countSlash {
-  font-size: 0.9rem;
-  font-weight: 600;
   color: var(--subtle);
+  font-size: var(--fs-small);
+  font-weight: 600;
 }
 
 .countTotal {
-  font-size: 0.95rem;
-  font-weight: 700;
   color: var(--muted);
+  font-size: var(--fs-small);
+  font-weight: 700;
 }
 
 .start {
   width: 100%;
-  min-height: 50px;
-  padding: 12px 20px;
-  border: 2px solid var(--green);
-  border-radius: 12px;
-  background: linear-gradient(180deg, var(--green-bg), rgb(255 255 255 / 70%));
-  color: var(--green-dark);
-  font-size: 1rem;
-  font-weight: 800;
+  min-height: 48px;
+  padding: 12px 22px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  background: var(--grad-brand);
+  box-shadow: 0 12px 26px rgb(17 83 42 / 28%);
+  color: #fdfbf4;
+  font-size: var(--fs-body);
+  font-weight: 700;
   letter-spacing: 0.01em;
   cursor: pointer;
-  box-shadow: 4px 5px 0 var(--green-lift);
   transition:
     transform var(--t) var(--ease),
-    box-shadow var(--t) var(--ease),
-    background var(--t) var(--ease);
+    box-shadow var(--t) var(--ease);
 }
 
-.start:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 5px 6px 0 var(--green-lift);
-}
-
-.start:active:not(:disabled) {
-  transform: translateY(1px);
-  box-shadow: 2px 3px 0 var(--green-lift);
+.start:hover:not(:disabled),
+.start:focus-visible:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 34px rgb(17 83 42 / 34%);
 }
 
 .start:disabled {
   cursor: not-allowed;
-  opacity: 0.85;
+  opacity: 0.72;
   transform: none;
   box-shadow: none;
 }
 
 .startUltimate {
-  border-color: color-mix(in srgb, var(--ultimate) 55%, var(--border));
-  background: linear-gradient(180deg, var(--ultimate-bg), rgb(255 255 255 / 72%));
-  color: var(--ultimate-dark);
-  box-shadow: 4px 5px 0 color-mix(in srgb, var(--ultimate) 18%, transparent);
+  background: var(--grad-ultimate);
+  box-shadow: 0 12px 26px rgb(91 33 182 / 28%);
 }
 
-.startUltimate:hover:not(:disabled) {
-  box-shadow: 5px 6px 0 color-mix(in srgb, var(--ultimate) 22%, transparent);
+.startUltimate:hover:not(:disabled),
+.startUltimate:focus-visible:not(:disabled) {
+  box-shadow: 0 18px 34px rgb(91 33 182 / 34%);
+}
+
+.modeCards {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.modeCard {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: var(--space-sm);
+  row-gap: 4px;
+  height: 100%;
+  padding: var(--space-md);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  background: rgb(253 251 244 / 72%);
+}
+
+.modeCardUltimate {
+  background: color-mix(in srgb, var(--ultimate-bg) 55%, var(--surface));
+}
+
+.modeIcon {
+  display: grid;
+  grid-row: 1 / span 2;
+  place-items: center;
+  align-self: start;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgb(31 143 69 / 20%);
+  border-radius: 12px;
+  background: var(--grad-mint);
+  color: var(--green-dark);
+}
+
+.modeCardUltimate .modeIcon {
+  border-color: color-mix(in srgb, var(--ultimate) 28%, var(--line));
+  background: var(--ultimate-bg);
+  color: var(--ultimate-dark);
+}
+
+.modeCardTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-h4);
+  font-weight: 700;
+}
+
+.modeCardText {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--fs-small);
+  line-height: 1.5;
+  text-wrap: pretty;
 }
 
 .error {
   margin: 0;
   padding: 10px 14px;
-  border: 1px solid color-mix(in srgb, crimson 45%, var(--border));
-  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, crimson 45%, var(--line));
+  border-radius: var(--radius-md);
   background: color-mix(in srgb, crimson 10%, var(--surface));
-  color: crimson;
-  font-size: 0.9rem;
+  color: #8f1d1d;
+  font-size: var(--fs-small);
   font-weight: 600;
 }
 
-.panel {
-  display: flex;
-  justify-content: center;
-  padding: 22px 20px 24px;
-}
-
-@media (min-width: 560px) {
+@media (min-width: 768px) {
   .optionsRow {
-    grid-template-columns: minmax(0, 1fr) 5.75rem;
-    gap: 16px;
+    grid-template-columns: minmax(0, 1fr) 7.5rem;
+    gap: var(--space-lg);
+  }
+
+  .fieldCount {
+    justify-items: center;
+  }
+
+  .fieldCount .label {
+    width: 100%;
+    text-align: center;
+  }
+
+  .modeCards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (min-width: 768px) {
-  .controls {
-    max-width: 36rem;
-    gap: 22px;
+@media (min-width: 1240px) {
+  .layout {
+    grid-template-columns: minmax(0, 1.15fr) minmax(16rem, 0.85fr);
+    gap: var(--space-lg);
+    align-items: stretch;
+  }
+
+  .modeCards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .start:hover:not(:disabled) {
+    transform: none;
   }
 }

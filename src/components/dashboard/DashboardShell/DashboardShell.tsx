@@ -85,12 +85,23 @@ export function DashboardShell({
     };
   }, [sidebarOpen]);
 
-  if (pathname === "/login" || !user) {
+  if (
+    pathname === "/login" ||
+    pathname === "/register" ||
+    pathname === "/welcome" ||
+    !user
+  ) {
     return <>{children}</>;
   }
 
   return (
     <div className={css.shell}>
+      <div className={css.decor} aria-hidden>
+        <div className={css.decorGrid} />
+        <div className={css.decorOrbA} />
+        <div className={css.decorOrbB} />
+      </div>
+
       <AppHeader
         sidebarOpen={sidebarOpen}
         onToggleSidebar={() => setSidebarOpen((open) => !open)}

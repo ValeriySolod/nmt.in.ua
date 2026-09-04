@@ -7,15 +7,12 @@ import {
   SITE_TAGLINE,
   THEME_COLOR,
   absoluteUrl,
-  buildOrganizationJsonLd,
-  buildWebApplicationJsonLd,
-  buildWebsiteJsonLd,
   createPageMetadata,
   siteIcons,
 } from "@/constants/seo";
-import { JsonLd } from "@/components/seo";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
-import { getCurrentUser } from "@/modules/auth";
+import { pickClientMessages } from "@/i18n/clientMessages";
+import { getCurrentUser } from "@/modules/auth/getCurrentUser";
 import { getRecentResults } from "@/modules/results/getRecentResults";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
@@ -63,17 +60,11 @@ export const metadata: Metadata = {
   },
 };
 
-const structuredData = [
-  buildWebsiteJsonLd(),
-  buildOrganizationJsonLd(),
-  buildWebApplicationJsonLd(),
-];
-
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const locale = await getLocale();
-  const messages = await getMessages();
-
+  const messages = pickClientMessages(await getMessages());
   const user = await getCurrentUser();
+
   let recentResults: Awaited<ReturnType<typeof getRecentResults>> = [];
   if (user) {
     try {
@@ -87,7 +78,6 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     <html lang={locale}>
       <body>
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <JsonLd data={structuredData} />
           <DashboardShell recentResults={recentResults} user={user}>
             {children}
           </DashboardShell>

@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import {
   startNmtSimulatorAction,
@@ -16,6 +17,7 @@ const initialState: StartNmtSimulatorActionState = {
 
 export default function SimulatorPage() {
   const router = useRouter();
+  const t = useTranslations("simulator");
 
   const [state, formAction, isPending] = useActionState(
     startNmtSimulatorAction,
@@ -29,35 +31,35 @@ export default function SimulatorPage() {
   }, [state, router]);
 
   return (
-    <main className={styles.page}>
-      <section className={styles.card}>
-        <span className={styles.eyebrow}>НМТ</span>
+    <section className={styles.page} aria-labelledby="simulator-title">
+      <div className={styles.card}>
+        <span className={styles.eyebrow}>{t("eyebrow")}</span>
 
-        <h1 className={styles.title}>Симулятор НМТ</h1>
+        <h1 id="simulator-title" className={styles.title}>
+          {t("title")}
+        </h1>
 
-        <p className={styles.description}>
-          Спробуйте пройти тест у форматі симуляції НМТ.
-        </p>
+        <p className={styles.description}>{t("description")}</p>
 
         <div className={styles.info}>
           <div>
             <strong>22</strong>
-            <span>Завдання</span>
+            <span>{t("tasks")}</span>
           </div>
 
           <div>
             <strong>⏱</strong>
-            <span>Таймер</span>
+            <span>{t("timer")}</span>
           </div>
 
           <div>
             <strong>✓</strong>
-            <span>Результат</span>
+            <span>{t("result")}</span>
           </div>
         </div>
 
         {state.status === "error" && (
-          <p className={styles.error}>{state.message}</p>
+          <p className={styles.error}>{t(`errors.${state.code}`)}</p>
         )}
 
         <form action={formAction}>
@@ -66,10 +68,10 @@ export default function SimulatorPage() {
             className={styles.startButton}
             disabled={isPending}
           >
-            {isPending ? "Підготовка тесту..." : "Почати тест"}
+            {isPending ? t("preparing") : t("start")}
           </button>
         </form>
-      </section>
-    </main>
+      </div>
+    </section>
   );
 }

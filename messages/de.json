@@ -8,6 +8,7 @@
     "hideMenu": "Menü ausblenden",
     "showMenu": "Menü anzeigen",
     "goHome": "Zur Startseite",
+    "goHomeShort": "Start",
     "tagline": "Mathematik · Übung · Fortschritt",
     "logout": "abmelden",
     "roles": {
@@ -16,6 +17,12 @@
       "admin": "Admin"
     },
     "siteName": "NMT-Vorbereitung"
+  },
+  "LanguageSwitcher": {
+    "aria": "Sprache der Website",
+    "ukFull": "Ukrainisch",
+    "enFull": "Englisch",
+    "deFull": "Deutsch"
   },
   "Sidebar": {
     "ariaLabel": "Dashboard-Navigation",
@@ -88,6 +95,10 @@
   },
   "TopicTestStart": {
     "title": "Test zum ausgewählten Thema",
+    "kicker": "Arbeitsbereich",
+    "helloStart": "Hallo,",
+    "formTitle": "Neues Training",
+    "lead": "Wähle ein Thema und einen Modus — und übe im NMT-Format.",
     "leadStandard": "bis zu {count} zufällige Aufgaben mit sofortiger Erklärung.",
     "leadUltimate": "bis zu {count} Aufgaben, 20 Minuten, ohne Hinweise bis zum Ende des Tests.",
     "noThemes": "Derzeit gibt es keine Themen mit Aufgaben in der Datenbank. Füge Aufgaben über den Import auf der Einstellungsseite hinzu.",
@@ -115,22 +126,16 @@
     "goToTopic": "Weiter zum Thema „{theme}“",
     "graphReason": "Das Thema „{theme}“ wurde erfolgreich bearbeitet — dies ist der nächste Schritt in deinem Lernplan.",
     "graphReasonFallback": "Dies ist der nächste Schritt in deinem Lernplan.",
-
     "repeatTopic": "Wiederhole das Thema „{theme}“",
     "weakTopicReason": "Dein letztes Ergebnis beträgt {percent} %. Es lohnt sich, dieses Thema noch einmal zu üben.",
-
     "tryTopic": "Probiere das Thema „{theme}“ aus",
     "untriedReason": "Du hast dieses Thema noch nicht bearbeitet — beginne mit einem kurzen Test.",
-
     "consultationTitle": "Buche eine Beratung",
     "consultationReason": "Mehrere Themen könnten zusätzliche Unterstützung durch eine Lehrkraft gebrauchen.",
-
     "materialsTitle": "Wiederhole die Lernmaterialien",
     "materialsReason": "Bei schwächeren Themen kann eine Wiederholung der Lernmaterialien vor dem nächsten Test helfen.",
-
     "simulatorTitle": "Probiere den vollständigen NMT-Simulator",
     "simulatorReason": "Du hast alle Themen auf einem guten Niveau bearbeitet — jetzt kannst du dein Wissen im vollständigen NMT-Format testen.",
-
     "problemsTitle": "Übe zusätzliche Aufgaben",
     "problemsReason": "Dein Fortschritt ist stabil — festige dein Wissen mit zusätzlichen Aufgaben."
   },
@@ -239,10 +244,156 @@
       "generic": "Die Sitzung konnte nicht abgebrochen werden. Bitte versuche es erneut."
     }
   },
+  "AuthShared": {
+    "backHome": "Zur Startseite",
+    "asideBadge": "NMT 2026 · Mathematik",
+    "asideTitle": "Ihr Bereich für die NMT-Vorbereitung in Mathematik",
+    "asideLead": "Eine Anmeldung — und Sie sehen Ihre Schwachstellen, den Verlauf der Versuche und die nächsten Schritte.",
+    "asidePoints": {
+      "a": "Themen-Tests und Ultimate-Modus auf Zeit",
+      "b": "Ergebnisanalyse und persönliche Empfehlungen",
+      "c": "Simulator des vollständigen Bogens im offiziellen Format"
+    }
+  },
+  "WelcomeLanding": {
+    "nav": {
+      "sectionsAria": "Abschnitte der Seite",
+      "features": "Funktionen",
+      "steps": "So funktioniert es",
+      "faq": "Fragen",
+      "login": "Anmelden",
+      "register": "Konto erstellen",
+      "cabinet": "Arbeitsbereich"
+    },
+    "hero": {
+      "badge": "NMT 2026 · Mathematik",
+      "titleStart": "Vorbereitung auf die NMT in Mathematik —",
+      "titleAccent": "systematisch und mit Ergebnis",
+      "lead": "Ein Online-Bereich, der Ihre Schwachstellen zeigt, im Prüfungsformat trainiert und einen klaren Plan für die nächsten Schritte gibt. Ohne verstreute PDFs und zufällige Tests.",
+      "ctaPrimary": "Vorbereitung starten",
+      "ctaSecondary": "Ich habe ein Konto",
+      "note": "Registrierung in einer Minute — ohne Karte und Zahlung",
+      "imageAlt": "Illustration: Funktionsgraph, Fortschrittsdiagramm und geometrische Formen",
+      "stats": {
+        "topics": {
+          "value": "20+",
+          "label": "Themen des Prüfungsstoffs"
+        },
+        "modes": {
+          "value": "2",
+          "label": "Modi: Training und Ultimate"
+        },
+        "format": {
+          "value": "100%",
+          "label": "offizielles Prüfungsformat im Simulator"
+        }
+      },
+      "chipA": {
+        "title": "Themenfortschritt",
+        "text": "Funktionen — 78% richtig"
+      },
+      "chipB": {
+        "title": "Ultimate-Modus",
+        "text": "12 Aufgaben · 15 Minuten"
+      }
+    },
+    "features": {
+      "kicker": "Funktionen",
+      "title": "Alles für regelmäßiges Üben an einem Ort",
+      "lead": "Vom ersten Themen-Test bis zur vollständigen Prüfungssimulation.",
+      "items": {
+        "topics": {
+          "title": "Tests nach Themen",
+          "text": "Thema und Aufgabenzahl wählen und sofort üben. Jede Frage mit Erklärung der Antwort."
+        },
+        "ultimate": {
+          "title": "Ultimate-Modus",
+          "text": "Derselbe Stoff, aber auf Zeit. Trainiert das Tempo, das in der echten Prüfung nötig ist."
+        },
+        "results": {
+          "title": "Ergebnisse und Analyse",
+          "text": "Verlauf der Versuche, Anteil richtiger Antworten und Entwicklung je Thema."
+        },
+        "recommendations": {
+          "title": "Persönliche Empfehlungen",
+          "text": "Nach jedem Test schlägt das System vor, was zu wiederholen ist und womit die nächste Einheit beginnt."
+        },
+        "simulator": {
+          "title": "NMT-Simulator",
+          "text": "Ein vollständiger Testbogen im offiziellen Format mit Timer und Punktzahl — die Generalprobe."
+        },
+        "sessions": {
+          "title": "Lernsitzungen",
+          "text": "Geplante Übungen und Mentor-Sitzungen, die die Lehrkraft gezielt auf Ihre Lücken setzt."
+        }
+      }
+    },
+    "steps": {
+      "kicker": "So funktioniert es",
+      "title": "Vier Schritte zu einem sicheren Ergebnis",
+      "lead": "Nichts einzurichten — Sie können direkt nach der Registrierung loslegen.",
+      "items": {
+        "signup": {
+          "title": "Konto erstellen",
+          "text": "Login, Name und Passwort. Dauert unter einer Minute."
+        },
+        "diagnose": {
+          "title": "Diagnose absolvieren",
+          "text": "Der erste Test zeigt Niveau und schwache Themen."
+        },
+        "train": {
+          "title": "Nach Plan üben",
+          "text": "Themen, Ultimate oder Simulator — je nach Ziel."
+        },
+        "track": {
+          "title": "Fortschritt verfolgen",
+          "text": "Das Dashboard zeigt Entwicklung und nächste Schritte."
+        }
+      }
+    },
+    "faq": {
+      "kicker": "Fragen",
+      "title": "Das Wichtigste in Kürze",
+      "lead": "Was vor der Registrierung am häufigsten gefragt wird.",
+      "items": {
+        "price": {
+          "q": "Was kostet das?",
+          "a": "Der Lernbereich ist kostenlos: Registrierung, Themen-Tests, Ergebnisse und Empfehlungen sind direkt nach der Kontoerstellung verfügbar."
+        },
+        "who": {
+          "q": "Für wen ist die Plattform geeignet?",
+          "a": "Für Schülerinnen und Schüler der Klassen 10–11, frühere Absolventen und Erwachsene, die zur Mathematik zurückkehren. Tempo und Umfang bestimmen Sie."
+        },
+        "mobile": {
+          "q": "Kann ich am Handy lernen?",
+          "a": "Ja. Die Oberfläche ist mobile-first: Tests, Simulator und Statistik funktionieren auf Handy, Tablet und Desktop gleich gut."
+        },
+        "recommendations": {
+          "q": "Wie entstehen die Empfehlungen?",
+          "a": "Das System wertet Ihre Antworten je Thema aus und schlägt vor, zuerst die Themen mit dem niedrigsten Anteil richtiger Antworten zu wiederholen."
+        },
+        "teacher": {
+          "q": "Kann ich mit einer Lehrkraft arbeiten?",
+          "a": "Ja. Die Lehrkraft sieht Ihre Ergebnisse und kann Mentor-Sitzungen vergeben — gezielte Übungen für konkrete Lücken."
+        }
+      }
+    },
+    "cta": {
+      "title": "Beginnen Sie heute mit dem ersten Thema",
+      "lead": "Erstellen Sie in einer Minute ein Konto und machen Sie den ersten Test, um Ihr echtes Niveau zu sehen.",
+      "primary": "Konto erstellen",
+      "secondary": "Anmelden",
+      "note": "Ohne Zahlung und ohne Kartendaten"
+    },
+    "footer": {
+      "tagline": "Online-Vorbereitung auf die NMT in Mathematik: Themen-Tests, Ergebnisanalyse, Prüfungssimulator und Lernsitzungen mit einer Lehrkraft.",
+      "rights": "Bildungsprojekt · NMT-Vorbereitung Mathematik"
+    }
+  },
   "LoginForm": {
     "kicker": "Anmelden",
     "title": "NMT-Lernbereich",
-    "lead": "Melde dich als Schüler, Lehrkraft oder Administrator an. Unten stehen Demo-Konten zum Testen zur Verfügung.",
+    "lead": "Melde dich als Schüler, Lehrkraft oder Administrator an.",
     "login": "Login",
     "password": "Passwort",
     "signingIn": "Anmeldung…",
@@ -262,6 +413,34 @@
     "errors": {
       "requiredFields": "Gib Login und Passwort ein.",
       "invalidCredentials": "Ungültiger Login oder ungültiges Passwort."
+    },
+    "noAccount": "Noch kein Konto?",
+    "registerLink": "Registrieren"
+  },
+  "RegisterForm": {
+    "kicker": "Registrierung",
+    "title": "Schülerkonto erstellen",
+    "lead": "Registriere dich, um Tests zu absolvieren, Ergebnisse zu speichern und Empfehlungen zu erhalten. Lehrkraft- und Admin-Zugang bleiben vorerst über Demo-Login.",
+    "displayName": "Anzeigename",
+    "login": "Login",
+    "loginHint": "Lateinische Buchstaben, Ziffern, Punkt, _ oder - (mindestens 3 Zeichen).",
+    "password": "Passwort",
+    "passwordHint": "Mindestens {min} Zeichen.",
+    "passwordConfirm": "Passwort bestätigen",
+    "submitting": "Wird erstellt…",
+    "submit": "Registrieren",
+    "haveAccount": "Bereits ein Konto?",
+    "signInLink": "Anmelden",
+    "errors": {
+      "requiredFields": "Bitte alle Felder ausfüllen.",
+      "invalidLogin": "Ungültiger Login. Nutze lateinische Buchstaben, Ziffern, ., _ oder -.",
+      "invalidDisplayName": "Der Name muss 2–100 Zeichen haben.",
+      "passwordTooShort": "Das Passwort ist zu kurz.",
+      "passwordTooLong": "Das Passwort ist zu lang.",
+      "passwordMismatch": "Die Passwörter stimmen nicht überein.",
+      "loginTaken": "Dieser Login ist bereits vergeben.",
+      "reservedLogin": "Dieser Login ist für Demos reserviert.",
+      "serverError": "Konto konnte nicht erstellt werden. Bitte später erneut versuchen."
     }
   },
   "ContentImportForm": {
@@ -288,6 +467,10 @@
     }
   },
   "Metadata": {
+    "welcome": {
+      "title": "NMT-Vorbereitung in Mathematik",
+      "description": "Online-Lernbereich für den NMT: Thementests, Ergebnisse, Empfehlungen und Prüfungssimulator."
+    },
     "home": {
       "title": "Test zum ausgewählten Thema",
       "description": "NMT-Übungstest zum ausgewählten Thema: Wähle ein Thema und die Anzahl der Aufgaben und beginne mit dem Üben."
@@ -295,6 +478,10 @@
     "login": {
       "title": "Anmelden",
       "description": "Melde dich in deinem NMT-Lernbereich an."
+    },
+    "register": {
+      "title": "Registrierung",
+      "description": "Erstelle ein Schülerkonto für den NMT-Lernbereich."
     },
     "session": {
       "title": "Test durchführen",
@@ -324,5 +511,37 @@
   "SettingsPage": {
     "title": "Einstellungen",
     "description": "Import von Lerninhalten und Kontoeinstellungen."
+  },
+  "simulator": {
+    "eyebrow": "NMT",
+    "title": "NMT-Simulator",
+    "description": "Versuche, den Test im NMT-Simulationsformat zu absolvieren.",
+    "tasks": "Aufgaben",
+    "timer": "Timer",
+    "result": "Ergebnis",
+    "preparing": "Test wird vorbereitet...",
+    "start": "Test starten",
+    "errors": {
+      "insufficientTasks": "Es sind nicht genügend Aufgaben vorhanden, um den Simulator zu starten.",
+      "alreadyInProgress": "Die Anfrage wird bereits verarbeitet. Bitte warten Sie.",
+      "generic": "Der Simulator konnte nicht gestartet werden. Bitte versuchen Sie es erneut."
+    }
+  },
+  "nmtTrainer": {
+    "title": "NMT-Simulator",
+    "taskProgress": "Aufgabe {current} von {total}",
+    "tasks": "Aufgaben",
+    "answered": "Beantwortet: {answered}/{total}",
+    "finishing": "Wird beendet...",
+    "finishTest": "Test beenden",
+    "back": "Zurück",
+    "next": "Weiter",
+    "errors": {
+      "unfinished": "Bearbeiten Sie alle Aufgaben, bevor Sie den Test beenden.",
+      "invalidInput": "Ungültige Daten.",
+      "notFound": "Die Sitzung oder Aufgabe wurde nicht gefunden.",
+      "sessionCompleted": "Diese Sitzung wurde bereits abgeschlossen.",
+      "generic": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
+    }
   }
 }

@@ -6,10 +6,18 @@ import { absoluteUrl } from "@/constants/seo";
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
 
-  return DASHBOARD_NAV.map((item) => ({
-    url: absoluteUrl(item.href),
-    lastModified: now,
-    changeFrequency: item.href === "/" ? "daily" : "weekly",
-    priority: item.href === "/" ? 1 : 0.7,
-  }));
+  return [
+    {
+      url: absoluteUrl("/welcome"),
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.9,
+    },
+    ...DASHBOARD_NAV.map((item): MetadataRoute.Sitemap[number] => ({
+      url: absoluteUrl(item.href),
+      lastModified: now,
+      changeFrequency: item.href === "/" ? "daily" : "weekly",
+      priority: item.href === "/" ? 1 : 0.7,
+    })),
+  ];
 }

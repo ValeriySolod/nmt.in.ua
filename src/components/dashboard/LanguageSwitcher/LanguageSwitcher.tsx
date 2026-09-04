@@ -1,15 +1,16 @@
 "use client";
 
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { setLocale } from "@/i18n/actions";
 import css from "./LanguageSwitcher.module.css";
 
-const locales = ["uk", "en", "de"] as const;
+const LOCALES = ["uk", "en", "de"] as const;
 
-type Locale = (typeof locales)[number];
+type Locale = (typeof LOCALES)[number];
 
 export function LanguageSwitcher() {
+  const t = useTranslations("LanguageSwitcher");
   const locale = useLocale();
   const router = useRouter();
 
@@ -19,19 +20,24 @@ export function LanguageSwitcher() {
   }
 
   return (
-    <div className={css.switcher} aria-label="Language">
-      {locales.map((item) => (
-        <button
-          key={item}
-          type="button"
-          className={css.button}
-          data-active={locale === item}
-          onClick={() => changeLocale(item)}
-          disabled={locale === item}
-        >
-          {item.toUpperCase()}
-        </button>
-      ))}
+    <div className={css.switcher} role="group" aria-label={t("aria")}>
+      {LOCALES.map((item) => {
+        const active = locale === item;
+        return (
+          <button
+            key={item}
+            type="button"
+            className={css.button}
+            data-active={active}
+            aria-label={t(`${item}Full`)}
+            aria-pressed={active}
+            onClick={() => changeLocale(item)}
+            disabled={active}
+          >
+            {item.toUpperCase()}
+          </button>
+        );
+      })}
     </div>
   );
 }

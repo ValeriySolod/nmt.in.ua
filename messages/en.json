@@ -8,6 +8,7 @@
     "hideMenu": "Hide menu",
     "showMenu": "Show menu",
     "goHome": "Go to homepage",
+    "goHomeShort": "Home",
     "tagline": "mathematics · practice · progress",
     "logout": "log out",
     "roles": {
@@ -16,6 +17,12 @@
       "admin": "Admin"
     },
     "siteName": "NMT Preparation"
+  },
+  "LanguageSwitcher": {
+    "aria": "Site language",
+    "ukFull": "Ukrainian",
+    "enFull": "English",
+    "deFull": "German"
   },
   "Sidebar": {
     "ariaLabel": "Dashboard navigation",
@@ -88,6 +95,10 @@
   },
   "TopicTestStart": {
     "title": "Test by selected topic",
+    "kicker": "Workspace",
+    "helloStart": "Hello,",
+    "formTitle": "New practice",
+    "lead": "Pick a topic and a mode — then practise in the NMT format.",
     "leadStandard": "up to {count} random tasks with instant explanations.",
     "leadUltimate": "up to {count} tasks, 20 minutes, with no hints until the end of the test.",
     "noThemes": "There are currently no topics with tasks in the database. Add tasks by importing them on the settings page.",
@@ -115,22 +126,16 @@
     "goToTopic": "Continue to the topic “{theme}”",
     "graphReason": "The topic “{theme}” has been mastered — this is the next step in your learning plan.",
     "graphReasonFallback": "This is the next step in your learning plan.",
-
     "repeatTopic": "Review the topic “{theme}”",
     "weakTopicReason": "Your latest result is {percent}%. It's worth practicing this topic again.",
-
     "tryTopic": "Try the topic “{theme}”",
     "untriedReason": "You haven't tried this topic yet — start with a short test.",
-
     "consultationTitle": "Book a consultation",
     "consultationReason": "Several topics could benefit from additional support from a teacher.",
-
     "materialsTitle": "Review the learning materials",
     "materialsReason": "Reviewing the notes can help before retaking tests on weaker topics.",
-
     "simulatorTitle": "Try the full NMT simulator",
     "simulatorReason": "You've covered all topics well — it's time to test yourself in the full NMT format.",
-
     "problemsTitle": "Practice additional problems",
     "problemsReason": "Your progress is steady — reinforce it with additional practice."
   },
@@ -239,10 +244,156 @@
       "generic": "Could not cancel the session. Please try again."
     }
   },
+  "AuthShared": {
+    "backHome": "Back to home",
+    "asideBadge": "NMT 2026 · mathematics",
+    "asideTitle": "Your workspace for NMT maths preparation",
+    "asideLead": "One login and you see your weak topics, attempt history and the plan for the next steps.",
+    "asidePoints": {
+      "a": "Topic tests and timed Ultimate mode",
+      "b": "Result analytics and personal recommendations",
+      "c": "Full paper simulator in the official exam format"
+    }
+  },
+  "WelcomeLanding": {
+    "nav": {
+      "sectionsAria": "Page sections",
+      "features": "Features",
+      "steps": "How it works",
+      "faq": "FAQ",
+      "login": "Log in",
+      "register": "Create account",
+      "cabinet": "Workspace"
+    },
+    "hero": {
+      "badge": "NMT 2026 · mathematics",
+      "titleStart": "Prepare for the NMT in maths —",
+      "titleAccent": "systematically, with results",
+      "lead": "An online workspace that shows your weak topics, trains you in exam format and gives a clear plan for the next steps. No scattered PDFs, no random tests.",
+      "ctaPrimary": "Start preparing",
+      "ctaSecondary": "I already have an account",
+      "note": "Sign up in a minute — no card, no payment",
+      "imageAlt": "Illustration: a function graph, a progress ring and geometric shapes",
+      "stats": {
+        "topics": {
+          "value": "20+",
+          "label": "topics of the exam syllabus"
+        },
+        "modes": {
+          "value": "2",
+          "label": "modes: practice and Ultimate"
+        },
+        "format": {
+          "value": "100%",
+          "label": "official exam format in the simulator"
+        }
+      },
+      "chipA": {
+        "title": "Topic progress",
+        "text": "Functions — 78% correct"
+      },
+      "chipB": {
+        "title": "Ultimate mode",
+        "text": "12 tasks · 15 minutes"
+      }
+    },
+    "features": {
+      "kicker": "Features",
+      "title": "Everything you need for regular practice in one place",
+      "lead": "From your first topic test to a full exam simulation.",
+      "items": {
+        "topics": {
+          "title": "Topic tests",
+          "text": "Pick a topic and the number of tasks, then start right away. Every question comes with an explanation."
+        },
+        "ultimate": {
+          "title": "Ultimate mode",
+          "text": "The same material, but against the clock. It teaches the pace you need on the real exam."
+        },
+        "results": {
+          "title": "Results and analytics",
+          "text": "Attempt history, share of correct answers and the trend for every topic separately."
+        },
+        "recommendations": {
+          "title": "Personal recommendations",
+          "text": "After each test the system suggests what to revise and where to start the next session."
+        },
+        "simulator": {
+          "title": "NMT simulator",
+          "text": "A full paper in the official format with a timer and scoring — a rehearsal of the real exam."
+        },
+        "sessions": {
+          "title": "Learning sessions",
+          "text": "Planned practice and mentor sessions assigned by a teacher for your specific gaps."
+        }
+      }
+    },
+    "steps": {
+      "kicker": "How it works",
+      "title": "Four steps to a confident result",
+      "lead": "Nothing to configure — you can start right after signing up.",
+      "items": {
+        "signup": {
+          "title": "Create an account",
+          "text": "Login, name and password. Takes under a minute."
+        },
+        "diagnose": {
+          "title": "Take the diagnostic",
+          "text": "The first test shows your level and weak topics."
+        },
+        "train": {
+          "title": "Practise with a plan",
+          "text": "Topics, Ultimate or the simulator — depending on your goal."
+        },
+        "track": {
+          "title": "Track your progress",
+          "text": "The dashboard shows the trend and the next steps."
+        }
+      }
+    },
+    "faq": {
+      "kicker": "FAQ",
+      "title": "The short answers",
+      "lead": "What people ask most often before signing up.",
+      "items": {
+        "price": {
+          "q": "How much does it cost?",
+          "a": "The student workspace is free: sign-up, topic tests, results and recommendations are available as soon as you create an account."
+        },
+        "who": {
+          "q": "Who is the platform for?",
+          "a": "Students in years 10–11, past graduates and adults returning to maths. You choose the pace and the workload."
+        },
+        "mobile": {
+          "q": "Can I study on a phone?",
+          "a": "Yes. The interface is mobile-first: tests, the simulator and statistics work equally well on a phone, tablet and desktop."
+        },
+        "recommendations": {
+          "q": "How are recommendations produced?",
+          "a": "The system looks at your answers per topic and suggests revising the ones with the lowest share of correct answers before moving on."
+        },
+        "teacher": {
+          "q": "Can I work with a teacher?",
+          "a": "Yes. A teacher sees your results and can assign mentor sessions — separate practice for specific gaps."
+        }
+      }
+    },
+    "cta": {
+      "title": "Start with your first topic today",
+      "lead": "Create a student account in a minute and take the first test to see your real level.",
+      "primary": "Create account",
+      "secondary": "Log in",
+      "note": "No payments, no card required"
+    },
+    "footer": {
+      "tagline": "Online NMT maths preparation: topic tests, result analytics, an exam simulator and learning sessions with a teacher.",
+      "rights": "Educational project · NMT mathematics preparation"
+    }
+  },
   "LoginForm": {
     "kicker": "Sign in",
     "title": "NMT Learning Dashboard",
-    "lead": "Sign in as a student, teacher, or admin. Demo accounts are available below for testing.",
+    "lead": "Sign in as a student, teacher, or admin.",
     "login": "Login",
     "password": "Password",
     "signingIn": "Signing in…",
@@ -262,6 +413,34 @@
     "errors": {
       "requiredFields": "Enter your login and password.",
       "invalidCredentials": "Invalid login or password."
+    },
+    "noAccount": "No account yet?",
+    "registerLink": "Create an account"
+  },
+  "RegisterForm": {
+    "kicker": "Sign up",
+    "title": "Create a student account",
+    "lead": "Register to take tests, save results, and get recommendations. Teacher and admin access stay on demo login for now.",
+    "displayName": "Display name",
+    "login": "Login",
+    "loginHint": "Latin letters, digits, dot, _ or - (at least 3 characters).",
+    "password": "Password",
+    "passwordHint": "At least {min} characters.",
+    "passwordConfirm": "Confirm password",
+    "submitting": "Creating…",
+    "submit": "Create account",
+    "haveAccount": "Already have an account?",
+    "signInLink": "Sign in",
+    "errors": {
+      "requiredFields": "Fill in all fields.",
+      "invalidLogin": "Invalid login. Use Latin letters, digits, ., _ or -.",
+      "invalidDisplayName": "Name must be 2–100 characters.",
+      "passwordTooShort": "Password is too short.",
+      "passwordTooLong": "Password is too long.",
+      "passwordMismatch": "Passwords do not match.",
+      "loginTaken": "This login is already taken.",
+      "reservedLogin": "This login is reserved for demos.",
+      "serverError": "Could not create the account. Try again later."
     }
   },
   "ContentImportForm": {
@@ -288,6 +467,10 @@
     }
   },
   "Metadata": {
+    "welcome": {
+      "title": "NMT math preparation",
+      "description": "An online workspace for NMT prep: topic tests, results, recommendations, and an exam simulator."
+    },
     "home": {
       "title": "Test by Selected Topic",
       "description": "NMT practice test by selected topic: choose a topic, the number of tasks, and start practicing."
@@ -295,6 +478,10 @@
     "login": {
       "title": "Sign In",
       "description": "Sign in to your NMT learning dashboard."
+    },
+    "register": {
+      "title": "Sign up",
+      "description": "Create a student account for the NMT learning dashboard."
     },
     "session": {
       "title": "Taking a Test",
@@ -324,5 +511,37 @@
   "SettingsPage": {
     "title": "Settings",
     "description": "Learning content import and account settings."
+  },
+  "simulator": {
+    "eyebrow": "NMT",
+    "title": "NMT Simulator",
+    "description": "Try taking the test in the NMT simulation format.",
+    "tasks": "Tasks",
+    "timer": "Timer",
+    "result": "Result",
+    "preparing": "Preparing test...",
+    "start": "Start test",
+    "errors": {
+      "insufficientTasks": "There are not enough tasks to start the simulator.",
+      "alreadyInProgress": "The request is already in progress. Please wait.",
+      "generic": "Failed to start the simulator. Please try again."
+    }
+  },
+  "nmtTrainer": {
+    "title": "NMT Simulator",
+    "taskProgress": "Task {current} of {total}",
+    "tasks": "Tasks",
+    "answered": "Answered: {answered}/{total}",
+    "finishing": "Finishing...",
+    "finishTest": "Finish test",
+    "back": "Back",
+    "next": "Next",
+    "errors": {
+      "unfinished": "Complete all tasks before finishing the test.",
+      "invalidInput": "Invalid data.",
+      "notFound": "The session or task was not found.",
+      "sessionCompleted": "This session has already been completed.",
+      "generic": "An error occurred. Please try again."
+    }
   }
 }

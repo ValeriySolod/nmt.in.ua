@@ -1,4 +1,4 @@
-/** Shared path / probe detection for middleware and docs. */
+/** Shared path / probe detection for the request proxy and docs. */
 
 const BLOCKED_PATH =
   /(?:^|\/)(?:\.env(?:\..*)?|\.git(?:\/|$)|\.svn|\.hg|wp-admin|wp-login\.php|xmlrpc\.php|phpmyadmin|adminer|cgi-bin|vendor\/phpunit|actuator|debug\/default|server-status)(?:\/|$)/i;

@@ -1,26 +1,53 @@
 .shell {
   position: relative;
-  min-height: 100dvh;
   isolation: isolate;
+  min-height: 100dvh;
+  overflow-x: clip;
+  color: var(--ink-deep);
+  background: var(--grad-aurora);
 }
 
-.shell::before {
-  content: "";
-  position: fixed;
+.decor {
+  position: absolute;
   inset: 0;
-  z-index: -1;
+  z-index: 0;
+  overflow: hidden;
   pointer-events: none;
-  background:
-    linear-gradient(
-      180deg,
-      rgb(244 246 248 / 84%) 0%,
-      rgb(244 246 248 / 94%) 48%,
-      rgb(244 246 248 / 98%) 100%
-    ),
-    url("/decor/header-formulas.webp");
-  background-size: cover, cover;
-  background-position: center top;
-  opacity: 0.5;
+}
+
+.decorGrid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgb(94 76 40 / 11%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(94 76 40 / 11%) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: linear-gradient(180deg, rgb(0 0 0 / 70%), rgb(0 0 0 / 18%) 72%);
+}
+
+.decorOrbA,
+.decorOrbB {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(10px);
+}
+
+.decorOrbA {
+  top: -12rem;
+  right: -8rem;
+  width: min(70vw, 32rem);
+  height: min(70vw, 32rem);
+  background: radial-gradient(circle, rgb(31 143 69 / 18%), transparent 68%);
+  animation: orbFloat 16s var(--ease) infinite alternate;
+}
+
+.decorOrbB {
+  top: 42%;
+  left: -10rem;
+  width: min(55vw, 24rem);
+  height: min(55vw, 24rem);
+  background: radial-gradient(circle, rgb(150 118 62 / 14%), transparent 70%);
+  animation: orbFloat 21s var(--ease) infinite alternate-reverse;
 }
 
 .backdrop {
@@ -28,28 +55,21 @@
   inset: var(--header-h) 0 0;
   z-index: 25;
   border: 0;
-  background: rgb(16 20 24 / 42%);
+  background: var(--overlay);
   backdrop-filter: blur(2px);
   cursor: pointer;
-  animation: fadeIn 0.2s var(--ease);
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  animation: fadeIn var(--t) var(--ease);
 }
 
 .body {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: flex-start;
   gap: 0;
-  width: min(100%, 1920px);
+  width: min(100%, var(--container-max));
   margin-inline: auto;
-  padding: var(--pad-y) var(--pad-x) 32px;
+  padding: var(--space-md) var(--container-pad) var(--space-xl);
 }
 
 .sidebarSlot {
@@ -60,16 +80,38 @@
 }
 
 .content {
-  flex: 1;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 16px;
+  flex: 1;
+  gap: var(--space-md);
   min-width: 0;
 }
 
 .main {
+  align-self: start;
+  width: 100%;
   min-width: 0;
-  padding: 8px 0 28px;
+  padding: 0 0 var(--space-lg);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes orbFloat {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  to {
+    transform: translate3d(-20px, 22px, 0) scale(1.06);
+  }
 }
 
 @media (min-width: 768px) {
@@ -78,7 +120,7 @@
   }
 
   .body {
-    gap: 22px;
+    gap: var(--space-lg);
   }
 
   .sidebarSlotOpen {
@@ -90,30 +132,30 @@
     flex: 0 0 0;
     width: 0;
   }
-
-  .content {
-    gap: 20px;
-  }
 }
 
-@media (min-width: 1280px) {
+@media (min-width: 1240px) {
   .body {
-    gap: 26px;
+    gap: var(--space-xl);
+    padding-block: var(--space-lg) var(--space-2xl);
   }
 
   .content {
     grid-template-columns: minmax(0, 1fr) var(--aside-w);
-    gap: 24px;
+    gap: var(--space-lg);
     align-items: start;
   }
 }
 
 @media (min-width: 1440px) {
-  .body {
-    gap: 28px;
+  .content {
+    gap: var(--space-xl);
   }
+}
 
-  .main {
-    padding-top: 12px;
+@media (prefers-reduced-motion: reduce) {
+  .decorOrbA,
+  .decorOrbB {
+    animation: none;
   }
 }
