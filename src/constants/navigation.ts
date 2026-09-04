@@ -39,7 +39,7 @@ export const DASHBOARD_NAV: NavItem[] = [
     href: "/materials",
     label: "Навчальні матеріали",
     description: "Конспекти, формули та пояснення до тем сертифікаційної роботи.",
-    status: "soon",
+    status: "ready",
   },
   {
     href: "/problems",

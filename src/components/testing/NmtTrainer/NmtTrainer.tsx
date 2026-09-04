@@ -12,6 +12,7 @@ import type {
   SessionTask,
   TrainerSessionSummary,
 } from "@/modules/testing/types";
+import { MathText } from "@/components/ui/MathText";
 
 import styles from "./NmtTrainer.module.css";
 
@@ -174,7 +175,11 @@ export function NmtTrainer({
         <div className={styles.task}>
           <p className={styles.taskName}>{currentTask.name}</p>
 
-          <div className={styles.taskText}>{currentTask.taskText}</div>
+          <MathText
+            as="div"
+            className={styles.taskText}
+            text={currentTask.taskText}
+          />
 
           <div className={styles.answers}>
             {currentTask.answers.map((answer) => {
@@ -192,7 +197,7 @@ export function NmtTrainer({
                 >
                   <span className={styles.answerNumber}>{answer.number}</span>
 
-                  <span>{answer.text}</span>
+                  <MathText text={answer.text} />
                 </button>
               );
             })}
