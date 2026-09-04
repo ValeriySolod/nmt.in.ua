@@ -25,6 +25,7 @@ import {
 } from "@/modules/testing/types";
 import type { RecommendedAction } from "@/modules/recommendations";
 import { TopicTrainerSummary } from "@/components/testing/TopicTrainerSummary";
+import { MathText } from "@/components/ui/MathText";
 import { useCountdownTimer } from "./useCountdownTimer";
 import { useSessionTimer } from "./useSessionTimer";
 import { useLocale, useTranslations } from "next-intl";
@@ -302,7 +303,11 @@ export function TopicTrainer({
         aria-label={t("taskAria", { number: currentIndex + 1 })}
       >
         <h2 className={css.taskName}>{currentTask.name}</h2>
-        <p className={css.taskText}>{currentTask.taskText}</p>
+        <MathText
+          as="div"
+          className={css.taskText}
+          text={currentTask.taskText}
+        />
 
         <div
           className={css.answers}
@@ -331,7 +336,7 @@ export function TopicTrainer({
               disabled={isPending || checkResult !== undefined || isFinishing}
               aria-pressed={selectedAnswer === answer.number}
             >
-              {answer.number}. {answer.text}
+              {answer.number}. <MathText text={answer.text} />
             </button>
           ))}
         </div>

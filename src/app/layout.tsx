@@ -16,6 +16,7 @@ import { getCurrentUser } from "@/modules/auth/getCurrentUser";
 import { getRecentResults } from "@/modules/results/getRecentResults";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
+import "katex/dist/katex.min.css";
 import "./globals.css";
 
 /** MySQL env is for runtime on the host; skip static prerender that hits the DB at build. */

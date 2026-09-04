@@ -1,4 +1,5 @@
 import type { SessionMistakeItem } from "@/modules/testing/getSessionMistakeReview";
+import { MathText } from "@/components/ui/MathText";
 import css from "./TopicTrainerMistakeReview.module.css";
 
 type TopicTrainerMistakeReviewProps = {
@@ -27,9 +28,9 @@ export function TopicTrainerMistakeReview({
             className={css.item}
           >
             <p className={css.itemName}>{item.name}</p>
-            <p className={css.itemText}>{item.taskText}</p>
+            <MathText as="div" className={css.itemText} text={item.taskText} />
             {item.comment ? (
-              <p className={css.comment}>{item.comment}</p>
+              <MathText as="div" className={css.comment} text={item.comment} />
             ) : null}
           </li>
         ))}
