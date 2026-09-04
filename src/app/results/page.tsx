@@ -2,7 +2,7 @@ import { RecommendedActionsPanel } from "@/components/dashboard/RecommendedActio
 import { TopicResultsTable } from "@/components/dashboard/TopicResultsTable";
 import { getNavItem } from "@/constants/navigation";
 import { createPageMetadata } from "@/constants/seo";
-import { requireUserId } from "@/modules/auth";
+import { requireUserId } from "@/modules/auth/getCurrentUser";
 import { getStudentTopicStats } from "@/modules/recommendations/getStudentTopicStats";
 import { recommendNextActionsForStats } from "@/modules/recommendations";
 import { getTopicResults } from "@/modules/results/getTopicResults";

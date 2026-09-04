@@ -33,7 +33,7 @@ export const DASHBOARD_NAV: NavItem[] = [
     href: "/simulator",
     label: "Симулятор НМТ",
     description: "Повний варіант НМТ у форматі УЦОЯО з таймером і балами.",
-    status: "soon",
+    status: "ready",
   },
   {
     href: "/materials",

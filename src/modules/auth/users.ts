@@ -102,15 +102,6 @@ async function seedDemoUsers(connection: SqlConnection): Promise<void> {
   const rows = await connection.query<CountRow>(SQL_COUNT_USERS, []);
   const count = rows[0]?.count ?? 0;
   if (count > 0) {
-    for (const account of DEMO_ACCOUNTS) {
-      await connection.execute(SQL_UPSERT_DEMO, [
-        account.id,
-        account.login,
-        hashPassword(account.password),
-        account.displayName,
-        account.role,
-      ]);
-    }
     return;
   }
 
@@ -186,6 +177,71 @@ export async function findUserById(
     const row = rows[0];
     if (!row) return null;
     return mapUser(row);
+  } finally {
+    connection.release();
+  }
+}
+
+const SQL_INSERT_USER = `
+  INSERT INTO ${AUTH_USERS_TABLE} (login, password_hash, display_name, role)
+  VALUES (?, ?, ?, ?)
+`;
+
+export type CreateUserInput = {
+  login: string;
+  displayName: string;
+  password: string;
+  role?: UserRole;
+};
+
+export class CreateUserError extends Error {
+  constructor(
+    message: string,
+    public readonly code: "login_taken" | "db_error",
+  ) {
+    super(message);
+    this.name = "CreateUserError";
+  }
+}
+
+/**
+ * Creates a new auth user. Public registration always uses role=student.
+ * Demo accounts keep fixed ids 1–3 via seed upsert.
+ */
+export async function createUser(
+  input: CreateUserInput,
+  deps: { getConnection: () => Promise<SqlConnection> } = {
+    getConnection: loadDefaultConnection,
+  },
+): Promise<AuthUser> {
+  await ensureAuthSchema(deps);
+  const role: UserRole = input.role ?? "student";
+  const connection = await deps.getConnection();
+  try {
+    const result = await connection.execute(SQL_INSERT_USER, [
+      input.login,
+      hashPassword(input.password),
+      input.displayName,
+      role,
+    ]);
+
+    return {
+      id: result.insertId,
+      login: input.login,
+      displayName: input.displayName,
+      role,
+    };
+  } catch (error) {
+    const errno =
+      typeof error === "object" && error !== null && "errno" in error
+        ? Number((error as { errno?: number }).errno)
+        : undefined;
+    // MySQL ER_DUP_ENTRY
+    if (errno === 1062) {
+      throw new CreateUserError("Login already taken.", "login_taken");
+    }
+    console.error("createUser: unexpected database error", error);
+    throw new CreateUserError("Database operation failed.", "db_error");
   } finally {
     connection.release();
   }

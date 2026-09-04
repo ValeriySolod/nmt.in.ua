@@ -4,7 +4,7 @@ import { ContentImportForm } from "@/components/settings/ContentImportForm";
 import { getNavItem } from "@/constants/navigation";
 import { createPageMetadata } from "@/constants/seo";
 import { isContentImportConfigured } from "@/modules/content-import/auth";
-import { requireRole } from "@/modules/auth";
+import { requireRole } from "@/modules/auth/getCurrentUser";
 const item = getNavItem("/settings");
 
 export async function generateMetadata() {

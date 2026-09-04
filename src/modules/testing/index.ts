@@ -4,7 +4,8 @@
  * Реалізовано:
  * - `/` → TopicTestStart (звичайний + Ultimate)
  * - `/session/[id]` → TopicTrainer
- * - `/simulator`, `/problems`, `/materials` → заглушки (скоро)
+ * - `/simulator` → симулятор НМТ (`NmtTrainer`)
+ * - `/problems`, `/materials` → заглушки (скоро)
  */
 
 export type TopicTestConfig = {

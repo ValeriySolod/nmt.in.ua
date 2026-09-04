@@ -1,6 +1,6 @@
 "use server";
 
-import { getCurrentUser } from "@/modules/auth";
+import { getCurrentUser } from "@/modules/auth/getCurrentUser";
 import { buildImportInputFromFormData } from "./buildImportInputFromFormData";
 import { isContentImportConfigured } from "./auth";
 import { ContentImportError, runContentImport, type ImportSummary } from "./index";

@@ -67,7 +67,7 @@
 
 | Маршрут | Зараз | Що зробити |
 | --- | --- | --- |
-| `/simulator` | `NavStubPage` | таска **3.8** |
+| `/simulator` | симулятор НМТ (`startNmtSimulatorAction`) | таска **3.8** |
 | `/problems` | `NavStubPage` | таска **3.9** |
 | `/materials` | `NavStubPage` | контент або лінки на матеріали (узгодити з ментором) |
 | `/consultations` | `NavStubPage` | форма запису / контакти (узгодити) |

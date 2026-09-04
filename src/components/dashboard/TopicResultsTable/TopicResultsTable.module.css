@@ -26,10 +26,10 @@
 
 .tableWrap {
   overflow-x: auto;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
   background: var(--surface);
-  box-shadow: 5px 6px 0 rgb(22 22 22 / 6%);
+  box-shadow: var(--shadow-sm);
 }
 
 .table {
@@ -77,8 +77,8 @@
 }
 
 .metricMedium {
-  background: #fff3cd;
-  color: #856404;
+  background: var(--paper-deep);
+  color: #6b5420;
 }
 
 .metricLow {

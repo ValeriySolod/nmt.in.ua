@@ -4,7 +4,7 @@ export const SESSION_COOKIE_NAME = "nmt_session";
 export const SESSION_MAX_AGE_SEC = 60 * 60 * 24 * 7;
 
 function readSecret(): string {
-  const secret = process.env.SESSION_SECRET ?? process.env.ADMIN_API_KEY;
+  const secret = process.env.SESSION_SECRET;
   if (!secret) {
     if (process.env.NODE_ENV === "production") {
       throw new Error("SESSION_SECRET is required in production.");

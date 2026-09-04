@@ -6,7 +6,7 @@ import {
   type RecommendationTranslator,
 } from "@/modules/recommendations";
 import { getStudentTopicStats } from "@/modules/recommendations/getStudentTopicStats";
-import { requireUserId } from "@/modules/auth";
+import { requireUserId } from "@/modules/auth/getCurrentUser";
 import { revalidatePath } from "next/cache";
 import {
   checkAnswer,

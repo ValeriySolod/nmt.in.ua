@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server";
 import css from "./PageFrame.module.css";
 
 type PageFrameProps = {
-  title: string;
+  title: React.ReactNode;
   lead?: React.ReactNode;
   kicker?: string;
   children: React.ReactNode;

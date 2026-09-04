@@ -14,6 +14,7 @@ const WINDOW_MS = 60_000;
 const LIMIT_PAGE = 90;
 const LIMIT_STATIC = 300;
 const LIMIT_OTHER = 60;
+const LIMIT_AUTH = 20;
 const MAX_BUCKETS = 5_000;
 
 function prune(now: number) {
@@ -42,12 +43,26 @@ function take(key: string, limit: number, now: number): boolean {
 function limitFor(pathname: string): number {
   if (pathname.startsWith("/_next/static")) return LIMIT_STATIC;
   if (pathname.startsWith("/_next")) return LIMIT_OTHER;
+  if (
+    pathname === "/login" ||
+    pathname === "/register" ||
+    pathname.startsWith("/login/") ||
+    pathname.startsWith("/register/") ||
+    pathname.startsWith("/api/")
+  ) {
+    return LIMIT_AUTH;
+  }
   return LIMIT_PAGE;
 }
 
-const PUBLIC_PATHS = ["/login"];
+const PUBLIC_PATHS = ["/", "/welcome", "/login", "/register"];
+
+/** Files shipped in /public — images, fonts, manifest. Never behind the auth guard. */
+const PUBLIC_ASSET =
+  /\.(?:webp|avif|png|jpe?g|gif|svg|ico|woff2?|ttf|otf|css|js|map|json|txt|xml|webmanifest)$/i;
 
 function isPublicPath(pathname: string): boolean {
+  if (PUBLIC_ASSET.test(pathname)) return true;
   return PUBLIC_PATHS.some(
     (path) => pathname === path || pathname.startsWith(`${path}/`),
   );
@@ -88,7 +103,7 @@ async function authGuard(request: NextRequest): Promise<NextResponse | null> {
   return null;
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (isBlockedPath(pathname)) {
@@ -104,7 +119,9 @@ export async function middleware(request: NextRequest) {
   const ip = clientIp(request.headers);
   const now = Date.now();
   const limit = limitFor(pathname);
-  const key = `${ip}:${limit === LIMIT_STATIC ? "static" : "app"}`;
+  const kind =
+    limit === LIMIT_STATIC ? "static" : limit === LIMIT_AUTH ? "auth" : "app";
+  const key = `${ip}:${kind}`;
 
   if (!take(key, limit, now)) {
     const retryAfter = Math.max(
@@ -124,7 +141,11 @@ export async function middleware(request: NextRequest) {
   const authResponse = await authGuard(request);
   if (authResponse) return authResponse;
 
-  return NextResponse.next();
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-pathname", pathname);
+  return NextResponse.next({
+    request: { headers: requestHeaders },
+  });
 }
 
 export const config = {

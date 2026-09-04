@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireRole, requireUserId } from "@/modules/auth";
+import { requireRole, requireUserId } from "@/modules/auth/getCurrentUser";
 import { createMentorSession } from "./createMentorSession";
 import {
   cancelLearningSession,

@@ -15,3 +15,4 @@ CREATE TABLE IF NOT EXISTS app_users (
 
 -- Demo accounts (password for all: demo123) are seeded by ensureAuthSchema() in the app.
 -- IDs 1–3 align with task_sessions.user_id used in existing data.
+-- Public registration inserts new rows with role='student' (auto-increment id >= 4).

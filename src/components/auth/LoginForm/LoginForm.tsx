@@ -1,12 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useActionState } from "react";
 import clsx from "clsx";
-import { DEMO_ACCOUNTS } from "@/modules/auth/client";
+import { PASSWORD_MAX_LEN } from "@/modules/auth/validateRegistration";
 import { loginAction, type LoginActionState } from "@/modules/auth/actions";
-import { DemoLoginButtons } from "./DemoLoginButtons";
-import css from "./LoginForm.module.css";
+import css from "../auth.module.css";
 
 const INITIAL: LoginActionState = { status: "idle" };
 
@@ -18,8 +18,13 @@ export function LoginForm({ nextPath }: LoginFormProps) {
   const t = useTranslations("LoginForm");
   const [state, formAction, pending] = useActionState(loginAction, INITIAL);
 
+  const registerHref =
+    nextPath === "/"
+      ? "/register"
+      : `/register?next=${encodeURIComponent(nextPath)}`;
+
   return (
-    <div className={css.wrap}>
+    <div className={css.card}>
       <header className={css.intro}>
         <p className={css.kicker}>{t("kicker")}</p>
         <h1 className={css.title}>{t("title")}</h1>
@@ -48,6 +53,7 @@ export function LoginForm({ nextPath }: LoginFormProps) {
             name="password"
             autoComplete="current-password"
             required
+            maxLength={PASSWORD_MAX_LEN}
             disabled={pending}
           />
         </label>
@@ -63,17 +69,12 @@ export function LoginForm({ nextPath }: LoginFormProps) {
         </button>
       </form>
 
-      <section className={css.demo} aria-labelledby="demo-login-title">
-        <h2 id="demo-login-title" className={css.demoTitle}>
-          {t("demoTitle")}
-        </h2>
-
-        <p className={css.demoLead}>
-          {t("demoPassword")} <strong>demo123</strong>
-        </p>
-
-        <DemoLoginButtons nextPath={nextPath} accounts={DEMO_ACCOUNTS} />
-      </section>
+      <p className={css.switch}>
+        {t("noAccount")}{" "}
+        <Link href={registerHref} className={css.switchLink}>
+          {t("registerLink")}
+        </Link>
+      </p>
     </div>
   );
 }

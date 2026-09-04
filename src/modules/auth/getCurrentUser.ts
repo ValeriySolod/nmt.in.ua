@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -19,12 +20,18 @@ export async function getSessionPayload() {
   return verifySessionToken(token);
 }
 
-/** Returns the logged-in user or null. */
-export async function getCurrentUser(): Promise<AuthUser | null> {
+/**
+ * Returns the logged-in user or null.
+ *
+ * Memoised per request: layout, `generateMetadata` and the page all ask for the user,
+ * and three parallel pool checkouts per render is what turns one dropped socket into a
+ * cascade of connection errors.
+ */
+export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
   const payload = await getSessionPayload();
   if (!payload) return null;
   return findUserById(payload.userId);
-}
+});
 
 /** Returns user id or null — for optional auth contexts. */
 export async function getCurrentUserId(): Promise<number | null> {
