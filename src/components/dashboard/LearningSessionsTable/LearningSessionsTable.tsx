@@ -46,7 +46,22 @@ function SessionActions({ row }: { row: LearningSessionRow }) {
 
   return (
     <div className={css.actions}>
-
+      {row.status === "expired" ? null : (
+        <Link href={`/session/${row.id}`} className={css.startLink}>
+          {t("start")}
+        </Link>
+      )}
+      <form action={formAction} className={css.cancelForm}>
+        <input type="hidden" name="sessionId" value={row.id} />
+        <button
+          type="submit"
+          className={css.cancelButton}
+          disabled={pending}
+          aria-label={t("cancelSession", { id: row.id })}
+        >
+          ×
+        </button>
+      </form>
       {state.status === "error" ? (
         <span className={css.error} role="alert">
           {t(`errors.${state.code}`)}
