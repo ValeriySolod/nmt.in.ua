@@ -64,8 +64,6 @@ export type RegisterActionState =
   | { status: "idle" }
   | { status: "error", code: RegistrationFieldError | "serverError" };
 
-export { needsEmailVerification } from "./needsEmailVerification";
-
 export async function loginAction(
   _prev: LoginActionState,
   formData: FormData,
