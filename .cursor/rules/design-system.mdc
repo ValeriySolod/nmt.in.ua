@@ -124,6 +124,11 @@ alwaysApply: true
 - `TeacherProfileEditor` — візитка викладача/адміна на `/account` (slug, headline, bio, city, subjects, contact URL, is_public, копія лінка).
 - `TeacherPublicCard` — публічна картка `/t/{slug}` у `DiagnosticShell` (без кабінетного chrome).
 
+`src/components/consultations/` — заявки на консультацію:
+
+- `ConsultationsStudentPanel` — форма «Запитати консультацію» + стан відкритого запиту.
+- `ConsultationsInbox` — черга для викладача/адміна: картки на base, таблиця з 768.
+
 Брейкпоінти кабінету ті самі: сайдбар з 768. Не використовувати 1280.
 
 ## Перевірка перед здачею
@@ -408,3 +413,12 @@ npm run lint && npm test && npm run build
 - Checkout: HMAC_MD5 Purchase, `amount=500.00` UAH (не копійки).
 - Webhook: `POST /api/payments/wayforpay/webhook`; return `303` через
   `/api/payments/wayforpay/return`.
+
+### 2026-09-10 — консультації: заявки учнів
+
+- `/consultations` більше не stub: учень надсилає один відкритий запит (опційне
+  повідомлення), викладач/адмін бачить усі заявки й ставить **побачено** / **закрито**.
+- UI: скляна форма як у `/account`; інбокс — картки на base, таблиця з 768.
+- Логіка в `src/modules/consultations`; таблиця `consultation_requests`
+  (`scripts/sql/019_consultation_requests.sql` + lazy `ensureConsultationSchema`).
+- Привʼязки учень↔викладач немає — список спільний для всіх teacher/admin.

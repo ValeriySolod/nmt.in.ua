@@ -6,7 +6,7 @@
 
 Джерело правди — Markdown. Word/docx копій немає.
 
-Оновлено 13 вересня 2026.
+Оновлено 16 вересня 2026.
 
 ---
 
@@ -20,7 +20,7 @@ nmt.in.ua — тренажер підготовки до НМТ з матема�
 | Роль | Що може |
 | --- | --- |
 | Учень (`student`) | Тести, симулятор, результати, свої сесії, реєстрація |
-| Викладач (`teacher`) | Усе як учень + призначити сесію на `/sessions` + публічна візитка на `/account` (`/t/{slug}`) |
+| Викладач (`teacher`) | Усе як учень + призначити сесію на `/sessions` + черга консультацій на `/consultations` + публічна візитка на `/account` (`/t/{slug}`) |
 | Адмін (`admin`) | Усе як викладач + імпорт контенту на `/settings` |
 
 ## 2. Перший день — чекліст
@@ -187,6 +187,7 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 | Генератори завдань | `src/modules/problemGenerators` | Чисті функції, без БД/Next. `fractionAddition`: `generateFractionAdditionTask`, `validateFractionAdditionAnswer`, seed-based RNG |
 | Практика дробів | `src/modules/fractionPractice` | `startFractionPracticeTaskAction`/`nextFractionPracticeTaskAction`/`checkFractionPracticeAnswerAction` — обгортка над `problemGenerators/fractionAddition` для `/practice/fractions`, без запису в `task_sessions`/`tasks2session` |
 | Візитка викладача | `src/modules/teachers` | `getOwnTeacherProfile` / `getPublicTeacherCard` / `saveTeacherProfileAction`; публічна лише якщо `is_public` і роль teacher/admin |
+| Консультації | `src/modules/consultations` | `createConsultationRequest` (один відкритий на учня), `getConsultationRequests` / `getOpenConsultationRequestForStudent`, `updateConsultationRequestStatus` (pending → acknowledged → closed) |
 
 ### 6.2. Таблиці MySQL, які чіпаємо
 
@@ -194,7 +195,7 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 | --- | --- | --- |
 | `app_users` | Наші акаунти | `login`, `role`. Не плутати з legacy `users` |
 | `user_avatars` | Фото профілю | `user_id`, `mime`, `bytes` MEDIUMBLOB. Лениво `CREATE` у `ensureAuthSchema` / `015_user_avatars.sql` |
-| `teacher_profiles` | Публічна візитка | `user_id`, `slug` unique, `headline`, `bio`, `city`, `subjects` (JSON), `contact_url`, `is_public`. `018_teacher_profiles.sql` + lazy `ensureTeacherProfileSchema`. **018, не 016/017:** на `dev` уже є `016_task_sessions_expire_time`; відкриті PR консультацій і «мої учні» тримають 016/017 |
+| `teacher_profiles` | Публічна візитка | `user_id`, `slug` unique, `headline`, `bio`, `city`, `subjects` (JSON), `contact_url`, `is_public`. `018_teacher_profiles.sql` + lazy `ensureTeacherProfileSchema`. **018:** `016` уже `task_sessions_expire_time`; консультації — `019`; «мої учні» — `017` |
 | `teacher_payments` | Pending реєстрація викладача до оплати WayForPay | `reference`, hashed пароль, `status` pending/paid/failed, `provider`, `external_order_id`; `user_id` після Approved. SQL `014_teacher_payments.sql` |
 | `themes` | Теми тесту | `id`, `code` (unique, напр. `ALG-08-QUAD-EQ` — якір розділу підручника), `name`, `description`, `ord` |
 | `theme_connections` | Граф «наступна тема» | `vertex_start` → `vertex_finish` |
@@ -203,6 +204,8 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 | `task_sessions` | Спроба учня | `session_type` 1 user / 2 auto / 3 mentor / 4 NMT / **5 diagnostic**; status 1 done / 2 created / 3 planned. `user_id` і `theme_id` **nullable**, плюс `guest_token CHAR(36)` nullable — діагностична спроба гостя не має `user_id`, а охоплює кілька тем одразу тож не має і `theme_id`. `expire_time` (unix sec, `scripts/sql/016_task_sessions_expire_time.sql`) — фіксований дедлайн 24 години від створення рядка (не від `start_time`!), ставиться раз і ніколи не оновлюється; активна (не завершена) сесія після дедлайну відхиляється на кожному наступному читанні/записі, завершена лишається доступною завжди. Див. `src/modules/testing/sessionExpiry.ts` |
 | `tasks2session` | Мапінг завдання↔сесія | `status` 0 / 1 / −1. `user_id` **nullable** + `guest_token CHAR(36)` nullable, дзеркалить владельця з `task_sessions` |
 | `site_feedback` | відгук про сайт (6.2) | `user_id`/`session_id` nullable, `score` 1–10, `message` (обов’язкове якщо score < 5), `email`, `source` footer/post_test |
+| `consultation_requests` | заявки на консультацію | `student_id`, `note`, `status` pending/acknowledged/closed, `handled_by`; один відкритий запит на учня. SQL `019_consultation_requests.sql` + lazy schema |
+
 | `user_self_scores` | Самооцінка (6.3–6.4), **історія, ніколи не перезаписується** | `user_id`/`guest_token` (рівно один із двох), `theme_id` nullable (NULL = загальна оцінка), `score` 1–10, `source` `diagnostic_overall`/`pre_topic`, `created_at` |
 
 **`right_answer_n` і `comments` не віддавай клієнту**, поки відповідь не перевірена або сесія не завершена. Перевірка завжди на сервері.
@@ -322,7 +325,7 @@ Ultimate/НМТ/діагностика лишились без змін. Зар�
 | `/materials/textbook` | Учень+ | Єдиний підручник: зміст + один розділ `?topic=<themes.code>` |
 | `/problems` | Учень+ | Задачник: друкований тест по темі |
 | `/account` | Учень+ | Особистий кабінет: фото / ініціали, пароль, результати, вихід |
-| `/consultations` | Учень+ | У меню; форма запису ще збирається (`StubPage` + CTA на симулятор / підручник) |
+| `/consultations` | Учень+ | Учень: один відкритий запит. Викладач/адмін: черга всіх заявок (побачено / закрито) |
 | `/practice/fractions` | Учень+ | Генерована практика: додавання дробів, 5 рівнів. Посилання з `TopicTestStart` (`/`) |
 
 ### 6.5. Генеровані завдання: `fractionAddition` → Practice mode (11.09.2026)
@@ -404,7 +407,7 @@ Ultimate/НМТ/діагностика лишились без змін. Зар�
 
 ## 11. З чого почати новому dev (вільні задачі)
 
-Повний розклад хвилі 6 — [`docs/mentor-tasks.md`](./mentor-tasks.md). Не чіпайте робочий topic-test без узгодження. Відкрите: **6.5** (банк), форма консультацій, політика діагностики при >10 eligible темах.
+Повний розклад хвилі 6 — [`docs/mentor-tasks.md`](./mentor-tasks.md). Не чіпайте робочий topic-test без узгодження. Відкрите: **6.5** (банк), політика діагностики при >10 eligible темах.
 
 | Задача | Де копати | Складність | Нотатка |
 | --- | --- | --- | --- |
@@ -414,7 +417,7 @@ Ultimate/НМТ/діагностика лишились без змін. Зар�
 | 6.6 Задачник | `src/app/problems`, таблиця `problems` | Середня | ✅ 08.09 (UI з JSON-каталогу, без MySQL на read) |
 | 6.3–6.4 Діагностика | `/diagnostic` | Велика | ✅; відкрито: політика тем при >10 eligible |
 | 6.2 Відгук | `src/modules/feedback` | Мала | ✅ |
-| Консультації | `/consultations` | Мала | Частково: пункт у меню; треба форма / контакти |
+| Консультації | `/consultations` | Мала | ✅ 10.09: заявки `consultation_requests` (`019`); без привʼязки учень↔викладач |
 | Публічна візитка викладача | `src/modules/teachers`, `/account`, `/t/{slug}` | Мала | ✅ 13.09 |
 | Реєстрація викладача + WayForPay | `/register/teacher`, `src/modules/payments` | Середня | ✅ 10.09: pending + WayForPay Purchase/webhook. Локально: «Оплата пройшла» лишає на `/register/teacher` (шлюз згорнутий). На живому мерчанті в production вимкнено |
 | Перф (TTFB / бандл) | `(app)`/`(marketing)` layouts, `catalogCache`, `sampleRandomIds` | — | ✅ 10.09: без `ORDER BY RAND()`, кеш довідників, cookie-профіль |

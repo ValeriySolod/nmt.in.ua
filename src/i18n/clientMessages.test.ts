@@ -48,6 +48,8 @@ test("pickClientMessages keeps shared marketing namespaces on auth and diagnosti
     assert.equal("Header" in picked, false);
   }
   assert.ok("ContentImportForm" in pickClientMessages(uk, "/settings"));
+  assert.ok("Consultations" in pickClientMessages(uk, "/consultations"));
+  assert.equal("Consultations" in pickClientMessages(uk, "/home"), false);
 });
 
 test("TopicTrainer ships on every marketing path, not just /diagnostic*", () => {

@@ -3,6 +3,7 @@ export {
   avatarSrc,
   canAssignMentorSessions,
   canImportContent,
+  canReviewConsultationRequests,
   roleLabel,
   userInitials,
 } from "./types";
