@@ -36,11 +36,15 @@
       "home": "Test by selected topic",
       "results": "Results by topic",
       "sessions": "Learning sessions",
+      "students": "My students",
       "simulator": "NMT Simulator",
       "materials": "Textbook",
       "problems": "Problem bank",
+      "feedback": "Feedback",
       "settings": "Settings",
-      "consultations": "Teacher consultations"
+      "consultations": "Teacher consultations",
+      "homeAdmin": "Tasks by topic",
+      "profiles": "Profiles"
     }
   },
   "RecentResults": {
@@ -50,7 +54,7 @@
   "AccountCabinet": {
     "kicker": "Profile",
     "title": "Personal account",
-    "lead": "Profile photo, password, results, and placeholders for achievements and study time.",
+    "lead": "Profile photo, public teacher card, password, results, and placeholders for achievements and study time.",
     "photoTitle": "Profile photo",
     "photoLead": "JPEG, PNG, or WebP. A square photo is cropped from the center and appears in the header.",
     "photoHint": "Up to {maxKb} KB. A square photo is cropped from the center and replaces the initials in the header.",
@@ -97,6 +101,44 @@
       "serverError": "Could not save the photo. Try again."
     }
   },
+  "TeacherProfile": {
+    "title": "Public teacher card",
+    "lead": "A short card for students. The /t/your-slug link is visible only while the card is public.",
+    "slug": "Page address",
+    "slugHint": "Latin letters, digits, and hyphens. 3–48 characters.",
+    "headline": "Headline",
+    "bio": "About",
+    "city": "City",
+    "subjects": "Subjects",
+    "subjectsHint": "Comma-separated, up to 8 items.",
+    "contactUrl": "Contact link",
+    "isPublic": "Publish the card",
+    "isPublicHint": "While unchecked, /t/… returns 404.",
+    "save": "Save card",
+    "saving": "Saving…",
+    "saved": "Card saved.",
+    "copyLink": "Copy link",
+    "copied": "Copied",
+    "errors": {
+      "slugRequired": "Enter a page address.",
+      "invalidSlug": "Use Latin letters, digits, and hyphens, 3–48 characters.",
+      "reservedSlug": "This address is reserved.",
+      "slugTaken": "This address is already taken.",
+      "headlineTooLong": "The headline is too long.",
+      "bioTooLong": "The about text is too long.",
+      "cityTooLong": "The city name is too long.",
+      "invalidSubjects": "Too many subjects, or one item is too long.",
+      "invalidContactUrl": "The link must start with http:// or https://.",
+      "forbidden": "Only a teacher or admin can edit the card.",
+      "serverError": "Could not save the card. Try again."
+    }
+  },
+  "TeacherPublicCard": {
+    "kicker": "Teacher",
+    "city": "City",
+    "subjects": "Subjects",
+    "contact": "Get in touch"
+  },
   "Common": {
     "soon": "Coming soon"
   },
@@ -118,6 +160,34 @@
     "alreadyPlanned": "Mentor session #{sessionId} was already planned.",
     "errors": {
       "generic": "Could not assign the mentor session. Check the topic and student."
+    }
+  },
+  "TeacherStudents": {
+    "kicker": "Teacher",
+    "title": "My students",
+    "lead": "Link a student by login. This list is only your links — not every account on the site.",
+    "addTitle": "Add a student",
+    "addLead": "The login must match an account with the student role.",
+    "login": "Student login",
+    "loginPlaceholder": "demo-student",
+    "loginHint": "Exact login, as used at sign-in.",
+    "add": "Add",
+    "adding": "Adding…",
+    "added": "{name} has been added to your list.",
+    "listTitle": "List",
+    "listLead": "Unlinking does not delete the student’s account.",
+    "empty": "No linked students yet. Add the first one by login.",
+    "unlink": "Unlink",
+    "unlinking": "Removing…",
+    "unlinked": "Student unlinked.",
+    "errors": {
+      "invalid_input": "Enter the student’s login.",
+      "not_found": "No user with that login was found.",
+      "not_a_student": "That login does not belong to a student.",
+      "already_linked": "This student is already on your list.",
+      "not_linked": "This student is not on your list.",
+      "forbidden": "Only a teacher or admin can manage the student list.",
+      "generic": "Could not save. Please try again."
     }
   },
   "StubPage": {
@@ -143,7 +213,58 @@
     },
     "consultations": {
       "title": "Teacher consultations",
-      "description": "Book a consultation and communicate with teachers."
+      "description": "Ask for a consultation: students send a request, teachers see it in the cabinet."
+    }
+  },
+  "Consultations": {
+    "kicker": "Consultation",
+    "title": "Teacher consultations",
+    "studentLead": "Leave a request — every teacher will see it in the cabinet. There is no personal student–teacher link yet.",
+    "teacherLead": "All student requests. There is no student–teacher assignment yet — teachers and admins share this list.",
+    "formTitle": "New request",
+    "formLead": "Briefly describe what you need help with — or just send the request.",
+    "noteLabel": "Message (optional)",
+    "notePlaceholder": "For example, which topic you need help with",
+    "noteHint": "Up to 1000 characters. You can leave this blank.",
+    "submit": "Ask for a consultation",
+    "submitting": "Sending…",
+    "success": "Request sent. Teachers will see it shortly.",
+    "alreadyOpen": "You already have an open request.",
+    "noNote": "No message",
+    "sentAt": "Sent {when}",
+    "openTitle": {
+      "pending": "Your request is waiting for a teacher",
+      "acknowledged": "A teacher has seen your request",
+      "closed": "Request closed"
+    },
+    "openLead": {
+      "pending": "No new request is needed — this one is already in the queue.",
+      "acknowledged": "Please wait. You can send another request after this one is closed.",
+      "closed": "You can send a new request."
+    },
+    "inboxTitle": "Student requests",
+    "inboxLead": "Open requests appear first. Mark as seen, or close after the consultation.",
+    "empty": "There are no requests yet.",
+    "student": "Student",
+    "note": "Message",
+    "status": "Status",
+    "created": "When",
+    "actions": "Actions",
+    "acknowledge": "Seen",
+    "close": "Close",
+    "saving": "Saving…",
+    "alreadyClosed": "Closed",
+    "statuses": {
+      "pending": "Pending",
+      "acknowledged": "Seen",
+      "closed": "Closed"
+    },
+    "errors": {
+      "invalid_input": "Check the message and try again.",
+      "forbidden": "Only a student can send a request.",
+      "generic": "Could not save. Please try again.",
+      "notFound": "This request no longer exists.",
+      "invalidTransition": "That status change is not allowed."
     }
   },
   "TopicTestStart": {
@@ -611,19 +732,25 @@
     },
     "errors": {
       "requiredFields": "Enter your login and password.",
-      "invalidCredentials": "Invalid login or password."
+      "invalidCredentials": "Invalid login or password.",
+      "accountBanned": "This account is blocked. Contact an administrator.",
+      "emailUnverified": "Confirm your email via the link we sent before signing in."
     },
     "noAccount": "No account yet?",
-    "registerLink": "Create an account"
+    "registerLink": "Create an account",
+    "forgotPassword": "Forgot password?",
+    "resendVerifyLink": "Resend verification email"
   },
   "RegisterForm": {
     "kicker": "Sign up",
     "title": "Create a student account",
-    "lead": "Register to take tests, save results, and get recommendations. Teacher and admin access stay on demo login for now.",
+    "lead": "Register to take tests, save results, and get recommendations.",
     "leadFromDiagnostic": "Register to save your diagnostic test result and self-assessment to your account.",
     "displayName": "Display name",
     "login": "Login",
     "loginHint": "Latin letters, digits, dot, _ or - (at least 3 characters).",
+    "email": "Email",
+    "emailHint": "Needed to verify the account and reset your password.",
     "password": "Password",
     "passwordHint": "At least {min} characters.",
     "passwordConfirm": "Confirm password",
@@ -635,12 +762,98 @@
       "requiredFields": "Fill in all fields.",
       "invalidLogin": "Invalid login. Use Latin letters, digits, ., _ or -.",
       "invalidDisplayName": "Name must be 2–100 characters.",
+      "invalidEmail": "Enter a valid email address.",
+      "passwordTooShort": "Password is too short.",
+      "passwordTooLong": "Password is too long.",
+      "passwordMismatch": "Passwords do not match.",
+      "loginTaken": "This login is already taken.",
+      "emailTaken": "This email is already in use.",
+      "reservedLogin": "This login is reserved for demos.",
+      "serverError": "Could not create the account. Try again later."
+    },
+    "roleLabel": "Who is signing up?",
+    "roleStudent": "Student",
+    "roleTeacher": "Teacher",
+    "titleTeacher": "Create a teacher account",
+    "leadTeacher": "Sign up as a teacher to guide students, see progress, and assign practice. Paid extras will come later.",
+    "submitTeacher": "Sign up as a teacher"
+  },
+  "TeacherRegister": {
+    "kicker": "For teachers",
+    "title": "Teacher cabinet",
+    "lead": "Assign mentor sessions and follow student progress. Admins are not created through this flow.",
+    "fee": "One-time fee of {fee} UAH — opens the cabinet.",
+    "benefits": {
+      "mentor": "Mentor sessions for a student’s weak topics",
+      "progress": "See results and topics that need more practice",
+      "cabinet": "The same workspace as students, plus an assignment panel"
+    },
+    "paymentNotConfigured": "Payments are not set up yet. You can save the application; a WayForPay checkout is not created and the cabinet stays inactive.",
+    "asideBadge": "Teachers · 500 UAH",
+    "asideTitle": "A cabinet to guide students to the NMT",
+    "asideLead": "After payment you see student progress and can assign practice for weak topics.",
+    "displayName": "Display name",
+    "login": "Login",
+    "loginHint": "Latin letters, digits, dot, _ or - (at least 3 characters).",
+    "password": "Password",
+    "passwordHint": "At least {min} characters.",
+    "passwordConfirm": "Confirm password",
+    "submitting": "Saving…",
+    "redirecting": "Opening payment…",
+    "submitPay": "Pay {fee} UAH",
+    "submitSave": "Save application",
+    "haveAccount": "Already have an account?",
+    "signInLink": "Sign in",
+    "studentPrompt": "Are you a student?",
+    "studentLink": "Free registration",
+    "testBypass": {
+      "hint": "Testing only: this does not charge a card or open WayForPay.",
+      "payOk": "Payment succeeded",
+      "working": "Opening the cabinet…",
+      "payAtGateway": "Continue to WayForPay",
+      "openGateway": "Open the real WayForPay gateway (not needed for testing)",
+      "pendingLead": "Application saved. For local testing, tap “Payment succeeded” — you do not need WayForPay.",
+      "errors": {
+        "disabled": "Test payment confirmation is disabled in this environment.",
+        "missing_reference": "No payment application found. Fill in the form again.",
+        "not_found": "The application was not found. Fill in the form again.",
+        "not_pending": "This application has already been processed.",
+        "activate_failed": "Could not activate the cabinet. Try again later."
+      }
+    },
+    "errors": {
+      "requiredFields": "Fill in all fields.",
+      "invalidLogin": "Invalid login. Use Latin letters, digits, ., _ or -.",
+      "invalidDisplayName": "Name must be 2–100 characters.",
       "passwordTooShort": "Password is too short.",
       "passwordTooLong": "Password is too long.",
       "passwordMismatch": "Passwords do not match.",
       "loginTaken": "This login is already taken.",
       "reservedLogin": "This login is reserved for demos.",
-      "serverError": "Could not create the account. Try again later."
+      "serverError": "Could not save the application. Try again later.",
+      "paymentNotConfigured": "Payments are not configured yet. Your application was saved; the cabinet will open after WayForPay acquiring is connected.",
+      "invoiceFailed": "Could not start WayForPay checkout. Try again later."
+    },
+    "result": {
+      "success": {
+        "kicker": "Payment",
+        "title": "Teacher cabinet is open",
+        "lead": "Payment is confirmed. You can sign in and assign sessions to students.",
+        "cta": "Go to cabinet"
+      },
+      "pending": {
+        "kicker": "Waiting for payment",
+        "title": "The invoice is still processing",
+        "lead": "If you already paid, wait a few seconds and refresh. The cabinet appears after the bank confirms the payment.",
+        "cta": "Sign in later"
+      },
+      "fail": {
+        "kicker": "Payment",
+        "title": "Payment was not completed",
+        "lead": "The payment was cancelled or failed. The teacher cabinet is not active yet.",
+        "hint": "No charge was made, or the bank declined the payment. You can try again.",
+        "retry": "Back to registration"
+      }
     }
   },
   "ContentImportForm": {
@@ -713,6 +926,7 @@
     }
   },
   "FeedbackAdmin": {
+    "kicker": "Feedback",
     "title": "Site feedback",
     "lead": "Visible to admins only. Students cannot see other people’s reviews.",
     "empty": "No feedback yet.",
@@ -746,6 +960,18 @@
       "title": "Sign up",
       "description": "Create a student account for the NMT learning dashboard."
     },
+    "teacherRegister": {
+      "title": "Teacher registration",
+      "description": "Teacher cabinet on nmt.in.ua: mentor sessions and student progress. One-time fee of 500 UAH."
+    },
+    "teacherRegisterSuccess": {
+      "title": "Payment successful",
+      "description": "The teacher cabinet is active after payment."
+    },
+    "teacherRegisterFail": {
+      "title": "Payment not completed",
+      "description": "The teacher-cabinet payment was cancelled or failed."
+    },
     "session": {
       "title": "Taking a Test",
       "description": "Interactive trainer with test tasks for the selected topic."
@@ -776,11 +1002,46 @@
     },
     "consultations": {
       "title": "Teacher Consultations",
-      "description": "Book a consultation and communicate with teachers."
+      "description": "Ask for a consultation: students send a request, teachers see it in the cabinet."
     },
     "account": {
       "title": "Personal account",
       "description": "Profile photo, password change, recent results, and sign out."
+    },
+    "teacherPublic": {
+      "title": "Teacher",
+      "titleNamed": "{name} — teacher",
+      "titleWithHeadline": "{name} — {headline}",
+      "description": "Public teacher card on nmt.in.ua.",
+      "descriptionNamed": "Public teacher card for {name}."
+    },
+    "students": {
+      "title": "My students",
+      "description": "The teacher’s student list: add by login or unlink."
+    },
+    "profiles": {
+      "title": "Profiles",
+      "description": "All accounts: filter by role, ban, or delete."
+    },
+    "feedback": {
+      "title": "Feedback",
+      "description": "User ratings and suggestions about the site."
+    },
+    "checkEmail": {
+      "title": "Confirm your email",
+      "description": "Check your inbox to confirm your nmt.in.ua account."
+    },
+    "verifyEmail": {
+      "title": "Email confirmation",
+      "description": "Confirm your email to sign in to the learning workspace."
+    },
+    "forgotPassword": {
+      "title": "Forgot password",
+      "description": "Send a password reset link for nmt.in.ua."
+    },
+    "resetPassword": {
+      "title": "New password",
+      "description": "Set a new password for the learning workspace."
     }
   },
   "SettingsPage": {
@@ -831,6 +1092,168 @@
       "sessionCompleted": "This session has already been completed.",
       "sessionExpired": "This session's 24-hour lifetime has expired.",
       "generic": "An error occurred. Please try again."
+    }
+  },
+  "AdminContent": {
+    "kicker": "Content",
+    "title": "Tasks by topic",
+    "lead": "Pick a topic, browse the question bank, then edit or create tasks.",
+    "themeTitle": "Topic",
+    "chooseTheme": "Choose a topic:",
+    "noThemes": "No topics in the bank yet.",
+    "taskCount": "In this topic: {count} tasks",
+    "listTitle": "Topic tasks",
+    "listLead": "Edit existing items or add new tests to the selected topic.",
+    "create": "New task",
+    "empty": "This topic has no tasks yet.",
+    "colDescription": "Description",
+    "colDifficulty": "Difficulty",
+    "colEdit": "Edit",
+    "colDelete": "Delete",
+    "editAria": "Edit \"{name}\"",
+    "deleteAria": "Delete \"{name}\"",
+    "deleteConfirm": "Delete task \"{name}\"?",
+    "createTitle": "New task",
+    "createLead": "Fill in the fields and save — the task will appear in the topic bank.",
+    "editTitle": "Edit task",
+    "editLead": "Change the fields and press Save.",
+    "formAria": "Task fields",
+    "colElement": "Element",
+    "colValue": "Value",
+    "name": "Name",
+    "taskText": "Question",
+    "answer": "Answer {n}",
+    "rightAnswer": "Correct answer number",
+    "difficulty": "Difficulty level",
+    "theme": "Topic",
+    "comments": "Hint / comment",
+    "save": "Save",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "created": "Task created.",
+    "updated": "Task updated.",
+    "errors": {
+      "invalid_input": "Check the form fields.",
+      "theme_not_found": "Selected topic was not found.",
+      "not_found": "Task not found.",
+      "forbidden": "Access denied.",
+      "in_use": "This task was used in sessions and cannot be deleted.",
+      "generic": "Could not complete the action. Try again."
+    },
+    "back": "Back",
+    "nextTask": "Next task",
+    "deleted": "Task deleted.",
+    "editTitleNamed": "Edit: {name}"
+  },
+  "AdminProfiles": {
+    "kicker": "Users",
+    "title": "Profiles",
+    "lead": "All platform accounts: filter by role, ban, or delete.",
+    "listTitle": "All accounts",
+    "listLead": "Demo accounts are protected. You cannot ban or delete yourself.",
+    "empty": "No users yet.",
+    "emptyFilter": "No accounts with this role.",
+    "you": "you",
+    "online": "online",
+    "offline": "offline",
+    "never": "never signed in",
+    "bannedBadge": "banned",
+    "protectedBadge": "demo",
+    "roleMeta": "Role: {role}",
+    "lastLoginMeta": "Last login: {date}",
+    "lastSeenMeta": "Last seen: {date}",
+    "createdMeta": "created {date}",
+    "filterLabel": "Filter by role",
+    "filterAll": "All ({count})",
+    "filterRole": "{role} ({count})",
+    "ban": "Ban",
+    "unban": "Unban",
+    "delete": "Delete",
+    "deleteConfirm": "Delete account “{name}”? This cannot be undone.",
+    "selfLocked": "This is your account — actions are unavailable.",
+    "protectedLocked": "Demo accounts are protected.",
+    "success": {
+      "ban": "Account {name} has been banned.",
+      "unban": "Account {name} has been unbanned.",
+      "delete": "Account {name} has been deleted."
+    },
+    "errors": {
+      "invalid_input": "Invalid data.",
+      "not_found": "User not found.",
+      "forbidden": "Access denied.",
+      "self_action": "You cannot ban or delete your own account.",
+      "protected_account": "Demo accounts are protected.",
+      "last_admin": "You cannot ban or delete the last active admin.",
+      "generic": "Could not complete the action. Try again."
+    },
+    "emailMeta": "Email: {email}",
+    "emailMissing": "Email: none",
+    "emailVerified": "verified",
+    "emailUnverified": "unverified"
+  },
+  "CheckEmail": {
+    "kicker": "Email",
+    "title": "Check your email",
+    "lead": "We sent a confirmation link. If it is missing, check Spam or resend.",
+    "leadWithEmail": "We sent a message to {email}. If it is missing, check Spam or resend.",
+    "email": "Email",
+    "resend": "Resend email",
+    "resending": "Sending…",
+    "resent": "If an unverified account exists for that address, the email is on its way.",
+    "backToLogin": "Back to sign in",
+    "errors": {
+      "invalid_email": "Enter a valid email address.",
+      "rate_limited": "Too many attempts. Wait a few minutes.",
+      "generic": "Could not send the email. Try again later."
+    }
+  },
+  "VerifyEmail": {
+    "kicker": "Verification",
+    "title": "Confirm your email",
+    "pending": "Checking the link…",
+    "success": "Email confirmed. Opening your workspace…",
+    "resendLink": "Resend verification email",
+    "backToLogin": "Back to sign in",
+    "errors": {
+      "invalid": "This link is invalid.",
+      "expired": "This link has expired. Request a new one.",
+      "used": "This link was already used.",
+      "generic": "Could not confirm the email. Try again."
+    }
+  },
+  "ForgotPassword": {
+    "kicker": "Password",
+    "title": "Reset password",
+    "lead": "Enter the account email — we will send a reset link.",
+    "email": "Email",
+    "submit": "Send reset link",
+    "submitting": "Sending…",
+    "sent": "If a verified account exists for that email, the message is on its way.",
+    "backToLogin": "Back to sign in",
+    "errors": {
+      "invalid_email": "Enter a valid email address.",
+      "rate_limited": "Too many attempts. Wait a few minutes.",
+      "generic": "Could not send the email. Try again later."
+    }
+  },
+  "ResetPassword": {
+    "kicker": "Password",
+    "title": "New password",
+    "lead": "Choose a new password for your workspace.",
+    "password": "New password",
+    "passwordConfirm": "Confirm password",
+    "submit": "Save password",
+    "submitting": "Saving…",
+    "success": "Password updated. Redirecting to sign in…",
+    "requestNew": "Request a new link",
+    "errors": {
+      "invalid_token": "This link is missing or invalid.",
+      "expired": "This link has expired. Request a new one.",
+      "used": "This link was already used.",
+      "passwordTooShort": "Password is too short.",
+      "passwordTooLong": "Password is too long.",
+      "passwordMismatch": "Passwords do not match.",
+      "generic": "Could not save the password. Try again."
     }
   }
 }

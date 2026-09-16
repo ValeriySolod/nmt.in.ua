@@ -12,8 +12,11 @@ import {
 import { PASSWORD_MAX_LEN, PASSWORD_MIN_LEN } from "@/modules/auth/validateRegistration";
 import { RecentResults } from "@/components/dashboard/RecentResults";
 import { UserAvatar } from "@/components/account/UserAvatar";
+import { TeacherProfileEditor } from "@/components/account/TeacherProfileEditor";
 import { AccountPhotoPanel } from "./AccountPhotoPanel";
 import type { RecentResultItem } from "@/modules/results/getRecentResults";
+import type { TeacherProfile } from "@/modules/teachers/types";
+import { normalizeSlug } from "@/modules/teachers/validateProfile";
 import css from "./AccountCabinet.module.css";
 
 const INITIAL: ChangePasswordActionState = { status: "idle" };
@@ -22,12 +25,14 @@ type AccountCabinetProps = {
   user: AuthUser;
   recentResults: RecentResultItem[];
   demoLocked: boolean;
+  teacherProfile?: TeacherProfile | null;
 };
 
 export function AccountCabinet({
   user,
   recentResults,
   demoLocked,
+  teacherProfile = null,
 }: AccountCabinetProps) {
   const t = useTranslations("AccountCabinet");
   const tHeader = useTranslations("Header");
@@ -53,24 +58,38 @@ export function AccountCabinet({
 
       <AccountPhotoPanel user={user} demoLocked={demoLocked} />
 
-      <RecentResults items={recentResults} />
+      {teacherProfile ? (
+        <TeacherProfileEditor
+          profile={teacherProfile}
+          suggestedSlug={normalizeSlug(user.login)}
+        />
+      ) : null}
 
-      <div className={css.stubs}>
-        <article className={css.stub} aria-labelledby="account-achievements-title">
-          <p className={css.soon}>{tCommon("soon")}</p>
-          <h2 id="account-achievements-title" className={css.stubTitle}>
-            {t("achievementsTitle")}
-          </h2>
-          <p className={css.stubLead}>{t("achievementsLead")}</p>
-        </article>
-        <article className={css.stub} aria-labelledby="account-time-title">
-          <p className={css.soon}>{tCommon("soon")}</p>
-          <h2 id="account-time-title" className={css.stubTitle}>
-            {t("timeTitle")}
-          </h2>
-          <p className={css.stubLead}>{t("timeLead")}</p>
-        </article>
-      </div>
+      {user.role !== "admin" ? (
+        <>
+          <RecentResults items={recentResults} />
+
+          <div className={css.stubs}>
+            <article
+              className={css.stub}
+              aria-labelledby="account-achievements-title"
+            >
+              <p className={css.soon}>{tCommon("soon")}</p>
+              <h2 id="account-achievements-title" className={css.stubTitle}>
+                {t("achievementsTitle")}
+              </h2>
+              <p className={css.stubLead}>{t("achievementsLead")}</p>
+            </article>
+            <article className={css.stub} aria-labelledby="account-time-title">
+              <p className={css.soon}>{tCommon("soon")}</p>
+              <h2 id="account-time-title" className={css.stubTitle}>
+                {t("timeTitle")}
+              </h2>
+              <p className={css.stubLead}>{t("timeLead")}</p>
+            </article>
+          </div>
+        </>
+      ) : null}
 
       <section className={css.panel} aria-labelledby="account-password-title">
         <div>

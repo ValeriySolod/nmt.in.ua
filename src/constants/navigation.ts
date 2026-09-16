@@ -29,6 +29,18 @@ export const DASHBOARD_NAV: NavItem[] = [
     status: "ready",
   },
   {
+    href: "/students",
+    label: "Мої учні",
+    description: "Список учнів викладача: додати за логіном або відв’язати.",
+    status: "ready",
+  },
+  {
+    href: "/profiles",
+    label: "Профілі",
+    description: "Усі облікові записи: фільтр за роллю, бан і видалення.",
+    status: "ready",
+  },
+  {
     href: "/simulator",
     label: "Симулятор НМТ",
     description: "Повний варіант НМТ у форматі УЦОЯО з таймером і балами.",
@@ -49,6 +61,12 @@ export const DASHBOARD_NAV: NavItem[] = [
     status: "ready",
   },
   {
+    href: "/feedback",
+    label: "Відгуки",
+    description: "Оцінки й пропозиції користувачів про сайт.",
+    status: "ready",
+  },
+  {
     href: "/settings",
     label: "Налаштування",
     description: "Імпорт навчального контенту та параметри облікового запису.",
@@ -57,7 +75,8 @@ export const DASHBOARD_NAV: NavItem[] = [
   {
     href: "/consultations",
     label: "Консультації викладачів",
-    description: "Запис на консультацію та спілкування з викладачами.",
+    description:
+      "Запит на консультацію: учень надсилає заявку, викладачі бачать її в кабінеті.",
     status: "ready",
   },
 ];

@@ -9,7 +9,18 @@ test("sitemap lists only public pages that do not require login", () => {
     .map((entry) => new URL(entry.url).pathname)
     .sort();
 
-  assert.deepEqual(paths, [...PUBLIC_PAGE_PATHS].sort());
+  assert.deepEqual(
+    paths,
+    [
+      ...PUBLIC_PAGE_PATHS.filter(
+        (path) =>
+          path !== "/t" &&
+          path !== "/verify-email" &&
+          path !== "/forgot-password" &&
+          path !== "/reset-password",
+      ),
+    ].sort(),
+  );
 
   const publicPaths = new Set<string>(paths);
   const cabinetHrefs = DASHBOARD_NAV.map((item) => item.href).filter(

@@ -121,6 +121,14 @@ alwaysApply: true
 - `PageFrame` / `PagePanel` — kicker-пілюля (не на старті тесту), `--fs-h1` display, скляна картка.
 - `TopicTestStart` — домашня робоча сторінка: вітання + тема + кількість завдань (поле / розмір банку). Без Ultimate і без самооцінки.
 - `AccountCabinet` — особистий кабінет: фото профілю, пароль, останні результати, заглушки (досягнення / час), вихід.
+- `TeacherProfileEditor` — візитка викладача на `/account` (slug, headline, bio, city, subjects, contact URL, is_public, копія лінка). Адмін редактор не бачить.
+- `TeacherPublicCard` — публічна картка `/t/{slug}` у `DiagnosticShell` (без кабінетного chrome).
+- `TeacherStudentsPanel` — `/students` для teacher/admin: додати учня за логіном, список, відв’язати. Учні пункт меню не бачать.
+
+`src/components/consultations/` — заявки на консультацію:
+
+- `ConsultationsStudentPanel` — форма «Запитати консультацію» + стан відкритого запиту.
+- `ConsultationsInbox` — черга для викладача/адміна: картки на base, таблиця з 768.
 
 Брейкпоінти кабінету ті самі: сайдбар з 768. Не використовувати 1280.
 
@@ -376,3 +384,84 @@ npm run lint && npm test && npm run build
 - `UserAvatar` у хедері й `/account`: JPEG/PNG/WebP з `/api/avatar/{id}?v=rev`, інакше ініціали.
 - Кроп 256×256 у браузері; рядок у `user_avatars` (MEDIUMBLOB), ліміт 512 КБ.
 - Демо-акаунти фото не змінюють.
+
+### 2026-09-13 — публічна візитка викладача `/t/{slug}`
+
+- Редактор на `/account` після фото: скляна панель як пароль/фото, без фіксованої height.
+- Публічна сторінка в `(marketing)` + `DiagnosticShell` (aurora, back-link). Картка
+  `--grad-glass`, kicker-пілюля, аватар з `/api/avatar`, чіпи предметів.
+- `/t` у `PUBLIC_PAGE_PATHS`; sitemap індекс `/t` не включає (немає лістингу).
+- Перевірити: 375 / 768 / 1240 / 1440 / 1920; учень не бачить редактор; неопублікований slug — 404.
+
+### 2026-09-10 — реєстрація викладача `/register/teacher`
+
+- Окрема публічна сторінка для реклами (не picker ролі на `/register`).
+- AuthShell + `auth.module.css`: `.feeChip`, `.benefits`, `.alertNotice` (папір / `--green-bg`).
+- Success `/register/teacher/success`, fail `/register/teacher/fail`.
+- Після рахунку клієнт POST-ить форму на WayForPay (`https://secure.wayforpay.com/pay`).
+  CSP: `form-action 'self' https://secure.wayforpay.com`.
+- Dev / sandbox `test_merch_n1`: після «Сплатити» checkout **не** автосабмітиться
+  і **не** рендериться як основна кнопка. Лише панель `.testBypass` з «Оплата пройшла»
+  (`--green-bg`, dashed, пілюля). Справжній WayForPay — згорнутий `<details>`
+  (`.gatewayDetails` / `.gatewaySummary` / `.checkoutQuiet`). Повторне «Сплатити»
+  лишає форму відкритою і бере новий reference. Production + живий мерчант —
+  як раніше, одразу POST на WayForPay.
+- Перевірити: 375 / 768 / 1240 / 1440 / 1920; на 1240+ маркетингова колонка;
+  без ключів WayForPay — банер «оплату ще не налаштовано»; локально — тестова кнопка.
+
+### 2026-09-10 — WayForPay замість Mono
+
+- Checkout: HMAC_MD5 Purchase, `amount=500.00` UAH (не копійки).
+- Webhook: `POST /api/payments/wayforpay/webhook`; return `303` через
+  `/api/payments/wayforpay/return`.
+
+### 2026-09-10 — консультації: заявки учнів
+
+- `/consultations` більше не stub: учень надсилає один відкритий запит (опційне
+  повідомлення), викладач/адмін бачить усі заявки й ставить **побачено** / **закрито**.
+- UI: скляна форма як у `/account`; інбокс — картки на base, таблиця з 768.
+- Логіка в `src/modules/consultations`; таблиця `consultation_requests`
+  (`scripts/sql/019_consultation_requests.sql` + lazy `ensureConsultationSchema`).
+- Привʼязки учень↔викладач немає — список спільний для всіх teacher/admin.
+
+### 2026-09-11 — «Мої учні» `/students`
+
+- Викладач / адмін додає учня **за логіном** (точний збіг після trim + lowercase).
+  Таблиця `teacher_students` (`017_teacher_students.sql` + `ensureTeacherStudentsSchema`).
+- Сайдбар показує пункт лише teacher/admin (як `/settings` лише admin). Учень — редірект на `/`.
+- Форма + список карток (1 кол. → рядок ім’я / відв’язати з 768). Без CRM і без авто-лінку з консультацій.
+
+### 2026-09-16 — відгуки адміна на `/feedback`
+
+- Список `site_feedback` винесено з `/settings` на окремий розділ `/feedback`
+  (пункт меню лише admin, guard у `proxy`).
+- `/settings` лишає лише імпорт контенту.
+
+### 2026-09-16 — профілі адміна: список / фільтр / бан / видалення
+
+- `/profiles`: без зміни ролей. Фільтр за роллю, бан/розбан, видалення.
+- `app_users.is_banned` (`020_app_users_is_banned.sql` + lazy ALTER).
+- Бан блокує логін і викидає з кабінету; демо-акаунти й власний акаунт захищені.
+
+### 2026-09-16 — presence: online/offline + last login
+
+- `last_login_at` / `last_seen_at` на `app_users` (`021` + lazy ALTER).
+- Кабінет: `PresenceHeartbeat` → `POST /api/presence` раз на хвилину.
+- Online = `last_seen` за останні ~3 хв. Адмін на `/profiles` бачить статус і час входу.
+
+### 2026-09-16 — email verify + reset (Resend)
+
+- `app_users.email` + `email_verified_at` (`022` + lazy ALTER / unique); `auth_tokens` (`023`).
+- `/register` вимагає e-mail → лист → `/verify-email`; логін блокується до verify (демо exempt).
+- Forgot/reset: `/forgot-password`, `/reset-password`. Без `RESEND_API_KEY` — log у консоль.
+
+### 2026-09-16 — реєстрація: учень / викладач без плати в UI
+
+- На `/register` вибір ролі (пілюлі) під aside-лідом з 1240; на мобілці — у картці форми.
+- Auth layout притиснуто до верху (`align-items: start`, без `min-height: 60dvh`).
+- Платний `/register/teacher` редіректить на `/register?role=teacher`; лінки «500 грн» з логіну/реєстрації прибрано.
+
+### 2026-09-16 — адмін `/account` без навчальних віджетів
+
+- Адмін не бачить «Останні результати», «Досягнення», «Час навчання» і публічну візитку.
+- Лишаються фото, пароль, вихід.

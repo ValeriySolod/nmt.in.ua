@@ -1,9 +1,13 @@
 export type { AuthUser, SessionPayload, UserRole, StudentOption } from "./types";
 export {
   DEMO_ACCOUNTS,
+  ADMIN_NAV_HREFS,
   avatarSrc,
   canAssignMentorSessions,
   canImportContent,
+  canManageProfiles,
+  canReviewConsultationRequests,
+  canManageStudents,
   roleLabel,
   userInitials,
 } from "./types";
@@ -43,6 +47,8 @@ export {
   findUserByLogin,
   listStudents,
   createUser,
+  createUserRecord,
+  insertUserOnConnection,
   CreateUserError,
   updateUserPassword,
 } from "./users";
@@ -53,7 +59,7 @@ export type {
   ChangePasswordFieldError,
   ChangePasswordInput,
 } from "./validateChangePassword";
-export type { CreateUserInput } from "./users";
+export type { CreateUserInput, CreateUserRecordInput } from "./users";
 export {
   validateRegistrationInput,
   PASSWORD_MIN_LEN,
@@ -63,3 +69,10 @@ export type {
   RegistrationFieldError,
   RegistrationInput,
 } from "./validateRegistration";
+export {
+  isUserOnline,
+  touchLastSeen,
+  recordLoginPresence,
+  ONLINE_THRESHOLD_MS,
+} from "./presence";
+export { needsEmailVerification } from "./needsEmailVerification";

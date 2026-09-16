@@ -36,12 +36,29 @@ test("cabinet /home keeps Header.goHomeShort and CORE namespaces", () => {
 });
 
 test("pickClientMessages keeps shared marketing namespaces on auth and diagnostic", () => {
-  for (const path of ["/login", "/register", "/diagnostic"] as const) {
+  for (const path of [
+    "/login",
+    "/register",
+    "/register/teacher",
+    "/register/check-email",
+    "/verify-email",
+    "/forgot-password",
+    "/reset-password",
+    "/diagnostic",
+  ] as const) {
     const picked = pickClientMessages(uk, path);
     assert.ok(PUBLIC_CLIENT_NAMESPACES.every((key) => key in picked));
+    assert.ok("TeacherRegister" in picked);
     assert.equal("Header" in picked, false);
   }
   assert.ok("ContentImportForm" in pickClientMessages(uk, "/settings"));
+  assert.ok("Consultations" in pickClientMessages(uk, "/consultations"));
+  assert.ok("Consultations" in pickClientMessages(uk, "/home"));
+  assert.ok("TeacherStudents" in pickClientMessages(uk, "/students"));
+  assert.ok("TeacherStudents" in pickClientMessages(uk, "/home"));
+  assert.ok("AdminContent" in pickClientMessages(uk, "/home"));
+  assert.ok("AdminProfiles" in pickClientMessages(uk, "/profiles"));
+  assert.equal("TeacherStudents" in pickClientMessages(uk, "/"), false);
 });
 
 test("TopicTrainer ships on every marketing path, not just /diagnostic*", () => {
@@ -85,5 +102,18 @@ test("SessionExpiredNotice ships everywhere TopicTrainer does", () => {
 
 test("CLIENT_MESSAGE_NAMESPACES still lists the full union for docs/tests", () => {
   assert.ok(CLIENT_MESSAGE_NAMESPACES.includes("LoginForm"));
+  assert.ok(CLIENT_MESSAGE_NAMESPACES.includes("TeacherRegister"));
   assert.ok(CLIENT_MESSAGE_NAMESPACES.includes("Header"));
+});
+
+test("cabinet /account ships TeacherProfile; /t cards stay on the public payload", () => {
+  const account = pickClientMessages(uk, "/account");
+  assert.ok("TeacherProfile" in account);
+  assert.equal("TeacherPublicCard" in account, false);
+
+  const publicCard = pickClientMessages(uk, "/t/igor-petrenko");
+  assert.ok(PUBLIC_CLIENT_NAMESPACES.every((key) => key in publicCard));
+  assert.ok("TeacherPublicCard" in publicCard);
+  assert.equal("Header" in publicCard, false);
+  assert.equal("TeacherProfile" in publicCard, false);
 });

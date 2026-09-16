@@ -2,12 +2,15 @@ import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { UpgradeSessionCookie } from "@/components/auth/UpgradeSessionCookie";
 import { pickClientMessages } from "@/i18n/clientMessages";
 import {
+  clearSessionCookie,
   getCurrentUser,
   sessionCookieNeedsUpgrade,
 } from "@/modules/auth/getCurrentUser";
+import { findUserById } from "@/modules/auth/users";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 /** App cabinet hits MySQL; never prerender at build. */
 export const dynamic = "force-dynamic";
@@ -22,6 +25,15 @@ export default async function AppLayout({
   const locale = await getLocale();
   const messages = pickClientMessages(await getMessages(), pathname);
   const user = await getCurrentUser();
+
+  if (user) {
+    const account = await findUserById(user.id);
+    if (!account || account.isBanned) {
+      await clearSessionCookie();
+      redirect("/login");
+    }
+  }
+
   const needsCookieUpgrade = user
     ? await sessionCookieNeedsUpgrade()
     : false;

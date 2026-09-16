@@ -64,7 +64,7 @@ function mapRow(row: FeedbackRow): SiteFeedback | null {
   };
 }
 
-/** Newest site feedback for the admin settings panel. Not for students. */
+/** Newest site feedback for the admin `/feedback` page. Not for students. */
 export async function getFeedbackList(
   deps: GetFeedbackListDeps = { getConnection: loadFeedbackConnection },
 ): Promise<SiteFeedback[]> {

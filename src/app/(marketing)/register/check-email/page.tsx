@@ -1,0 +1,33 @@
+import { getTranslations } from "next-intl/server";
+import { AuthShell } from "@/components/auth/AuthShell";
+import { CheckEmailForm } from "@/components/auth/CheckEmailForm/CheckEmailForm";
+import { createPageMetadata } from "@/constants/seo";
+
+export async function generateMetadata() {
+  const t = await getTranslations("Metadata.checkEmail");
+
+  return createPageMetadata({
+    title: t("title"),
+    description: t("description"),
+    path: "/register/check-email",
+    noIndex: true,
+  });
+}
+
+type CheckEmailPageProps = {
+  searchParams: Promise<{ email?: string | string[] }>;
+};
+
+export default async function CheckEmailPage({
+  searchParams,
+}: CheckEmailPageProps) {
+  const params = await searchParams;
+  const raw = Array.isArray(params.email) ? params.email[0] : params.email;
+  const email = (raw ?? "").trim().toLowerCase();
+
+  return (
+    <AuthShell>
+      <CheckEmailForm email={email} />
+    </AuthShell>
+  );
+}

@@ -46,9 +46,9 @@ npm run dev
 | Граф тем | `theme_connections` → наступна тема в рекомендаціях |
 | Mentor API | `POST /api/admin/sessions` — planned-сесія від ментора |
 | Auth | `/` вітальна (гость), `/login`, `/register`, ролі, демо-акаунти |
-| Консультації | `/consultations` — у меню; форма запису ще збирається |
+| Консультації | `/consultations` — учень надсилає запит; викладачі бачать чергу |
 
-**Заглушки більше не ховаємо за «скоро»:** консультації видно в сайдбарі.
+Консультації в сайдбарі без «скоро»: учень надсилає запит, викладачі бачать спільну чергу.
 
 ## Змінні середовища
 
@@ -58,10 +58,14 @@ npm run dev
 | --- | --- |
 | `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` | MySQL |
 | `DB_CONNECTION_LIMIT`, `DB_CONNECT_TIMEOUT_MS`, `DB_MAX_IDLE`, `DB_IDLE_TIMEOUT_MS` | тюнінг пулу; `DB_IDLE_TIMEOUT_MS` тримати нижче `wait_timeout` сервера |
-| `NEXT_PUBLIC_SITE_URL` | canonical URL для SEO |
+| `NEXT_PUBLIC_SITE_URL` | canonical URL для SEO, `returnUrl` / `serviceUrl` WayForPay |
 | `CONTENT_IMPORT_API_KEY` | Bearer для `POST /api/import` і Server Action імпорту (admin) |
 | `ADMIN_API_KEY` | Bearer для `POST /api/admin/sessions` |
 | `SESSION_SECRET` | HMAC-секрет для cookie `nmt_session` (обовʼязково в production) |
+| `WAYFORPAY_MERCHANT_ACCOUNT` | merchantAccount WayForPay для `/register/teacher` (порожній = scaffold без живих платежів) |
+| `WAYFORPAY_MERCHANT_SECRET_KEY` | SecretKey для HMAC_MD5 підпису Purchase / serviceUrl |
+| `WAYFORPAY_MERCHANT_DOMAIN` | опційно; дефолт — hostname з `NEXT_PUBLIC_SITE_URL` |
+| `WAYFORPAY_PAY_URL` | опційно, дефолт `https://secure.wayforpay.com/pay` |
 | `MAX_BODY_BYTES` | ліміт тіла HTTP на `server.js` (дефолт 8388608) |
 
 Якщо `CONTENT_IMPORT_API_KEY` або `ADMIN_API_KEY` не задані — відповідні ендпоінти відхиляють **усі** запити (`401`, fail-closed).
@@ -73,10 +77,22 @@ npm run dev
 | Логін | Пароль | Роль | Можливості |
 | --- | --- | --- | --- |
 | `demo-student` | `demo123` | Учень | тести, результати, власні сесії |
-| `demo-teacher` | `demo123` | Викладач | + призначення mentor-сесій на `/sessions` |
-| `demo-admin` | `demo123` | Адмін | + імпорт контенту на `/settings` |
+| `demo-teacher` | `demo123` | Викладач | + призначення mentor-сесій на `/sessions` і «Мої учні» на `/students` |
+| `demo-admin` | `demo123` | Адмін | + імпорт контенту на `/settings` (і той самий список учнів) |
 
-На `/login` є кнопки швидкого входу для кожної ролі. Нові учні реєструються на `/register` (роль `student`, авто-вхід після створення).
+На `/login` є кнопки швидкого входу для кожної ролі (у dev). Публічна реєстрація — `/register` з вибором **учень / викладач** (`?role=`), обовʼязковий email і підтвердження листа перед першим входом. Платний `/register/teacher` (WayForPay, 500 грн) **приховано в UI** — редірект на `/register?role=teacher`; код еквайрингу лишається для майбутньої оплати доп. функцій. Адмін цим потоком не створюється.
+
+### Оплата кабінету викладача (WayForPay) — код є, UI на паузі
+
+Публічно зараз безкоштовна реєстрація викладача на `/register?role=teacher`. Нижче — як увімкнути старий checkout, коли знову знадобиться.
+
+1. Скопіюй `WAYFORPAY_MERCHANT_ACCOUNT` і `WAYFORPAY_MERCHANT_SECRET_KEY` у `.env.local` / `.env.production` (кабінет WayForPay). Для пісочниці з документації WayForPay `merchantAccount` = `test_merch_n1`; SecretKey лише локально, не в git.
+2. За бажанням `WAYFORPAY_MERCHANT_DOMAIN` (дефолт — hostname `NEXT_PUBLIC_SITE_URL`, на проді `nmt.in.ua`). Домен має збігатися з кабінетом WayForPay.
+3. SQL: `scripts/sql/014_teacher_payments.sql` — або нічого не запускай: таблиця створюється при першому сабміті. Якщо вже була Mono-версія з `mono_invoice_id`, колонки мігрують самі.
+4. `NEXT_PUBLIC_SITE_URL=https://nmt.in.ua` (HTTPS) для `returnUrl` і `serviceUrl`. Локально webhook не дійде на `localhost` — потрібен публічний тунель (ngrok тощо) і той самий URL у env.
+5. Webhook: `POST https://<домен>/api/payments/wayforpay/webhook` (підпис HMAC_MD5 `merchantSignature`). Після оплати браузер іде на `/api/payments/wayforpay/return` → `/register/teacher/success?ref=…`.
+6. Сума **500 грн**. WayForPay приймає major units з двома знаками (`amount=500.00`, `currency=UAH`); у БД лишаємо `50000` копійок. Без ключів застосунок **не** підписує checkout. CSP `form-action` дозволяє `https://secure.wayforpay.com`. Ключі лише в `.env.local` / хостинг `.env.production`, не в git.
+7. Локально / пісочниця `test_merch_n1`: після «Сплатити» сторінка **не** стрибає одразу на WayForPay. Є кнопка **«Оплата пройшла»** — той самий шлях, що Approved webhook (активує викладача + сесія на `/`). На живому мерчанті в `NODE_ENV=production` кнопки немає. Вимкнути локально: `TEACHER_PAYMENT_TEST_BYPASS=0`.
 
 **Скидання демо-даних:** старі тести до auth писалися з `user_id=1`, тому вони «прилипають» до demo-student. Очистити:
 
@@ -90,12 +106,17 @@ npm run reset-demo-student
 
 | Що | Де |
 | --- | --- |
-| Вхід / вихід | `/login`, cookie `nmt_session` |
-| Реєстрація | `/register` — публічна, лише роль `student` |
+| Вхід / вихід | `/login`, cookie `nmt_session`; логін блокується до verify email (демо exempt) |
+| Реєстрація | `/register?role=student\|teacher` — email обовʼязковий → `/register/check-email` → `/verify-email` |
+| Скидання пароля | `/forgot-password`, `/reset-password` (Resend або log без `RESEND_API_KEY`) |
+| Реєстрація викладача (оплата) | UI на паузі; `/register/teacher` → `/register?role=teacher`. WayForPay код + `/success`/`/fail` лишаються |
+| Webhook оплати | `POST /api/payments/wayforpay/webhook` (публічний, перевірка HMAC_MD5) |
 | Ролі | `student`, `teacher`, `admin` |
-| Облікові записи | таблиця `app_users` (окремо від legacy `users` на хостингу) |
-| Middleware | редірект на `/login`; публічні `/`, `/welcome`, `/login`, `/register` і статика з `public/`; `/settings` — лише admin |
+| Облікові записи | таблиця `app_users` (+ `email` / `email_verified_at`); токени — `auth_tokens` |
+| Middleware | редірект на `/login`; публічні `/`, `/welcome`, `/login`, `/register`, `/verify-email`, `/forgot-password`, `/reset-password`, `/diagnostic`, `/t/{slug}` і статика; `/settings`/`/profiles`/`/feedback` — admin; `/students` — teacher/admin |
 | Mentor UI | `/sessions` — панель призначення для teacher/admin |
+| Мої учні | `/students` — додати за логіном / відв’язати (teacher/admin) |
+| Публічна візитка | `/account` (лише teacher) редагує картку; `/t/{slug}` якщо `is_public` |
 
 `userId` у Server Actions береться з сесії (`requireUserId()`), не з FormData.
 
@@ -204,6 +225,7 @@ src/modules/content-import/     модуль 2 — CSV/JSON → БД
 src/modules/testing/              модуль 3 — сесії, відповіді, finish
 src/modules/recommendations/      модуль 4 — stats, rules, graph, persist
 src/modules/sessions/             список сесій, createMentorSession
+src/modules/teacher-students/     «Мої учні»: link/unlink за логіном
 src/modules/admin/                auth для admin API
 src/middleware.ts                 rate limit + auth + probe paths
 server.js                         hardened запуск на хостингу
@@ -370,11 +392,12 @@ import {
 | `/session/[id]` | TopicTrainer | 3 |
 | `/results` | Таблиця + рекомендації | 3, 4 |
 | `/sessions` | Історія + planned (auto/mentor) + mentor assign | 3, 4, 5 |
+| `/students` | Мої учні (teacher/admin): додати за логіном | teacher-students |
 | `/settings` | Імпорт контенту (admin) | 2, 5 |
 | `/simulator` | Симулятор НМТ | 3 |
 | `/problems` | Друкований тест по темі | 6.6 |
 | `/materials` | Заглушка | контент |
-| `/consultations` | Заглушка | 4 (дія) |
+| `/consultations` | Заявки учнів + черга викладача | 6 |
 | `POST /api/import` | Реалізовано | 2 |
 | `POST /api/admin/sessions` | Реалізовано | 4 |
 

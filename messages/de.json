@@ -36,11 +36,15 @@
       "home": "Test zum ausgewählten Thema",
       "results": "Ergebnisse nach Themen",
       "sessions": "Lernsitzungen",
+      "students": "Meine Schüler",
       "simulator": "NMT-Simulator",
       "materials": "Lehrbuch",
       "problems": "Aufgabenbank",
+      "feedback": "Feedback",
       "settings": "Einstellungen",
-      "consultations": "Lehrerberatungen"
+      "consultations": "Lehrerberatungen",
+      "homeAdmin": "Aufgaben nach Thema",
+      "profiles": "Profile"
     }
   },
   "RecentResults": {
@@ -50,7 +54,7 @@
   "AccountCabinet": {
     "kicker": "Profil",
     "title": "Persönliches Konto",
-    "lead": "Profilfoto, Passwort, Ergebnisse und Platzhalter für Erfolge und Lernzeit.",
+    "lead": "Profilfoto, öffentliche Lehrerkarte, Passwort, Ergebnisse und Platzhalter für Erfolge und Lernzeit.",
     "photoTitle": "Profilfoto",
     "photoLead": "JPEG, PNG oder WebP. Ein quadratisches Foto wird mittig zugeschnitten und erscheint in der Kopfzeile.",
     "photoHint": "Bis {maxKb} KB. Ein quadratisches Foto wird mittig zugeschnitten und ersetzt die Initialen in der Kopfzeile.",
@@ -97,6 +101,44 @@
       "serverError": "Das Foto konnte nicht gespeichert werden. Bitte erneut versuchen."
     }
   },
+  "TeacherProfile": {
+    "title": "Öffentliche Lehrerkarte",
+    "lead": "Eine kurze Karte für Schüler. Der Link /t/dein-slug ist nur sichtbar, wenn die Karte öffentlich ist.",
+    "slug": "Seitenadresse",
+    "slugHint": "Lateinische Buchstaben, Ziffern und Bindestriche. 3–48 Zeichen.",
+    "headline": "Kurzüberschrift",
+    "bio": "Über mich",
+    "city": "Stadt",
+    "subjects": "Fächer",
+    "subjectsHint": "Durch Kommas getrennt, bis zu 8 Einträge.",
+    "contactUrl": "Kontaktlink",
+    "isPublic": "Karte veröffentlichen",
+    "isPublicHint": "Ohne Häkchen antwortet /t/… mit 404.",
+    "save": "Karte speichern",
+    "saving": "Wird gespeichert…",
+    "saved": "Karte gespeichert.",
+    "copyLink": "Link kopieren",
+    "copied": "Kopiert",
+    "errors": {
+      "slugRequired": "Bitte eine Seitenadresse angeben.",
+      "invalidSlug": "Lateinische Buchstaben, Ziffern und Bindestriche, 3–48 Zeichen.",
+      "reservedSlug": "Diese Adresse ist reserviert.",
+      "slugTaken": "Diese Adresse ist bereits vergeben.",
+      "headlineTooLong": "Die Überschrift ist zu lang.",
+      "bioTooLong": "Der Text „Über mich“ ist zu lang.",
+      "cityTooLong": "Der Stadtname ist zu lang.",
+      "invalidSubjects": "Zu viele Fächer oder ein Eintrag ist zu lang.",
+      "invalidContactUrl": "Der Link muss mit http:// oder https:// beginnen.",
+      "forbidden": "Nur Lehrkraft oder Admin können die Karte bearbeiten.",
+      "serverError": "Die Karte konnte nicht gespeichert werden. Bitte erneut versuchen."
+    }
+  },
+  "TeacherPublicCard": {
+    "kicker": "Lehrkraft",
+    "city": "Stadt",
+    "subjects": "Fächer",
+    "contact": "Kontakt"
+  },
   "Common": {
     "soon": "Demnächst"
   },
@@ -118,6 +160,34 @@
     "alreadyPlanned": "Mentor-Sitzung #{sessionId} war bereits geplant.",
     "errors": {
       "generic": "Die Mentor-Sitzung konnte nicht zugewiesen werden. Überprüfe das Thema und den Schüler."
+    }
+  },
+  "TeacherStudents": {
+    "kicker": "Lehrkraft",
+    "title": "Meine Schüler",
+    "lead": "Verknüpfe einen Schüler über den Login. Die Liste enthält nur deine Verbindungen — nicht alle Konten der Website.",
+    "addTitle": "Schüler hinzufügen",
+    "addLead": "Der Login muss zu einem Konto mit der Rolle „Schüler“ gehören.",
+    "login": "Schüler-Login",
+    "loginPlaceholder": "demo-student",
+    "loginHint": "Genau der Login wie beim Anmelden.",
+    "add": "Hinzufügen",
+    "adding": "Wird hinzugefügt…",
+    "added": "{name} wurde zur Liste hinzugefügt.",
+    "listTitle": "Liste",
+    "listLead": "Das Aufheben der Verknüpfung löscht das Schülerkonto nicht.",
+    "empty": "Noch keine verknüpften Schüler. Füge den ersten über den Login hinzu.",
+    "unlink": "Verknüpfung aufheben",
+    "unlinking": "Wird entfernt…",
+    "unlinked": "Verknüpfung aufgehoben.",
+    "errors": {
+      "invalid_input": "Gib den Login des Schülers ein.",
+      "not_found": "Kein Benutzer mit diesem Login gefunden.",
+      "not_a_student": "Dieser Login gehört keinem Schüler.",
+      "already_linked": "Dieser Schüler steht bereits auf deiner Liste.",
+      "not_linked": "Dieser Schüler steht nicht auf deiner Liste.",
+      "forbidden": "Nur Lehrkraft oder Admin können die Schülerliste verwalten.",
+      "generic": "Speichern fehlgeschlagen. Bitte erneut versuchen."
     }
   },
   "StubPage": {
@@ -143,7 +213,58 @@
     },
     "consultations": {
       "title": "Lehrerberatungen",
-      "description": "Buche eine Beratung und tausche dich mit Lehrkräften aus."
+      "description": "Beratung anfragen: Schüler senden eine Anfrage, Lehrkräfte sehen sie im Kabinett."
+    }
+  },
+  "Consultations": {
+    "kicker": "Beratung",
+    "title": "Lehrerberatungen",
+    "studentLead": "Hinterlasse eine Anfrage — alle Lehrkräfte sehen sie im Kabinett. Eine persönliche Zuordnung Schüler–Lehrkraft gibt es noch nicht.",
+    "teacherLead": "Alle Schüleranfragen. Eine Zuordnung Schüler–Lehrkraft gibt es noch nicht — die Liste ist für Lehrkräfte und Admins gemeinsam.",
+    "formTitle": "Neue Anfrage",
+    "formLead": "Beschreibe kurz, wobei du Hilfe brauchst — oder sende die Anfrage einfach so.",
+    "noteLabel": "Nachricht (optional)",
+    "notePlaceholder": "Zum Beispiel, zu welchem Thema du Hilfe brauchst",
+    "noteHint": "Bis zu 1000 Zeichen. Das Feld darf leer bleiben.",
+    "submit": "Beratung anfragen",
+    "submitting": "Senden…",
+    "success": "Anfrage gesendet. Lehrkräfte sehen sie in Kürze.",
+    "alreadyOpen": "Du hast bereits eine offene Anfrage.",
+    "noNote": "Keine Nachricht",
+    "sentAt": "Gesendet {when}",
+    "openTitle": {
+      "pending": "Deine Anfrage wartet auf eine Lehrkraft",
+      "acknowledged": "Eine Lehrkraft hat deine Anfrage gesehen",
+      "closed": "Anfrage geschlossen"
+    },
+    "openLead": {
+      "pending": "Eine neue Anfrage ist nicht nötig — diese steht bereits in der Warteschlange.",
+      "acknowledged": "Bitte warten. Eine weitere Anfrage kannst du senden, wenn diese geschlossen ist.",
+      "closed": "Du kannst eine neue Anfrage senden."
+    },
+    "inboxTitle": "Schüleranfragen",
+    "inboxLead": "Offene Anfragen stehen oben. Als gesehen markieren oder nach der Beratung schließen.",
+    "empty": "Es gibt noch keine Anfragen.",
+    "student": "Schüler",
+    "note": "Nachricht",
+    "status": "Status",
+    "created": "Wann",
+    "actions": "Aktionen",
+    "acknowledge": "Gesehen",
+    "close": "Schließen",
+    "saving": "Speichern…",
+    "alreadyClosed": "Geschlossen",
+    "statuses": {
+      "pending": "Offen",
+      "acknowledged": "Gesehen",
+      "closed": "Geschlossen"
+    },
+    "errors": {
+      "invalid_input": "Prüfe die Nachricht und versuche es erneut.",
+      "forbidden": "Nur ein Schüler kann eine Anfrage senden.",
+      "generic": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+      "notFound": "Diese Anfrage existiert nicht mehr.",
+      "invalidTransition": "Diese Statusänderung ist nicht erlaubt."
     }
   },
   "TopicTestStart": {
@@ -611,19 +732,25 @@
     },
     "errors": {
       "requiredFields": "Gib Login und Passwort ein.",
-      "invalidCredentials": "Ungültiger Login oder ungültiges Passwort."
+      "invalidCredentials": "Ungültiger Login oder ungültiges Passwort.",
+      "accountBanned": "Dieses Konto ist gesperrt. Wende dich an einen Administrator.",
+      "emailUnverified": "Bestätige zuerst deine E-Mail über den Link in der Nachricht."
     },
     "noAccount": "Noch kein Konto?",
-    "registerLink": "Registrieren"
+    "registerLink": "Registrieren",
+    "forgotPassword": "Passwort vergessen?",
+    "resendVerifyLink": "Bestätigung erneut senden"
   },
   "RegisterForm": {
     "kicker": "Registrierung",
     "title": "Schülerkonto erstellen",
-    "lead": "Registriere dich, um Tests zu absolvieren, Ergebnisse zu speichern und Empfehlungen zu erhalten. Lehrkraft- und Admin-Zugang bleiben vorerst über Demo-Login.",
+    "lead": "Registriere dich, um Tests zu absolvieren, Ergebnisse zu speichern und Empfehlungen zu erhalten.",
     "leadFromDiagnostic": "Registriere dich, um dein Einstufungstest-Ergebnis und deine Selbsteinschätzung in deinem Konto zu speichern.",
     "displayName": "Anzeigename",
     "login": "Login",
     "loginHint": "Lateinische Buchstaben, Ziffern, Punkt, _ oder - (mindestens 3 Zeichen).",
+    "email": "E-Mail",
+    "emailHint": "Wird zur Kontobestätigung und Passwortwiederherstellung benötigt.",
     "password": "Passwort",
     "passwordHint": "Mindestens {min} Zeichen.",
     "passwordConfirm": "Passwort bestätigen",
@@ -635,12 +762,98 @@
       "requiredFields": "Bitte alle Felder ausfüllen.",
       "invalidLogin": "Ungültiger Login. Nutze lateinische Buchstaben, Ziffern, ., _ oder -.",
       "invalidDisplayName": "Der Name muss 2–100 Zeichen haben.",
+      "invalidEmail": "Bitte eine gültige E-Mail-Adresse angeben.",
+      "passwordTooShort": "Das Passwort ist zu kurz.",
+      "passwordTooLong": "Das Passwort ist zu lang.",
+      "passwordMismatch": "Die Passwörter stimmen nicht überein.",
+      "loginTaken": "Dieser Login ist bereits vergeben.",
+      "emailTaken": "Diese E-Mail wird bereits verwendet.",
+      "reservedLogin": "Dieser Login ist für Demos reserviert.",
+      "serverError": "Konto konnte nicht erstellt werden. Bitte später erneut versuchen."
+    },
+    "roleLabel": "Wer registriert sich?",
+    "roleStudent": "Schüler",
+    "roleTeacher": "Lehrkraft",
+    "titleTeacher": "Lehrer-Konto erstellen",
+    "leadTeacher": "Registriere dich als Lehrkraft, um Schüler zu begleiten, Fortschritt zu sehen und Übungen zuzuweisen. Bezahlte Extras kommen später.",
+    "submitTeacher": "Als Lehrkraft registrieren"
+  },
+  "TeacherRegister": {
+    "kicker": "Für Lehrkräfte",
+    "title": "Lehrer-Konto",
+    "lead": "Weise Mentor-Sitzungen zu und verfolge den Fortschritt der Schüler. Admins entstehen über diesen Weg nicht.",
+    "fee": "Einmalige Gebühr {fee} UAH — öffnet das Konto.",
+    "benefits": {
+      "mentor": "Mentor-Sitzungen zu konkreten Lücken",
+      "progress": "Ergebnisse und Themen sehen, die nachgearbeitet werden sollten",
+      "cabinet": "Derselbe Arbeitsbereich wie für Schüler, plus Zuweisungspanel"
+    },
+    "paymentNotConfigured": "Zahlungen sind noch nicht eingerichtet. Die Anmeldung kann gespeichert werden; ein WayForPay-Checkout wird nicht erstellt, das Konto bleibt inaktiv.",
+    "asideBadge": "Lehrkräfte · 500 UAH",
+    "asideTitle": "Ein Konto, um Schüler zur NMT zu führen",
+    "asideLead": "Nach der Zahlung siehst du den Fortschritt und kannst Übungen für schwache Themen zuweisen.",
+    "displayName": "Anzeigename",
+    "login": "Login",
+    "loginHint": "Lateinische Buchstaben, Ziffern, Punkt, _ oder - (mindestens 3 Zeichen).",
+    "password": "Passwort",
+    "passwordHint": "Mindestens {min} Zeichen.",
+    "passwordConfirm": "Passwort bestätigen",
+    "submitting": "Wird gespeichert…",
+    "redirecting": "Weiter zur Zahlung…",
+    "submitPay": "{fee} UAH zahlen",
+    "submitSave": "Anmeldung speichern",
+    "haveAccount": "Bereits ein Konto?",
+    "signInLink": "Anmelden",
+    "studentPrompt": "Du bist Schüler?",
+    "studentLink": "Kostenlose Registrierung",
+    "testBypass": {
+      "hint": "Nur zum Testen: Es wird nichts abgebucht und WayForPay nicht geöffnet.",
+      "payOk": "Zahlung erfolgreich",
+      "working": "Konto wird aktiviert…",
+      "payAtGateway": "Weiter zu WayForPay",
+      "openGateway": "Echtes WayForPay-Gateway öffnen (für den Test nicht nötig)",
+      "pendingLead": "Anmeldung gespeichert. Zur lokalen Prüfung auf „Zahlung erfolgreich“ tippen — WayForPay ist nicht nötig.",
+      "errors": {
+        "disabled": "Die Testbestätigung der Zahlung ist in dieser Umgebung deaktiviert.",
+        "missing_reference": "Keine Zahlungsanmeldung gefunden. Bitte das Formular erneut ausfüllen.",
+        "not_found": "Die Anmeldung wurde nicht gefunden. Bitte das Formular erneut ausfüllen.",
+        "not_pending": "Diese Anmeldung wurde bereits verarbeitet.",
+        "activate_failed": "Das Konto konnte nicht aktiviert werden. Bitte später erneut versuchen."
+      }
+    },
+    "errors": {
+      "requiredFields": "Bitte alle Felder ausfüllen.",
+      "invalidLogin": "Ungültiger Login. Nutze lateinische Buchstaben, Ziffern, ., _ oder -.",
+      "invalidDisplayName": "Der Name muss 2–100 Zeichen haben.",
       "passwordTooShort": "Das Passwort ist zu kurz.",
       "passwordTooLong": "Das Passwort ist zu lang.",
       "passwordMismatch": "Die Passwörter stimmen nicht überein.",
       "loginTaken": "Dieser Login ist bereits vergeben.",
       "reservedLogin": "Dieser Login ist für Demos reserviert.",
-      "serverError": "Konto konnte nicht erstellt werden. Bitte später erneut versuchen."
+      "serverError": "Anmeldung konnte nicht gespeichert werden. Bitte später erneut versuchen.",
+      "paymentNotConfigured": "Zahlungen sind noch nicht konfiguriert. Die Anmeldung wurde gespeichert; das Konto öffnet sich nach dem Anschluss von WayForPay.",
+      "invoiceFailed": "WayForPay-Zahlung konnte nicht gestartet werden. Bitte später erneut versuchen."
+    },
+    "result": {
+      "success": {
+        "kicker": "Zahlung",
+        "title": "Lehrer-Konto ist geöffnet",
+        "lead": "Die Zahlung ist bestätigt. Du kannst dich anmelden und Sitzungen zuweisen.",
+        "cta": "Zum Arbeitsbereich"
+      },
+      "pending": {
+        "kicker": "Zahlung wird erwartet",
+        "title": "Die Rechnung wird noch verarbeitet",
+        "lead": "Wenn du bereits gezahlt hast, warte einige Sekunden und aktualisiere die Seite. Das Konto erscheint nach der Bankbestätigung.",
+        "cta": "Später anmelden"
+      },
+      "fail": {
+        "kicker": "Zahlung",
+        "title": "Zahlung nicht abgeschlossen",
+        "lead": "Die Zahlung wurde abgebrochen oder ist fehlgeschlagen. Das Lehrer-Konto ist noch nicht aktiv.",
+        "hint": "Es wurde nichts abgebucht, oder die Bank hat abgelehnt. Du kannst es erneut versuchen.",
+        "retry": "Zurück zur Registrierung"
+      }
     }
   },
   "ContentImportForm": {
@@ -713,6 +926,7 @@
     }
   },
   "FeedbackAdmin": {
+    "kicker": "Rückmeldung",
     "title": "Website-Feedback",
     "lead": "Nur für Admins sichtbar. Schüler sehen fremde Rückmeldungen nicht.",
     "empty": "Noch kein Feedback.",
@@ -746,6 +960,18 @@
       "title": "Registrierung",
       "description": "Erstelle ein Schülerkonto für den NMT-Lernbereich."
     },
+    "teacherRegister": {
+      "title": "Registrierung für Lehrkräfte",
+      "description": "Lehrer-Konto auf nmt.in.ua: Mentor-Sitzungen und Lernfortschritt. Einmalige Gebühr 500 UAH."
+    },
+    "teacherRegisterSuccess": {
+      "title": "Zahlung erfolgreich",
+      "description": "Das Lehrer-Konto ist nach der Zahlung aktiv."
+    },
+    "teacherRegisterFail": {
+      "title": "Zahlung nicht abgeschlossen",
+      "description": "Die Zahlung für das Lehrer-Konto wurde abgebrochen oder ist fehlgeschlagen."
+    },
     "session": {
       "title": "Test durchführen",
       "description": "Interaktiver Trainer mit Testaufgaben zum ausgewählten Thema."
@@ -776,11 +1002,46 @@
     },
     "consultations": {
       "title": "Lehrerberatung",
-      "description": "Buche eine Beratung und kommuniziere mit Lehrkräften."
+      "description": "Beratung anfragen: Schüler senden eine Anfrage, Lehrkräfte sehen sie im Kabinett."
     },
     "account": {
       "title": "Persönliches Konto",
       "description": "Profilfoto, Passwortänderung, letzte Ergebnisse und Abmeldung."
+    },
+    "teacherPublic": {
+      "title": "Lehrkraft",
+      "titleNamed": "{name} — Lehrkraft",
+      "titleWithHeadline": "{name} — {headline}",
+      "description": "Öffentliche Lehrerkarte auf nmt.in.ua.",
+      "descriptionNamed": "Öffentliche Lehrerkarte von {name}."
+    },
+    "students": {
+      "title": "Meine Schüler",
+      "description": "Schülerliste der Lehrkraft: per Login hinzufügen oder Verknüpfung aufheben."
+    },
+    "profiles": {
+      "title": "Profile",
+      "description": "Alle Konten: nach Rolle filtern, sperren oder löschen."
+    },
+    "feedback": {
+      "title": "Feedback",
+      "description": "Bewertungen und Vorschläge der Nutzer zur Website."
+    },
+    "checkEmail": {
+      "title": "E-Mail bestätigen",
+      "description": "Prüfe dein Postfach, um dein nmt.in.ua-Konto zu bestätigen."
+    },
+    "verifyEmail": {
+      "title": "E-Mail-Bestätigung",
+      "description": "E-Mail bestätigen, um dich im Lernbereich anzumelden."
+    },
+    "forgotPassword": {
+      "title": "Passwort vergessen",
+      "description": "Link zum Zurücksetzen des Passworts für nmt.in.ua senden."
+    },
+    "resetPassword": {
+      "title": "Neues Passwort",
+      "description": "Neues Passwort für den Lernbereich festlegen."
     }
   },
   "SettingsPage": {
@@ -831,6 +1092,168 @@
       "sessionCompleted": "Diese Sitzung wurde bereits abgeschlossen.",
       "sessionExpired": "Die 24-Stunden-Gültigkeit dieser Sitzung ist abgelaufen.",
       "generic": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
+    }
+  },
+  "AdminContent": {
+    "kicker": "Inhalt",
+    "title": "Aufgaben nach Thema",
+    "lead": "Thema wählen, Aufgabenbank prüfen und Aufgaben bearbeiten oder anlegen.",
+    "themeTitle": "Thema",
+    "chooseTheme": "Thema wählen:",
+    "noThemes": "Noch keine Themen in der Bank.",
+    "taskCount": "In diesem Thema: {count} Aufgaben",
+    "listTitle": "Themenaufgaben",
+    "listLead": "Vorhandene Einträge bearbeiten oder neue Tests hinzufügen.",
+    "create": "Neue Aufgabe",
+    "empty": "In diesem Thema gibt es noch keine Aufgaben.",
+    "colDescription": "Beschreibung",
+    "colDifficulty": "Schwierigkeit",
+    "colEdit": "Ändern",
+    "colDelete": "Löschen",
+    "editAria": "„{name}“ bearbeiten",
+    "deleteAria": "„{name}“ löschen",
+    "deleteConfirm": "Aufgabe „{name}“ löschen?",
+    "createTitle": "Neue Aufgabe",
+    "createLead": "Felder ausfüllen und speichern — die Aufgabe erscheint in der Themenbank.",
+    "editTitle": "Aufgabe bearbeiten",
+    "editLead": "Felder ändern und Speichern drücken.",
+    "formAria": "Aufgabenfelder",
+    "colElement": "Element",
+    "colValue": "Wert",
+    "name": "Name",
+    "taskText": "Aufgabe",
+    "answer": "Antwort {n}",
+    "rightAnswer": "Nummer der richtigen Antwort",
+    "difficulty": "Schwierigkeitsgrad",
+    "theme": "Thema",
+    "comments": "Hinweis / Kommentar",
+    "save": "Speichern",
+    "saving": "Speichern…",
+    "cancel": "Abbrechen",
+    "created": "Aufgabe erstellt.",
+    "updated": "Aufgabe aktualisiert.",
+    "errors": {
+      "invalid_input": "Bitte die Formularfelder prüfen.",
+      "theme_not_found": "Gewähltes Thema nicht gefunden.",
+      "not_found": "Aufgabe nicht gefunden.",
+      "forbidden": "Kein Zugriff.",
+      "in_use": "Die Aufgabe wurde in Sitzungen genutzt und kann nicht gelöscht werden.",
+      "generic": "Aktion fehlgeschlagen. Bitte erneut versuchen."
+    },
+    "back": "Zurück",
+    "nextTask": "Nächste Aufgabe",
+    "deleted": "Aufgabe gelöscht.",
+    "editTitleNamed": "Bearbeiten: {name}"
+  },
+  "AdminProfiles": {
+    "kicker": "Benutzer",
+    "title": "Profile",
+    "lead": "Alle Konten der Plattform: nach Rolle filtern, sperren oder löschen.",
+    "listTitle": "Alle Konten",
+    "listLead": "Demo-Konten sind geschützt. Eigenes Konto kann nicht gesperrt oder gelöscht werden.",
+    "empty": "Noch keine Benutzer.",
+    "emptyFilter": "Keine Konten mit dieser Rolle.",
+    "you": "Sie",
+    "online": "online",
+    "offline": "offline",
+    "never": "noch nie angemeldet",
+    "bannedBadge": "gesperrt",
+    "protectedBadge": "demo",
+    "roleMeta": "Rolle: {role}",
+    "lastLoginMeta": "Letzter Login: {date}",
+    "lastSeenMeta": "Zuletzt aktiv: {date}",
+    "createdMeta": "erstellt {date}",
+    "filterLabel": "Filter nach Rolle",
+    "filterAll": "Alle ({count})",
+    "filterRole": "{role} ({count})",
+    "ban": "Sperren",
+    "unban": "Entsperren",
+    "delete": "Löschen",
+    "deleteConfirm": "Konto „{name}“ löschen? Das kann nicht rückgängig gemacht werden.",
+    "selfLocked": "Das ist Ihr Konto — Aktionen nicht verfügbar.",
+    "protectedLocked": "Demo-Konten sind geschützt.",
+    "success": {
+      "ban": "Konto {name} wurde gesperrt.",
+      "unban": "Konto {name} wurde entsperrt.",
+      "delete": "Konto {name} wurde gelöscht."
+    },
+    "errors": {
+      "invalid_input": "Ungültige Daten.",
+      "not_found": "Benutzer nicht gefunden.",
+      "forbidden": "Kein Zugriff.",
+      "self_action": "Eigenes Konto kann nicht gesperrt oder gelöscht werden.",
+      "protected_account": "Demo-Konten sind geschützt.",
+      "last_admin": "Der letzte aktive Admin kann nicht gesperrt oder gelöscht werden.",
+      "generic": "Aktion fehlgeschlagen. Bitte erneut versuchen."
+    },
+    "emailMeta": "E-Mail: {email}",
+    "emailMissing": "E-Mail: keine",
+    "emailVerified": "bestätigt",
+    "emailUnverified": "nicht bestätigt"
+  },
+  "CheckEmail": {
+    "kicker": "E-Mail",
+    "title": "E-Mail prüfen",
+    "lead": "Wir haben einen Bestätigungslink gesendet. Fehlt er, prüfe den Spam oder sende erneut.",
+    "leadWithEmail": "Nachricht an {email} gesendet. Fehlt sie, prüfe den Spam oder sende erneut.",
+    "email": "E-Mail",
+    "resend": "Erneut senden",
+    "resending": "Wird gesendet…",
+    "resent": "Falls ein unbestätigtes Konto existiert, ist die Nachricht unterwegs.",
+    "backToLogin": "Zur Anmeldung",
+    "errors": {
+      "invalid_email": "Gib eine gültige E-Mail-Adresse ein.",
+      "rate_limited": "Zu viele Versuche. Warte einige Minuten.",
+      "generic": "E-Mail konnte nicht gesendet werden. Später erneut versuchen."
+    }
+  },
+  "VerifyEmail": {
+    "kicker": "Bestätigung",
+    "title": "E-Mail bestätigen",
+    "pending": "Link wird geprüft…",
+    "success": "E-Mail bestätigt. Arbeitsbereich wird geöffnet…",
+    "resendLink": "Bestätigung erneut senden",
+    "backToLogin": "Zur Anmeldung",
+    "errors": {
+      "invalid": "Dieser Link ist ungültig.",
+      "expired": "Dieser Link ist abgelaufen. Bitte erneut anfordern.",
+      "used": "Dieser Link wurde bereits verwendet.",
+      "generic": "E-Mail konnte nicht bestätigt werden. Erneut versuchen."
+    }
+  },
+  "ForgotPassword": {
+    "kicker": "Passwort",
+    "title": "Passwort zurücksetzen",
+    "lead": "Gib die Konto-E-Mail ein — wir senden einen Reset-Link.",
+    "email": "E-Mail",
+    "submit": "Link senden",
+    "submitting": "Wird gesendet…",
+    "sent": "Falls ein bestätigtes Konto existiert, ist die Nachricht unterwegs.",
+    "backToLogin": "Zur Anmeldung",
+    "errors": {
+      "invalid_email": "Gib eine gültige E-Mail-Adresse ein.",
+      "rate_limited": "Zu viele Versuche. Warte einige Minuten.",
+      "generic": "E-Mail konnte nicht gesendet werden. Später erneut versuchen."
+    }
+  },
+  "ResetPassword": {
+    "kicker": "Passwort",
+    "title": "Neues Passwort",
+    "lead": "Wähle ein neues Passwort für den Arbeitsbereich.",
+    "password": "Neues Passwort",
+    "passwordConfirm": "Passwort bestätigen",
+    "submit": "Passwort speichern",
+    "submitting": "Wird gespeichert…",
+    "success": "Passwort aktualisiert. Weiter zur Anmeldung…",
+    "requestNew": "Neuen Link anfordern",
+    "errors": {
+      "invalid_token": "Dieser Link fehlt oder ist ungültig.",
+      "expired": "Dieser Link ist abgelaufen. Bitte erneut anfordern.",
+      "used": "Dieser Link wurde bereits verwendet.",
+      "passwordTooShort": "Passwort ist zu kurz.",
+      "passwordTooLong": "Passwort ist zu lang.",
+      "passwordMismatch": "Passwörter stimmen nicht überein.",
+      "generic": "Passwort konnte nicht gespeichert werden. Erneut versuchen."
     }
   }
 }

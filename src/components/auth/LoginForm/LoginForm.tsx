@@ -58,9 +58,23 @@ export function LoginForm({ nextPath }: LoginFormProps) {
           />
         </label>
 
+        <p className={css.switch}>
+          <Link href="/forgot-password" className={css.switchLink}>
+            {t("forgotPassword")}
+          </Link>
+        </p>
+
         {state.status === "error" ? (
           <p className={clsx(css.alert, css.alertError)} role="alert">
             {t(`errors.${state.code}`)}
+            {state.code === "emailUnverified" ? (
+              <>
+                {" "}
+                <Link href="/register/check-email" className={css.switchLink}>
+                  {t("resendVerifyLink")}
+                </Link>
+              </>
+            ) : null}
           </p>
         ) : null}
 

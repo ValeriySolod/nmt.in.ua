@@ -6,7 +6,12 @@ import clsx from "clsx";
 import { FeedbackEntry } from "@/components/feedback/FeedbackDialog";
 import { DASHBOARD_NAV } from "@/constants/navigation";
 import type { UserRole } from "@/modules/auth/client";
-import { canImportContent } from "@/modules/auth/client";
+import {
+  ADMIN_NAV_HREFS,
+  canImportContent,
+  canManageProfiles,
+  canManageStudents,
+} from "@/modules/auth/client";
 import { useTranslations } from "next-intl";
 import css from "./AppSidebar.module.css";
 
@@ -20,9 +25,12 @@ const NAV_ICONS: Record<string, string> = {
   "/": "∑",
   "/results": "%",
   "/sessions": "⏱",
+  "/students": "◈",
+  "/profiles": "◉",
   "/simulator": "◎",
   "/materials/textbook": "▣",
   "/problems": "ƒ",
+  "/feedback": "★",
   "/settings": "⚙",
   "/consultations": "✉",
 };
@@ -31,19 +39,29 @@ const NAV_KEYS: Record<string, string> = {
   "/": "home",
   "/results": "results",
   "/sessions": "sessions",
+  "/students": "students",
+  "/profiles": "profiles",
   "/simulator": "simulator",
   "/materials/textbook": "materials",
   "/problems": "problems",
+  "/feedback": "feedback",
   "/settings": "settings",
   "/consultations": "consultations",
 };
 
+const ADMIN_NAV_SET = new Set<string>(ADMIN_NAV_HREFS);
+
 export function AppSidebar({ open, onNavigate, role }: AppSidebarProps) {
   const t = useTranslations("Sidebar");
   const pathname = usePathname();
-  const navItems = DASHBOARD_NAV.filter(
-    (item) => item.href !== "/settings" || canImportContent(role),
-  );
+  const navItems = DASHBOARD_NAV.filter((item) => {
+    if (role === "admin") return ADMIN_NAV_SET.has(item.href);
+    if (item.href === "/settings") return canImportContent(role);
+    if (item.href === "/feedback") return canImportContent(role);
+    if (item.href === "/profiles") return canManageProfiles(role);
+    if (item.href === "/students") return canManageStudents(role);
+    return true;
+  });
 
   return (
     <aside
@@ -64,7 +82,8 @@ export function AppSidebar({ open, onNavigate, role }: AppSidebarProps) {
             {navItems.map((item) => {
               const active =
                 item.href === "/"
-                  ? pathname === "/"
+                  ? pathname === "/" ||
+                    (role === "admin" && pathname.startsWith("/tasks"))
                   : pathname === item.href ||
                     pathname.startsWith(`${item.href}/`);
               const isSoon = item.status === "soon";
@@ -87,7 +106,9 @@ export function AppSidebar({ open, onNavigate, role }: AppSidebarProps) {
                     </span>
                     <span className={css.labelRow}>
                       <span className={css.label}>
-                        {t(`nav.${NAV_KEYS[item.href]}`)}
+                        {item.href === "/" && role === "admin"
+                          ? t("nav.homeAdmin")
+                          : t(`nav.${NAV_KEYS[item.href]}`)}
                       </span>
                       {isSoon ? (
                         <span

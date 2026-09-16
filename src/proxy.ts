@@ -46,10 +46,22 @@ function limitFor(pathname: string): number {
   if (pathname.startsWith("/_next")) return LIMIT_OTHER;
   if (pathname.startsWith("/api/avatar")) return LIMIT_PAGE;
   if (
+    pathname === "/api/payments/wayforpay/webhook" ||
+    pathname === "/api/payments/wayforpay/return"
+  ) {
+    return LIMIT_PAGE;
+  }
+  if (
     pathname === "/login" ||
     pathname === "/register" ||
     pathname.startsWith("/login/") ||
     pathname.startsWith("/register/") ||
+    pathname === "/verify-email" ||
+    pathname.startsWith("/verify-email/") ||
+    pathname === "/forgot-password" ||
+    pathname.startsWith("/forgot-password/") ||
+    pathname === "/reset-password" ||
+    pathname.startsWith("/reset-password/") ||
     pathname.startsWith("/api/")
   ) {
     return LIMIT_AUTH;
@@ -63,13 +75,27 @@ const PUBLIC_ASSET =
 
 function isPublicPath(pathname: string): boolean {
   if (PUBLIC_ASSET.test(pathname)) return true;
+  // Includes `/t` so public teacher cards (`/t/{slug}`) skip the auth guard.
   return PUBLIC_PAGE_PATHS.some(
     (path) => pathname === path || pathname.startsWith(`${path}/`),
   );
 }
 
 function requiresAdmin(pathname: string): boolean {
-  return pathname === "/settings" || pathname.startsWith("/settings/");
+  return (
+    pathname === "/settings" ||
+    pathname.startsWith("/settings/") ||
+    pathname === "/profiles" ||
+    pathname.startsWith("/profiles/") ||
+    pathname === "/feedback" ||
+    pathname.startsWith("/feedback/") ||
+    pathname === "/tasks" ||
+    pathname.startsWith("/tasks/")
+  );
+}
+
+function requiresTeacherOrAdmin(pathname: string): boolean {
+  return pathname === "/students" || pathname.startsWith("/students/");
 }
 
 async function authGuard(request: NextRequest): Promise<NextResponse | null> {
@@ -94,6 +120,17 @@ async function authGuard(request: NextRequest): Promise<NextResponse | null> {
   }
 
   if (requiresAdmin(pathname) && session.role !== "admin") {
+    const home = request.nextUrl.clone();
+    home.pathname = "/";
+    home.search = "";
+    return NextResponse.redirect(home);
+  }
+
+  if (
+    requiresTeacherOrAdmin(pathname) &&
+    session.role !== "teacher" &&
+    session.role !== "admin"
+  ) {
     const home = request.nextUrl.clone();
     home.pathname = "/";
     home.search = "";

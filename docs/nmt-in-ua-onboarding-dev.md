@@ -6,7 +6,7 @@
 
 Джерело правди — Markdown. Word/docx копій немає.
 
-Оновлено 8 вересня 2026.
+Оновлено 16 вересня 2026.
 
 ---
 
@@ -20,8 +20,8 @@ nmt.in.ua — тренажер підготовки до НМТ з матема�
 | Роль | Що може |
 | --- | --- |
 | Учень (`student`) | Тести, симулятор, результати, свої сесії, реєстрація |
-| Викладач (`teacher`) | Усе як учень + призначити сесію на `/sessions` |
-| Адмін (`admin`) | Усе як викладач + імпорт контенту на `/settings` |
+| Викладач (`teacher`) | Усе як учень + призначити сесію на `/sessions` + черга консультацій на `/consultations` + «Мої учні» на `/students` + публічна візитка на `/account` (`/t/{slug}`) |
+| Адмін (`admin`) | Імпорт на `/settings`, відгуки `/feedback`, профілі `/profiles`; **без** публічної візитки й навчальних віджетів на `/account` |
 
 ## 2. Перший день — чекліст
 
@@ -54,6 +54,12 @@ npm run dev
 | --- | --- | --- |
 | `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` | Пул MySQL | Сторінки з даними падають |
 | `SESSION_SECRET` | Підпис cookie `nmt_session` | На проді вхід небезпечний / зламаний |
+| `RESEND_API_KEY` | Листи verify / reset пароля | Без ключа — `[mail:log]` у консоль (зручно локально) |
+| `MAIL_FROM` | From для Resend (опційно) | Дефолт sandbox Resend |
+| `WAYFORPAY_MERCHANT_ACCOUNT` | Еквайринг WayForPay (UI зараз на паузі) | Без ключів checkout не підписується. Пісочниця: `test_merch_n1`. Лише `.env.local` / хостинг |
+| `WAYFORPAY_MERCHANT_SECRET_KEY` | SecretKey HMAC_MD5 (Purchase + serviceUrl) | Разом із account; ніколи в git |
+| `WAYFORPAY_MERCHANT_DOMAIN` | Домен мерчанта (опційно) | Hostname з `NEXT_PUBLIC_SITE_URL` |
+| `TEACHER_PAYMENT_TEST_BYPASS` | Кнопка «Оплата пройшла» на `/register/teacher` | За замовчуванням увімкнено лише в `development`. У production потрібні `=1` **і** sandbox `test_merch_n1`. На живому мерчанті в production завжди вимкнено, навіть якщо `=1`. Локально сховати: `=0` |
 | `CONTENT_IMPORT_API_KEY` | Bearer для `POST /api/import` | Усі імпорти — 401 (fail-closed) |
 | `ADMIN_API_KEY` | Bearer для `POST /api/admin/sessions` | Усі admin-запити — 401 |
 
@@ -66,8 +72,8 @@ npm run dev
 | Логін | Пароль | Роль | Навіщо зайти |
 | --- | --- | --- | --- |
 | `demo-student` | `demo123` | Учень | Тести, результати, свої сесії |
-| `demo-teacher` | `demo123` | Викладач | Панель призначення на `/sessions` |
-| `demo-admin` | `demo123` | Адмін | Форма імпорту на `/settings` |
+| `demo-teacher` | `demo123` | Викладач | Панель призначення на `/sessions`; «Мої учні» на `/students`; візитка на `/account` |
+| `demo-admin` | `demo123` | Адмін | Імпорт `/settings`, відгуки `/feedback`, профілі `/profiles`; `/account` без візитки й навчальних віджетів |
 
 Таблиця `app_users` створюється сама при першому запиті. Legacy-таблицю `users` на хостингу не чіпаємо. Якщо старі сесії «прилипли» до demo-student: `npm run reset-demo-student`.
 
@@ -76,7 +82,7 @@ npm run dev
 | Команда | Коли |
 | --- | --- |
 | `npm run dev` | Щодня |
-| `npm test` | Перед PR. Зараз ~192 кейси |
+| `npm test` | Перед PR. Зараз ~730 кейсів |
 | `npm run lint` | Перед PR |
 | `npm run build` | Перед здачею фічі, яка чіпає сторінки / сервер |
 | `npm run reset-demo-student` | Коли демо-учень завалений старими сесіями |
@@ -128,19 +134,26 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 | `src/app/` | Маршрути App Router + metadata |
 | `src/app/welcome/` | Лендінг (завжди, навіть для увійшлих) |
 | `src/app/login/` і `register/` | Вхід і реєстрація учня |
+| `src/app/(marketing)/verify-email/` тощо | Підтвердження email, forgot/reset пароля |
+| `src/app/(marketing)/register/teacher/` | Редірект на `/register?role=teacher` (оплата WayForPay на паузі; success/fail лишаються) |
+| `src/app/api/payments/wayforpay/webhook/` | Webhook еквайрингу (serviceUrl) |
 | `src/app/session/[id]/` | Тренажер однієї сесії |
 | `src/app/simulator/` | Старт симулятора НМТ |
 | `src/app/results/` і `sessions/` | Прогрес і історія |
 | `src/app/settings/` | Імпорт (лише admin) |
+| `src/app/(app)/feedback/` | Список відгуків сайту (лише admin) |
 | `src/app/api/import/` і `api/admin/sessions/` | Machine-to-machine API з Bearer |
 | `src/components/welcome/` | Секції лендінгу + `landing.module.css` |
 | `src/components/dashboard/` | Кабінет: header, sidebar, таблиці, старт тесту |
-| `src/components/account/` | Особистий кабінет `/account` |
+| `src/components/account/` | Особистий кабінет `/account` + редактор візитки викладача |
+| `src/components/teachers/` | Публічна картка `/t/{slug}` |
 | `src/components/testing/` | TopicTrainer, NmtTrainer, підсумок, розбір помилок |
-| `src/components/auth/` | AuthShell, форми входу / реєстрації |
+| `src/components/auth/` | AuthShell, форми входу / реєстрації / verify / reset |
 | `src/components/ui/` | Reveal, ModeTabs, MathText |
 | `src/components/practice/` | `FractionPracticeTrainer` — генерована практика дробів (11.09) |
-| `src/modules/auth/` | Користувачі, cookie, паролі, ролі |
+| `src/modules/auth/` | Користувачі, cookie, паролі, ролі, email verify/reset |
+| `src/modules/mail/` | Resend / log-транзакційні листи |
+| `src/modules/payments/` | Реєстрація викладача, WayForPay Purchase, webhook |
 | `src/modules/content-import/` | CSV/JSON → БД |
 | `src/modules/testing/` | Старт, checkAnswer, finish, симулятор, таймер |
 | `src/modules/problemGenerators/` | Чисті генератори завдань (без БД); поки лише `fractionAddition` — 5 рівнів додавання дробів з однаковим знаменником |
@@ -148,6 +161,7 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 | `src/modules/recommendations/` | Статистика, правила, граф тем, авто-сесії |
 | `src/modules/sessions/` | Список сесій, createMentorSession |
 | `src/modules/results/` | Агрегати для `/results` і сайдбару |
+| `src/modules/teachers/` | Публічна візитка: slug, lazy `teacher_profiles`, `/t/{slug}` |
 | `messages/uk.json`, `en.json`, `de.json` | Тексти інтерфейсу |
 | `src/app/globals.css` | Дизайн-токени. Новий колір — сюди, не в компонент |
 | `.cursor/rules/design-system.mdc` | Правила верстки. Читати перед CSS |
@@ -168,21 +182,28 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 | Модуль | Папка | Головні функції |
 | --- | --- | --- |
 | Auth | `src/modules/auth` | `requireUserId`, `getCurrentUser`, login/register/`changePassword` |
+| Оплата | `src/modules/payments` | `startTeacherRegistration`, `applyWayForPayWebhook`, `simulateTeacherPaymentSuccess`, `resolveBypassReference`, `buildWayForPayCheckout` |
 | Імпорт | `src/modules/content-import` | parse + validate + транзакція `themes` → connections → `quiz_tasks` (+ опційно `problems`) |
 | Тест | `src/modules/testing` | `startTopicTest`, `startNmtSimulator`, `checkAnswer`, `finishTrainerSession`, `getTaskHint`, `addSimilarPracticeTask` (Практика, 11.09) |
 | Рекомендації | `src/modules/recommendations` | `getStudentTopicStats`, `recommendNextActions`, `persistRecommendations` |
 | Сесії | `src/modules/sessions` | `getLearningSessions`, `createMentorSession`, cancel |
+| Учні викладача | `src/modules/teacher-students` | `linkStudentByLogin`, `unlinkStudent`, `getTeacherStudents` — ручний зв’язок за логіном |
 | Самооцінка | `src/modules/self-score` | `recordSelfScore`, `saveThemeSelfScoreAction` (колонка на `/results`), `getLatestSelfScoresForResults` — історія 1–10, ніколи не перезаписується |
 | Діагностика (гість) | `src/modules/diagnostic` | `startDiagnosticTest`, owner-aware `checkDiagnosticAnswer`/`finishDiagnosticSession`/`getDiagnosticSessionTasks`/`markDiagnosticSessionStarted`, `claimGuestProgress` — усе окремо від `testing`, щоб не чіпати протестований topic-test код |
 | Генератори завдань | `src/modules/problemGenerators` | Чисті функції, без БД/Next. `fractionAddition`: `generateFractionAdditionTask`, `validateFractionAdditionAnswer`, seed-based RNG |
 | Практика дробів | `src/modules/fractionPractice` | `startFractionPracticeTaskAction`/`nextFractionPracticeTaskAction`/`checkFractionPracticeAnswerAction` — обгортка над `problemGenerators/fractionAddition` для `/practice/fractions`, без запису в `task_sessions`/`tasks2session` |
+| Візитка викладача | `src/modules/teachers` | `getOwnTeacherProfile` / `getPublicTeacherCard` / `saveTeacherProfileAction`; публічна лише якщо `is_public` і роль teacher/admin |
+| Консультації | `src/modules/consultations` | `createConsultationRequest` (один відкритий на учня), `getConsultationRequests` / `getOpenConsultationRequestForStudent`, `updateConsultationRequestStatus` (pending → acknowledged → closed) |
 
 ### 6.2. Таблиці MySQL, які чіпаємо
 
 | Таблиця | Навіщо | Важливі поля |
 | --- | --- | --- |
-| `app_users` | Наші акаунти | `login`, `role`. Не плутати з legacy `users` |
+| `app_users` | Наші акаунти | `login`, `email` / `email_verified_at` (022; реєстрація + блок логіну до verify, демо exempt), `role`, `is_banned` (020), `last_login_at` / `last_seen_at` (021). Не плутати з legacy `users` |
+| `auth_tokens` | Verify / reset | `user_id`, `purpose` email_verify\|password_reset, `token_hash`, `expires_at`, `used_at`. SQL `023_auth_tokens.sql` + lazy `ensureAuthTokenSchema`. Листи через Resend (`RESEND_API_KEY` / `MAIL_FROM`) або log у dev |
 | `user_avatars` | Фото профілю | `user_id`, `mime`, `bytes` MEDIUMBLOB. Лениво `CREATE` у `ensureAuthSchema` / `015_user_avatars.sql` |
+| `teacher_profiles` | Публічна візитка | `user_id`, `slug` unique, `headline`, `bio`, `city`, `subjects` (JSON), `contact_url`, `is_public`. `018_teacher_profiles.sql` + lazy `ensureTeacherProfileSchema`. **018:** `016` уже `task_sessions_expire_time`; консультації — `019`; «мої учні» — `017` |
+| `teacher_payments` | Pending реєстрація викладача до оплати WayForPay | `reference`, hashed пароль, `status` pending/paid/failed, `provider`, `external_order_id`; `user_id` після Approved. SQL `014_teacher_payments.sql` |
 | `themes` | Теми тесту | `id`, `code` (unique, напр. `ALG-08-QUAD-EQ` — якір розділу підручника), `name`, `description`, `ord` |
 | `theme_connections` | Граф «наступна тема» | `vertex_start` → `vertex_finish` |
 | `quiz_tasks` | Банк тренажера (тест / симулятор topic-bank / діагностика) | `right_answer_n` (1–4) лише на сервері в сесії |
@@ -190,7 +211,11 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 | `task_sessions` | Спроба учня | `session_type` 1 user / 2 auto / 3 mentor / 4 NMT / **5 diagnostic**; status 1 done / 2 created / 3 planned. `user_id` і `theme_id` **nullable**, плюс `guest_token CHAR(36)` nullable — діагностична спроба гостя не має `user_id`, а охоплює кілька тем одразу тож не має і `theme_id`. `expire_time` (unix sec, `scripts/sql/016_task_sessions_expire_time.sql`) — фіксований дедлайн 24 години від створення рядка (не від `start_time`!), ставиться раз і ніколи не оновлюється; активна (не завершена) сесія після дедлайну відхиляється на кожному наступному читанні/записі, завершена лишається доступною завжди. Див. `src/modules/testing/sessionExpiry.ts` |
 | `tasks2session` | Мапінг завдання↔сесія | `status` 0 / 1 / −1. `user_id` **nullable** + `guest_token CHAR(36)` nullable, дзеркалить владельця з `task_sessions` |
 | `site_feedback` | відгук про сайт (6.2) | `user_id`/`session_id` nullable, `score` 1–10, `message` (обов’язкове якщо score < 5), `email`, `source` footer/post_test |
+| `consultation_requests` | заявки на консультацію | `student_id`, `note`, `status` pending/acknowledged/closed, `handled_by`; один відкритий запит на учня. SQL `019_consultation_requests.sql` + lazy schema |
+
 | `user_self_scores` | Самооцінка (6.3–6.4), **історія, ніколи не перезаписується** | `user_id`/`guest_token` (рівно один із двох), `theme_id` nullable (NULL = загальна оцінка), `score` 1–10, `source` `diagnostic_overall`/`pre_topic`, `created_at` |
+| `teacher_students` | Список «Мої учні» | `teacher_user_id` + `student_user_id` (unique pair, FK на `app_users`). Ліниво: `ensureTeacherStudentsSchema`. DDL: `scripts/sql/017_teacher_students.sql` |
+
 
 **`right_answer_n` і `comments` не віддавай клієнту**, поки відповідь не перевірена або сесія не завершена. Перевірка завжди на сервері.
 
@@ -299,16 +324,22 @@ Ultimate/НМТ/діагностика лишились без змін. Зар�
 | URL | Хто бачить | Стан |
 | --- | --- | --- |
 | `/`, `/welcome` | Усі. `/` — лендінг для гостя, кабінет для учня; `/welcome` завжди лендінг | Готово |
-| `/login`, `/register` | Гість | Готово |
+| `/login`, `/register` | Гість | Готово. На `/register` вибір учень/викладач (`?role=`). Email → check-email → verify |
+| `/register/check-email`, `/verify-email` | Гість | Підтвердження email (Resend / log). Після verify — сесія |
+| `/forgot-password`, `/reset-password` | Гість | Скидання пароля за email (лише verified акаунти) |
+| `/register/teacher` (+ `/success`, `/fail`) | Гість | UI оплати приховано: `/register/teacher` → `/register?role=teacher`. WayForPay success/fail лишаються для старих чеків |
 | `/diagnostic`, `/diagnostic/session/[id]` | Усі (публічно, як `/welcome`) — гість або увійдений учень | Готово |
 | `/session/[id]` | Власник сесії | Готово |
 | `/simulator` | Учень+ | Готово — сітка офіційних варіантів НМТ (`nmt_variants`) |
-| `/settings` | Лише admin | Готово |
+| `/settings` | Лише admin | Імпорт контенту |
+| `/feedback` | Лише admin | Відгуки про сайт (`site_feedback`) |
+| `/profiles` | Лише admin | Список акаунтів: email + verified, фільтр за роллю, online/offline, останній вхід, бан, видалення |
 | `/materials`, `/materials/[slug]` | Учень+ | Редірект → `/materials/textbook` |
 | `/materials/textbook` | Учень+ | Єдиний підручник: зміст + один розділ `?topic=<themes.code>` |
 | `/problems` | Учень+ | Задачник: друкований тест по темі |
-| `/account` | Учень+ | Особистий кабінет: фото / ініціали, пароль, результати, вихід |
-| `/consultations` | Учень+ | У меню; форма запису ще збирається (`StubPage` + CTA на симулятор / підручник) |
+| `/account` | Учень+ | Фото / пароль / вихід. Учень і викладач — результати + заглушки; викладач — візитка; адмін — без них |
+| `/students` | Лише teacher/admin | «Мої учні»: додати за логіном, список, відв’язати |
+| `/consultations` | Учень+ | Учень: один відкритий запит. Викладач/адмін: черга всіх заявок (побачено / закрито) |
 | `/practice/fractions` | Учень+ | Генерована практика: додавання дробів, 5 рівнів. Посилання з `TopicTestStart` (`/`) |
 
 ### 6.5. Генеровані завдання: `fractionAddition` → Practice mode (11.09.2026)
@@ -390,7 +421,7 @@ Ultimate/НМТ/діагностика лишились без змін. Зар�
 
 ## 11. З чого почати новому dev (вільні задачі)
 
-Повний розклад хвилі 6 — [`docs/mentor-tasks.md`](./mentor-tasks.md). Не чіпайте робочий topic-test без узгодження. Відкрите: **6.5** (банк), форма консультацій, політика діагностики при >10 eligible темах.
+Повний розклад хвилі 6 — [`docs/mentor-tasks.md`](./mentor-tasks.md). Не чіпайте робочий topic-test без узгодження. Відкрите: **6.5** (банк), політика діагностики при >10 eligible темах.
 
 | Задача | Де копати | Складність | Нотатка |
 | --- | --- | --- | --- |
@@ -400,12 +431,16 @@ Ultimate/НМТ/діагностика лишились без змін. Зар�
 | 6.6 Задачник | `src/app/problems`, таблиця `problems` | Середня | ✅ 08.09 (UI з JSON-каталогу, без MySQL на read) |
 | 6.3–6.4 Діагностика | `/diagnostic` | Велика | ✅; відкрито: політика тем при >10 eligible |
 | 6.2 Відгук | `src/modules/feedback` | Мала | ✅ |
-| Консультації | `/consultations` | Мала | Частково: пункт у меню; треба форма / контакти |
+| Консультації | `/consultations` | Мала | ✅ 10.09: заявки `consultation_requests` (`019`); без привʼязки учень↔викладач |
+| Мої учні | `src/modules/teacher-students`, `/students` | Мала | ✅ 11.09: ручне прив’язування за логіном (teacher/admin) |
+| Публічна візитка викладача | `src/modules/teachers`, `/account`, `/t/{slug}` | Мала | ✅ 13.09; адмін без візитки з 16.09 |
+| Реєстрація викладача + WayForPay | `/register/teacher`, `src/modules/payments` | Середня | ⏸️ UI оплати приховано 16.09; безкоштовний teacher на `/register?role=teacher`. WayForPay код лишається |
+| Email verify + reset (Resend) | `src/modules/auth`, `src/modules/mail`, `/verify-email` | Середня | ✅ 16.09: блок логіну до verify; forgot/reset; без ключа — log |
 | Перф (TTFB / бандл) | `(app)`/`(marketing)` layouts, `catalogCache`, `sampleRandomIds` | — | ✅ 10.09: без `ORDER BY RAND()`, кеш довідників, cookie-профіль |
 
-Карта app router: `src/app/page.tsx` — `/` (гість легкий / учень → CabinetHome); `src/app/(marketing)/` — welcome / login / register / diagnostic; `src/app/(app)/` — кабінет (`force-dynamic`). Root layout лише `html`/`body` + `globals.css`.
+Карта app router: `src/app/page.tsx` — `/` (гість легкий / учень → CabinetHome); `src/app/(marketing)/` — welcome / login / register / diagnostic / `t/[slug]`; `src/app/(app)/` — кабінет (`force-dynamic`). Root layout лише `html`/`body` + `globals.css`.
 
-Поза першим релізом (не хапати «бо цікаво»): групи викладача, ДЗ, PDF, Google-логін, AI-перевірка, типи завдань окрім вибору з 4 варіантів, повноцінний PWA. Це версія 2 — питайте PM.
+Поза першим релізом (не хапати «бо цікаво»): іменовані групи / CRM викладача, ДЗ, PDF, Google-логін, AI-перевірка, типи завдань окрім вибору з 4 варіантів, повноцінний PWA. Це версія 2 — питайте PM.
 
 ## 12. Як здати роботу
 
@@ -425,6 +460,6 @@ Ultimate/НМТ/діагностика лишились без змін. Зар�
 - На `/` обери тему, звичайний режим, Старт — потрапиш у `/session/[id]`.
 - Відповідай, заверши, подивись підсумок і поради.
 - Відкрий `/results` і `/sessions` — ті самі цифри мають збігатися.
-- Вийди, зайди як `demo-teacher`, на `/sessions` признач сесію `demo-student`.
+- Вийди, зайди як `demo-teacher`, на `/sessions` признач сесію `demo-student`. На `/students` додай того ж учня за логіном. На `/account` заповни візитку, постав «опублікувати», відкрий `/t/{slug}` інкогніто.
 - Зайди як `demo-admin`, глянь форму на `/settings`. Не імпортуй випадковий файл у спільну базу без узгодження.
 - Відкрий `/simulator` — це не той самий код, що короткий тест (`NmtTrainer`, `session_type` 4).

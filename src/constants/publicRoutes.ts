@@ -7,5 +7,9 @@ export const PUBLIC_PAGE_PATHS = [
   "/welcome",
   "/login",
   "/register",
+  "/verify-email",
+  "/forgot-password",
+  "/reset-password",
   "/diagnostic",
+  "/t",
 ] as const;

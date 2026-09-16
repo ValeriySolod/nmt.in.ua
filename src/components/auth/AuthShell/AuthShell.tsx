@@ -6,11 +6,21 @@ import css from "../auth.module.css";
 
 type AuthShellProps = {
   children: ReactNode;
+  aside?: {
+    badge: string;
+    title: string;
+    lead: string;
+  };
+  /** Extra content under the marketing lead (e.g. register role picker). */
+  asideExtra?: ReactNode;
 };
 
 /** Shared frame for /login and /register: aurora background, brand, marketing column. */
-export async function AuthShell({ children }: AuthShellProps) {
+export async function AuthShell({ children, aside, asideExtra }: AuthShellProps) {
   const t = await getTranslations("AuthShared");
+  const badge = aside?.badge ?? t("asideBadge");
+  const title = aside?.title ?? t("asideTitle");
+  const lead = aside?.lead ?? t("asideLead");
 
   return (
     <div className={css.page}>
@@ -50,9 +60,10 @@ export async function AuthShell({ children }: AuthShellProps) {
 
         <div className={css.layout}>
           <aside className={css.aside}>
-            <p className={css.asideBadge}>{t("asideBadge")}</p>
-            <h2 className={css.asideTitle}>{t("asideTitle")}</h2>
-            <p className={css.asideLead}>{t("asideLead")}</p>
+            <p className={css.asideBadge}>{badge}</p>
+            <h2 className={css.asideTitle}>{title}</h2>
+            <p className={css.asideLead}>{lead}</p>
+            {asideExtra}
           </aside>
 
           {children}
