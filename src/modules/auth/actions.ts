@@ -352,6 +352,16 @@ export async function verifyEmailAction(
   try {
     const consumed = await consumeAuthToken(token, "email_verify");
     if (!consumed.ok) {
+      // Strict Mode / email prefetch can consume the token twice in one click.
+      // If the account is already verified, treat a reused link as success.
+      if (consumed.code === "used" && consumed.userId) {
+        const user = await findUserById(consumed.userId);
+        if (user?.emailVerified && !user.isBanned) {
+          await recordLoginPresence(user.id);
+          await setSessionCookie(user);
+          return { status: "ok" };
+        }
+      }
       return { status: "error", code: consumed.code };
     }
     await markEmailVerified(consumed.userId);

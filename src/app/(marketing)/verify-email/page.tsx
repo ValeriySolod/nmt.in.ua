@@ -1,7 +1,8 @@
 import { getTranslations } from "next-intl/server";
 import { AuthShell } from "@/components/auth/AuthShell";
-import { VerifyEmailClient } from "@/components/auth/VerifyEmailClient/VerifyEmailClient";
+import { VerifyEmailResult } from "@/components/auth/VerifyEmailResult/VerifyEmailResult";
 import { createPageMetadata } from "@/constants/seo";
+import { verifyEmailAction } from "@/modules/auth/actions";
 
 export async function generateMetadata() {
   const t = await getTranslations("Metadata.verifyEmail");
@@ -25,9 +26,13 @@ export default async function VerifyEmailPage({
   const raw = Array.isArray(params.token) ? params.token[0] : params.token;
   const token = (raw ?? "").trim();
 
+  const result = token
+    ? await verifyEmailAction(token)
+    : ({ status: "error", code: "invalid" } as const);
+
   return (
     <AuthShell>
-      <VerifyEmailClient token={token} />
+      <VerifyEmailResult result={result} />
     </AuthShell>
   );
 }

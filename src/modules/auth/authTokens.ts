@@ -109,7 +109,7 @@ export async function issueAuthToken(
 
 export type ConsumeAuthTokenResult =
   | { ok: true; userId: number }
-  | { ok: false; code: "invalid" | "expired" | "used" };
+  | { ok: false; code: "invalid" | "expired" | "used"; userId?: number };
 
 export async function consumeAuthToken(
   rawToken: string,
@@ -147,7 +147,7 @@ export async function consumeAuthToken(
     }
     if (row.used_at) {
       await connection.rollback();
-      return { ok: false, code: "used" };
+      return { ok: false, code: "used", userId: row.user_id };
     }
     const expires =
       row.expires_at instanceof Date
@@ -155,7 +155,7 @@ export async function consumeAuthToken(
         : new Date(row.expires_at);
     if (Number.isNaN(expires.getTime()) || expires.getTime() <= Date.now()) {
       await connection.rollback();
-      return { ok: false, code: "expired" };
+      return { ok: false, code: "expired", userId: row.user_id };
     }
 
     await connection.execute(
