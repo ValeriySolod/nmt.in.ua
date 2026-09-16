@@ -38,6 +38,13 @@ function makeConnection(options: {
     beginTransaction: async () => {},
     query: async <T,>(sql: string) => {
       calls.push({ sql });
+      if (
+        sql.includes("FROM app_users") &&
+        sql.includes("WHERE id = ?") &&
+        !sql.includes("consultation_requests")
+      ) {
+        return [{ id: 1 }] as T[];
+      }
       if (sql.includes("status IN ('pending', 'acknowledged')")) {
         return (options.existing ? [options.existing] : []) as T[];
       }

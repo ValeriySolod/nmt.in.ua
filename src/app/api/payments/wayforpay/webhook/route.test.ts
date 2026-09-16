@@ -40,7 +40,7 @@ test("POST webhook happy path verifies signature and activates on Approved", asy
       },
       apply: async (incoming) => {
         applied.push(incoming);
-        return { handled: true, activated: true, status: "Approved" };
+        return { handled: true, activated: true, status: "Approved", retry: false };
       },
       accept: (orderReference) => ({
         orderReference,
@@ -80,7 +80,7 @@ test("POST webhook returns 503 without verifying when credentials are missing", 
     },
     apply: async () => {
       applied = true;
-      return { handled: true, activated: true, status: "Approved" };
+      return { handled: true, activated: true, status: "Approved", retry: false };
     },
     accept: (orderReference) => ({
       orderReference,
@@ -101,7 +101,7 @@ test("POST webhook rejects an invalid signature", async () => {
     verify: () => false,
     apply: async () => {
       applied = true;
-      return { handled: true, activated: true, status: "Approved" };
+      return { handled: true, activated: true, status: "Approved", retry: false };
     },
     accept: (orderReference) => ({
       orderReference,
@@ -112,4 +112,32 @@ test("POST webhook rejects an invalid signature", async () => {
   });
   assert.equal(response.status, 401);
   assert.equal(applied, false);
+});
+
+test("POST webhook returns 500 without accept when activation needs retry", async () => {
+  let accepted = false;
+  const response = await POST(requestWith(JSON.stringify(payload)), undefined, {
+    isConfigured: () => true,
+    verify: () => true,
+    apply: async () => ({
+      handled: true,
+      activated: false,
+      status: "Approved",
+      retry: true,
+    }),
+    accept: (orderReference) => {
+      accepted = true;
+      return {
+        orderReference,
+        status: "accept",
+        time: 1,
+        signature: "x",
+      };
+    },
+  });
+  assert.equal(response.status, 500);
+  assert.equal(accepted, false);
+  const json = (await response.json()) as { ok: boolean; error: string };
+  assert.equal(json.ok, false);
+  assert.equal(json.error, "activation_pending_retry");
 });

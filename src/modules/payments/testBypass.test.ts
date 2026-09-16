@@ -97,11 +97,19 @@ test("isTeacherPaymentTestBypassEnabled is on in development by default", () => 
   );
 });
 
-test("isTeacherPaymentTestBypassEnabled is on for sandbox merchant in production", () => {
+test("isTeacherPaymentTestBypassEnabled requires an explicit flag for sandbox in production", () => {
   assert.equal(
     isTeacherPaymentTestBypassEnabled({
       NODE_ENV: "production",
       WAYFORPAY_MERCHANT_ACCOUNT: "test_merch_n1",
+    }),
+    false,
+  );
+  assert.equal(
+    isTeacherPaymentTestBypassEnabled({
+      NODE_ENV: "production",
+      WAYFORPAY_MERCHANT_ACCOUNT: "test_merch_n1",
+      TEACHER_PAYMENT_TEST_BYPASS: "1",
     }),
     true,
   );
@@ -225,7 +233,7 @@ test("simulateTeacherPaymentSuccess fails safely when the payment is missing", a
   assert.deepEqual(result, { ok: false, code: "not_found" });
 });
 
-test("simulateTeacherPaymentSuccess activates via sandbox merchant in production", async () => {
+test("simulateTeacherPaymentSuccess activates via sandbox merchant only with explicit flag", async () => {
   resetTeacherPaymentsSchemaCache();
   let inserted = false;
   const connection = connectionForBypass({
@@ -233,6 +241,19 @@ test("simulateTeacherPaymentSuccess activates via sandbox merchant in production
       inserted = true;
     },
   });
+  const blocked = await simulateTeacherPaymentSuccess(
+    { reference },
+    {
+      getConnection: async () => connection,
+      env: {
+        NODE_ENV: "production",
+        WAYFORPAY_MERCHANT_ACCOUNT: "test_merch_n1",
+      },
+    },
+  );
+  assert.deepEqual(blocked, { ok: false, code: "disabled" });
+  assert.equal(inserted, false);
+
   const result = await simulateTeacherPaymentSuccess(
     { reference },
     {
@@ -240,6 +261,7 @@ test("simulateTeacherPaymentSuccess activates via sandbox merchant in production
       env: {
         NODE_ENV: "production",
         WAYFORPAY_MERCHANT_ACCOUNT: "test_merch_n1",
+        TEACHER_PAYMENT_TEST_BYPASS: "1",
       },
     },
   );

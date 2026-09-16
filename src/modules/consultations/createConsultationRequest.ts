@@ -73,6 +73,14 @@ export function validateCreateConsultationRequestInput(
   return { studentId, note: normalizedNote };
 }
 
+const SQL_LOCK_STUDENT = `
+  SELECT id
+  FROM app_users
+  WHERE id = ?
+  LIMIT 1
+  FOR UPDATE
+`;
+
 const SQL_FIND_OPEN = `
   SELECT ${SQL_REQUEST_SELECT}
   FROM consultation_requests r
@@ -115,6 +123,18 @@ export async function createConsultationRequest(
     const connection = await deps.getConnection();
     try {
       await connection.beginTransaction();
+
+      // Serialize concurrent creates for the same student (FOR UPDATE on an
+      // open request alone does nothing when no open row exists yet).
+      const studentRows = await connection.query<{ id: number }>(SQL_LOCK_STUDENT, [
+        input.studentId,
+      ]);
+      if (!studentRows[0]) {
+        throw new CreateConsultationRequestError(
+          "Student account was not found.",
+          "forbidden",
+        );
+      }
 
       const existing = await connection.query<ConsultationRequestRow>(
         SQL_FIND_OPEN,

@@ -93,7 +93,14 @@ export async function claimTeacherSessionAction(
   if (!isTeacherPaymentReference(reference)) {
     return { ok: false };
   }
-  const payment = await findTeacherPaymentByReference(reference.trim());
+  const trimmed = reference.trim();
+  // Capability URL alone is not enough — only the browser that started
+  // checkout (HttpOnly cookie) may claim the new teacher session.
+  const cookieRef = await readTeacherPayReferenceFromCookie();
+  if (!cookieRef || cookieRef !== trimmed) {
+    return { ok: false };
+  }
+  const payment = await findTeacherPaymentByReference(trimmed);
   if (!payment || payment.status !== "paid" || !payment.userId) {
     return { ok: false };
   }
@@ -102,6 +109,11 @@ export async function claimTeacherSessionAction(
     return { ok: false };
   }
   await setSessionCookie(user);
+  try {
+    await clearTeacherPayCookie();
+  } catch (error) {
+    console.error("claimTeacherSessionAction: cookie clear failed", error);
+  }
   return { ok: true };
 }
 

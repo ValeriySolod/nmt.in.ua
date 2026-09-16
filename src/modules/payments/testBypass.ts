@@ -40,8 +40,9 @@ function isSandboxMerchant(account: string): boolean {
  * Dev/sandbox control that pretends WayForPay returned Approved.
  *
  * Hard safety: never on a live merchant in production — even if
- * `TEACHER_PAYMENT_TEST_BYPASS=1`. Default on when not production or when the
- * merchant is `test_merch_n1`.
+ * `TEACHER_PAYMENT_TEST_BYPASS=1`. In production with the sandbox merchant
+ * (`test_merch_n1`), require an explicit `TEACHER_PAYMENT_TEST_BYPASS=1`.
+ * Default on only outside production.
  */
 export function isTeacherPaymentTestBypassEnabled(
   env: TestBypassEnv = process.env,
@@ -50,6 +51,7 @@ export function isTeacherPaymentTestBypassEnabled(
   const sandbox = isSandboxMerchant(merchant);
   const production = env.NODE_ENV === "production";
 
+  // Live acquiring in production: never.
   if (production && !sandbox) {
     return false;
   }
@@ -58,7 +60,8 @@ export function isTeacherPaymentTestBypassEnabled(
   if (flag === "0") return false;
   if (flag === "1") return true;
 
-  return !production || sandbox;
+  // Default: on in development/test only — not in production sandbox.
+  return !production;
 }
 
 export async function simulateTeacherPaymentSuccess(

@@ -6,10 +6,10 @@ import type { SqlConnection } from "@/lib/db/mysql";
 import type { AuthUser } from "@/modules/auth/types";
 import {
   CreateUserError,
-  findUserByLogin,
   insertUserOnConnection,
 } from "@/modules/auth/users";
 import { hashPassword } from "@/modules/auth/password";
+import type { UserRole } from "@/modules/auth/types";
 import {
   CCY_UAH,
   TEACHER_FEE_KOPIYKY,
@@ -93,12 +93,6 @@ const SQL_FIND_PENDING_BY_LOGIN = `
   LIMIT 1
 `;
 
-const SQL_UPDATE_PENDING_CREDENTIALS = `
-  UPDATE teacher_payments
-  SET display_name = ?, password_hash = ?, amount_kopiyky = ?, ccy = ?, provider = ?
-  WHERE id = ? AND status = 'pending'
-`;
-
 const SQL_SET_EXTERNAL = `
   UPDATE teacher_payments
   SET external_order_id = ?, provider = ?
@@ -109,8 +103,23 @@ const SQL_MARK_PAID = `
   UPDATE teacher_payments
   SET status = 'paid', user_id = ?, paid_at = CURRENT_TIMESTAMP,
       external_order_id = COALESCE(?, external_order_id)
-  WHERE id = ?
+  WHERE id = ? AND status = 'pending'
 `;
+
+const SQL_FIND_USER_BY_LOGIN_FOR_UPDATE = `
+  SELECT id, login, display_name, role
+  FROM app_users
+  WHERE login = ?
+  LIMIT 1
+  FOR UPDATE
+`;
+
+type ExistingUserRow = {
+  id: number;
+  login: string;
+  display_name: string;
+  role: UserRole;
+};
 
 const SQL_MARK_STATUS = `
   UPDATE teacher_payments
@@ -211,29 +220,11 @@ export async function createPendingTeacherPayment(
   const ccy = input.ccy ?? CCY_UAH;
   const passwordHash = hashPassword(input.password);
 
+  // Never overwrite credentials on an existing pending row — that would let a
+  // second registrant steal the login before the first person pays.
   const existing = await findPendingTeacherPaymentByLogin(input.login, deps);
   if (existing) {
-    const connection = await deps.getConnection();
-    try {
-      await connection.execute(SQL_UPDATE_PENDING_CREDENTIALS, [
-        input.displayName,
-        passwordHash,
-        amount,
-        ccy,
-        WAYFORPAY_PROVIDER,
-        existing.id,
-      ]);
-    } finally {
-      connection.release();
-    }
-    return {
-      ...existing,
-      displayName: input.displayName,
-      passwordHash,
-      amountKopiyky: amount,
-      ccy,
-      provider: WAYFORPAY_PROVIDER,
-    };
+    return existing;
   }
 
   const reference = newReference();
@@ -286,11 +277,20 @@ export async function attachExternalOrder(
 
 export type ActivateTeacherResult =
   | { ok: true; user: AuthUser; created: boolean }
-  | { ok: false; code: "not_found" | "login_conflict" | "amount_mismatch" | "db_error" };
+  | {
+      ok: false;
+      code:
+        | "not_found"
+        | "not_pending"
+        | "login_conflict"
+        | "amount_mismatch"
+        | "db_error";
+    };
 
 /**
  * pending → paid: insert `app_users` with role=teacher using the stored hash.
- * Idempotent when the payment is already paid.
+ * Idempotent when the payment is already paid. Never attaches a payment to an
+ * existing login (even another teacher) — that would be an account takeover.
  */
 export async function activatePaidTeacher(
   payment: TeacherPayment,
@@ -330,26 +330,16 @@ export async function activatePaidTeacher(
       };
     }
 
-    const existing = await findUserByLogin(current.login, deps);
-    if (existing) {
-      if (existing.role === "teacher") {
-        await connection.execute(SQL_MARK_PAID, [
-          existing.id,
-          options.externalOrderId ?? current.externalOrderId,
-          current.id,
-        ]);
-        await connection.commit();
-        return {
-          ok: true,
-          created: false,
-          user: {
-            id: existing.id,
-            login: existing.login,
-            displayName: existing.displayName,
-            role: "teacher",
-          },
-        };
-      }
+    if (current.status !== "pending") {
+      await connection.rollback();
+      return { ok: false, code: "not_pending" };
+    }
+
+    const existingRows = await connection.query<ExistingUserRow>(
+      SQL_FIND_USER_BY_LOGIN_FOR_UPDATE,
+      [current.login],
+    );
+    if (existingRows[0]) {
       await connection.execute(SQL_MARK_STATUS, ["failed", current.id]);
       await connection.commit();
       return { ok: false, code: "login_conflict" };
@@ -373,11 +363,15 @@ export async function activatePaidTeacher(
       return { ok: false, code: "db_error" };
     }
 
-    await connection.execute(SQL_MARK_PAID, [
+    const marked = await connection.execute(SQL_MARK_PAID, [
       user.id,
       options.externalOrderId ?? current.externalOrderId,
       current.id,
     ]);
+    if (marked.affectedRows !== 1) {
+      await connection.rollback();
+      return { ok: false, code: "db_error" };
+    }
     await connection.commit();
     return { ok: true, user, created: true };
   } catch (error) {
@@ -458,6 +452,11 @@ export type ApplyWayForPayWebhookResult = {
   handled: boolean;
   activated: boolean;
   status: string | null;
+  /**
+   * When `Approved` did not activate: ask WayForPay to retry (HTTP 5xx, no accept).
+   * Terminal failures (`login_conflict`, amount mismatch, already failed) stay false.
+   */
+  retry: boolean;
 };
 
 /**
@@ -481,7 +480,14 @@ export async function applyWayForPayWebhook(
     );
   }
   if (!payment) {
-    return { handled: false, activated: false, status: status || null };
+    // Approved for an unknown reference: retry so ops can investigate;
+    // otherwise accept (decline for a missing row is not actionable).
+    return {
+      handled: false,
+      activated: false,
+      status: status || null,
+      retry: statusKey === "approved",
+    };
   }
 
   if (statusKey === "approved") {
@@ -492,14 +498,14 @@ export async function applyWayForPayWebhook(
         received: payload.amount,
         reference: payment.reference,
       });
-      return { handled: true, activated: false, status };
+      return { handled: true, activated: false, status, retry: false };
     }
     if (
       payload.currency &&
       payload.currency.trim().toUpperCase() !== WAYFORPAY_CURRENCY
     ) {
       console.error("applyWayForPayWebhook: currency mismatch", payload.currency);
-      return { handled: true, activated: false, status };
+      return { handled: true, activated: false, status, retry: false };
     }
     const result = await activatePaidTeacher(
       payment,
@@ -508,11 +514,11 @@ export async function applyWayForPayWebhook(
       },
       deps,
     );
-    return {
-      handled: true,
-      activated: result.ok,
-      status,
-    };
+    if (result.ok) {
+      return { handled: true, activated: true, status, retry: false };
+    }
+    const retry = result.code === "db_error" || result.code === "not_found";
+    return { handled: true, activated: false, status, retry };
   }
 
   const mapped = FAILURE_STATUSES[statusKey];
@@ -525,5 +531,5 @@ export async function applyWayForPayWebhook(
     }
   }
 
-  return { handled: true, activated: false, status: status || null };
+  return { handled: true, activated: false, status: status || null, retry: false };
 }

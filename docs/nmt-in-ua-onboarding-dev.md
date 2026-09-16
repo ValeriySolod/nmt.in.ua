@@ -57,7 +57,7 @@ npm run dev
 | `WAYFORPAY_MERCHANT_ACCOUNT` | Еквайринг WayForPay для `/register/teacher` | Без ключів: «оплату ще не налаштовано», checkout не підписується. З ключами — HMAC_MD5 + POST на `secure.wayforpay.com/pay`. Пісочниця з docs: `test_merch_n1`. Лише `.env.local` / хостинг `.env.production` |
 | `WAYFORPAY_MERCHANT_SECRET_KEY` | SecretKey HMAC_MD5 (Purchase + serviceUrl) | Разом із account; ніколи в git |
 | `WAYFORPAY_MERCHANT_DOMAIN` | Домен мерчанта (опційно) | Hostname з `NEXT_PUBLIC_SITE_URL` |
-| `TEACHER_PAYMENT_TEST_BYPASS` | Кнопка «Оплата пройшла» на `/register/teacher` | За замовчуванням увімкнено в `development` і для `test_merch_n1`. У production на живому мерчанті завжди вимкнено, навіть якщо `=1`. Локально сховати: `=0` |
+| `TEACHER_PAYMENT_TEST_BYPASS` | Кнопка «Оплата пройшла» на `/register/teacher` | За замовчуванням увімкнено лише в `development`. У production потрібні `=1` **і** sandbox `test_merch_n1`. На живому мерчанті в production завжди вимкнено, навіть якщо `=1`. Локально сховати: `=0` |
 | `CONTENT_IMPORT_API_KEY` | Bearer для `POST /api/import` | Усі імпорти — 401 (fail-closed) |
 | `ADMIN_API_KEY` | Bearer для `POST /api/admin/sessions` | Усі admin-запити — 401 |
 
@@ -319,7 +319,7 @@ Ultimate/НМТ/діагностика лишились без змін. Зар�
 | --- | --- | --- |
 | `/`, `/welcome` | Усі. `/` — лендінг для гостя, кабінет для учня; `/welcome` завжди лендінг | Готово |
 | `/login`, `/register` | Гість | Готово |
-| `/register/teacher` (+ `/success`, `/fail`) | Гість | Платна реєстрація викладача (WayForPay, 500 грн). Без ключів — заглушка. Dev/sandbox: кнопка «Оплата пройшла» (без переходу на WayForPay за замовчуванням) |
+| `/register/teacher` (+ `/success`, `/fail`) | Гість | Платна реєстрація викладача (WayForPay, 500 грн). Без ключів — заглушка. Dev: кнопка «Оплата пройшла». Production sandbox — лише з `TEACHER_PAYMENT_TEST_BYPASS=1` |
 | `/diagnostic`, `/diagnostic/session/[id]` | Усі (публічно, як `/welcome`) — гість або увійдений учень | Готово |
 | `/session/[id]` | Власник сесії | Готово |
 | `/simulator` | Учень+ | Готово — сітка офіційних варіантів НМТ (`nmt_variants`) |

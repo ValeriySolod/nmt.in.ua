@@ -99,6 +99,19 @@ export async function POST(
   try {
     const result = await deps.apply(payload);
     const orderReference = payload.orderReference ?? "";
+    // Approved but not activated with a retryable failure: do NOT accept —
+    // WayForPay must retry or money is taken without a teacher account.
+    if (result.retry) {
+      console.error("WayForPay webhook: Approved not activated, asking for retry", {
+        orderReference,
+        handled: result.handled,
+        activated: result.activated,
+      });
+      return NextResponse.json(
+        { ok: false, error: "activation_pending_retry", handled: result.handled },
+        { status: 500 },
+      );
+    }
     return NextResponse.json({
       ...deps.accept(orderReference),
       ok: true,

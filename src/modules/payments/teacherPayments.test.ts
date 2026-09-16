@@ -201,6 +201,7 @@ test("applyWayForPayWebhook on Approved activates the pending teacher", async ()
     handled: true,
     activated: true,
     status: "Approved",
+    retry: false,
   });
   assert.equal(inserted, true);
 });
@@ -228,6 +229,55 @@ test("applyWayForPayWebhook on Declined marks pending as failed", async () => {
     handled: true,
     activated: false,
     status: "Declined",
+    retry: false,
   });
   assert.deepEqual(marked, ["failed", 7]);
+});
+
+test("activatePaidTeacher rejects an existing login instead of attaching payment", async () => {
+  resetTeacherPaymentsSchemaCache();
+  let markedPaid = false;
+  let markedFailed: unknown[] | undefined;
+  const connection = connectionForActivation({
+    existingUser: {
+      id: 55,
+      login: "math_tutor",
+      password_hash: "scrypt:other",
+      display_name: "Existing Teacher",
+      role: "teacher",
+    },
+    onMarkPaid: () => {
+      markedPaid = true;
+    },
+    onMarkStatus: (params) => {
+      markedFailed = params;
+    },
+  });
+
+  const result = await activatePaidTeacher(
+    pendingPayment,
+    { externalOrderId: reference },
+    { getConnection: async () => connection },
+  );
+
+  assert.deepEqual(result, { ok: false, code: "login_conflict" });
+  assert.equal(markedPaid, false);
+  assert.deepEqual(markedFailed, ["failed", 7]);
+});
+
+test("activatePaidTeacher refuses non-pending rows", async () => {
+  resetTeacherPaymentsSchemaCache();
+  const failedRow = {
+    ...pendingRow,
+    status: "failed" as const,
+  };
+  const connection = connectionForActivation({ paymentRow: failedRow });
+
+  const result = await activatePaidTeacher(
+    { ...pendingPayment, status: "failed" },
+    {},
+    { getConnection: async () => connection },
+  );
+
+  assert.deepEqual(result, { ok: false, code: "not_pending" });
 });
