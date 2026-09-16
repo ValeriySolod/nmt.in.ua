@@ -51,7 +51,7 @@ export type TeacherProfileFieldError =
   | "serverError";
 
 export function canEditTeacherProfile(role: UserRole): boolean {
-  return role === "teacher" || role === "admin";
+  return role === "teacher";
 }
 
 export function teacherPublicPath(slug: string): string {

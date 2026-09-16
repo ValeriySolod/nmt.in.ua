@@ -48,7 +48,7 @@ const SQL_GET_PUBLIC = `
   LEFT JOIN user_avatars a ON a.user_id = u.id
   WHERE p.slug = ?
     AND p.is_public = 1
-    AND u.role IN ('teacher', 'admin')
+    AND u.role = 'teacher'
   LIMIT 1
 `;
 
