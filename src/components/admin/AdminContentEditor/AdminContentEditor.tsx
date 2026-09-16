@@ -37,7 +37,6 @@ export function AdminContentEditor({
   const [themeId, setThemeId] = useState<number | null>(
     initialThemeId ?? themes[0]?.id ?? null,
   );
-  const [tasks, setTasks] = useState(initialTasks);
   const [, startTransition] = useTransition();
 
   const [deleteState, deleteAction, deletePending] = useActionState(
@@ -46,16 +45,12 @@ export function AdminContentEditor({
   );
 
   useEffect(() => {
-    setTasks(initialTasks);
-  }, [initialTasks]);
-
-  useEffect(() => {
     if (deleteState.status === "success") {
       startTransition(() => {
         router.refresh();
       });
     }
-  }, [deleteState, router]);
+  }, [deleteState, router, startTransition]);
 
   function onThemeChange(next: number) {
     setThemeId(next);
@@ -65,6 +60,7 @@ export function AdminContentEditor({
   }
 
   const selectedTheme = themes.find((theme) => theme.id === themeId);
+  const tasks = initialTasks;
 
   return (
     <div className={css.layout}>

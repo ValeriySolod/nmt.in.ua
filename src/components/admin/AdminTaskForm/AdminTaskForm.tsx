@@ -98,16 +98,6 @@ export function AdminTaskForm({
   );
 
   useEffect(() => {
-    if (mode === "edit" && task) {
-      setForm(valuesFromTask(task));
-      return;
-    }
-    if (mode === "create") {
-      setForm(emptyValues(themeId));
-    }
-  }, [mode, task?.id, themeId]);
-
-  useEffect(() => {
     if (saveState.status !== "success") return;
 
     if (saveState.mode === "create") {
@@ -115,7 +105,6 @@ export function AdminTaskForm({
       return;
     }
 
-    setForm(valuesFromTask(saveState.task));
     router.refresh();
   }, [saveState, router]);
 

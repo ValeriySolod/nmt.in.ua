@@ -56,6 +56,7 @@ export default async function EditAdminTaskPage({ params }: EditTaskPageProps) {
       lead={t("editLead")}
     >
       <AdminTaskForm
+        key={task.id}
         mode="edit"
         themes={themes}
         themeId={task.themeId}
