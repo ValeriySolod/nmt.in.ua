@@ -183,6 +183,66 @@
   text-wrap: pretty;
 }
 
+.rolePicker {
+  display: grid;
+  gap: var(--space-2xs);
+  justify-items: start;
+}
+
+.rolePickerAside {
+  display: none;
+  margin-top: var(--space-xs);
+}
+
+.rolePickerCard {
+  display: grid;
+}
+
+.rolePickerLabel {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--fs-small);
+  font-weight: 600;
+}
+
+.rolePickerTabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  width: 100%;
+  max-width: 22rem;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: rgb(253 251 244 / 72%);
+}
+
+.roleTab {
+  display: grid;
+  place-items: center;
+  min-height: 44px;
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  color: var(--muted);
+  font-size: var(--fs-small);
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  transition:
+    background var(--t) var(--ease),
+    color var(--t) var(--ease);
+}
+
+.roleTab:hover {
+  color: var(--ink);
+}
+
+.roleTabActive {
+  background: var(--grad-mint);
+  color: var(--green-dark);
+  box-shadow: var(--shadow-sm);
+}
+
 /* --- form card ------------------------------------------------------------- */
 
 .card {
@@ -341,6 +401,12 @@
   color: #b3213f;
 }
 
+.alertSuccess {
+  border: 1px solid rgb(31 143 69 / 30%);
+  background: var(--green-bg);
+  color: var(--green-dark);
+}
+
 .alertNotice {
   border: 1px solid rgb(31 143 69 / 30%);
   background: var(--green-bg);
@@ -417,8 +483,7 @@
   .layout {
     grid-template-columns: minmax(0, 1fr) minmax(0, 32rem);
     gap: var(--space-3xl);
-    align-items: center;
-    min-height: 60dvh;
+    align-items: start;
   }
 
   .aside {
@@ -428,6 +493,14 @@
   .card {
     margin-inline: 0;
     justify-self: end;
+  }
+
+  .rolePickerCard {
+    display: none;
+  }
+
+  .rolePickerAside {
+    display: grid;
   }
 }
 

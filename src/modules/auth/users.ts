@@ -14,18 +14,22 @@ const SQL_CREATE_USERS = `
     login VARCHAR(50) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     display_name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NULL,
+    email_verified_at TIMESTAMP NULL DEFAULT NULL,
     role ENUM('student', 'teacher', 'admin') NOT NULL,
     is_banned TINYINT(1) NOT NULL DEFAULT 0,
     last_login_at TIMESTAMP NULL DEFAULT NULL,
     last_seen_at TIMESTAMP NULL DEFAULT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
-    UNIQUE KEY uq_app_users_login (login)
+    UNIQUE KEY uq_app_users_login (login),
+    UNIQUE KEY uq_app_users_email (email)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 `;
 
 const SQL_FIND_BY_LOGIN = `
   SELECT u.id, u.login, u.password_hash, u.display_name, u.role, u.is_banned,
+         u.email, u.email_verified_at,
          UNIX_TIMESTAMP(a.updated_at) AS avatar_rev
   FROM ${AUTH_USERS_TABLE} u
   LEFT JOIN user_avatars a ON a.user_id = u.id
@@ -35,10 +39,21 @@ const SQL_FIND_BY_LOGIN = `
 
 const SQL_FIND_BY_ID = `
   SELECT u.id, u.login, u.display_name, u.role, u.is_banned,
+         u.email, u.email_verified_at,
          UNIX_TIMESTAMP(a.updated_at) AS avatar_rev
   FROM ${AUTH_USERS_TABLE} u
   LEFT JOIN user_avatars a ON a.user_id = u.id
   WHERE u.id = ?
+  LIMIT 1
+`;
+
+const SQL_FIND_BY_EMAIL = `
+  SELECT u.id, u.login, u.password_hash, u.display_name, u.role, u.is_banned,
+         u.email, u.email_verified_at,
+         UNIX_TIMESTAMP(a.updated_at) AS avatar_rev
+  FROM ${AUTH_USERS_TABLE} u
+  LEFT JOIN user_avatars a ON a.user_id = u.id
+  WHERE u.email = ?
   LIMIT 1
 `;
 
@@ -61,6 +76,8 @@ type UserRow = {
   display_name: string;
   role: UserRole;
   is_banned?: number | boolean | null;
+  email?: string | null;
+  email_verified_at?: Date | string | null;
   avatar_rev?: number | string | null;
 };
 
@@ -86,6 +103,18 @@ function mapUser(row: UserRow): AuthUser {
   };
   if (isTruthyFlag(row.is_banned)) {
     user.isBanned = true;
+  }
+  if (typeof row.email === "string" && row.email.trim()) {
+    user.email = row.email.trim().toLowerCase();
+  }
+  if (row.email_verified_at) {
+    const verified =
+      row.email_verified_at instanceof Date
+        ? row.email_verified_at
+        : new Date(row.email_verified_at);
+    if (!Number.isNaN(verified.getTime())) {
+      user.emailVerified = true;
+    }
   }
   const avatarRev = mapAvatarRev(row.avatar_rev);
   if (avatarRev) {
@@ -124,6 +153,27 @@ async function ensureUserColumn(
   );
 }
 
+async function ensureEmailUniqueIndex(connection: SqlConnection): Promise<void> {
+  const rows = await connection.query<{
+    INDEX_NAME?: string;
+    index_name?: string;
+  }>(
+    `SELECT INDEX_NAME AS INDEX_NAME
+     FROM information_schema.STATISTICS
+     WHERE TABLE_SCHEMA = DATABASE()
+       AND TABLE_NAME = ?
+       AND INDEX_NAME = 'uq_app_users_email'
+     LIMIT 1`,
+    [AUTH_USERS_TABLE],
+  );
+  if (rows.length > 0) return;
+  await connection.execute(
+    `ALTER TABLE ${AUTH_USERS_TABLE}
+     ADD UNIQUE KEY uq_app_users_email (email)`,
+    [],
+  );
+}
+
 async function runAuthSchemaMigration(
   deps: { getConnection: () => Promise<SqlConnection> },
 ): Promise<void> {
@@ -145,6 +195,17 @@ async function runAuthSchemaMigration(
       "last_seen_at",
       "last_seen_at TIMESTAMP NULL DEFAULT NULL AFTER last_login_at",
     );
+    await ensureUserColumn(
+      connection,
+      "email",
+      "email VARCHAR(255) NULL DEFAULT NULL AFTER display_name",
+    );
+    await ensureUserColumn(
+      connection,
+      "email_verified_at",
+      "email_verified_at TIMESTAMP NULL DEFAULT NULL AFTER email",
+    );
+    await ensureEmailUniqueIndex(connection);
     await connection.execute(SQL_CREATE_USER_AVATARS, []);
     await seedDemoUsers(connection);
   } finally {
@@ -250,9 +311,53 @@ export async function findUserById(
   }
 }
 
+export async function findUserByEmail(
+  email: string,
+  deps: { getConnection: () => Promise<SqlConnection> } = {
+    getConnection: loadDefaultConnection,
+  },
+): Promise<(AuthUser & { passwordHash: string }) | null> {
+  const normalized = email.trim().toLowerCase();
+  if (!normalized) return null;
+
+  await ensureAuthSchema(deps);
+  const connection = await deps.getConnection();
+  try {
+    const rows = await connection.query<UserRow>(SQL_FIND_BY_EMAIL, [
+      normalized,
+    ]);
+    const row = rows[0];
+    if (!row?.password_hash) return null;
+    return { ...mapUser(row), passwordHash: row.password_hash };
+  } finally {
+    connection.release();
+  }
+}
+
+export async function markEmailVerified(
+  userId: number,
+  deps: { getConnection: () => Promise<SqlConnection> } = {
+    getConnection: loadDefaultConnection,
+  },
+): Promise<void> {
+  await ensureAuthSchema(deps);
+  const connection = await deps.getConnection();
+  try {
+    await connection.execute(
+      `UPDATE ${AUTH_USERS_TABLE}
+       SET email_verified_at = COALESCE(email_verified_at, CURRENT_TIMESTAMP)
+       WHERE id = ?`,
+      [userId],
+    );
+  } finally {
+    connection.release();
+  }
+}
+
 const SQL_INSERT_USER = `
-  INSERT INTO ${AUTH_USERS_TABLE} (login, password_hash, display_name, role)
-  VALUES (?, ?, ?, ?)
+  INSERT INTO ${AUTH_USERS_TABLE}
+    (login, password_hash, display_name, role, email, email_verified_at)
+  VALUES (?, ?, ?, ?, ?, NULL)
 `;
 
 export type CreateUserInput = {
@@ -260,6 +365,8 @@ export type CreateUserInput = {
   displayName: string;
   password: string;
   role?: UserRole;
+  /** Required for public student registration; optional for teacher activation. */
+  email?: string | null;
 };
 
 export type CreateUserRecordInput = {
@@ -267,12 +374,13 @@ export type CreateUserRecordInput = {
   displayName: string;
   passwordHash: string;
   role: UserRole;
+  email?: string | null;
 };
 
 export class CreateUserError extends Error {
   constructor(
     message: string,
-    public readonly code: "login_taken" | "db_error",
+    public readonly code: "login_taken" | "email_taken" | "db_error",
   ) {
     super(message);
     this.name = "CreateUserError";
@@ -284,8 +392,20 @@ function mapDupOrThrow(error: unknown): never {
     typeof error === "object" && error !== null && "errno" in error
       ? Number((error as { errno?: number }).errno)
       : undefined;
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === "object" &&
+          error !== null &&
+          "message" in error &&
+          typeof (error as { message?: unknown }).message === "string"
+        ? (error as { message: string }).message
+        : String(error);
   // MySQL ER_DUP_ENTRY
   if (errno === 1062) {
+    if (/email/i.test(message) || /uq_app_users_email/i.test(message)) {
+      throw new CreateUserError("Email already taken.", "email_taken");
+    }
     throw new CreateUserError("Login already taken.", "login_taken");
   }
   console.error("createUserRecord: unexpected database error", error);
@@ -298,11 +418,16 @@ export async function insertUserOnConnection(
   input: CreateUserRecordInput,
 ): Promise<AuthUser> {
   try {
+    const email =
+      typeof input.email === "string" && input.email.trim()
+        ? input.email.trim().toLowerCase()
+        : null;
     const result = await connection.execute(SQL_INSERT_USER, [
       input.login,
       input.passwordHash,
       input.displayName,
       input.role,
+      email,
     ]);
     return {
       id: result.insertId,
@@ -335,7 +460,7 @@ export async function createUserRecord(
 }
 
 /**
- * Creates a new auth user. Public registration always uses role=student.
+ * Creates a new auth user. Public `/register` may create student or teacher.
  * Demo accounts keep fixed ids 1–3 via seed upsert.
  */
 export async function createUser(
@@ -351,6 +476,7 @@ export async function createUser(
       displayName: input.displayName,
       passwordHash: hashPassword(input.password),
       role,
+      email: input.email ?? null,
     },
     deps,
   );

@@ -121,7 +121,7 @@ alwaysApply: true
 - `PageFrame` / `PagePanel` — kicker-пілюля (не на старті тесту), `--fs-h1` display, скляна картка.
 - `TopicTestStart` — домашня робоча сторінка: вітання + тема + кількість завдань (поле / розмір банку). Без Ultimate і без самооцінки.
 - `AccountCabinet` — особистий кабінет: фото профілю, пароль, останні результати, заглушки (досягнення / час), вихід.
-- `TeacherProfileEditor` — візитка викладача/адміна на `/account` (slug, headline, bio, city, subjects, contact URL, is_public, копія лінка).
+- `TeacherProfileEditor` — візитка викладача на `/account` (slug, headline, bio, city, subjects, contact URL, is_public, копія лінка). Адмін редактор не бачить.
 - `TeacherPublicCard` — публічна картка `/t/{slug}` у `DiagnosticShell` (без кабінетного chrome).
 - `TeacherStudentsPanel` — `/students` для teacher/admin: додати учня за логіном, список, відв’язати. Учні пункт меню не бачать.
 
@@ -448,3 +448,20 @@ npm run lint && npm test && npm run build
 - `last_login_at` / `last_seen_at` на `app_users` (`021` + lazy ALTER).
 - Кабінет: `PresenceHeartbeat` → `POST /api/presence` раз на хвилину.
 - Online = `last_seen` за останні ~3 хв. Адмін на `/profiles` бачить статус і час входу.
+
+### 2026-09-16 — email verify + reset (Resend)
+
+- `app_users.email` + `email_verified_at` (`022` + lazy ALTER / unique); `auth_tokens` (`023`).
+- `/register` вимагає e-mail → лист → `/verify-email`; логін блокується до verify (демо exempt).
+- Forgot/reset: `/forgot-password`, `/reset-password`. Без `RESEND_API_KEY` — log у консоль.
+
+### 2026-09-16 — реєстрація: учень / викладач без плати в UI
+
+- На `/register` вибір ролі (пілюлі) під aside-лідом з 1240; на мобілці — у картці форми.
+- Auth layout притиснуто до верху (`align-items: start`, без `min-height: 60dvh`).
+- Платний `/register/teacher` редіректить на `/register?role=teacher`; лінки «500 грн» з логіну/реєстрації прибрано.
+
+### 2026-09-16 — адмін `/account` без навчальних віджетів
+
+- Адмін не бачить «Останні результати», «Досягнення», «Час навчання» і публічну візитку.
+- Лишаються фото, пароль, вихід.

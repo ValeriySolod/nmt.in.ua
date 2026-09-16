@@ -48,7 +48,7 @@ export async function TeacherRegisterResult({
 
       <p className={css.switch}>
         {outcome === "fail" ? (
-          <Link href="/register/teacher" className={css.switchLink}>
+          <Link href="/register?role=teacher" className={css.switchLink}>
             {t("fail.retry")}
           </Link>
         ) : (

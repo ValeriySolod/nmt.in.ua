@@ -75,3 +75,4 @@ export {
   recordLoginPresence,
   ONLINE_THRESHOLD_MS,
 } from "./presence";
+export { needsEmailVerification } from "./needsEmailVerification";

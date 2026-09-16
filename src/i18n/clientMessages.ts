@@ -54,6 +54,10 @@ export const PUBLIC_CLIENT_NAMESPACES = [
   "RegisterForm",
   "TeacherRegister",
   "TeacherPublicCard",
+  "CheckEmail",
+  "VerifyEmail",
+  "ForgotPassword",
+  "ResetPassword",
 ] as const;
 
 const SETTINGS_NAMESPACES = ["ContentImportForm"] as const;
@@ -81,6 +85,12 @@ function isMarketingPath(pathname: string): boolean {
     pathname.startsWith("/login/") ||
     pathname === "/register" ||
     pathname.startsWith("/register/") ||
+    pathname === "/verify-email" ||
+    pathname.startsWith("/verify-email/") ||
+    pathname === "/forgot-password" ||
+    pathname.startsWith("/forgot-password/") ||
+    pathname === "/reset-password" ||
+    pathname.startsWith("/reset-password/") ||
     pathname === "/diagnostic" ||
     pathname.startsWith("/diagnostic/") ||
     pathname === "/t" ||

@@ -56,6 +56,12 @@ function limitFor(pathname: string): number {
     pathname === "/register" ||
     pathname.startsWith("/login/") ||
     pathname.startsWith("/register/") ||
+    pathname === "/verify-email" ||
+    pathname.startsWith("/verify-email/") ||
+    pathname === "/forgot-password" ||
+    pathname.startsWith("/forgot-password/") ||
+    pathname === "/reset-password" ||
+    pathname.startsWith("/reset-password/") ||
     pathname.startsWith("/api/")
   ) {
     return LIMIT_AUTH;

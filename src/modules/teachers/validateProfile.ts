@@ -50,6 +50,9 @@ export const RESERVED_TEACHER_SLUGS = new Set([
   "icons",
   "landing",
   "nmt",
+  "verify-email",
+  "forgot-password",
+  "reset-password",
 ]);
 
 export type ValidatedTeacherProfile = {

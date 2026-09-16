@@ -65,24 +65,31 @@ export function AccountCabinet({
         />
       ) : null}
 
-      <RecentResults items={recentResults} />
+      {user.role !== "admin" ? (
+        <>
+          <RecentResults items={recentResults} />
 
-      <div className={css.stubs}>
-        <article className={css.stub} aria-labelledby="account-achievements-title">
-          <p className={css.soon}>{tCommon("soon")}</p>
-          <h2 id="account-achievements-title" className={css.stubTitle}>
-            {t("achievementsTitle")}
-          </h2>
-          <p className={css.stubLead}>{t("achievementsLead")}</p>
-        </article>
-        <article className={css.stub} aria-labelledby="account-time-title">
-          <p className={css.soon}>{tCommon("soon")}</p>
-          <h2 id="account-time-title" className={css.stubTitle}>
-            {t("timeTitle")}
-          </h2>
-          <p className={css.stubLead}>{t("timeLead")}</p>
-        </article>
-      </div>
+          <div className={css.stubs}>
+            <article
+              className={css.stub}
+              aria-labelledby="account-achievements-title"
+            >
+              <p className={css.soon}>{tCommon("soon")}</p>
+              <h2 id="account-achievements-title" className={css.stubTitle}>
+                {t("achievementsTitle")}
+              </h2>
+              <p className={css.stubLead}>{t("achievementsLead")}</p>
+            </article>
+            <article className={css.stub} aria-labelledby="account-time-title">
+              <p className={css.soon}>{tCommon("soon")}</p>
+              <h2 id="account-time-title" className={css.stubTitle}>
+                {t("timeTitle")}
+              </h2>
+              <p className={css.stubLead}>{t("timeLead")}</p>
+            </article>
+          </div>
+        </>
+      ) : null}
 
       <section className={css.panel} aria-labelledby="account-password-title">
         <div>

@@ -32,6 +32,8 @@ test("setProfileBannedAction bans for admin", async () => {
         id: 10,
         login: "pupil1",
         displayName: "Учень",
+        email: "pupil1@example.com",
+        emailVerified: true,
         role: "student",
         isBanned: true,
         isOnline: false,

@@ -16,6 +16,10 @@ export type AuthUser = {
   avatarRev?: number;
   /** True when an admin banned the account (blocks login). */
   isBanned?: boolean;
+  /** Normalized email when present (new registrations). */
+  email?: string;
+  /** True when email_verified_at is set (or demo bypass). */
+  emailVerified?: boolean;
 };
 
 export type SessionPayload = {

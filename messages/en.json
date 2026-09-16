@@ -733,21 +733,24 @@
     "errors": {
       "requiredFields": "Enter your login and password.",
       "invalidCredentials": "Invalid login or password.",
-      "accountBanned": "This account is blocked. Contact an administrator."
+      "accountBanned": "This account is blocked. Contact an administrator.",
+      "emailUnverified": "Confirm your email via the link we sent before signing in."
     },
     "noAccount": "No account yet?",
     "registerLink": "Create an account",
-    "teacherPrompt": "Teacher?",
-    "teacherLink": "Open a teacher cabinet (500 UAH)"
+    "forgotPassword": "Forgot password?",
+    "resendVerifyLink": "Resend verification email"
   },
   "RegisterForm": {
     "kicker": "Sign up",
     "title": "Create a student account",
-    "lead": "Register to take tests, save results, and get recommendations. Teachers sign up on a separate page.",
+    "lead": "Register to take tests, save results, and get recommendations.",
     "leadFromDiagnostic": "Register to save your diagnostic test result and self-assessment to your account.",
     "displayName": "Display name",
     "login": "Login",
     "loginHint": "Latin letters, digits, dot, _ or - (at least 3 characters).",
+    "email": "Email",
+    "emailHint": "Needed to verify the account and reset your password.",
     "password": "Password",
     "passwordHint": "At least {min} characters.",
     "passwordConfirm": "Confirm password",
@@ -755,19 +758,25 @@
     "submit": "Create account",
     "haveAccount": "Already have an account?",
     "signInLink": "Sign in",
-    "teacherPrompt": "Teacher?",
-    "teacherLink": "Separate registration",
     "errors": {
       "requiredFields": "Fill in all fields.",
       "invalidLogin": "Invalid login. Use Latin letters, digits, ., _ or -.",
       "invalidDisplayName": "Name must be 2–100 characters.",
+      "invalidEmail": "Enter a valid email address.",
       "passwordTooShort": "Password is too short.",
       "passwordTooLong": "Password is too long.",
       "passwordMismatch": "Passwords do not match.",
       "loginTaken": "This login is already taken.",
+      "emailTaken": "This email is already in use.",
       "reservedLogin": "This login is reserved for demos.",
       "serverError": "Could not create the account. Try again later."
-    }
+    },
+    "roleLabel": "Who is signing up?",
+    "roleStudent": "Student",
+    "roleTeacher": "Teacher",
+    "titleTeacher": "Create a teacher account",
+    "leadTeacher": "Sign up as a teacher to guide students, see progress, and assign practice. Paid extras will come later.",
+    "submitTeacher": "Sign up as a teacher"
   },
   "TeacherRegister": {
     "kicker": "For teachers",
@@ -1017,6 +1026,22 @@
     "feedback": {
       "title": "Feedback",
       "description": "User ratings and suggestions about the site."
+    },
+    "checkEmail": {
+      "title": "Confirm your email",
+      "description": "Check your inbox to confirm your nmt.in.ua account."
+    },
+    "verifyEmail": {
+      "title": "Email confirmation",
+      "description": "Confirm your email to sign in to the learning workspace."
+    },
+    "forgotPassword": {
+      "title": "Forgot password",
+      "description": "Send a password reset link for nmt.in.ua."
+    },
+    "resetPassword": {
+      "title": "New password",
+      "description": "Set a new password for the learning workspace."
     }
   },
   "SettingsPage": {
@@ -1160,6 +1185,75 @@
       "protected_account": "Demo accounts are protected.",
       "last_admin": "You cannot ban or delete the last active admin.",
       "generic": "Could not complete the action. Try again."
+    },
+    "emailMeta": "Email: {email}",
+    "emailMissing": "Email: none",
+    "emailVerified": "verified",
+    "emailUnverified": "unverified"
+  },
+  "CheckEmail": {
+    "kicker": "Email",
+    "title": "Check your email",
+    "lead": "We sent a confirmation link. If it is missing, check Spam or resend.",
+    "leadWithEmail": "We sent a message to {email}. If it is missing, check Spam or resend.",
+    "email": "Email",
+    "resend": "Resend email",
+    "resending": "Sending…",
+    "resent": "If an unverified account exists for that address, the email is on its way.",
+    "backToLogin": "Back to sign in",
+    "errors": {
+      "invalid_email": "Enter a valid email address.",
+      "rate_limited": "Too many attempts. Wait a few minutes.",
+      "generic": "Could not send the email. Try again later."
+    }
+  },
+  "VerifyEmail": {
+    "kicker": "Verification",
+    "title": "Confirm your email",
+    "pending": "Checking the link…",
+    "success": "Email confirmed. Opening your workspace…",
+    "resendLink": "Resend verification email",
+    "backToLogin": "Back to sign in",
+    "errors": {
+      "invalid": "This link is invalid.",
+      "expired": "This link has expired. Request a new one.",
+      "used": "This link was already used.",
+      "generic": "Could not confirm the email. Try again."
+    }
+  },
+  "ForgotPassword": {
+    "kicker": "Password",
+    "title": "Reset password",
+    "lead": "Enter the account email — we will send a reset link.",
+    "email": "Email",
+    "submit": "Send reset link",
+    "submitting": "Sending…",
+    "sent": "If a verified account exists for that email, the message is on its way.",
+    "backToLogin": "Back to sign in",
+    "errors": {
+      "invalid_email": "Enter a valid email address.",
+      "rate_limited": "Too many attempts. Wait a few minutes.",
+      "generic": "Could not send the email. Try again later."
+    }
+  },
+  "ResetPassword": {
+    "kicker": "Password",
+    "title": "New password",
+    "lead": "Choose a new password for your workspace.",
+    "password": "New password",
+    "passwordConfirm": "Confirm password",
+    "submit": "Save password",
+    "submitting": "Saving…",
+    "success": "Password updated. Redirecting to sign in…",
+    "requestNew": "Request a new link",
+    "errors": {
+      "invalid_token": "This link is missing or invalid.",
+      "expired": "This link has expired. Request a new one.",
+      "used": "This link was already used.",
+      "passwordTooShort": "Password is too short.",
+      "passwordTooLong": "Password is too long.",
+      "passwordMismatch": "Passwords do not match.",
+      "generic": "Could not save the password. Try again."
     }
   }
 }

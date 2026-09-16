@@ -733,21 +733,24 @@
     "errors": {
       "requiredFields": "Gib Login und Passwort ein.",
       "invalidCredentials": "Ungültiger Login oder ungültiges Passwort.",
-      "accountBanned": "Dieses Konto ist gesperrt. Wende dich an einen Administrator."
+      "accountBanned": "Dieses Konto ist gesperrt. Wende dich an einen Administrator.",
+      "emailUnverified": "Bestätige zuerst deine E-Mail über den Link in der Nachricht."
     },
     "noAccount": "Noch kein Konto?",
     "registerLink": "Registrieren",
-    "teacherPrompt": "Lehrkraft?",
-    "teacherLink": "Lehrer-Konto (500 UAH)"
+    "forgotPassword": "Passwort vergessen?",
+    "resendVerifyLink": "Bestätigung erneut senden"
   },
   "RegisterForm": {
     "kicker": "Registrierung",
     "title": "Schülerkonto erstellen",
-    "lead": "Registriere dich, um Tests zu absolvieren, Ergebnisse zu speichern und Empfehlungen zu erhalten. Lehrkräfte registrieren sich auf einer eigenen Seite.",
+    "lead": "Registriere dich, um Tests zu absolvieren, Ergebnisse zu speichern und Empfehlungen zu erhalten.",
     "leadFromDiagnostic": "Registriere dich, um dein Einstufungstest-Ergebnis und deine Selbsteinschätzung in deinem Konto zu speichern.",
     "displayName": "Anzeigename",
     "login": "Login",
     "loginHint": "Lateinische Buchstaben, Ziffern, Punkt, _ oder - (mindestens 3 Zeichen).",
+    "email": "E-Mail",
+    "emailHint": "Wird zur Kontobestätigung und Passwortwiederherstellung benötigt.",
     "password": "Passwort",
     "passwordHint": "Mindestens {min} Zeichen.",
     "passwordConfirm": "Passwort bestätigen",
@@ -755,19 +758,25 @@
     "submit": "Registrieren",
     "haveAccount": "Bereits ein Konto?",
     "signInLink": "Anmelden",
-    "teacherPrompt": "Lehrkraft?",
-    "teacherLink": "Separate Registrierung",
     "errors": {
       "requiredFields": "Bitte alle Felder ausfüllen.",
       "invalidLogin": "Ungültiger Login. Nutze lateinische Buchstaben, Ziffern, ., _ oder -.",
       "invalidDisplayName": "Der Name muss 2–100 Zeichen haben.",
+      "invalidEmail": "Bitte eine gültige E-Mail-Adresse angeben.",
       "passwordTooShort": "Das Passwort ist zu kurz.",
       "passwordTooLong": "Das Passwort ist zu lang.",
       "passwordMismatch": "Die Passwörter stimmen nicht überein.",
       "loginTaken": "Dieser Login ist bereits vergeben.",
+      "emailTaken": "Diese E-Mail wird bereits verwendet.",
       "reservedLogin": "Dieser Login ist für Demos reserviert.",
       "serverError": "Konto konnte nicht erstellt werden. Bitte später erneut versuchen."
-    }
+    },
+    "roleLabel": "Wer registriert sich?",
+    "roleStudent": "Schüler",
+    "roleTeacher": "Lehrkraft",
+    "titleTeacher": "Lehrer-Konto erstellen",
+    "leadTeacher": "Registriere dich als Lehrkraft, um Schüler zu begleiten, Fortschritt zu sehen und Übungen zuzuweisen. Bezahlte Extras kommen später.",
+    "submitTeacher": "Als Lehrkraft registrieren"
   },
   "TeacherRegister": {
     "kicker": "Für Lehrkräfte",
@@ -1017,6 +1026,22 @@
     "feedback": {
       "title": "Feedback",
       "description": "Bewertungen und Vorschläge der Nutzer zur Website."
+    },
+    "checkEmail": {
+      "title": "E-Mail bestätigen",
+      "description": "Prüfe dein Postfach, um dein nmt.in.ua-Konto zu bestätigen."
+    },
+    "verifyEmail": {
+      "title": "E-Mail-Bestätigung",
+      "description": "E-Mail bestätigen, um dich im Lernbereich anzumelden."
+    },
+    "forgotPassword": {
+      "title": "Passwort vergessen",
+      "description": "Link zum Zurücksetzen des Passworts für nmt.in.ua senden."
+    },
+    "resetPassword": {
+      "title": "Neues Passwort",
+      "description": "Neues Passwort für den Lernbereich festlegen."
     }
   },
   "SettingsPage": {
@@ -1160,6 +1185,75 @@
       "protected_account": "Demo-Konten sind geschützt.",
       "last_admin": "Der letzte aktive Admin kann nicht gesperrt oder gelöscht werden.",
       "generic": "Aktion fehlgeschlagen. Bitte erneut versuchen."
+    },
+    "emailMeta": "E-Mail: {email}",
+    "emailMissing": "E-Mail: keine",
+    "emailVerified": "bestätigt",
+    "emailUnverified": "nicht bestätigt"
+  },
+  "CheckEmail": {
+    "kicker": "E-Mail",
+    "title": "E-Mail prüfen",
+    "lead": "Wir haben einen Bestätigungslink gesendet. Fehlt er, prüfe den Spam oder sende erneut.",
+    "leadWithEmail": "Nachricht an {email} gesendet. Fehlt sie, prüfe den Spam oder sende erneut.",
+    "email": "E-Mail",
+    "resend": "Erneut senden",
+    "resending": "Wird gesendet…",
+    "resent": "Falls ein unbestätigtes Konto existiert, ist die Nachricht unterwegs.",
+    "backToLogin": "Zur Anmeldung",
+    "errors": {
+      "invalid_email": "Gib eine gültige E-Mail-Adresse ein.",
+      "rate_limited": "Zu viele Versuche. Warte einige Minuten.",
+      "generic": "E-Mail konnte nicht gesendet werden. Später erneut versuchen."
+    }
+  },
+  "VerifyEmail": {
+    "kicker": "Bestätigung",
+    "title": "E-Mail bestätigen",
+    "pending": "Link wird geprüft…",
+    "success": "E-Mail bestätigt. Arbeitsbereich wird geöffnet…",
+    "resendLink": "Bestätigung erneut senden",
+    "backToLogin": "Zur Anmeldung",
+    "errors": {
+      "invalid": "Dieser Link ist ungültig.",
+      "expired": "Dieser Link ist abgelaufen. Bitte erneut anfordern.",
+      "used": "Dieser Link wurde bereits verwendet.",
+      "generic": "E-Mail konnte nicht bestätigt werden. Erneut versuchen."
+    }
+  },
+  "ForgotPassword": {
+    "kicker": "Passwort",
+    "title": "Passwort zurücksetzen",
+    "lead": "Gib die Konto-E-Mail ein — wir senden einen Reset-Link.",
+    "email": "E-Mail",
+    "submit": "Link senden",
+    "submitting": "Wird gesendet…",
+    "sent": "Falls ein bestätigtes Konto existiert, ist die Nachricht unterwegs.",
+    "backToLogin": "Zur Anmeldung",
+    "errors": {
+      "invalid_email": "Gib eine gültige E-Mail-Adresse ein.",
+      "rate_limited": "Zu viele Versuche. Warte einige Minuten.",
+      "generic": "E-Mail konnte nicht gesendet werden. Später erneut versuchen."
+    }
+  },
+  "ResetPassword": {
+    "kicker": "Passwort",
+    "title": "Neues Passwort",
+    "lead": "Wähle ein neues Passwort für den Arbeitsbereich.",
+    "password": "Neues Passwort",
+    "passwordConfirm": "Passwort bestätigen",
+    "submit": "Passwort speichern",
+    "submitting": "Wird gespeichert…",
+    "success": "Passwort aktualisiert. Weiter zur Anmeldung…",
+    "requestNew": "Neuen Link anfordern",
+    "errors": {
+      "invalid_token": "Dieser Link fehlt oder ist ungültig.",
+      "expired": "Dieser Link ist abgelaufen. Bitte erneut anfordern.",
+      "used": "Dieser Link wurde bereits verwendet.",
+      "passwordTooShort": "Passwort ist zu kurz.",
+      "passwordTooLong": "Passwort ist zu lang.",
+      "passwordMismatch": "Passwörter stimmen nicht überein.",
+      "generic": "Passwort konnte nicht gespeichert werden. Erneut versuchen."
     }
   }
 }

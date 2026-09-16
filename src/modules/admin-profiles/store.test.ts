@@ -32,6 +32,8 @@ const studentRow = {
   id: 10,
   login: "pupil1",
   display_name: "Учень",
+  email: "pupil1@example.com",
+  email_verified_at: "2026-01-01T00:00:00.000Z",
   role: "student" as const,
   is_banned: 0,
   last_login_at: "2026-01-01T00:00:00.000Z",

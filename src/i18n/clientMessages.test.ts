@@ -40,6 +40,10 @@ test("pickClientMessages keeps shared marketing namespaces on auth and diagnosti
     "/login",
     "/register",
     "/register/teacher",
+    "/register/check-email",
+    "/verify-email",
+    "/forgot-password",
+    "/reset-password",
     "/diagnostic",
   ] as const) {
     const picked = pickClientMessages(uk, path);
