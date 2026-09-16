@@ -23,7 +23,7 @@ export type PurchaseSignatureInput = {
   amount: string;
   currency: string;
   productName: readonly string[];
-  productCount: readonly Array<string | number>;
+  productCount: ReadonlyArray<string | number>;
   productPrice: readonly string[];
 };
 
