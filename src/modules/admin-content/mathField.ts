@@ -62,39 +62,6 @@ function replaceCmdBraces(
   return out;
 }
 
-function replaceCmdTwoBraces(
-  input: string,
-  command: string,
-  replacer: (a: string, b: string) => string,
-): string {
-  const needle = `\\${command}{`;
-  let out = "";
-  let i = 0;
-  while (i < input.length) {
-    const idx = input.indexOf(needle, i);
-    if (idx === -1) {
-      out += input.slice(i);
-      break;
-    }
-    out += input.slice(i, idx);
-    const first = readBraceGroup(input, idx + needle.length - 1);
-    if (!first) {
-      out += needle;
-      i = idx + needle.length;
-      continue;
-    }
-    const second = readBraceGroup(input, first.end);
-    if (!second) {
-      out += input.slice(idx, first.end);
-      i = first.end;
-      continue;
-    }
-    out += replacer(first.inner, second.inner);
-    i = second.end;
-  }
-  return out;
-}
-
 /** TeX `\frac` args: `{…}` or a single digit/letter (`\frac12`, `\frac7{12}`). */
 function readFracArg(
   input: string,

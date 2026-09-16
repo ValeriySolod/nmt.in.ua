@@ -43,6 +43,7 @@ export default async function NewAdminTaskPage({ searchParams }: NewTaskPageProp
   return (
     <PageFrame kicker={t("kicker")} title={t("createTitle")} lead={t("createLead")}>
       <AdminTaskForm
+        key={`create-${themeId}`}
         mode="create"
         themes={themes}
         themeId={themeId}
