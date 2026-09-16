@@ -80,9 +80,11 @@ npm run dev
 | `demo-teacher` | `demo123` | Викладач | + призначення mentor-сесій на `/sessions` і «Мої учні» на `/students` |
 | `demo-admin` | `demo123` | Адмін | + імпорт контенту на `/settings` (і той самий список учнів) |
 
-На `/login` є кнопки швидкого входу для кожної ролі. Нові учні реєструються на `/register` (роль `student`, авто-вхід після створення). Викладачі — окрема сторінка `/register/teacher` (500 грн, WayForPay); без `WAYFORPAY_MERCHANT_ACCOUNT` / `WAYFORPAY_MERCHANT_SECRET_KEY` форма зберігає заявку й показує «оплату ще не налаштовано». З ключами браузер робить POST на `https://secure.wayforpay.com/pay`. Адмін цим потоком не створюється.
+На `/login` є кнопки швидкого входу для кожної ролі (у dev). Публічна реєстрація — `/register` з вибором **учень / викладач** (`?role=`), обовʼязковий email і підтвердження листа перед першим входом. Платний `/register/teacher` (WayForPay, 500 грн) **приховано в UI** — редірект на `/register?role=teacher`; код еквайрингу лишається для майбутньої оплати доп. функцій. Адмін цим потоком не створюється.
 
-### Оплата кабінету викладача (WayForPay)
+### Оплата кабінету викладача (WayForPay) — код є, UI на паузі
+
+Публічно зараз безкоштовна реєстрація викладача на `/register?role=teacher`. Нижче — як увімкнути старий checkout, коли знову знадобиться.
 
 1. Скопіюй `WAYFORPAY_MERCHANT_ACCOUNT` і `WAYFORPAY_MERCHANT_SECRET_KEY` у `.env.local` / `.env.production` (кабінет WayForPay). Для пісочниці з документації WayForPay `merchantAccount` = `test_merch_n1`; SecretKey лише локально, не в git.
 2. За бажанням `WAYFORPAY_MERCHANT_DOMAIN` (дефолт — hostname `NEXT_PUBLIC_SITE_URL`, на проді `nmt.in.ua`). Домен має збігатися з кабінетом WayForPay.
@@ -104,16 +106,17 @@ npm run reset-demo-student
 
 | Що | Де |
 | --- | --- |
-| Вхід / вихід | `/login`, cookie `nmt_session` |
-| Реєстрація | `/register` — публічна, лише роль `student` |
-| Реєстрація викладача | `/register/teacher` — pending у `teacher_payments`, акаунт `role=teacher` лише після `transactionStatus=Approved` від WayForPay (500 грн). Без ключів — UI-заглушка, checkout не підписується. У dev / sandbox `test_merch_n1` є кнопка «Оплата пройшла» (той самий `activatePaidTeacher`). На живому мерчанті в production — ні |
+| Вхід / вихід | `/login`, cookie `nmt_session`; логін блокується до verify email (демо exempt) |
+| Реєстрація | `/register?role=student\|teacher` — email обовʼязковий → `/register/check-email` → `/verify-email` |
+| Скидання пароля | `/forgot-password`, `/reset-password` (Resend або log без `RESEND_API_KEY`) |
+| Реєстрація викладача (оплата) | UI на паузі; `/register/teacher` → `/register?role=teacher`. WayForPay код + `/success`/`/fail` лишаються |
 | Webhook оплати | `POST /api/payments/wayforpay/webhook` (публічний, перевірка HMAC_MD5) |
 | Ролі | `student`, `teacher`, `admin` |
-| Облікові записи | таблиця `app_users` (окремо від legacy `users` на хостингу) |
-| Middleware | редірект на `/login`; публічні `/`, `/welcome`, `/login`, `/register` (+ `/register/teacher`), `/diagnostic`, `/t/{slug}` і статика з `public/`; webhook/return WayForPay під `/api/payments/wayforpay/*` (усі `/api/*` без auth-guard); `/settings` — лише admin; `/students` — teacher/admin |
+| Облікові записи | таблиця `app_users` (+ `email` / `email_verified_at`); токени — `auth_tokens` |
+| Middleware | редірект на `/login`; публічні `/`, `/welcome`, `/login`, `/register`, `/verify-email`, `/forgot-password`, `/reset-password`, `/diagnostic`, `/t/{slug}` і статика; `/settings`/`/profiles`/`/feedback` — admin; `/students` — teacher/admin |
 | Mentor UI | `/sessions` — панель призначення для teacher/admin |
 | Мої учні | `/students` — додати за логіном / відв’язати (teacher/admin) |
-| Публічна візитка | `/account` (teacher/admin) редагує картку; `/t/{slug}` видно лише якщо `is_public` |
+| Публічна візитка | `/account` (лише teacher) редагує картку; `/t/{slug}` якщо `is_public` |
 
 `userId` у Server Actions береться з сесії (`requireUserId()`), не з FormData.
 

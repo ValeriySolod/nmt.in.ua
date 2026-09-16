@@ -9,7 +9,7 @@ import type { VerifyEmailActionState } from "@/modules/auth/actions";
 import css from "../auth.module.css";
 
 type VerifyEmailResultProps = {
-  result: Exclude<VerifyEmailActionState, { status: "idle" }>;
+  result: VerifyEmailActionState;
 };
 
 export function VerifyEmailResult({ result }: VerifyEmailResultProps) {

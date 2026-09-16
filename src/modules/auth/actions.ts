@@ -346,9 +346,8 @@ export async function resendVerificationAction(
 }
 
 export type VerifyEmailActionState =
-  | { status: "idle" }
   | { status: "ok" }
-  | { status: "error", code: "invalid" | "expired" | "used" | "generic" };
+  | { status: "error"; code: "invalid" | "expired" | "used" | "generic" };
 
 export async function verifyEmailAction(
   token: string,

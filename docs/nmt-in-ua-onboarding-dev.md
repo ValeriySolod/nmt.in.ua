@@ -21,7 +21,7 @@ nmt.in.ua — тренажер підготовки до НМТ з матема�
 | --- | --- |
 | Учень (`student`) | Тести, симулятор, результати, свої сесії, реєстрація |
 | Викладач (`teacher`) | Усе як учень + призначити сесію на `/sessions` + черга консультацій на `/consultations` + «Мої учні» на `/students` + публічна візитка на `/account` (`/t/{slug}`) |
-| Адмін (`admin`) | Усе як викладач + імпорт на `/settings` + відгуки на `/feedback` |
+| Адмін (`admin`) | Імпорт на `/settings`, відгуки `/feedback`, профілі `/profiles`; **без** публічної візитки й навчальних віджетів на `/account` |
 
 ## 2. Перший день — чекліст
 
@@ -54,7 +54,9 @@ npm run dev
 | --- | --- | --- |
 | `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` | Пул MySQL | Сторінки з даними падають |
 | `SESSION_SECRET` | Підпис cookie `nmt_session` | На проді вхід небезпечний / зламаний |
-| `WAYFORPAY_MERCHANT_ACCOUNT` | Еквайринг WayForPay для `/register/teacher` | Без ключів: «оплату ще не налаштовано», checkout не підписується. З ключами — HMAC_MD5 + POST на `secure.wayforpay.com/pay`. Пісочниця з docs: `test_merch_n1`. Лише `.env.local` / хостинг `.env.production` |
+| `RESEND_API_KEY` | Листи verify / reset пароля | Без ключа — `[mail:log]` у консоль (зручно локально) |
+| `MAIL_FROM` | From для Resend (опційно) | Дефолт sandbox Resend |
+| `WAYFORPAY_MERCHANT_ACCOUNT` | Еквайринг WayForPay (UI зараз на паузі) | Без ключів checkout не підписується. Пісочниця: `test_merch_n1`. Лише `.env.local` / хостинг |
 | `WAYFORPAY_MERCHANT_SECRET_KEY` | SecretKey HMAC_MD5 (Purchase + serviceUrl) | Разом із account; ніколи в git |
 | `WAYFORPAY_MERCHANT_DOMAIN` | Домен мерчанта (опційно) | Hostname з `NEXT_PUBLIC_SITE_URL` |
 | `TEACHER_PAYMENT_TEST_BYPASS` | Кнопка «Оплата пройшла» на `/register/teacher` | За замовчуванням увімкнено лише в `development`. У production потрібні `=1` **і** sandbox `test_merch_n1`. На живому мерчанті в production завжди вимкнено, навіть якщо `=1`. Локально сховати: `=0` |
@@ -71,7 +73,7 @@ npm run dev
 | --- | --- | --- | --- |
 | `demo-student` | `demo123` | Учень | Тести, результати, свої сесії |
 | `demo-teacher` | `demo123` | Викладач | Панель призначення на `/sessions`; «Мої учні» на `/students`; візитка на `/account` |
-| `demo-admin` | `demo123` | Адмін | Імпорт на `/settings`, відгуки на `/feedback`, профілі на `/profiles` |
+| `demo-admin` | `demo123` | Адмін | Імпорт `/settings`, відгуки `/feedback`, профілі `/profiles`; `/account` без візитки й навчальних віджетів |
 
 Таблиця `app_users` створюється сама при першому запиті. Legacy-таблицю `users` на хостингу не чіпаємо. Якщо старі сесії «прилипли» до demo-student: `npm run reset-demo-student`.
 
@@ -80,7 +82,7 @@ npm run dev
 | Команда | Коли |
 | --- | --- |
 | `npm run dev` | Щодня |
-| `npm test` | Перед PR. Зараз ~192 кейси |
+| `npm test` | Перед PR. Зараз ~730 кейсів |
 | `npm run lint` | Перед PR |
 | `npm run build` | Перед здачею фічі, яка чіпає сторінки / сервер |
 | `npm run reset-demo-student` | Коли демо-учень завалений старими сесіями |
@@ -133,7 +135,7 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 | `src/app/welcome/` | Лендінг (завжди, навіть для увійшлих) |
 | `src/app/login/` і `register/` | Вхід і реєстрація учня |
 | `src/app/(marketing)/verify-email/` тощо | Підтвердження email, forgot/reset пароля |
-| `src/app/(marketing)/register/teacher/` | Платна реєстрація викладача (WayForPay) |
+| `src/app/(marketing)/register/teacher/` | Редірект на `/register?role=teacher` (оплата WayForPay на паузі; success/fail лишаються) |
 | `src/app/api/payments/wayforpay/webhook/` | Webhook еквайрингу (serviceUrl) |
 | `src/app/session/[id]/` | Тренажер однієї сесії |
 | `src/app/simulator/` | Старт симулятора НМТ |
@@ -335,7 +337,7 @@ Ultimate/НМТ/діагностика лишились без змін. Зар�
 | `/materials`, `/materials/[slug]` | Учень+ | Редірект → `/materials/textbook` |
 | `/materials/textbook` | Учень+ | Єдиний підручник: зміст + один розділ `?topic=<themes.code>` |
 | `/problems` | Учень+ | Задачник: друкований тест по темі |
-| `/account` | Учень+ | Особистий кабінет: фото / ініціали, пароль, результати, вихід |
+| `/account` | Учень+ | Фото / пароль / вихід. Учень і викладач — результати + заглушки; викладач — візитка; адмін — без них |
 | `/students` | Лише teacher/admin | «Мої учні»: додати за логіном, список, відв’язати |
 | `/consultations` | Учень+ | Учень: один відкритий запит. Викладач/адмін: черга всіх заявок (побачено / закрито) |
 | `/practice/fractions` | Учень+ | Генерована практика: додавання дробів, 5 рівнів. Посилання з `TopicTestStart` (`/`) |
