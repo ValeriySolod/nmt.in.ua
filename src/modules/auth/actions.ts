@@ -100,8 +100,9 @@ export async function loginAction(
 }
 
 /**
- * Public self-registration. Creates a student, sends verify email,
+ * Public self-registration. Creates a student or teacher, sends verify email,
  * does **not** open a session until the email is confirmed.
+ * Paid teacher checkout (`/register/teacher`) is hidden for now.
  */
 export async function registerAction(
   _prev: RegisterActionState,
@@ -119,6 +120,9 @@ export async function registerAction(
     return { status: "error", code: validated.code };
   }
 
+  const roleRaw = String(formData.get("role") ?? "student").trim();
+  const role = roleRaw === "teacher" ? "teacher" : "student";
+
   let userId: number;
   try {
     const user = await createUser({
@@ -126,7 +130,7 @@ export async function registerAction(
       displayName: validated.value.displayName,
       email: validated.value.email,
       password: validated.value.password,
-      role: "student",
+      role,
     });
     userId = user.id;
   } catch (error) {
@@ -140,7 +144,7 @@ export async function registerAction(
     return { status: "error", code: "serverError" };
   }
 
-  if (formData.get("from") === "diagnostic") {
+  if (role === "student" && formData.get("from") === "diagnostic") {
     try {
       const result = await claimGuestProgress(userId);
       if (result.claimed) {

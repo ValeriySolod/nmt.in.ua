@@ -738,15 +738,13 @@
     },
     "noAccount": "Noch kein Konto?",
     "registerLink": "Registrieren",
-    "teacherPrompt": "Lehrkraft?",
-    "teacherLink": "Lehrer-Konto (500 UAH)",
     "forgotPassword": "Passwort vergessen?",
     "resendVerifyLink": "Bestätigung erneut senden"
   },
   "RegisterForm": {
     "kicker": "Registrierung",
     "title": "Schülerkonto erstellen",
-    "lead": "Registriere dich, um Tests zu absolvieren, Ergebnisse zu speichern und Empfehlungen zu erhalten. Lehrkräfte registrieren sich auf einer eigenen Seite.",
+    "lead": "Registriere dich, um Tests zu absolvieren, Ergebnisse zu speichern und Empfehlungen zu erhalten.",
     "leadFromDiagnostic": "Registriere dich, um dein Einstufungstest-Ergebnis und deine Selbsteinschätzung in deinem Konto zu speichern.",
     "displayName": "Anzeigename",
     "login": "Login",
@@ -760,8 +758,6 @@
     "submit": "Registrieren",
     "haveAccount": "Bereits ein Konto?",
     "signInLink": "Anmelden",
-    "teacherPrompt": "Lehrkraft?",
-    "teacherLink": "Separate Registrierung",
     "errors": {
       "requiredFields": "Bitte alle Felder ausfüllen.",
       "invalidLogin": "Ungültiger Login. Nutze lateinische Buchstaben, Ziffern, ., _ oder -.",
@@ -774,7 +770,13 @@
       "emailTaken": "Diese E-Mail wird bereits verwendet.",
       "reservedLogin": "Dieser Login ist für Demos reserviert.",
       "serverError": "Konto konnte nicht erstellt werden. Bitte später erneut versuchen."
-    }
+    },
+    "roleLabel": "Wer registriert sich?",
+    "roleStudent": "Schüler",
+    "roleTeacher": "Lehrkraft",
+    "titleTeacher": "Lehrer-Konto erstellen",
+    "leadTeacher": "Registriere dich als Lehrkraft, um Schüler zu begleiten, Fortschritt zu sehen und Übungen zuzuweisen. Bezahlte Extras kommen später.",
+    "submitTeacher": "Als Lehrkraft registrieren"
   },
   "TeacherRegister": {
     "kicker": "Für Lehrkräfte",

@@ -19,7 +19,6 @@ test("sitemap lists only public pages that do not require login", () => {
           path !== "/forgot-password" &&
           path !== "/reset-password",
       ),
-      "/register/teacher",
     ].sort(),
   );
 

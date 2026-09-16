@@ -738,15 +738,13 @@
     },
     "noAccount": "No account yet?",
     "registerLink": "Create an account",
-    "teacherPrompt": "Teacher?",
-    "teacherLink": "Open a teacher cabinet (500 UAH)",
     "forgotPassword": "Forgot password?",
     "resendVerifyLink": "Resend verification email"
   },
   "RegisterForm": {
     "kicker": "Sign up",
     "title": "Create a student account",
-    "lead": "Register to take tests, save results, and get recommendations. Teachers sign up on a separate page.",
+    "lead": "Register to take tests, save results, and get recommendations.",
     "leadFromDiagnostic": "Register to save your diagnostic test result and self-assessment to your account.",
     "displayName": "Display name",
     "login": "Login",
@@ -760,8 +758,6 @@
     "submit": "Create account",
     "haveAccount": "Already have an account?",
     "signInLink": "Sign in",
-    "teacherPrompt": "Teacher?",
-    "teacherLink": "Separate registration",
     "errors": {
       "requiredFields": "Fill in all fields.",
       "invalidLogin": "Invalid login. Use Latin letters, digits, ., _ or -.",
@@ -774,7 +770,13 @@
       "emailTaken": "This email is already in use.",
       "reservedLogin": "This login is reserved for demos.",
       "serverError": "Could not create the account. Try again later."
-    }
+    },
+    "roleLabel": "Who is signing up?",
+    "roleStudent": "Student",
+    "roleTeacher": "Teacher",
+    "titleTeacher": "Create a teacher account",
+    "leadTeacher": "Sign up as a teacher to guide students, see progress, and assign practice. Paid extras will come later.",
+    "submitTeacher": "Sign up as a teacher"
   },
   "TeacherRegister": {
     "kicker": "For teachers",

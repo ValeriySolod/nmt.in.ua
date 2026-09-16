@@ -322,10 +322,10 @@ Ultimate/НМТ/діагностика лишились без змін. Зар�
 | URL | Хто бачить | Стан |
 | --- | --- | --- |
 | `/`, `/welcome` | Усі. `/` — лендінг для гостя, кабінет для учня; `/welcome` завжди лендінг | Готово |
-| `/login`, `/register` | Гість | Готово. Реєстрація з обовʼязковим email → `/register/check-email` (без сесії до verify) |
+| `/login`, `/register` | Гість | Готово. На `/register` вибір учень/викладач (`?role=`). Email → check-email → verify |
 | `/register/check-email`, `/verify-email` | Гість | Підтвердження email (Resend / log). Після verify — сесія |
 | `/forgot-password`, `/reset-password` | Гість | Скидання пароля за email (лише verified акаунти) |
-| `/register/teacher` (+ `/success`, `/fail`) | Гість | Платна реєстрація викладача (WayForPay, 500 грн). Без ключів — заглушка. Dev: кнопка «Оплата пройшла». Production sandbox — лише з `TEACHER_PAYMENT_TEST_BYPASS=1` |
+| `/register/teacher` (+ `/success`, `/fail`) | Гість | UI оплати приховано: `/register/teacher` → `/register?role=teacher`. WayForPay success/fail лишаються для старих чеків |
 | `/diagnostic`, `/diagnostic/session/[id]` | Усі (публічно, як `/welcome`) — гість або увійдений учень | Готово |
 | `/session/[id]` | Власник сесії | Готово |
 | `/simulator` | Учень+ | Готово — сітка офіційних варіантів НМТ (`nmt_variants`) |
@@ -432,7 +432,7 @@ Ultimate/НМТ/діагностика лишились без змін. Зар�
 | Консультації | `/consultations` | Мала | ✅ 10.09: заявки `consultation_requests` (`019`); без привʼязки учень↔викладач |
 | Мої учні | `src/modules/teacher-students`, `/students` | Мала | ✅ 11.09: ручне прив’язування за логіном (teacher/admin) |
 | Публічна візитка викладача | `src/modules/teachers`, `/account`, `/t/{slug}` | Мала | ✅ 13.09 |
-| Реєстрація викладача + WayForPay | `/register/teacher`, `src/modules/payments` | Середня | ✅ 10.09: pending + WayForPay Purchase/webhook. Локально: «Оплата пройшла» лишає на `/register/teacher` (шлюз згорнутий). На живому мерчанті в production вимкнено |
+| Реєстрація викладача + WayForPay | `/register/teacher`, `src/modules/payments` | Середня | ⏸️ UI оплати приховано 16.09; безкоштовний teacher на `/register?role=teacher`. WayForPay код лишається |
 | Email verify + reset (Resend) | `src/modules/auth`, `src/modules/mail`, `/verify-email` | Середня | ✅ 16.09: блок логіну до verify; forgot/reset; без ключа — log |
 | Перф (TTFB / бандл) | `(app)`/`(marketing)` layouts, `catalogCache`, `sampleRandomIds` | — | ✅ 10.09: без `ORDER BY RAND()`, кеш довідників, cookie-профіль |
 

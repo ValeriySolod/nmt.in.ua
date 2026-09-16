@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { useActionState } from "react";
 import clsx from "clsx";
@@ -12,34 +13,52 @@ import {
   PASSWORD_MAX_LEN,
   PASSWORD_MIN_LEN,
 } from "@/modules/auth/validateRegistration";
+import type { RegisterRole } from "../RegisterRolePicker/RegisterRolePicker";
 import css from "../auth.module.css";
 
 const INITIAL: RegisterActionState = { status: "idle" };
 
 type RegisterFormProps = {
   nextPath: string;
+  role: RegisterRole;
+  rolePicker: ReactNode;
   /** Set when arriving via `/register?from=diagnostic` — lets `registerAction`
    * claim the guest's diagnostic progress after a successful signup. */
   from?: "diagnostic";
 };
 
-export function RegisterForm({ nextPath, from }: RegisterFormProps) {
+export function RegisterForm({
+  nextPath,
+  role,
+  rolePicker,
+  from,
+}: RegisterFormProps) {
   const t = useTranslations("RegisterForm");
   const [state, formAction, pending] = useActionState(registerAction, INITIAL);
+  const isTeacher = role === "teacher";
 
   return (
     <div className={css.card}>
+      {rolePicker}
+
       <header className={css.intro}>
         <p className={css.kicker}>{t("kicker")}</p>
-        <h1 className={css.title}>{t("title")}</h1>
+        <h1 className={css.title}>
+          {isTeacher ? t("titleTeacher") : t("title")}
+        </h1>
         <p className={css.lead}>
-          {from === "diagnostic" ? t("leadFromDiagnostic") : t("lead")}
+          {isTeacher
+            ? t("leadTeacher")
+            : from === "diagnostic"
+              ? t("leadFromDiagnostic")
+              : t("lead")}
         </p>
       </header>
 
       <form className={css.form} action={formAction}>
         <input type="hidden" name="next" value={nextPath} />
         <input type="hidden" name="from" value={from ?? ""} />
+        <input type="hidden" name="role" value={role} />
 
         <label className={css.field}>
           <span className={css.label}>{t("displayName")}</span>
@@ -122,7 +141,11 @@ export function RegisterForm({ nextPath, from }: RegisterFormProps) {
         ) : null}
 
         <button type="submit" className={css.submit} disabled={pending}>
-          {pending ? t("submitting") : t("submit")}
+          {pending
+            ? t("submitting")
+            : isTeacher
+              ? t("submitTeacher")
+              : t("submit")}
         </button>
       </form>
 
@@ -130,12 +153,6 @@ export function RegisterForm({ nextPath, from }: RegisterFormProps) {
         {t("haveAccount")}{" "}
         <Link href="/login" className={css.switchLink}>
           {t("signInLink")}
-        </Link>
-      </p>
-      <p className={css.switch}>
-        {t("teacherPrompt")}{" "}
-        <Link href="/register/teacher" className={css.switchLink}>
-          {t("teacherLink")}
         </Link>
       </p>
     </div>

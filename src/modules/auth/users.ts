@@ -460,7 +460,7 @@ export async function createUserRecord(
 }
 
 /**
- * Creates a new auth user. Public registration always uses role=student.
+ * Creates a new auth user. Public `/register` may create student or teacher.
  * Demo accounts keep fixed ids 1–3 via seed upsert.
  */
 export async function createUser(

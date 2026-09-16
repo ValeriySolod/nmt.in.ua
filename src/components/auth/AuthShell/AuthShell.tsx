@@ -11,10 +11,12 @@ type AuthShellProps = {
     title: string;
     lead: string;
   };
+  /** Extra content under the marketing lead (e.g. register role picker). */
+  asideExtra?: ReactNode;
 };
 
 /** Shared frame for /login and /register: aurora background, brand, marketing column. */
-export async function AuthShell({ children, aside }: AuthShellProps) {
+export async function AuthShell({ children, aside, asideExtra }: AuthShellProps) {
   const t = await getTranslations("AuthShared");
   const badge = aside?.badge ?? t("asideBadge");
   const title = aside?.title ?? t("asideTitle");
@@ -61,6 +63,7 @@ export async function AuthShell({ children, aside }: AuthShellProps) {
             <p className={css.asideBadge}>{badge}</p>
             <h2 className={css.asideTitle}>{title}</h2>
             <p className={css.asideLead}>{lead}</p>
+            {asideExtra}
           </aside>
 
           {children}
