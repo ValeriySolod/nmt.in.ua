@@ -26,10 +26,12 @@ export default async function AccountPage() {
   const t = await getTranslations("AccountCabinet");
 
   let recentResults: Awaited<ReturnType<typeof getRecentResults>> = [];
-  try {
-    recentResults = await getRecentResults(user.id);
-  } catch (error) {
-    console.error("account: getRecentResults failed", error);
+  if (user.role !== "admin") {
+    try {
+      recentResults = await getRecentResults(user.id);
+    } catch (error) {
+      console.error("account: getRecentResults failed", error);
+    }
   }
 
   let teacherProfile = null;
