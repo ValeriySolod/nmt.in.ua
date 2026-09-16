@@ -51,6 +51,7 @@ export const PUBLIC_CLIENT_NAMESPACES = [
 ] as const;
 
 const SETTINGS_NAMESPACES = ["ContentImportForm"] as const;
+const STUDENTS_NAMESPACES = ["TeacherStudents"] as const;
 
 /**
  * Redundant with `PUBLIC_CLIENT_NAMESPACES` now that `TopicTrainer` moved
@@ -66,6 +67,7 @@ export const CLIENT_MESSAGE_NAMESPACES = [
   ...PUBLIC_CLIENT_NAMESPACES,
   ...SETTINGS_NAMESPACES,
   ...CONSULTATIONS_NAMESPACES,
+  ...STUDENTS_NAMESPACES,
 ] as const;
 
 function isMarketingPath(pathname: string): boolean {
@@ -93,6 +95,8 @@ function namespacesForPath(pathname: string): readonly string[] {
     pathname === "/settings" || pathname.startsWith("/settings/");
   const isConsultations =
     pathname === "/consultations" || pathname.startsWith("/consultations/");
+  const isStudents =
+    pathname === "/students" || pathname.startsWith("/students/");
 
   if (isMarketingPath(pathname)) {
     if (isDiagnosticPath(pathname)) {
@@ -109,6 +113,9 @@ function namespacesForPath(pathname: string): readonly string[] {
   }
   if (isConsultations) {
     for (const key of CONSULTATIONS_NAMESPACES) keys.add(key);
+  }
+  if (isStudents) {
+    for (const key of STUDENTS_NAMESPACES) keys.add(key);
   }
   return [...keys];
 }

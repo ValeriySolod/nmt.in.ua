@@ -77,8 +77,8 @@ npm run dev
 | Логін | Пароль | Роль | Можливості |
 | --- | --- | --- | --- |
 | `demo-student` | `demo123` | Учень | тести, результати, власні сесії |
-| `demo-teacher` | `demo123` | Викладач | + призначення mentor-сесій на `/sessions` |
-| `demo-admin` | `demo123` | Адмін | + імпорт контенту на `/settings` |
+| `demo-teacher` | `demo123` | Викладач | + призначення mentor-сесій на `/sessions` і «Мої учні» на `/students` |
+| `demo-admin` | `demo123` | Адмін | + імпорт контенту на `/settings` (і той самий список учнів) |
 
 На `/login` є кнопки швидкого входу для кожної ролі. Нові учні реєструються на `/register` (роль `student`, авто-вхід після створення). Викладачі — окрема сторінка `/register/teacher` (500 грн, WayForPay); без `WAYFORPAY_MERCHANT_ACCOUNT` / `WAYFORPAY_MERCHANT_SECRET_KEY` форма зберігає заявку й показує «оплату ще не налаштовано». З ключами браузер робить POST на `https://secure.wayforpay.com/pay`. Адмін цим потоком не створюється.
 
@@ -110,8 +110,9 @@ npm run reset-demo-student
 | Webhook оплати | `POST /api/payments/wayforpay/webhook` (публічний, перевірка HMAC_MD5) |
 | Ролі | `student`, `teacher`, `admin` |
 | Облікові записи | таблиця `app_users` (окремо від legacy `users` на хостингу) |
-| Middleware | редірект на `/login`; публічні `/`, `/welcome`, `/login`, `/register` (+ `/register/teacher`), `/diagnostic`, `/t/{slug}` і статика з `public/`; webhook/return WayForPay під `/api/payments/wayforpay/*` (усі `/api/*` без auth-guard); `/settings` — лише admin |
+| Middleware | редірект на `/login`; публічні `/`, `/welcome`, `/login`, `/register` (+ `/register/teacher`), `/diagnostic`, `/t/{slug}` і статика з `public/`; webhook/return WayForPay під `/api/payments/wayforpay/*` (усі `/api/*` без auth-guard); `/settings` — лише admin; `/students` — teacher/admin |
 | Mentor UI | `/sessions` — панель призначення для teacher/admin |
+| Мої учні | `/students` — додати за логіном / відв’язати (teacher/admin) |
 | Публічна візитка | `/account` (teacher/admin) редагує картку; `/t/{slug}` видно лише якщо `is_public` |
 
 `userId` у Server Actions береться з сесії (`requireUserId()`), не з FormData.
@@ -221,6 +222,7 @@ src/modules/content-import/     модуль 2 — CSV/JSON → БД
 src/modules/testing/              модуль 3 — сесії, відповіді, finish
 src/modules/recommendations/      модуль 4 — stats, rules, graph, persist
 src/modules/sessions/             список сесій, createMentorSession
+src/modules/teacher-students/     «Мої учні»: link/unlink за логіном
 src/modules/admin/                auth для admin API
 src/middleware.ts                 rate limit + auth + probe paths
 server.js                         hardened запуск на хостингу
@@ -387,6 +389,7 @@ import {
 | `/session/[id]` | TopicTrainer | 3 |
 | `/results` | Таблиця + рекомендації | 3, 4 |
 | `/sessions` | Історія + planned (auto/mentor) + mentor assign | 3, 4, 5 |
+| `/students` | Мої учні (teacher/admin): додати за логіном | teacher-students |
 | `/settings` | Імпорт контенту (admin) | 2, 5 |
 | `/simulator` | Симулятор НМТ | 3 |
 | `/problems` | Друкований тест по темі | 6.6 |

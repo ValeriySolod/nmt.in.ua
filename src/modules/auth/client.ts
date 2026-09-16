@@ -4,6 +4,7 @@ export {
   canAssignMentorSessions,
   canImportContent,
   canReviewConsultationRequests,
+  canManageStudents,
   roleLabel,
   userInitials,
 } from "./types";
