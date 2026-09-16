@@ -9,15 +9,16 @@ export type RegisterRole = "student" | "teacher";
 
 type RegisterRolePickerProps = {
   role: RegisterRole;
-  /** Keep next/from when switching role. */
-  hrefForRole: (role: RegisterRole) => string;
+  studentHref: string;
+  teacherHref: string;
   /** `aside` — under marketing copy (1240+). `card` — mobile form. */
   placement: "aside" | "card";
 };
 
 export function RegisterRolePicker({
   role,
-  hrefForRole,
+  studentHref,
+  teacherHref,
   placement,
 }: RegisterRolePickerProps) {
   const t = useTranslations("RegisterForm");
@@ -34,7 +35,7 @@ export function RegisterRolePicker({
       <p className={css.rolePickerLabel}>{t("roleLabel")}</p>
       <div className={css.rolePickerTabs}>
         <Link
-          href={hrefForRole("student")}
+          href={studentHref}
           className={clsx(
             css.roleTab,
             role === "student" && css.roleTabActive,
@@ -44,7 +45,7 @@ export function RegisterRolePicker({
           {t("roleStudent")}
         </Link>
         <Link
-          href={hrefForRole("teacher")}
+          href={teacherHref}
           className={clsx(
             css.roleTab,
             role === "teacher" && css.roleTabActive,

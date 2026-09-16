@@ -32,6 +32,18 @@ function pickRole(raw: string | string[] | undefined): RegisterRole {
   return value === "teacher" ? "teacher" : "student";
 }
 
+function registerHref(
+  role: RegisterRole,
+  nextPath: string,
+  from: "diagnostic" | undefined,
+): string {
+  const query = new URLSearchParams();
+  query.set("role", role);
+  if (nextPath !== "/") query.set("next", nextPath);
+  if (from) query.set("from", from);
+  return `/register?${query.toString()}`;
+}
+
 export default async function RegisterPage({ searchParams }: RegisterPageProps) {
   const params = await searchParams;
   const rawNext = Array.isArray(params.next) ? params.next[0] : params.next;
@@ -40,25 +52,22 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
   const from = rawFrom === "diagnostic" ? "diagnostic" : undefined;
   const role = pickRole(params.role);
 
-  const hrefForRole = (nextRole: RegisterRole) => {
-    const query = new URLSearchParams();
-    query.set("role", nextRole);
-    if (nextPath !== "/") query.set("next", nextPath);
-    if (from) query.set("from", from);
-    return `/register?${query.toString()}`;
-  };
+  const studentHref = registerHref("student", nextPath, from);
+  const teacherHref = registerHref("teacher", nextPath, from);
 
   const cardPicker = (
     <RegisterRolePicker
       role={role}
-      hrefForRole={hrefForRole}
+      studentHref={studentHref}
+      teacherHref={teacherHref}
       placement="card"
     />
   );
   const asidePicker = (
     <RegisterRolePicker
       role={role}
-      hrefForRole={hrefForRole}
+      studentHref={studentHref}
+      teacherHref={teacherHref}
       placement="aside"
     />
   );
