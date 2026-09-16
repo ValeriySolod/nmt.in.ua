@@ -12,7 +12,13 @@ test("sitemap lists only public pages that do not require login", () => {
   assert.deepEqual(
     paths,
     [
-      ...PUBLIC_PAGE_PATHS.filter((path) => path !== "/t"),
+      ...PUBLIC_PAGE_PATHS.filter(
+        (path) =>
+          path !== "/t" &&
+          path !== "/verify-email" &&
+          path !== "/forgot-password" &&
+          path !== "/reset-password",
+      ),
       "/register/teacher",
     ].sort(),
   );

@@ -6,21 +6,37 @@ export const DISPLAY_NAME_MIN_LEN = 2;
 export const DISPLAY_NAME_MAX_LEN = 100;
 export const PASSWORD_MIN_LEN = 8;
 export const PASSWORD_MAX_LEN = 128;
+export const EMAIL_MAX_LEN = 255;
 
 /** login: latin letters, digits, underscore, hyphen, dot */
 const LOGIN_PATTERN = /^[a-z0-9][a-z0-9._-]{1,48}[a-z0-9]$|^[a-z0-9]{3,50}$/i;
+
+/** Practical email check — full RFC is overkill for registration. */
+const EMAIL_PATTERN =
+  /^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/i;
 
 export type RegistrationFieldError =
   | "requiredFields"
   | "invalidLogin"
   | "invalidDisplayName"
+  | "invalidEmail"
   | "passwordTooShort"
   | "passwordTooLong"
   | "passwordMismatch"
   | "loginTaken"
+  | "emailTaken"
   | "reservedLogin";
 
 export type RegistrationInput = {
+  login: string;
+  displayName: string;
+  email: string;
+  password: string;
+  passwordConfirm: string;
+};
+
+/** Teacher paid signup — same credentials rules, email collected later / not yet. */
+export type TeacherRegistrationInput = {
   login: string;
   displayName: string;
   password: string;
@@ -28,6 +44,13 @@ export type RegistrationInput = {
 };
 
 export type ValidatedRegistration = {
+  login: string;
+  displayName: string;
+  email: string;
+  password: string;
+};
+
+export type ValidatedTeacherRegistration = {
   login: string;
   displayName: string;
   password: string;
@@ -45,13 +68,23 @@ export function normalizeDisplayName(raw: string): string {
   return raw.trim().replace(/\s+/g, " ");
 }
 
-/**
- * Validates public self-registration fields (student only).
- * Returns a field error code or normalized values.
- */
-export function validateRegistrationInput(
-  input: RegistrationInput,
-): { ok: true; value: ValidatedRegistration } | { ok: false; code: RegistrationFieldError } {
+export function normalizeEmail(raw: string | null | undefined): string {
+  return String(raw ?? "")
+    .trim()
+    .toLowerCase();
+}
+
+function validateCredentialFields(input: {
+  login: string;
+  displayName: string;
+  password: string;
+  passwordConfirm: string;
+}):
+  | {
+      ok: true;
+      value: { login: string; displayName: string; password: string };
+    }
+  | { ok: false; code: RegistrationFieldError } {
   const login = normalizeLogin(input.login);
   const displayName = normalizeDisplayName(input.displayName);
   const password = input.password;
@@ -92,8 +125,41 @@ export function validateRegistrationInput(
     return { ok: false, code: "passwordMismatch" };
   }
 
+  return { ok: true, value: { login, displayName, password } };
+}
+
+/**
+ * Validates public self-registration fields (student only).
+ * Returns a field error code or normalized values.
+ */
+export function validateRegistrationInput(
+  input: RegistrationInput,
+):
+  | { ok: true; value: ValidatedRegistration }
+  | { ok: false; code: RegistrationFieldError } {
+  const email = normalizeEmail(input.email);
+  if (!email) {
+    return { ok: false, code: "requiredFields" };
+  }
+
+  const credentials = validateCredentialFields(input);
+  if (!credentials.ok) return credentials;
+
+  if (email.length > EMAIL_MAX_LEN || !EMAIL_PATTERN.test(email)) {
+    return { ok: false, code: "invalidEmail" };
+  }
+
   return {
     ok: true,
-    value: { login, displayName, password },
+    value: { ...credentials.value, email },
   };
+}
+
+/** Paid teacher registration — credentials only until email lands in that flow. */
+export function validateTeacherRegistrationInput(
+  input: TeacherRegistrationInput,
+):
+  | { ok: true; value: ValidatedTeacherRegistration }
+  | { ok: false; code: RegistrationFieldError } {
+  return validateCredentialFields(input);
 }

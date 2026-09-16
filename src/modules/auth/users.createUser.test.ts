@@ -25,6 +25,7 @@ test("createUser inserts a student and returns AuthUser", async () => {
         assert.match(String(params[1]), /^scrypt:/);
         assert.equal(params[2], "Марія Коваленко");
         assert.equal(params[3], "student");
+        assert.equal(params[4], "maria@example.com");
         return { insertId: 42, affectedRows: 1 };
       }
       return { insertId: 0, affectedRows: 0 };
@@ -42,6 +43,7 @@ test("createUser inserts a student and returns AuthUser", async () => {
     {
       login: "maria_k",
       displayName: "Марія Коваленко",
+      email: "maria@example.com",
       password: "securepass",
       role: "student",
     },
@@ -79,12 +81,48 @@ test("createUser maps MySQL duplicate key to login_taken", async () => {
         {
           login: "taken",
           displayName: "Taken User",
+          email: "taken@example.com",
           password: "securepass",
         },
         { getConnection: async () => connection },
       ),
     (error: unknown) =>
       error instanceof CreateUserError && error.code === "login_taken",
+  );
+});
+
+test("createUser maps MySQL duplicate email to email_taken", async () => {
+  const connection: SqlConnection = {
+    beginTransaction: async () => {},
+    query: async <T,>() => [{ count: 3 }] as T[],
+    execute: async (sql) => {
+      if (sql.includes("CREATE TABLE") || sql.includes("ON DUPLICATE KEY") || sql.includes("ADD COLUMN") || sql.includes("ADD UNIQUE")) {
+        return { insertId: 0, affectedRows: 0 };
+      }
+      const err = Object.assign(
+        new Error("Duplicate entry 'x' for key 'uq_app_users_email'"),
+        { errno: 1062 },
+      );
+      throw err;
+    },
+    commit: async () => {},
+    rollback: async () => {},
+    release: () => {},
+  };
+
+  await assert.rejects(
+    () =>
+      createUser(
+        {
+          login: "fresh",
+          displayName: "Fresh User",
+          email: "dup@example.com",
+          password: "securepass",
+        },
+        { getConnection: async () => connection },
+      ),
+    (error: unknown) =>
+      error instanceof CreateUserError && error.code === "email_taken",
   );
 });
 

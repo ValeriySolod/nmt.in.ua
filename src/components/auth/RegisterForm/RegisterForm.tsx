@@ -71,6 +71,20 @@ export function RegisterForm({ nextPath, from }: RegisterFormProps) {
         </label>
 
         <label className={css.field}>
+          <span className={css.label}>{t("email")}</span>
+          <input
+            className={css.input}
+            type="email"
+            name="email"
+            autoComplete="email"
+            required
+            maxLength={255}
+            disabled={pending}
+          />
+          <span className={css.hint}>{t("emailHint")}</span>
+        </label>
+
+        <label className={css.field}>
           <span className={css.label}>{t("password")}</span>
           <input
             className={css.input}

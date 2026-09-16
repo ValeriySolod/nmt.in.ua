@@ -1,6 +1,6 @@
 import { findUserByLogin } from "@/modules/auth/users";
 import {
-  validateRegistrationInput,
+  validateTeacherRegistrationInput,
   type RegistrationFieldError,
 } from "@/modules/auth/validateRegistration";
 import { readWayForPayConfig, teacherCheckoutUrls } from "./config";
@@ -58,7 +58,7 @@ export async function startTeacherRegistration(
   },
   deps: StartTeacherRegistrationDeps = defaultStartDeps,
 ): Promise<StartTeacherRegistrationResult> {
-  const validated = validateRegistrationInput(input);
+  const validated = validateTeacherRegistrationInput(input);
   if (!validated.ok) {
     return { ok: false, code: validated.code };
   }

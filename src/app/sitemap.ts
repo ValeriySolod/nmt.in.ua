@@ -2,9 +2,17 @@ import type { MetadataRoute } from "next";
 import { PUBLIC_PAGE_PATHS } from "@/constants/publicRoutes";
 import { absoluteUrl } from "@/constants/seo";
 
-/** `/t` is a public prefix for `/t/{slug}` cards — there is no index page. */
+/** `/t` is a public prefix for `/t/{slug}` cards — there is no index page.
+ *  Verify/reset links are token URLs — keep them out of the sitemap. */
+const SITEMAP_EXCLUDED = new Set([
+  "/t",
+  "/verify-email",
+  "/forgot-password",
+  "/reset-password",
+]);
+
 const SITEMAP_PUBLIC_PATHS = [
-  ...PUBLIC_PAGE_PATHS.filter((path) => path !== "/t"),
+  ...PUBLIC_PAGE_PATHS.filter((path) => !SITEMAP_EXCLUDED.has(path)),
   "/register/teacher",
 ];
 

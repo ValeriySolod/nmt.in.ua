@@ -166,6 +166,15 @@ export function AdminProfilesPanel({
                     </p>
                     <p className={css.login}>@{profile.login}</p>
                     <p className={css.meta}>
+                      {profile.email
+                        ? t("emailMeta", { email: profile.email })
+                        : t("emailMissing")}
+                      {" · "}
+                      {profile.emailVerified
+                        ? t("emailVerified")
+                        : t("emailUnverified")}
+                    </p>
+                    <p className={css.meta}>
                       {t("roleMeta", { role: roleLabel(profile.role) })}
                       {" · "}
                       {t("lastLoginMeta", {

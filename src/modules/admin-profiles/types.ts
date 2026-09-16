@@ -4,6 +4,8 @@ export type AdminProfile = {
   id: number;
   login: string;
   displayName: string;
+  email: string | null;
+  emailVerified: boolean;
   role: UserRole;
   isBanned: boolean;
   isOnline: boolean;

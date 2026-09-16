@@ -132,6 +132,7 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 | `src/app/` | Маршрути App Router + metadata |
 | `src/app/welcome/` | Лендінг (завжди, навіть для увійшлих) |
 | `src/app/login/` і `register/` | Вхід і реєстрація учня |
+| `src/app/(marketing)/verify-email/` тощо | Підтвердження email, forgot/reset пароля |
 | `src/app/(marketing)/register/teacher/` | Платна реєстрація викладача (WayForPay) |
 | `src/app/api/payments/wayforpay/webhook/` | Webhook еквайрингу (serviceUrl) |
 | `src/app/session/[id]/` | Тренажер однієї сесії |
@@ -145,10 +146,11 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 | `src/components/account/` | Особистий кабінет `/account` + редактор візитки викладача |
 | `src/components/teachers/` | Публічна картка `/t/{slug}` |
 | `src/components/testing/` | TopicTrainer, NmtTrainer, підсумок, розбір помилок |
-| `src/components/auth/` | AuthShell, форми входу / реєстрації |
+| `src/components/auth/` | AuthShell, форми входу / реєстрації / verify / reset |
 | `src/components/ui/` | Reveal, ModeTabs, MathText |
 | `src/components/practice/` | `FractionPracticeTrainer` — генерована практика дробів (11.09) |
-| `src/modules/auth/` | Користувачі, cookie, паролі, ролі |
+| `src/modules/auth/` | Користувачі, cookie, паролі, ролі, email verify/reset |
+| `src/modules/mail/` | Resend / log-транзакційні листи |
 | `src/modules/payments/` | Реєстрація викладача, WayForPay Purchase, webhook |
 | `src/modules/content-import/` | CSV/JSON → БД |
 | `src/modules/testing/` | Старт, checkAnswer, finish, симулятор, таймер |
@@ -195,7 +197,8 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 
 | Таблиця | Навіщо | Важливі поля |
 | --- | --- | --- |
-| `app_users` | Наші акаунти | `login`, `role`, `is_banned` (020), `last_login_at` / `last_seen_at` (021, online ≈ 3 хв). Не плутати з legacy `users` |
+| `app_users` | Наші акаунти | `login`, `email` / `email_verified_at` (022; реєстрація + блок логіну до verify, демо exempt), `role`, `is_banned` (020), `last_login_at` / `last_seen_at` (021). Не плутати з legacy `users` |
+| `auth_tokens` | Verify / reset | `user_id`, `purpose` email_verify\|password_reset, `token_hash`, `expires_at`, `used_at`. SQL `023_auth_tokens.sql` + lazy `ensureAuthTokenSchema`. Листи через Resend (`RESEND_API_KEY` / `MAIL_FROM`) або log у dev |
 | `user_avatars` | Фото профілю | `user_id`, `mime`, `bytes` MEDIUMBLOB. Лениво `CREATE` у `ensureAuthSchema` / `015_user_avatars.sql` |
 | `teacher_profiles` | Публічна візитка | `user_id`, `slug` unique, `headline`, `bio`, `city`, `subjects` (JSON), `contact_url`, `is_public`. `018_teacher_profiles.sql` + lazy `ensureTeacherProfileSchema`. **018:** `016` уже `task_sessions_expire_time`; консультації — `019`; «мої учні» — `017` |
 | `teacher_payments` | Pending реєстрація викладача до оплати WayForPay | `reference`, hashed пароль, `status` pending/paid/failed, `provider`, `external_order_id`; `user_id` після Approved. SQL `014_teacher_payments.sql` |
@@ -319,14 +322,16 @@ Ultimate/НМТ/діагностика лишились без змін. Зар�
 | URL | Хто бачить | Стан |
 | --- | --- | --- |
 | `/`, `/welcome` | Усі. `/` — лендінг для гостя, кабінет для учня; `/welcome` завжди лендінг | Готово |
-| `/login`, `/register` | Гість | Готово |
+| `/login`, `/register` | Гість | Готово. Реєстрація з обовʼязковим email → `/register/check-email` (без сесії до verify) |
+| `/register/check-email`, `/verify-email` | Гість | Підтвердження email (Resend / log). Після verify — сесія |
+| `/forgot-password`, `/reset-password` | Гість | Скидання пароля за email (лише verified акаунти) |
 | `/register/teacher` (+ `/success`, `/fail`) | Гість | Платна реєстрація викладача (WayForPay, 500 грн). Без ключів — заглушка. Dev: кнопка «Оплата пройшла». Production sandbox — лише з `TEACHER_PAYMENT_TEST_BYPASS=1` |
 | `/diagnostic`, `/diagnostic/session/[id]` | Усі (публічно, як `/welcome`) — гість або увійдений учень | Готово |
 | `/session/[id]` | Власник сесії | Готово |
 | `/simulator` | Учень+ | Готово — сітка офіційних варіантів НМТ (`nmt_variants`) |
 | `/settings` | Лише admin | Імпорт контенту |
 | `/feedback` | Лише admin | Відгуки про сайт (`site_feedback`) |
-| `/profiles` | Лише admin | Список акаунтів: фільтр за роллю, online/offline, останній вхід, бан, видалення |
+| `/profiles` | Лише admin | Список акаунтів: email + verified, фільтр за роллю, online/offline, останній вхід, бан, видалення |
 | `/materials`, `/materials/[slug]` | Учень+ | Редірект → `/materials/textbook` |
 | `/materials/textbook` | Учень+ | Єдиний підручник: зміст + один розділ `?topic=<themes.code>` |
 | `/problems` | Учень+ | Задачник: друкований тест по темі |
@@ -428,6 +433,7 @@ Ultimate/НМТ/діагностика лишились без змін. Зар�
 | Мої учні | `src/modules/teacher-students`, `/students` | Мала | ✅ 11.09: ручне прив’язування за логіном (teacher/admin) |
 | Публічна візитка викладача | `src/modules/teachers`, `/account`, `/t/{slug}` | Мала | ✅ 13.09 |
 | Реєстрація викладача + WayForPay | `/register/teacher`, `src/modules/payments` | Середня | ✅ 10.09: pending + WayForPay Purchase/webhook. Локально: «Оплата пройшла» лишає на `/register/teacher` (шлюз згорнутий). На живому мерчанті в production вимкнено |
+| Email verify + reset (Resend) | `src/modules/auth`, `src/modules/mail`, `/verify-email` | Середня | ✅ 16.09: блок логіну до verify; forgot/reset; без ключа — log |
 | Перф (TTFB / бандл) | `(app)`/`(marketing)` layouts, `catalogCache`, `sampleRandomIds` | — | ✅ 10.09: без `ORDER BY RAND()`, кеш довідників, cookie-профіль |
 
 Карта app router: `src/app/page.tsx` — `/` (гість легкий / учень → CabinetHome); `src/app/(marketing)/` — welcome / login / register / diagnostic / `t/[slug]`; `src/app/(app)/` — кабінет (`force-dynamic`). Root layout лише `html`/`body` + `globals.css`.

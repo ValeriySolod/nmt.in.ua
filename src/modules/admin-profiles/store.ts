@@ -6,14 +6,14 @@ import { ensureAuthSchema } from "@/modules/auth/users";
 import { AdminProfilesError, type AdminProfile } from "./types";
 
 const SQL_LIST_PROFILES = `
-  SELECT id, login, display_name, role, is_banned,
+  SELECT id, login, display_name, email, email_verified_at, role, is_banned,
          last_login_at, last_seen_at, created_at
   FROM app_users
   ORDER BY role ASC, display_name ASC, id ASC
 `;
 
 const SQL_FIND_TARGET = `
-  SELECT id, login, display_name, role, is_banned,
+  SELECT id, login, display_name, email, email_verified_at, role, is_banned,
          last_login_at, last_seen_at, created_at
   FROM app_users
   WHERE id = ?
@@ -34,6 +34,8 @@ type ProfileRow = {
   id: number;
   login: string;
   display_name: string;
+  email: string | null;
+  email_verified_at: Date | string | null;
   role: UserRole;
   is_banned: number | boolean | null;
   last_login_at: Date | string | null;
@@ -65,10 +67,13 @@ function isTruthyFlag(value: unknown): boolean {
 function mapProfile(row: ProfileRow, nowMs = Date.now()): AdminProfile {
   const lastSeenAt = formatTimestamp(row.last_seen_at);
   const lastLoginAt = formatTimestamp(row.last_login_at);
+  const email = row.email?.trim() || null;
   return {
     id: row.id,
     login: row.login.trim(),
     displayName: row.display_name.trim(),
+    email,
+    emailVerified: Boolean(formatTimestamp(row.email_verified_at)),
     role: row.role,
     isBanned: isTruthyFlag(row.is_banned),
     isOnline: isUserOnline(lastSeenAt, nowMs),

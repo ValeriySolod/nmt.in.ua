@@ -21,6 +21,7 @@ test("registerAction returns validation error without creating a user", async ()
     formDataWith({
       login: "ab",
       displayName: "Ok Name",
+      email: "ok@example.com",
       password: "12345678",
       passwordConfirm: "12345678",
     }),
@@ -36,6 +37,7 @@ test("registerAction maps login_taken from createUser", async () => {
     formDataWith({
       login: "demo-admin",
       displayName: "Someone",
+      email: "someone@example.com",
       password: "12345678",
       passwordConfirm: "12345678",
     }),

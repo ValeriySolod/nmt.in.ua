@@ -448,3 +448,9 @@ npm run lint && npm test && npm run build
 - `last_login_at` / `last_seen_at` на `app_users` (`021` + lazy ALTER).
 - Кабінет: `PresenceHeartbeat` → `POST /api/presence` раз на хвилину.
 - Online = `last_seen` за останні ~3 хв. Адмін на `/profiles` бачить статус і час входу.
+
+### 2026-09-16 — email verify + reset (Resend)
+
+- `app_users.email` + `email_verified_at` (`022` + lazy ALTER / unique); `auth_tokens` (`023`).
+- `/register` вимагає e-mail → лист → `/verify-email`; логін блокується до verify (демо exempt).
+- Forgot/reset: `/forgot-password`, `/reset-password`. Без `RESEND_API_KEY` — log у консоль.
