@@ -11,7 +11,10 @@ test("sitemap lists only public pages that do not require login", () => {
 
   assert.deepEqual(
     paths,
-    [...PUBLIC_PAGE_PATHS].filter((path) => path !== "/t").sort(),
+    [
+      ...PUBLIC_PAGE_PATHS.filter((path) => path !== "/t"),
+      "/register/teacher",
+    ].sort(),
   );
 
   const publicPaths = new Set<string>(paths);

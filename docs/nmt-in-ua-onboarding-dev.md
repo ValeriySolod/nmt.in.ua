@@ -54,6 +54,10 @@ npm run dev
 | --- | --- | --- |
 | `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` | Пул MySQL | Сторінки з даними падають |
 | `SESSION_SECRET` | Підпис cookie `nmt_session` | На проді вхід небезпечний / зламаний |
+| `WAYFORPAY_MERCHANT_ACCOUNT` | Еквайринг WayForPay для `/register/teacher` | Без ключів: «оплату ще не налаштовано», checkout не підписується. З ключами — HMAC_MD5 + POST на `secure.wayforpay.com/pay`. Пісочниця з docs: `test_merch_n1`. Лише `.env.local` / хостинг `.env.production` |
+| `WAYFORPAY_MERCHANT_SECRET_KEY` | SecretKey HMAC_MD5 (Purchase + serviceUrl) | Разом із account; ніколи в git |
+| `WAYFORPAY_MERCHANT_DOMAIN` | Домен мерчанта (опційно) | Hostname з `NEXT_PUBLIC_SITE_URL` |
+| `TEACHER_PAYMENT_TEST_BYPASS` | Кнопка «Оплата пройшла» на `/register/teacher` | За замовчуванням увімкнено в `development` і для `test_merch_n1`. У production на живому мерчанті завжди вимкнено, навіть якщо `=1`. Локально сховати: `=0` |
 | `CONTENT_IMPORT_API_KEY` | Bearer для `POST /api/import` | Усі імпорти — 401 (fail-closed) |
 | `ADMIN_API_KEY` | Bearer для `POST /api/admin/sessions` | Усі admin-запити — 401 |
 
@@ -128,6 +132,8 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 | `src/app/` | Маршрути App Router + metadata |
 | `src/app/welcome/` | Лендінг (завжди, навіть для увійшлих) |
 | `src/app/login/` і `register/` | Вхід і реєстрація учня |
+| `src/app/(marketing)/register/teacher/` | Платна реєстрація викладача (WayForPay) |
+| `src/app/api/payments/wayforpay/webhook/` | Webhook еквайрингу (serviceUrl) |
 | `src/app/session/[id]/` | Тренажер однієї сесії |
 | `src/app/simulator/` | Старт симулятора НМТ |
 | `src/app/results/` і `sessions/` | Прогрес і історія |
@@ -142,6 +148,7 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 | `src/components/ui/` | Reveal, ModeTabs, MathText |
 | `src/components/practice/` | `FractionPracticeTrainer` — генерована практика дробів (11.09) |
 | `src/modules/auth/` | Користувачі, cookie, паролі, ролі |
+| `src/modules/payments/` | Реєстрація викладача, WayForPay Purchase, webhook |
 | `src/modules/content-import/` | CSV/JSON → БД |
 | `src/modules/testing/` | Старт, checkAnswer, finish, симулятор, таймер |
 | `src/modules/problemGenerators/` | Чисті генератори завдань (без БД); поки лише `fractionAddition` — 5 рівнів додавання дробів з однаковим знаменником |
@@ -170,6 +177,7 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 | Модуль | Папка | Головні функції |
 | --- | --- | --- |
 | Auth | `src/modules/auth` | `requireUserId`, `getCurrentUser`, login/register/`changePassword` |
+| Оплата | `src/modules/payments` | `startTeacherRegistration`, `applyWayForPayWebhook`, `simulateTeacherPaymentSuccess`, `resolveBypassReference`, `buildWayForPayCheckout` |
 | Імпорт | `src/modules/content-import` | parse + validate + транзакція `themes` → connections → `quiz_tasks` (+ опційно `problems`) |
 | Тест | `src/modules/testing` | `startTopicTest`, `startNmtSimulator`, `checkAnswer`, `finishTrainerSession`, `getTaskHint`, `addSimilarPracticeTask` (Практика, 11.09) |
 | Рекомендації | `src/modules/recommendations` | `getStudentTopicStats`, `recommendNextActions`, `persistRecommendations` |
@@ -187,6 +195,7 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 | `app_users` | Наші акаунти | `login`, `role`. Не плутати з legacy `users` |
 | `user_avatars` | Фото профілю | `user_id`, `mime`, `bytes` MEDIUMBLOB. Лениво `CREATE` у `ensureAuthSchema` / `015_user_avatars.sql` |
 | `teacher_profiles` | Публічна візитка | `user_id`, `slug` unique, `headline`, `bio`, `city`, `subjects` (JSON), `contact_url`, `is_public`. `018_teacher_profiles.sql` + lazy `ensureTeacherProfileSchema`. **018, не 016/017:** на `dev` уже є `016_task_sessions_expire_time`; відкриті PR консультацій і «мої учні» тримають 016/017 |
+| `teacher_payments` | Pending реєстрація викладача до оплати WayForPay | `reference`, hashed пароль, `status` pending/paid/failed, `provider`, `external_order_id`; `user_id` після Approved. SQL `014_teacher_payments.sql` |
 | `themes` | Теми тесту | `id`, `code` (unique, напр. `ALG-08-QUAD-EQ` — якір розділу підручника), `name`, `description`, `ord` |
 | `theme_connections` | Граф «наступна тема» | `vertex_start` → `vertex_finish` |
 | `quiz_tasks` | Банк тренажера (тест / симулятор topic-bank / діагностика) | `right_answer_n` (1–4) лише на сервері в сесії |
@@ -304,6 +313,7 @@ Ultimate/НМТ/діагностика лишились без змін. Зар�
 | --- | --- | --- |
 | `/`, `/welcome` | Усі. `/` — лендінг для гостя, кабінет для учня; `/welcome` завжди лендінг | Готово |
 | `/login`, `/register` | Гість | Готово |
+| `/register/teacher` (+ `/success`, `/fail`) | Гість | Платна реєстрація викладача (WayForPay, 500 грн). Без ключів — заглушка. Dev/sandbox: кнопка «Оплата пройшла» (без переходу на WayForPay за замовчуванням) |
 | `/diagnostic`, `/diagnostic/session/[id]` | Усі (публічно, як `/welcome`) — гість або увійдений учень | Готово |
 | `/session/[id]` | Власник сесії | Готово |
 | `/simulator` | Учень+ | Готово — сітка офіційних варіантів НМТ (`nmt_variants`) |
@@ -406,6 +416,7 @@ Ultimate/НМТ/діагностика лишились без змін. Зар�
 | 6.2 Відгук | `src/modules/feedback` | Мала | ✅ |
 | Консультації | `/consultations` | Мала | Частково: пункт у меню; треба форма / контакти |
 | Публічна візитка викладача | `src/modules/teachers`, `/account`, `/t/{slug}` | Мала | ✅ 13.09 |
+| Реєстрація викладача + WayForPay | `/register/teacher`, `src/modules/payments` | Середня | ✅ 10.09: pending + WayForPay Purchase/webhook. Локально: «Оплата пройшла» лишає на `/register/teacher` (шлюз згорнутий). На живому мерчанті в production вимкнено |
 | Перф (TTFB / бандл) | `(app)`/`(marketing)` layouts, `catalogCache`, `sampleRandomIds` | — | ✅ 10.09: без `ORDER BY RAND()`, кеш довідників, cookie-профіль |
 
 Карта app router: `src/app/page.tsx` — `/` (гість легкий / учень → CabinetHome); `src/app/(marketing)/` — welcome / login / register / diagnostic / `t/[slug]`; `src/app/(app)/` — кабінет (`force-dynamic`). Root layout лише `html`/`body` + `globals.css`.

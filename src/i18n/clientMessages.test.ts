@@ -36,9 +36,15 @@ test("cabinet /home keeps Header.goHomeShort and CORE namespaces", () => {
 });
 
 test("pickClientMessages keeps shared marketing namespaces on auth and diagnostic", () => {
-  for (const path of ["/login", "/register", "/diagnostic"] as const) {
+  for (const path of [
+    "/login",
+    "/register",
+    "/register/teacher",
+    "/diagnostic",
+  ] as const) {
     const picked = pickClientMessages(uk, path);
     assert.ok(PUBLIC_CLIENT_NAMESPACES.every((key) => key in picked));
+    assert.ok("TeacherRegister" in picked);
     assert.equal("Header" in picked, false);
   }
   assert.ok("ContentImportForm" in pickClientMessages(uk, "/settings"));
@@ -85,6 +91,7 @@ test("SessionExpiredNotice ships everywhere TopicTrainer does", () => {
 
 test("CLIENT_MESSAGE_NAMESPACES still lists the full union for docs/tests", () => {
   assert.ok(CLIENT_MESSAGE_NAMESPACES.includes("LoginForm"));
+  assert.ok(CLIENT_MESSAGE_NAMESPACES.includes("TeacherRegister"));
   assert.ok(CLIENT_MESSAGE_NAMESPACES.includes("Header"));
 });
 

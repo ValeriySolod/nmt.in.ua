@@ -46,6 +46,12 @@ function limitFor(pathname: string): number {
   if (pathname.startsWith("/_next")) return LIMIT_OTHER;
   if (pathname.startsWith("/api/avatar")) return LIMIT_PAGE;
   if (
+    pathname === "/api/payments/wayforpay/webhook" ||
+    pathname === "/api/payments/wayforpay/return"
+  ) {
+    return LIMIT_PAGE;
+  }
+  if (
     pathname === "/login" ||
     pathname === "/register" ||
     pathname.startsWith("/login/") ||
