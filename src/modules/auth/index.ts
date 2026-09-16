@@ -1,9 +1,11 @@
 export type { AuthUser, SessionPayload, UserRole, StudentOption } from "./types";
 export {
   DEMO_ACCOUNTS,
+  ADMIN_NAV_HREFS,
   avatarSrc,
   canAssignMentorSessions,
   canImportContent,
+  canManageProfiles,
   canReviewConsultationRequests,
   canManageStudents,
   roleLabel,
@@ -67,3 +69,9 @@ export type {
   RegistrationFieldError,
   RegistrationInput,
 } from "./validateRegistration";
+export {
+  isUserOnline,
+  touchLastSeen,
+  recordLoginPresence,
+  ONLINE_THRESHOLD_MS,
+} from "./presence";

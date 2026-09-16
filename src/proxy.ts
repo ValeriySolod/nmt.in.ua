@@ -76,7 +76,16 @@ function isPublicPath(pathname: string): boolean {
 }
 
 function requiresAdmin(pathname: string): boolean {
-  return pathname === "/settings" || pathname.startsWith("/settings/");
+  return (
+    pathname === "/settings" ||
+    pathname.startsWith("/settings/") ||
+    pathname === "/profiles" ||
+    pathname.startsWith("/profiles/") ||
+    pathname === "/feedback" ||
+    pathname.startsWith("/feedback/") ||
+    pathname === "/tasks" ||
+    pathname.startsWith("/tasks/")
+  );
 }
 
 function requiresTeacherOrAdmin(pathname: string): boolean {

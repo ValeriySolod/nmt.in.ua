@@ -52,6 +52,8 @@ test("pickClientMessages keeps shared marketing namespaces on auth and diagnosti
   assert.ok("Consultations" in pickClientMessages(uk, "/home"));
   assert.ok("TeacherStudents" in pickClientMessages(uk, "/students"));
   assert.ok("TeacherStudents" in pickClientMessages(uk, "/home"));
+  assert.ok("AdminContent" in pickClientMessages(uk, "/home"));
+  assert.ok("AdminProfiles" in pickClientMessages(uk, "/profiles"));
   assert.equal("TeacherStudents" in pickClientMessages(uk, "/"), false);
 });
 

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import { findUserById } from "@/modules/auth/users";
 import { setSessionCookie } from "@/modules/auth/getCurrentUser";
+import { recordLoginPresence } from "@/modules/auth/presence";
 import {
   isAllowedWayForPayCheckoutUrl,
   isTeacherPaymentReference,
@@ -108,6 +109,7 @@ export async function claimTeacherSessionAction(
   if (!user || user.role !== "teacher") {
     return { ok: false };
   }
+  await recordLoginPresence(user.id);
   await setSessionCookie(user);
   try {
     await clearTeacherPayCookie();
@@ -172,6 +174,7 @@ export async function simulateTeacherPaymentSuccessAction(
     return { status: "error", code: result.code };
   }
 
+  await recordLoginPresence(result.user.id);
   await setSessionCookie(result.user);
   try {
     await clearTeacherPayCookie();

@@ -16,6 +16,7 @@ import {
 import { changePassword, ChangePasswordError } from "./changePassword";
 import type { ChangePasswordErrorCode } from "./changePassword";
 import { createUser, CreateUserError, findUserById, findUserByLogin } from "./users";
+import { recordLoginPresence } from "./presence";
 import {
   removeAvatar,
   uploadAvatar,
@@ -30,15 +31,18 @@ import {
   type RegistrationFieldError,
 } from "./validateRegistration";
 
-export type LoginErrorCode = "requiredFields" | "invalidCredentials";
+export type LoginErrorCode =
+  | "requiredFields"
+  | "invalidCredentials"
+  | "accountBanned";
 
 export type LoginActionState =
   | { status: "idle" }
-  | { status: "error"; code: LoginErrorCode };
+  | { status: "error", code: LoginErrorCode };
 
 export type RegisterActionState =
   | { status: "idle" }
-  | { status: "error"; code: RegistrationFieldError | "serverError" };
+  | { status: "error", code: RegistrationFieldError | "serverError" };
 
 export async function loginAction(
   _prev: LoginActionState,
@@ -62,6 +66,11 @@ export async function loginAction(
     return { status: "error", code: "invalidCredentials" };
   }
 
+  if (user.isBanned) {
+    return { status: "error", code: "accountBanned" };
+  }
+
+  await recordLoginPresence(user.id);
   await setSessionCookie(user);
   redirect(nextPath);
 }
@@ -94,6 +103,7 @@ export async function registerAction(
       password: validated.value.password,
       role: "student",
     });
+    await recordLoginPresence(user.id);
     await setSessionCookie(user);
     userId = user.id;
   } catch (error) {
@@ -132,9 +142,10 @@ export async function demoLoginAction(
   }
 
   const user = await findUserByLogin(login);
-  if (!user) {
+  if (!user || user.isBanned) {
     redirect("/login");
   }
+  await recordLoginPresence(user.id);
   await setSessionCookie(user);
   redirect(safeInternalPath(nextPath));
 }
@@ -147,7 +158,7 @@ export async function logoutAction(): Promise<void> {
 export type ChangePasswordActionState =
   | { status: "idle" }
   | { status: "ok" }
-  | { status: "error"; code: ChangePasswordErrorCode };
+  | { status: "error", code: ChangePasswordErrorCode };
 
 export async function changePasswordAction(
   _prev: ChangePasswordActionState,
@@ -193,7 +204,7 @@ export async function upgradeSessionCookieAction(): Promise<{ ok: boolean }> {
 export type UploadAvatarActionState =
   | { status: "idle" }
   | { status: "ok" }
-  | { status: "error"; code: UploadAvatarErrorCode };
+  | { status: "error", code: UploadAvatarErrorCode };
 
 function profileWithoutAvatar(user: AuthUser): AuthUser {
   return {

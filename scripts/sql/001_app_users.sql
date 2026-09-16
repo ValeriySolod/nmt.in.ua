@@ -8,6 +8,9 @@ CREATE TABLE IF NOT EXISTS app_users (
   password_hash VARCHAR(255) NOT NULL,
   display_name VARCHAR(100) NOT NULL,
   role ENUM('student', 'teacher', 'admin') NOT NULL,
+  is_banned TINYINT(1) NOT NULL DEFAULT 0,
+  last_login_at TIMESTAMP NULL DEFAULT NULL,
+  last_seen_at TIMESTAMP NULL DEFAULT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY uq_app_users_login (login)

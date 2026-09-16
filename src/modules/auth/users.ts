@@ -15,6 +15,9 @@ const SQL_CREATE_USERS = `
     password_hash VARCHAR(255) NOT NULL,
     display_name VARCHAR(100) NOT NULL,
     role ENUM('student', 'teacher', 'admin') NOT NULL,
+    is_banned TINYINT(1) NOT NULL DEFAULT 0,
+    last_login_at TIMESTAMP NULL DEFAULT NULL,
+    last_seen_at TIMESTAMP NULL DEFAULT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     UNIQUE KEY uq_app_users_login (login)
@@ -22,7 +25,7 @@ const SQL_CREATE_USERS = `
 `;
 
 const SQL_FIND_BY_LOGIN = `
-  SELECT u.id, u.login, u.password_hash, u.display_name, u.role,
+  SELECT u.id, u.login, u.password_hash, u.display_name, u.role, u.is_banned,
          UNIX_TIMESTAMP(a.updated_at) AS avatar_rev
   FROM ${AUTH_USERS_TABLE} u
   LEFT JOIN user_avatars a ON a.user_id = u.id
@@ -31,7 +34,7 @@ const SQL_FIND_BY_LOGIN = `
 `;
 
 const SQL_FIND_BY_ID = `
-  SELECT u.id, u.login, u.display_name, u.role,
+  SELECT u.id, u.login, u.display_name, u.role, u.is_banned,
          UNIX_TIMESTAMP(a.updated_at) AS avatar_rev
   FROM ${AUTH_USERS_TABLE} u
   LEFT JOIN user_avatars a ON a.user_id = u.id
@@ -57,6 +60,7 @@ type UserRow = {
   password_hash?: string;
   display_name: string;
   role: UserRole;
+  is_banned?: number | boolean | null;
   avatar_rev?: number | string | null;
 };
 
@@ -69,6 +73,10 @@ function mapAvatarRev(value: unknown): number | undefined {
   return numeric;
 }
 
+function isTruthyFlag(value: unknown): boolean {
+  return value === true || value === 1 || value === "1";
+}
+
 function mapUser(row: UserRow): AuthUser {
   const user: AuthUser = {
     id: row.id,
@@ -76,6 +84,9 @@ function mapUser(row: UserRow): AuthUser {
     displayName: row.display_name.trim(),
     role: row.role,
   };
+  if (isTruthyFlag(row.is_banned)) {
+    user.isBanned = true;
+  }
   const avatarRev = mapAvatarRev(row.avatar_rev);
   if (avatarRev) {
     user.avatarRev = avatarRev;
@@ -90,12 +101,50 @@ async function loadDefaultConnection(): Promise<SqlConnection> {
 
 let schemaReady: Promise<void> | undefined;
 
+async function ensureUserColumn(
+  connection: SqlConnection,
+  columnName: string,
+  addColumnSql: string,
+): Promise<void> {
+  const rows = await connection.query<{
+    COLUMN_NAME?: string;
+    column_name?: string;
+  }>(
+    `SELECT COLUMN_NAME AS COLUMN_NAME
+     FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE()
+       AND TABLE_NAME = ?
+       AND COLUMN_NAME = ?`,
+    [AUTH_USERS_TABLE, columnName],
+  );
+  if (rows.length > 0) return;
+  await connection.execute(
+    `ALTER TABLE ${AUTH_USERS_TABLE} ADD COLUMN ${addColumnSql}`,
+    [],
+  );
+}
+
 async function runAuthSchemaMigration(
   deps: { getConnection: () => Promise<SqlConnection> },
 ): Promise<void> {
   const connection = await deps.getConnection();
   try {
     await connection.execute(SQL_CREATE_USERS, []);
+    await ensureUserColumn(
+      connection,
+      "is_banned",
+      "is_banned TINYINT(1) NOT NULL DEFAULT 0 AFTER role",
+    );
+    await ensureUserColumn(
+      connection,
+      "last_login_at",
+      "last_login_at TIMESTAMP NULL DEFAULT NULL AFTER is_banned",
+    );
+    await ensureUserColumn(
+      connection,
+      "last_seen_at",
+      "last_seen_at TIMESTAMP NULL DEFAULT NULL AFTER last_login_at",
+    );
     await connection.execute(SQL_CREATE_USER_AVATARS, []);
     await seedDemoUsers(connection);
   } finally {

@@ -35,6 +35,12 @@ export const DASHBOARD_NAV: NavItem[] = [
     status: "ready",
   },
   {
+    href: "/profiles",
+    label: "Профілі",
+    description: "Усі облікові записи: фільтр за роллю, бан і видалення.",
+    status: "ready",
+  },
+  {
     href: "/simulator",
     label: "Симулятор НМТ",
     description: "Повний варіант НМТ у форматі УЦОЯО з таймером і балами.",
@@ -52,6 +58,12 @@ export const DASHBOARD_NAV: NavItem[] = [
     label: "Задачник",
     description:
       "Друкований тест по темі: таблиця завдань, щоб роздрукувати й дати дітям.",
+    status: "ready",
+  },
+  {
+    href: "/feedback",
+    label: "Відгуки",
+    description: "Оцінки й пропозиції користувачів про сайт.",
     status: "ready",
   },
   {

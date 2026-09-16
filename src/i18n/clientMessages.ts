@@ -29,6 +29,8 @@ export const CORE_CLIENT_NAMESPACES = [
   // `(app)` layout does not re-pick messages mid-chain.
   "Consultations",
   "TeacherStudents",
+  "AdminContent",
+  "AdminProfiles",
 ] as const;
 
 /**

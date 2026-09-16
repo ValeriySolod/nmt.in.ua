@@ -14,6 +14,8 @@ export type AuthUser = {
   role: UserRole;
   /** Unix seconds of the stored avatar; omitted when the user has none. */
   avatarRev?: number;
+  /** True when an admin banned the account (blocks login). */
+  isBanned?: boolean;
 };
 
 export type SessionPayload = {
@@ -57,7 +59,7 @@ export const DEMO_ACCOUNTS = [
     displayName: "Адміністратор",
     role: "admin" as const,
     id: 3,
-    description: "Адмін — імпорт контенту та налаштування",
+    description: "Адмін — редактор завдань і профілів",
   },
 ] as const;
 
@@ -95,3 +97,21 @@ export function canReviewConsultationRequests(role: UserRole): boolean {
 export function canManageStudents(role: UserRole): boolean {
   return role === "teacher" || role === "admin";
 }
+
+/** Platform account list (filter / ban / delete) — admin only. */
+export function canManageProfiles(role: UserRole): boolean {
+  return role === "admin";
+}
+
+/**
+ * Sidebar hrefs for the content-editor admin cabinet.
+ * Student/teacher learning paths stay available via URL, but not in the menu.
+ */
+export const ADMIN_NAV_HREFS = [
+  "/",
+  "/profiles",
+  "/materials/textbook",
+  "/problems",
+  "/feedback",
+  "/settings",
+] as const;

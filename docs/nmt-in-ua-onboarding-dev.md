@@ -21,7 +21,7 @@ nmt.in.ua — тренажер підготовки до НМТ з матема�
 | --- | --- |
 | Учень (`student`) | Тести, симулятор, результати, свої сесії, реєстрація |
 | Викладач (`teacher`) | Усе як учень + призначити сесію на `/sessions` + черга консультацій на `/consultations` + «Мої учні» на `/students` + публічна візитка на `/account` (`/t/{slug}`) |
-| Адмін (`admin`) | Усе як викладач + імпорт контенту на `/settings` |
+| Адмін (`admin`) | Усе як викладач + імпорт на `/settings` + відгуки на `/feedback` |
 
 ## 2. Перший день — чекліст
 
@@ -71,7 +71,7 @@ npm run dev
 | --- | --- | --- | --- |
 | `demo-student` | `demo123` | Учень | Тести, результати, свої сесії |
 | `demo-teacher` | `demo123` | Викладач | Панель призначення на `/sessions`; «Мої учні» на `/students`; візитка на `/account` |
-| `demo-admin` | `demo123` | Адмін | Форма імпорту на `/settings` + той самий список учнів |
+| `demo-admin` | `demo123` | Адмін | Імпорт на `/settings`, відгуки на `/feedback`, профілі на `/profiles` |
 
 Таблиця `app_users` створюється сама при першому запиті. Legacy-таблицю `users` на хостингу не чіпаємо. Якщо старі сесії «прилипли» до demo-student: `npm run reset-demo-student`.
 
@@ -138,6 +138,7 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 | `src/app/simulator/` | Старт симулятора НМТ |
 | `src/app/results/` і `sessions/` | Прогрес і історія |
 | `src/app/settings/` | Імпорт (лише admin) |
+| `src/app/(app)/feedback/` | Список відгуків сайту (лише admin) |
 | `src/app/api/import/` і `api/admin/sessions/` | Machine-to-machine API з Bearer |
 | `src/components/welcome/` | Секції лендінгу + `landing.module.css` |
 | `src/components/dashboard/` | Кабінет: header, sidebar, таблиці, старт тесту |
@@ -194,7 +195,7 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 
 | Таблиця | Навіщо | Важливі поля |
 | --- | --- | --- |
-| `app_users` | Наші акаунти | `login`, `role`. Не плутати з legacy `users` |
+| `app_users` | Наші акаунти | `login`, `role`, `is_banned` (020), `last_login_at` / `last_seen_at` (021, online ≈ 3 хв). Не плутати з legacy `users` |
 | `user_avatars` | Фото профілю | `user_id`, `mime`, `bytes` MEDIUMBLOB. Лениво `CREATE` у `ensureAuthSchema` / `015_user_avatars.sql` |
 | `teacher_profiles` | Публічна візитка | `user_id`, `slug` unique, `headline`, `bio`, `city`, `subjects` (JSON), `contact_url`, `is_public`. `018_teacher_profiles.sql` + lazy `ensureTeacherProfileSchema`. **018:** `016` уже `task_sessions_expire_time`; консультації — `019`; «мої учні» — `017` |
 | `teacher_payments` | Pending реєстрація викладача до оплати WayForPay | `reference`, hashed пароль, `status` pending/paid/failed, `provider`, `external_order_id`; `user_id` після Approved. SQL `014_teacher_payments.sql` |
@@ -323,7 +324,9 @@ Ultimate/НМТ/діагностика лишились без змін. Зар�
 | `/diagnostic`, `/diagnostic/session/[id]` | Усі (публічно, як `/welcome`) — гість або увійдений учень | Готово |
 | `/session/[id]` | Власник сесії | Готово |
 | `/simulator` | Учень+ | Готово — сітка офіційних варіантів НМТ (`nmt_variants`) |
-| `/settings` | Лише admin | Готово |
+| `/settings` | Лише admin | Імпорт контенту |
+| `/feedback` | Лише admin | Відгуки про сайт (`site_feedback`) |
+| `/profiles` | Лише admin | Список акаунтів: фільтр за роллю, online/offline, останній вхід, бан, видалення |
 | `/materials`, `/materials/[slug]` | Учень+ | Редірект → `/materials/textbook` |
 | `/materials/textbook` | Учень+ | Єдиний підручник: зміст + один розділ `?topic=<themes.code>` |
 | `/problems` | Учень+ | Задачник: друкований тест по темі |

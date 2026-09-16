@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import type { AuthUser } from "@/modules/auth/client";
+import { PresenceHeartbeat } from "@/components/dashboard/PresenceHeartbeat";
 import { useTranslations } from "next-intl";
 import css from "./DashboardShell.module.css";
 
@@ -160,6 +161,7 @@ export function DashboardShell({
 
   return (
     <div className={css.shell}>
+      <PresenceHeartbeat />
       <div className={css.noPrint}>
         <div className={css.decor} aria-hidden>
           <div className={css.decorGrid} />

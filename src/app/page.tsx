@@ -28,6 +28,15 @@ export async function generateMetadata() {
     });
   }
 
+  if (user.role === "admin") {
+    const t = await getTranslations("AdminContent");
+    return createPageMetadata({
+      title: t("title"),
+      description: t("lead"),
+      path: "/",
+    });
+  }
+
   const t = await getTranslations("Metadata.home");
   return createPageMetadata({
     title: t("title"),

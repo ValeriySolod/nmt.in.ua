@@ -430,3 +430,21 @@ npm run lint && npm test && npm run build
   Таблиця `teacher_students` (`017_teacher_students.sql` + `ensureTeacherStudentsSchema`).
 - Сайдбар показує пункт лише teacher/admin (як `/settings` лише admin). Учень — редірект на `/`.
 - Форма + список карток (1 кол. → рядок ім’я / відв’язати з 768). Без CRM і без авто-лінку з консультацій.
+
+### 2026-09-16 — відгуки адміна на `/feedback`
+
+- Список `site_feedback` винесено з `/settings` на окремий розділ `/feedback`
+  (пункт меню лише admin, guard у `proxy`).
+- `/settings` лишає лише імпорт контенту.
+
+### 2026-09-16 — профілі адміна: список / фільтр / бан / видалення
+
+- `/profiles`: без зміни ролей. Фільтр за роллю, бан/розбан, видалення.
+- `app_users.is_banned` (`020_app_users_is_banned.sql` + lazy ALTER).
+- Бан блокує логін і викидає з кабінету; демо-акаунти й власний акаунт захищені.
+
+### 2026-09-16 — presence: online/offline + last login
+
+- `last_login_at` / `last_seen_at` на `app_users` (`021` + lazy ALTER).
+- Кабінет: `PresenceHeartbeat` → `POST /api/presence` раз на хвилину.
+- Online = `last_seen` за останні ~3 хв. Адмін на `/profiles` бачить статус і час входу.

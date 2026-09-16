@@ -40,8 +40,11 @@
       "simulator": "NMT-Simulator",
       "materials": "Lehrbuch",
       "problems": "Aufgabenbank",
+      "feedback": "Feedback",
       "settings": "Einstellungen",
-      "consultations": "Lehrerberatungen"
+      "consultations": "Lehrerberatungen",
+      "homeAdmin": "Aufgaben nach Thema",
+      "profiles": "Profile"
     }
   },
   "RecentResults": {
@@ -729,7 +732,8 @@
     },
     "errors": {
       "requiredFields": "Gib Login und Passwort ein.",
-      "invalidCredentials": "Ungültiger Login oder ungültiges Passwort."
+      "invalidCredentials": "Ungültiger Login oder ungültiges Passwort.",
+      "accountBanned": "Dieses Konto ist gesperrt. Wende dich an einen Administrator."
     },
     "noAccount": "Noch kein Konto?",
     "registerLink": "Registrieren",
@@ -913,6 +917,7 @@
     }
   },
   "FeedbackAdmin": {
+    "kicker": "Rückmeldung",
     "title": "Website-Feedback",
     "lead": "Nur für Admins sichtbar. Schüler sehen fremde Rückmeldungen nicht.",
     "empty": "Noch kein Feedback.",
@@ -1004,6 +1009,14 @@
     "students": {
       "title": "Meine Schüler",
       "description": "Schülerliste der Lehrkraft: per Login hinzufügen oder Verknüpfung aufheben."
+    },
+    "profiles": {
+      "title": "Profile",
+      "description": "Alle Konten: nach Rolle filtern, sperren oder löschen."
+    },
+    "feedback": {
+      "title": "Feedback",
+      "description": "Bewertungen und Vorschläge der Nutzer zur Website."
     }
   },
   "SettingsPage": {
@@ -1054,6 +1067,99 @@
       "sessionCompleted": "Diese Sitzung wurde bereits abgeschlossen.",
       "sessionExpired": "Die 24-Stunden-Gültigkeit dieser Sitzung ist abgelaufen.",
       "generic": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
+    }
+  },
+  "AdminContent": {
+    "kicker": "Inhalt",
+    "title": "Aufgaben nach Thema",
+    "lead": "Thema wählen, Aufgabenbank prüfen und Aufgaben bearbeiten oder anlegen.",
+    "themeTitle": "Thema",
+    "chooseTheme": "Thema wählen:",
+    "noThemes": "Noch keine Themen in der Bank.",
+    "taskCount": "In diesem Thema: {count} Aufgaben",
+    "listTitle": "Themenaufgaben",
+    "listLead": "Vorhandene Einträge bearbeiten oder neue Tests hinzufügen.",
+    "create": "Neue Aufgabe",
+    "empty": "In diesem Thema gibt es noch keine Aufgaben.",
+    "colDescription": "Beschreibung",
+    "colDifficulty": "Schwierigkeit",
+    "colEdit": "Ändern",
+    "colDelete": "Löschen",
+    "editAria": "„{name}“ bearbeiten",
+    "deleteAria": "„{name}“ löschen",
+    "deleteConfirm": "Aufgabe „{name}“ löschen?",
+    "createTitle": "Neue Aufgabe",
+    "createLead": "Felder ausfüllen und speichern — die Aufgabe erscheint in der Themenbank.",
+    "editTitle": "Aufgabe bearbeiten",
+    "editLead": "Felder ändern und Speichern drücken.",
+    "formAria": "Aufgabenfelder",
+    "colElement": "Element",
+    "colValue": "Wert",
+    "name": "Name",
+    "taskText": "Aufgabe",
+    "answer": "Antwort {n}",
+    "rightAnswer": "Nummer der richtigen Antwort",
+    "difficulty": "Schwierigkeitsgrad",
+    "theme": "Thema",
+    "comments": "Hinweis / Kommentar",
+    "save": "Speichern",
+    "saving": "Speichern…",
+    "cancel": "Abbrechen",
+    "created": "Aufgabe erstellt.",
+    "updated": "Aufgabe aktualisiert.",
+    "errors": {
+      "invalid_input": "Bitte die Formularfelder prüfen.",
+      "theme_not_found": "Gewähltes Thema nicht gefunden.",
+      "not_found": "Aufgabe nicht gefunden.",
+      "forbidden": "Kein Zugriff.",
+      "in_use": "Die Aufgabe wurde in Sitzungen genutzt und kann nicht gelöscht werden.",
+      "generic": "Aktion fehlgeschlagen. Bitte erneut versuchen."
+    },
+    "back": "Zurück",
+    "nextTask": "Nächste Aufgabe",
+    "deleted": "Aufgabe gelöscht.",
+    "editTitleNamed": "Bearbeiten: {name}"
+  },
+  "AdminProfiles": {
+    "kicker": "Benutzer",
+    "title": "Profile",
+    "lead": "Alle Konten der Plattform: nach Rolle filtern, sperren oder löschen.",
+    "listTitle": "Alle Konten",
+    "listLead": "Demo-Konten sind geschützt. Eigenes Konto kann nicht gesperrt oder gelöscht werden.",
+    "empty": "Noch keine Benutzer.",
+    "emptyFilter": "Keine Konten mit dieser Rolle.",
+    "you": "Sie",
+    "online": "online",
+    "offline": "offline",
+    "never": "noch nie angemeldet",
+    "bannedBadge": "gesperrt",
+    "protectedBadge": "demo",
+    "roleMeta": "Rolle: {role}",
+    "lastLoginMeta": "Letzter Login: {date}",
+    "lastSeenMeta": "Zuletzt aktiv: {date}",
+    "createdMeta": "erstellt {date}",
+    "filterLabel": "Filter nach Rolle",
+    "filterAll": "Alle ({count})",
+    "filterRole": "{role} ({count})",
+    "ban": "Sperren",
+    "unban": "Entsperren",
+    "delete": "Löschen",
+    "deleteConfirm": "Konto „{name}“ löschen? Das kann nicht rückgängig gemacht werden.",
+    "selfLocked": "Das ist Ihr Konto — Aktionen nicht verfügbar.",
+    "protectedLocked": "Demo-Konten sind geschützt.",
+    "success": {
+      "ban": "Konto {name} wurde gesperrt.",
+      "unban": "Konto {name} wurde entsperrt.",
+      "delete": "Konto {name} wurde gelöscht."
+    },
+    "errors": {
+      "invalid_input": "Ungültige Daten.",
+      "not_found": "Benutzer nicht gefunden.",
+      "forbidden": "Kein Zugriff.",
+      "self_action": "Eigenes Konto kann nicht gesperrt oder gelöscht werden.",
+      "protected_account": "Demo-Konten sind geschützt.",
+      "last_admin": "Der letzte aktive Admin kann nicht gesperrt oder gelöscht werden.",
+      "generic": "Aktion fehlgeschlagen. Bitte erneut versuchen."
     }
   }
 }
