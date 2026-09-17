@@ -13,6 +13,7 @@ import {
   overlayShown,
   tweenFast,
 } from "@/lib/motionPresets";
+import { useIsClient } from "@/lib/useIsClient";
 import { submitFeedbackAction } from "@/modules/feedback/actions";
 import type { SubmitFeedbackActionErrorCode } from "@/modules/feedback/actions";
 import {
@@ -56,11 +57,7 @@ export function FeedbackDialog({
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const reduceMotion = useReducedMotion();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useIsClient();
   const [score, setScore] = useState<ScoreTab>("none");
   const [message, setMessage] = useState("");
   const [email, setEmail] = useState("");
