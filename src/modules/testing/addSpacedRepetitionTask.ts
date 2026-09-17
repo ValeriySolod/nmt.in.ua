@@ -34,7 +34,7 @@ const SQL_SELECT_SESSION = `
 
 /** Every answered topic-bank task in the session, oldest first, scored by
  * its permanent first-attempt outcome — never a retry/reinforcement result.
- * `origin` (from `practice_task_origin`, see migration 021) is NULL for an
+ * `origin` (from `practice_task_origin`, see migration 027) is NULL for an
  * ordinary original task and 'similar'/'repetition' for a follow-up row —
  * exactly what `findThemeDueForRepetition`'s `isFollowUp` flag needs, read
  * from durable state rather than approximated. */

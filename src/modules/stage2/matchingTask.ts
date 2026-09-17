@@ -10,7 +10,7 @@ import { getStage2HintLevel, type HintLevel, type Stage2HintResult } from "./hin
 export type MatchingItem = { id: number; text: string };
 
 export type MatchingReveal = {
-  /** Each left item's id maps to its own id — see migration 022's note:
+  /** Each left item's id maps to its own id — see migration 028's note:
    * one row IS one correct pair, so `leftId === rightId` for the correct
    * match; this reveal echoes that back explicitly for the client to render
    * without needing to know the convention. */

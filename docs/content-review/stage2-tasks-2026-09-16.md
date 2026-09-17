@@ -1,6 +1,6 @@
 # Stage 2 task content — sourcing and verification (2026-09-16)
 
-Scope: seed content for `scripts/sql/022_stage2_task_formats.sql` (5 new
+Scope: seed content for `scripts/sql/028_stage2_task_formats.sql` (5 new
 interactive formats for task 6.9 Stage 2). This is a short sourcing note per
 the task's content-audit requirement — not a general formula reference.
 
@@ -65,10 +65,10 @@ already represented in the existing `quiz_tasks` bank under themes
 theme referenced in `docs/mentor-tasks.md`. No domain restriction or
 notation beyond what's already used elsewhere in this bank was introduced.
 
-## Analogous hint examples (migration 023)
+## Analogous hint examples (migration 029)
 
-Migration `023_analogous_hint_examples.sql` adds nullable `hint_example` to
-quiz_tasks and all five Stage 2 content tables. Apply after 020–022, once,
+Migration `029_analogous_hint_examples.sql` adds nullable `hint_example` to
+quiz_tasks and all five Stage 2 content tables. Apply after 026–028, once,
 before deploying code that selects the column. No production DB was touched.
 DDL is not repeatable (duplicate columns fail). Test on an isolated DB first.
 Old quiz tasks retain NULL: their answer explanation remains gated until the

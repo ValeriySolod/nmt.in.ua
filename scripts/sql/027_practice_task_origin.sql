@@ -34,12 +34,12 @@
 --    row written before this migration and every ordinary task written
 --    after it; no existing INSERT needs to change.
 --
--- Run once in phpMyAdmin or: mysql ... < scripts/sql/021_practice_task_origin.sql
+-- Run once in phpMyAdmin or: mysql ... < scripts/sql/027_practice_task_origin.sql
 -- The `ALTER TABLE` is NOT safe to re-run (fails if the column already
 -- exists, same as every other ADD COLUMN migration in this repo); the
 -- `CREATE TABLE IF NOT EXISTS` below it is.
 --
--- NOTE: like 020, this was written and reviewed against this repo's existing
+-- NOTE: like 026, this was written and reviewed against this repo's existing
 -- schema conventions (see 017_teacher_students.sql for the FK/index style
 -- copied here) but NOT executed against a live/production MySQL instance in
 -- this environment — no local MySQL server was reachable. Validate against a

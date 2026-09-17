@@ -34,7 +34,7 @@
 --     NULL — getTaskHintLevel degrades that task straight to the existing
 --     `comments` explanation instead of fabricating placeholder rungs.
 --
--- Run once in phpMyAdmin or: mysql ... < scripts/sql/020_practice_retry_and_hint_ladder.sql
+-- Run once in phpMyAdmin or: mysql ... < scripts/sql/026_practice_retry_and_hint_ladder.sql
 -- NOT idempotent as a whole (ADD COLUMN fails if re-run against a database
 -- that already has these columns).
 --

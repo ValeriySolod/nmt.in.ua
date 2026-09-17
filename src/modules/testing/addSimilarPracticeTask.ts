@@ -53,7 +53,7 @@ const SQL_SELECT_NEW_TASK = `
   FROM quiz_tasks WHERE id = ?
 `;
 
-/** Idempotency/concurrency guard (see migration 021): a 'similar' follow-up
+/** Idempotency/concurrency guard (see migration 027): a 'similar' follow-up
  * already recorded for this exact source mapping means a duplicate/retried
  * request should return that same follow-up, never insert a second one.
  * The source row's own `FOR UPDATE` lock above already serializes two
@@ -262,7 +262,7 @@ export async function addSimilarPracticeTask(
         );
       }
 
-      // Idempotency/concurrency guard — see migration 021's note and
+      // Idempotency/concurrency guard — see migration 027's note and
       // `SQL_SELECT_EXISTING_ORIGIN` above.
       const existingOrigin = await connection.query<ExistingOriginRow>(
         SQL_SELECT_EXISTING_ORIGIN,

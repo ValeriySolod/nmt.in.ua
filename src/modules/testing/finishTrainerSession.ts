@@ -29,7 +29,7 @@ const SQL_SELECT_SESSION = `
 `;
 
 /** `COALESCE(first_attempt_status, status)`: the permanent first-attempt
- * outcome when present (see migration 020), falling back to `status` for
+ * outcome when present (see migration 026), falling back to `status` for
  * legacy rows or non-Practice sessions where the two never diverge. This is
  * what must be scored — a Practice-mode retry/reinforcement/repetition can
  * change `status` afterwards but must never change the stored score. */

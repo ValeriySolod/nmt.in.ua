@@ -22,7 +22,7 @@
 -- `src/modules/stage2/stage2Attempt.ts`).
 --
 -- Every content table follows the same shape as `quiz_tasks`'s hint columns
--- (migration 020): `hint_direction`, `hint_rule` (first two hint-ladder
+-- (migration 026): `hint_direction`, `hint_rule` (first two hint-ladder
 -- rungs, nullable) and `comments` (explanation / worked example, rung 3 —
 -- also what's revealed after the one allowed retry is spent). No legacy rows
 -- exist for any of these tables (they are new content only), so there is no
@@ -30,12 +30,12 @@
 -- `hint_direction`/`hint_rule` still degrade exactly like `quiz_tasks` does
 -- today (see `getTaskHintLevel.ts`'s `resolveRung`, reused conceptually).
 --
--- Run once in phpMyAdmin or: mysql ... < scripts/sql/022_stage2_task_formats.sql
+-- Run once in phpMyAdmin or: mysql ... < scripts/sql/028_stage2_task_formats.sql
 -- `CREATE TABLE IF NOT EXISTS` throughout — safe to re-run for the DDL; the
 -- seed INSERTs at the bottom use explicit ids and are also safe to re-run
 -- (`INSERT IGNORE`).
 --
--- NOTE: like 020/021, written and reviewed against this repo's schema
+-- NOTE: like 026/027, written and reviewed against this repo's schema
 -- conventions but NOT executed against a live/production MySQL instance in
 -- this environment (no local MySQL reachable — see docs/mentor-tasks.md
 -- 6.9 section for what was checked). Validate on a staging copy first.
