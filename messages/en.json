@@ -46,7 +46,8 @@
       "settings": "Settings",
       "consultations": "Teacher consultations",
       "homeAdmin": "Tasks by topic",
-      "profiles": "Profiles"
+      "profiles": "Profiles",
+      "assign": "Assign topic test"
     }
   },
   "RecentResults": {
@@ -1102,6 +1103,10 @@
     "resetPassword": {
       "title": "New password",
       "description": "Set a new password for the learning workspace."
+    },
+    "assign": {
+      "title": "Assign topic test",
+      "description": "Assign topic tests to your students with a deadline and progress statuses."
     }
   },
   "SettingsPage": {
@@ -1317,6 +1322,53 @@
       "passwordTooLong": "Password is too long.",
       "passwordMismatch": "Passwords do not match.",
       "generic": "Could not save the password. Try again."
+    }
+  },
+  "TeacherAssign": {
+    "kicker": "Teacher",
+    "title": "Assign a topic test",
+    "lead": "Pick a topic, students, and deadline. Then track who finished and who missed it.",
+    "formTitle": "New assignment",
+    "formLead": "Check students from your roster. Deadline is “now” (24h) or a specific date and time.",
+    "topic": "Topic",
+    "when": "When",
+    "scheduleNow": "Now",
+    "scheduleDatetime": "Date and time",
+    "dueAt": "Deadline",
+    "students": "Students",
+    "assign": "Assign",
+    "assigning": "Assigning…",
+    "created": "Assignment created. It appears in the list.",
+    "noThemes": "No topics available.",
+    "noStudents": "Add students on “My students” first.",
+    "listTitle": "Assigned tests",
+    "listLead": "Open a test to see students: green = done, pink = overdue.",
+    "listEmpty": "No assignments yet.",
+    "dueLabel": "Due {date}",
+    "counts": "done {done} · overdue {overdue} · total {total}",
+    "progress": {
+      "completed": "Done",
+      "overdue": "Overdue",
+      "pending": "Pending"
+    },
+    "cancel": "Cancel assignment",
+    "cancelling": "Cancelling…",
+    "cancelConfirm": "Cancel this assignment? Unfinished student sessions will be removed.",
+    "editMembers": "Change student list",
+    "editClose": "Hide editor",
+    "saveMembers": "Save students",
+    "saving": "Saving…",
+    "membersSaved": "Student list updated.",
+    "errors": {
+      "invalid_input": "Check the topic, students, and date.",
+      "theme_not_found": "Topic not found.",
+      "no_students": "Select at least one student.",
+      "students_not_linked": "Student must be on your roster.",
+      "not_found": "Assignment not found.",
+      "cancelled": "This assignment is already cancelled.",
+      "forbidden": "You cannot access this assignment.",
+      "db_error": "Database error. Try again.",
+      "generic": "Could not save. Try again."
     }
   }
 }

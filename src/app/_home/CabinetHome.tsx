@@ -1,5 +1,6 @@
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
+import { redirect } from "next/navigation";
 import { AdminContentEditor } from "@/components/admin/AdminContentEditor";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { PageFrame } from "@/components/dashboard/PageFrame";
@@ -29,6 +30,10 @@ export async function CabinetHome({
   initialThemeId,
   needsCookieUpgrade,
 }: CabinetHomeProps) {
+  if (user.role === "teacher") {
+    redirect("/assign");
+  }
+
   const messages = pickClientMessages(await getMessages(), "/home");
 
   if (canImportContent(user.role)) {

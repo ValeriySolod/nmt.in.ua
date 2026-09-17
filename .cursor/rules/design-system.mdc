@@ -127,6 +127,7 @@ alwaysApply: true
 - `TeacherProfileEditor` — візитка викладача на `/account` (slug, headline, bio, city, subjects, contact URL, is_public, копія лінка). Адмін редактор не бачить.
 - `TeacherPublicCard` — публічна картка `/t/{slug}` у `DiagnosticShell` (без кабінетного chrome).
 - `TeacherStudentsPanel` — `/students` для teacher/admin: додати учня за логіном, список, відв’язати. Учні пункт меню не бачать.
+- `TeacherAssignWorkspace` — `/assign`: призначити тест за темою кільком учням (зараз / дата-час), список призначень і статуси.
 
 `src/components/ui/` — спільні контроли:
 
@@ -511,3 +512,11 @@ npm run lint && npm test && npm run build
 - `app/not-found.tsx`, `error.tsx`, `global-error.tsx`; loading у `(app)` і `(marketing)`.
   Ілюстрації `public/status/*.webp`. Спінер — циркуль навколо ∑, не стороння бібліотека.
   Перевірити: `/welcome/щось-неіснуюче` (гість); у кабінеті неіснуючий шлях. Випадковий `/foo` без сесії лишається редіректом на логін.
+
+### 2026-09-17 — призначення тестів викладачем `/assign`
+
+- Меню викладача: прибрано «Тест за обраною темою» (`/`); додано `/assign` і лишається `/students`.
+- `TeacherAssignWorkspace`: тема, «на зараз» / дата-час, галочки учнів, список призначень;
+  у деталі — зелений (пройшов) / рожевий (не встиг), скасування, зміна переліку учнів.
+- Таблиці `mentor_assignments` + `mentor_assignment_members` (`033` + lazy schema).
+- Перевірити: 375 / 768 / 1240 / 1440 / 1920; `demo-teacher` → `/students` → `/assign`.

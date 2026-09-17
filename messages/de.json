@@ -46,7 +46,8 @@
       "settings": "Einstellungen",
       "consultations": "Lehrerberatungen",
       "homeAdmin": "Aufgaben nach Thema",
-      "profiles": "Profile"
+      "profiles": "Profile",
+      "assign": "Thementest zuweisen"
     }
   },
   "RecentResults": {
@@ -1102,6 +1103,10 @@
     "resetPassword": {
       "title": "Neues Passwort",
       "description": "Neues Passwort für den Lernbereich festlegen."
+    },
+    "assign": {
+      "title": "Thementest zuweisen",
+      "description": "Thementests an Schüler mit Frist und Fortschrittsstatus zuweisen."
     }
   },
   "SettingsPage": {
@@ -1317,6 +1322,53 @@
       "passwordTooLong": "Passwort ist zu lang.",
       "passwordMismatch": "Passwörter stimmen nicht überein.",
       "generic": "Passwort konnte nicht gespeichert werden. Erneut versuchen."
+    }
+  },
+  "TeacherAssign": {
+    "kicker": "Lehrkraft",
+    "title": "Thementest zuweisen",
+    "lead": "Thema, Schüler und Frist wählen. Danach sehen Sie, wer fertig ist und wer zu spät war.",
+    "formTitle": "Neue Zuweisung",
+    "formLead": "Schüler aus Ihrer Liste anhaken. Frist: „jetzt“ (24 Std.) oder Datum/Uhrzeit.",
+    "topic": "Thema",
+    "when": "Wann",
+    "scheduleNow": "Jetzt",
+    "scheduleDatetime": "Datum und Uhrzeit",
+    "dueAt": "Frist",
+    "students": "Schüler",
+    "assign": "Zuweisen",
+    "assigning": "Wird zugewiesen…",
+    "created": "Zuweisung erstellt. Sie erscheint in der Liste.",
+    "noThemes": "Keine Themen verfügbar.",
+    "noStudents": "Zuerst Schüler unter „Meine Schüler“ hinzufügen.",
+    "listTitle": "Zugewiesene Tests",
+    "listLead": "Test öffnen: grün = erledigt, rosa = überfällig.",
+    "listEmpty": "Noch keine Zuweisungen.",
+    "dueLabel": "Bis {date}",
+    "counts": "fertig {done} · überfällig {overdue} · gesamt {total}",
+    "progress": {
+      "completed": "Erledigt",
+      "overdue": "Überfällig",
+      "pending": "Offen"
+    },
+    "cancel": "Zuweisung stornieren",
+    "cancelling": "Wird storniert…",
+    "cancelConfirm": "Diese Zuweisung stornieren? Offene Sitzungen werden entfernt.",
+    "editMembers": "Schülerliste ändern",
+    "editClose": "Editor schließen",
+    "saveMembers": "Schüler speichern",
+    "saving": "Speichern…",
+    "membersSaved": "Schülerliste aktualisiert.",
+    "errors": {
+      "invalid_input": "Thema, Schüler und Datum prüfen.",
+      "theme_not_found": "Thema nicht gefunden.",
+      "no_students": "Mindestens einen Schüler wählen.",
+      "students_not_linked": "Schüler muss in Ihrer Liste sein.",
+      "not_found": "Zuweisung nicht gefunden.",
+      "cancelled": "Zuweisung bereits storniert.",
+      "forbidden": "Kein Zugriff auf diese Zuweisung.",
+      "db_error": "Datenbankfehler. Erneut versuchen.",
+      "generic": "Speichern fehlgeschlagen. Erneut versuchen."
     }
   }
 }
