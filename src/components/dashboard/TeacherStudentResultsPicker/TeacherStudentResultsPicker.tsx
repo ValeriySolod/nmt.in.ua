@@ -23,11 +23,13 @@ type TeacherStudentResultsPickerProps = {
   students: TeacherStudentOption[];
   /** `all` or a student id string. */
   selectedValue: string;
+  /** Route the picker navigates on (`/results` or `/sessions`). */
+  basePath?: "/results" | "/sessions";
 };
 
-function resultsHref(student: string): string {
-  if (student === ALL_STUDENTS_VALUE) return "/results";
-  return queryHref("/results", { student });
+function studentHref(basePath: "/results" | "/sessions", student: string): string {
+  if (student === ALL_STUDENTS_VALUE) return basePath;
+  return queryHref(basePath, { student });
 }
 
 /** Keep local Select value in sync when the server prop changes after navigation. */
@@ -44,6 +46,7 @@ function useStateSynced(selectedValue: string) {
 export function TeacherStudentResultsPicker({
   students,
   selectedValue,
+  basePath = "/results",
 }: TeacherStudentResultsPickerProps) {
   const t = useTranslations("TeacherStudentResults");
   const router = useRouter();
@@ -64,10 +67,14 @@ export function TeacherStudentResultsPicker({
           onChange={(next) => {
             const student = next || ALL_STUDENTS_VALUE;
             setValue(student);
-            router.push(resultsHref(student), { scroll: false });
+            router.push(studentHref(basePath, student), { scroll: false });
           }}
           options={[
-            { value: ALL_STUDENTS_VALUE, label: t("allStudents") },
+            {
+              value: ALL_STUDENTS_VALUE,
+              label:
+                basePath === "/sessions" ? t("allSessions") : t("allStudents"),
+            },
             ...students.map((student) => ({
               value: String(student.studentUserId),
               label: t("studentOption", {
@@ -81,7 +88,7 @@ export function TeacherStudentResultsPicker({
       </label>
       {showingOne ? (
         <Link
-          href="/results"
+          href={basePath}
           className={css.backAll}
           onClick={() => setValue(ALL_STUDENTS_VALUE)}
         >

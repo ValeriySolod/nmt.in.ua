@@ -25,7 +25,9 @@ async function loadDefaultConnection(): Promise<SqlConnection> {
   return getConnection();
 }
 
-function resolveLimit(limit: number | undefined): number {
+export function resolveLearningSessionsLimit(
+  limit: number | undefined,
+): number {
   const raw = limit ?? LEARNING_SESSIONS_PAGE_SIZE;
   if (!Number.isInteger(raw) || raw <= 0) return LEARNING_SESSIONS_PAGE_SIZE;
   return Math.min(raw, 200);
@@ -36,7 +38,7 @@ export async function getLearningSessions(
   deps: GetLearningSessionsDeps = { getConnection: loadDefaultConnection },
   options: GetLearningSessionsOptions = {},
 ): Promise<LearningSessionRow[]> {
-  const limit = resolveLimit(options.limit);
+  const limit = resolveLearningSessionsLimit(options.limit);
   await (deps.ensureSchema ??
     (() => ensureMentorAssignmentsSchema(deps.getConnection)))();
 

@@ -33,6 +33,7 @@ export const CORE_CLIENT_NAMESPACES = [
   "TeacherStudents",
   "TeacherAssign",
   "TeacherStudentResults",
+  "TeacherStudentSessions",
   "AdminContent",
   "AdminProfiles",
 ] as const;

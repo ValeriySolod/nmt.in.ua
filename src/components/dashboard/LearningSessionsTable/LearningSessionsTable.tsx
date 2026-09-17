@@ -22,6 +22,13 @@ const CANCEL_INITIAL: CancelLearningSessionActionState = { status: "idle" };
 type LearningSessionsTableProps = {
   rows: LearningSessionRow[];
   extended?: boolean;
+  /** Hide start/cancel — for teacher viewing a student's sessions. */
+  readOnly?: boolean;
+  title?: string;
+  lead?: string;
+  empty?: string;
+  /** Kept when toggling compact/extended (e.g. `student`). */
+  queryParams?: Record<string, string | null | undefined>;
 };
 
 function formatPercent(percent: number | null): string {
@@ -91,6 +98,11 @@ function SessionActions({ row }: { row: LearningSessionRow }) {
 export function LearningSessionsTable({
   rows,
   extended = false,
+  readOnly = false,
+  title,
+  lead,
+  empty,
+  queryParams,
 }: LearningSessionsTableProps) {
   const t = useTranslations("LearningSessionsTable");
   const router = useRouter();
@@ -103,11 +115,11 @@ export function LearningSessionsTable({
     >
       <header className={css.intro}>
         <h1 id="learning-sessions-title" className={css.title}>
-          {t("title")}
+          {title ?? t("title")}
         </h1>
         <div className={css.descriptionRow}>
-          <p className={css.lead}>{t("lead")}</p>
-          {rows.length > 0 ? (
+          <p className={css.lead}>{lead ?? t("lead")}</p>
+          {rows.length > 0 && !readOnly ? (
             <div className={css.tableControls}>
               <button
                 type="button"
@@ -117,6 +129,7 @@ export function LearningSessionsTable({
                 onClick={() =>
                   router.replace(
                     queryHref("/sessions", {
+                      ...queryParams,
                       extended: showExtendedInfo ? null : "1",
                     }),
                     { scroll: false },
@@ -132,7 +145,7 @@ export function LearningSessionsTable({
 
       {rows.length === 0 ? (
         <p className={css.empty} role="status">
-          {t("empty")}
+          {empty ?? t("empty")}
         </p>
       ) : (
         <div
@@ -187,9 +200,11 @@ export function LearningSessionsTable({
                 <th scope="col" className={css.colStatus}>
                   {t("status")}
                 </th>
-                <th scope="col" className={css.colActions}>
-                  {t("actions")}
-                </th>
+                {readOnly ? null : (
+                  <th scope="col" className={css.colActions}>
+                    {t("actions")}
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -241,9 +256,11 @@ export function LearningSessionsTable({
                       ) : null}
                     </div>
                   </td>
-                  <td className={css.colActions}>
-                    <SessionActions row={row} />
-                  </td>
+                  {readOnly ? null : (
+                    <td className={css.colActions}>
+                      <SessionActions row={row} />
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
