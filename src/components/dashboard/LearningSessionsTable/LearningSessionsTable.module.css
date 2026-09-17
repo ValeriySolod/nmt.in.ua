@@ -154,7 +154,8 @@
 
 .colStatus {
   width: 14%;
-  white-space: nowrap;
+  display: grid;
+  gap: 4px;
 }
 
 .colActions {
@@ -247,6 +248,28 @@
 .statusExpired {
   color: var(--muted);
   font-weight: 700;
+}
+
+.scheduledHint {
+  display: block;
+  color: var(--muted);
+  font-size: var(--fs-kicker);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.scheduledBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px dashed rgb(31 143 69 / 40%);
+  border-radius: var(--radius-pill);
+  background: var(--green-bg);
+  color: var(--green-dark);
+  font-size: var(--fs-small);
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .actions {

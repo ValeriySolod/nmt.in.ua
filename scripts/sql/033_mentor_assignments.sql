@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS mentor_assignments (
   teacher_user_id INT NOT NULL,
   theme_id INT NOT NULL,
   tasks_number INT UNSIGNED NOT NULL DEFAULT 10,
+  available_at INT UNSIGNED NOT NULL,
   due_at INT UNSIGNED NOT NULL,
   schedule_mode ENUM('now', 'datetime') NOT NULL DEFAULT 'now',
   status ENUM('active', 'cancelled') NOT NULL DEFAULT 'active',

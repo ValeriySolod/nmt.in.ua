@@ -37,8 +37,8 @@ function readScheduleMode(formData: FormData): "now" | "datetime" {
   return raw === "datetime" ? "datetime" : "now";
 }
 
-function readDueAtUnix(formData: FormData): number | null {
-  const local = String(formData.get("dueAtLocal") ?? "").trim();
+function readLocalDateTimeUnix(formData: FormData, key: string): number | null {
+  const local = String(formData.get(key) ?? "").trim();
   if (!local) return null;
   const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(
     local,
@@ -71,7 +71,8 @@ export async function createMentorAssignmentAction(
       themeId,
       studentIds: readStudentIds(formData),
       scheduleMode: readScheduleMode(formData),
-      dueAtUnix: readDueAtUnix(formData),
+      availableAtUnix: readLocalDateTimeUnix(formData, "availableAtLocal"),
+      dueAtUnix: readLocalDateTimeUnix(formData, "dueAtLocal"),
     });
     revalidatePath("/assign");
     revalidatePath("/sessions");

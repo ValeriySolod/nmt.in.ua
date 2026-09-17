@@ -18,6 +18,7 @@ export const CORE_CLIENT_NAMESPACES = [
   "TopicTrainer",
   "TopicTrainerSummary",
   "SessionExpiredNotice",
+  "SessionScheduledNotice",
   "LearningSessionsTable",
   "ProblemsWorkbook",
   "simulator",

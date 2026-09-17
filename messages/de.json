@@ -622,7 +622,8 @@
       "notCancelable": "Eine abgeschlossene Sitzung kann nicht abgebrochen werden.",
       "invalidInput": "Ungültige Sitzungs-ID.",
       "generic": "Die Sitzung konnte nicht abgebrochen werden. Bitte versuche es erneut."
-    }
+    },
+    "opensAt": "Ab {date}"
   },
   "AuthShared": {
     "backHome": "Zur Startseite",
@@ -1327,14 +1328,14 @@
   "TeacherAssign": {
     "kicker": "Lehrkraft",
     "title": "Thementest zuweisen",
-    "lead": "Thema, Schüler und Frist wählen. Danach sehen Sie, wer fertig ist und wer zu spät war.",
+    "lead": "Thema, Schüler, Öffnung und Fensterende. Dann Status: grün fertig, rosa überfällig.",
     "formTitle": "Neue Zuweisung",
-    "formLead": "Schüler aus Ihrer Liste anhaken. Frist: „jetzt“ (24 Std.) oder Datum/Uhrzeit.",
+    "formLead": "Wählen Sie Öffnungszeit und Frist. Schüler anhaken.",
     "topic": "Thema",
-    "when": "Wann",
-    "scheduleNow": "Jetzt",
-    "scheduleDatetime": "Datum und Uhrzeit",
-    "dueAt": "Frist",
+    "when": "Zeitplan",
+    "scheduleNow": "Jetzt öffnen",
+    "scheduleDatetime": "Ab Datum/Uhrzeit öffnen",
+    "dueAt": "Fertig bis (Fensterende)",
     "students": "Schüler",
     "assign": "Zuweisen",
     "assigning": "Wird zugewiesen…",
@@ -1369,6 +1370,14 @@
       "forbidden": "Kein Zugriff auf diese Zuweisung.",
       "db_error": "Datenbankfehler. Erneut versuchen.",
       "generic": "Speichern fehlgeschlagen. Erneut versuchen."
-    }
+    },
+    "availableAt": "Öffnet um",
+    "opensLabel": "Öffnet {date}"
+  },
+  "SessionScheduledNotice": {
+    "title": "Test noch nicht geöffnet",
+    "lead": "Die Lehrkraft hat den Start für {date} geplant.",
+    "body": "Bis {date} bleibt der Test gesperrt. Kommen Sie später zu den Lernsitzungen zurück und starten Sie dann.",
+    "backToSessions": "Zu den Sitzungen"
   }
 }

@@ -25,6 +25,11 @@ export type LearningSessionRow = {
   timeSec: number;
   timePerTaskSec: number | null;
   startTimeLabel: string;
+  /** When a mentor assignment opens; null if immediate / unknown. */
+  availableAt: number | null;
+  availableAtLabel: string | null;
+  /** False while waiting for availableAt on a planned mentor assignment. */
+  canStart: boolean;
   createdByLabel: string;
   createdBy: SessionCreatedBy;
   status: SessionDisplayStatus;
@@ -42,6 +47,7 @@ export type TaskSessionRecord = {
   session_type: number;
   start_time: number;
   expire_time: number;
+  available_at?: number | null;
 };
 
 export function sessionPercent(
@@ -152,6 +158,14 @@ export function buildLearningSessionRows(
 ): LearningSessionRow[] {
   return sessions.map((session, index) => {
     const status = resolveSessionDisplayStatus(session, nowSec);
+    const availableAt =
+      session.available_at != null &&
+      Number.isFinite(session.available_at) &&
+      session.available_at > 0
+        ? session.available_at
+        : null;
+    const waiting =
+      status === "planned" && availableAt != null && nowSec < availableAt;
     return {
       id: session.id,
       rowNumber: index + 1,
@@ -163,6 +177,11 @@ export function buildLearningSessionRows(
       timeSec: session.time,
       timePerTaskSec: sessionTimePerTask(session.tasks_number, session.time),
       startTimeLabel: formatSessionStartTime(session.start_time),
+      availableAt,
+      availableAtLabel: availableAt
+        ? formatSessionStartTime(availableAt)
+        : null,
+      canStart: status === "planned" && !waiting,
       createdBy: resolveSessionCreatedBy(session.session_type),
       createdByLabel: sessionCreatedByLabel(session.session_type),
       status,

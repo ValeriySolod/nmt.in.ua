@@ -6,7 +6,7 @@ import {
 } from "@/modules/sessions/types";
 import { TOPIC_TEST_TASK_COUNT } from "@/modules/testing/startTopicTest";
 import { nowUnixSec } from "@/modules/testing/sessionElapsed";
-import { resolveAssignmentDueAt } from "./dueAt";
+import { resolveAssignmentSchedule } from "./dueAt";
 import {
   ensureTeacherStudentsSchema,
 } from "@/modules/teacher-students/schema";
@@ -24,7 +24,7 @@ import {
   type MentorAssignmentSummary,
 } from "./types";
 
-export { resolveAssignmentDueAt } from "./dueAt";
+export { resolveAssignmentDueAt, resolveAssignmentSchedule } from "./dueAt";
 
 type Deps = {
   getConnection: () => Promise<SqlConnection>;
@@ -37,6 +37,7 @@ type AssignmentRow = {
   theme_id: number;
   theme_name: string;
   tasks_number: number;
+  available_at: number;
   due_at: number;
   schedule_mode: AssignmentScheduleMode;
   status: "active" | "cancelled";
@@ -58,8 +59,8 @@ const SQL_THEME = `SELECT id, name FROM themes WHERE id = ? LIMIT 1`;
 
 const SQL_INSERT_ASSIGNMENT = `
   INSERT INTO mentor_assignments (
-    teacher_user_id, theme_id, tasks_number, due_at, schedule_mode, status, created_at
-  ) VALUES (?, ?, ?, ?, ?, 'active', ?)
+    teacher_user_id, theme_id, tasks_number, available_at, due_at, schedule_mode, status, created_at
+  ) VALUES (?, ?, ?, ?, ?, ?, 'active', ?)
 `;
 
 const SQL_INSERT_MEMBER = `
@@ -81,6 +82,7 @@ const SQL_LIST_ASSIGNMENTS = `
     a.theme_id,
     t.name AS theme_name,
     a.tasks_number,
+    a.available_at,
     a.due_at,
     a.schedule_mode,
     a.status,
@@ -99,6 +101,7 @@ const SQL_GET_ASSIGNMENT = `
     a.theme_id,
     t.name AS theme_name,
     a.tasks_number,
+    a.available_at,
     a.due_at,
     a.schedule_mode,
     a.status,
@@ -255,6 +258,7 @@ function summarize(
     themeId: row.theme_id,
     themeName: row.theme_name.trim(),
     tasksNumber: row.tasks_number,
+    availableAt: row.available_at,
     dueAt: row.due_at,
     scheduleMode: row.schedule_mode,
     status: row.status,
@@ -270,7 +274,9 @@ export type CreateMentorAssignmentInput = {
   themeId: number;
   studentIds: number[];
   scheduleMode: AssignmentScheduleMode;
-  /** Unix seconds; required when scheduleMode is datetime. */
+  /** Unix seconds — when the test opens (datetime mode). */
+  availableAtUnix?: number | null;
+  /** Unix seconds — end of the completion window (required). */
   dueAtUnix?: number | null;
   tasksNumber?: number;
 };
@@ -318,8 +324,9 @@ export async function createMentorAssignment(
 
     await assertStudentsLinked(connection, input.teacherUserId, studentIds);
 
-    const dueAt = resolveAssignmentDueAt(
+    const schedule = resolveAssignmentSchedule(
       input.scheduleMode,
+      input.availableAtUnix ?? null,
       input.dueAtUnix ?? null,
       nowSec(),
     );
@@ -329,7 +336,8 @@ export async function createMentorAssignment(
       input.teacherUserId,
       input.themeId,
       tasksNumber,
-      dueAt,
+      schedule.availableAt,
+      schedule.dueAt,
       input.scheduleMode,
       createdAt,
     ]);
@@ -348,7 +356,7 @@ export async function createMentorAssignment(
         studentId,
         input.themeId,
         tasksNumber,
-        dueAt,
+        schedule.dueAt,
       );
       await connection.execute(SQL_INSERT_MEMBER, [
         assignmentId,

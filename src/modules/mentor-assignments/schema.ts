@@ -7,6 +7,7 @@ export const SQL_CREATE_MENTOR_ASSIGNMENTS = `
     teacher_user_id INT NOT NULL,
     theme_id INT NOT NULL,
     tasks_number INT UNSIGNED NOT NULL DEFAULT 10,
+    available_at INT UNSIGNED NOT NULL,
     due_at INT UNSIGNED NOT NULL,
     schedule_mode ENUM('now', 'datetime') NOT NULL DEFAULT 'now',
     status ENUM('active', 'cancelled') NOT NULL DEFAULT 'active',
@@ -49,12 +50,50 @@ async function loadDefaultConnection(): Promise<SqlConnection> {
 
 let schemaReady: Promise<void> | undefined;
 
+async function columnNames(
+  connection: SqlConnection,
+): Promise<Set<string>> {
+  const rows = await connection.query<{
+    COLUMN_NAME?: string;
+    column_name?: string;
+  }>(
+    `SELECT COLUMN_NAME AS COLUMN_NAME
+     FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'mentor_assignments'`,
+    [],
+  );
+  return new Set(
+    rows.map((row) => String(row.COLUMN_NAME ?? row.column_name ?? "")),
+  );
+}
+
+/** Add available_at when the table was created before that column existed. */
+export async function migrateMentorAssignmentsAvailableAt(
+  connection: SqlConnection,
+): Promise<void> {
+  const columns = await columnNames(connection);
+  if (columns.size === 0 || columns.has("available_at")) return;
+
+  await connection.execute(
+    `ALTER TABLE mentor_assignments
+     ADD COLUMN available_at INT UNSIGNED NOT NULL DEFAULT 0 AFTER tasks_number`,
+    [],
+  );
+  await connection.execute(
+    `UPDATE mentor_assignments
+     SET available_at = created_at
+     WHERE available_at = 0`,
+    [],
+  );
+}
+
 async function runMentorAssignmentsSchemaMigration(
   getConnection: () => Promise<SqlConnection>,
 ): Promise<void> {
   const connection = await getConnection();
   try {
     await connection.execute(SQL_CREATE_MENTOR_ASSIGNMENTS, []);
+    await migrateMentorAssignmentsAvailableAt(connection);
     await connection.execute(SQL_CREATE_MENTOR_ASSIGNMENT_MEMBERS, []);
   } finally {
     connection.release();

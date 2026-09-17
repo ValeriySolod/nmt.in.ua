@@ -5,7 +5,7 @@ export {
   cancelMentorAssignment,
   updateMentorAssignmentMembers,
 } from "./assignments";
-export { resolveAssignmentDueAt } from "./dueAt";
+export { resolveAssignmentDueAt, resolveAssignmentSchedule } from "./dueAt";
 export {
   createMentorAssignmentAction,
   cancelMentorAssignmentAction,

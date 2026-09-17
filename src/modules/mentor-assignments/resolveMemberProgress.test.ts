@@ -1,28 +1,35 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { resolveAssignmentDueAt } from "@/modules/mentor-assignments/dueAt";
+import { resolveAssignmentSchedule } from "@/modules/mentor-assignments/dueAt";
 import {
   MentorAssignmentsError,
   resolveMemberProgress,
 } from "@/modules/mentor-assignments/types";
-import { SESSION_LIFETIME_SEC } from "@/modules/testing/sessionExpiry";
 
-test("resolveAssignmentDueAt for now uses 24h window", () => {
+test("resolveAssignmentSchedule for now uses teacher dueAt", () => {
   const now = 1_700_000_000;
-  assert.equal(
-    resolveAssignmentDueAt("now", null, now),
-    now + SESSION_LIFETIME_SEC,
-  );
+  const due = now + 3_600;
+  assert.deepEqual(resolveAssignmentSchedule("now", null, due, now), {
+    availableAt: now,
+    dueAt: due,
+  });
 });
 
-test("resolveAssignmentDueAt for datetime requires future stamp", () => {
+test("resolveAssignmentSchedule for datetime needs available + later due", () => {
   const now = 1_700_000_000;
-  assert.equal(
-    resolveAssignmentDueAt("datetime", now + 3600, now),
-    now + 3600,
+  const available = now + 3_600;
+  const due = available + 7_200;
+  assert.deepEqual(
+    resolveAssignmentSchedule("datetime", available, due, now),
+    { availableAt: available, dueAt: due },
   );
   assert.throws(
-    () => resolveAssignmentDueAt("datetime", now - 1, now),
+    () => resolveAssignmentSchedule("datetime", available, available, now),
+    (error: unknown) =>
+      error instanceof MentorAssignmentsError && error.code === "invalid_input",
+  );
+  assert.throws(
+    () => resolveAssignmentSchedule("now", null, now - 1, now),
     (error: unknown) =>
       error instanceof MentorAssignmentsError && error.code === "invalid_input",
   );

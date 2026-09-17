@@ -47,9 +47,15 @@ function SessionActions({ row }: { row: LearningSessionRow }) {
     return null;
   }
 
+  const waiting = row.status === "planned" && !row.canStart;
+
   return (
     <div className={css.actions}>
-      {row.status === "expired" ? null : (
+      {row.status === "expired" ? null : waiting ? (
+        <span className={css.scheduledBadge} title={row.availableAtLabel ?? undefined}>
+          {t("opensAt", { date: row.availableAtLabel ?? "—" })}
+        </span>
+      ) : (
         <Link href={`/session/${row.id}`} className={css.startLink}>
           {t("start")}
         </Link>
@@ -220,6 +226,11 @@ export function LearningSessionsTable({
                     <span className={clsx(statusClass(row.status))}>
                       {t(`statuses.${row.status}`)}
                     </span>
+                    {row.availableAtLabel && row.status === "planned" ? (
+                      <span className={css.scheduledHint}>
+                        {t("opensAt", { date: row.availableAtLabel })}
+                      </span>
+                    ) : null}
                   </td>
                   <td className={css.colActions}>
                     <SessionActions row={row} />

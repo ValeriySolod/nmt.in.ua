@@ -172,11 +172,12 @@ test("buildLearningSessionRows labels mentor planned session", () => {
   assert.equal(rows[0]?.status, "planned");
 });
 
-test("buildLearningSessionRows reads an expired planned session as expired, not planned", () => {
+test("buildLearningSessionRows blocks start before available_at", () => {
+  const availableAt = NOW + 3_600;
   const rows = buildLearningSessionRows(
     [
       {
-        id: 21,
+        id: 22,
         theme_id: 4,
         theme_name: "Графіки",
         tasks_number: 10,
@@ -185,12 +186,15 @@ test("buildLearningSessionRows reads an expired planned session as expired, not 
         session_status: SESSION_STATUS_PLANNED,
         session_type: SESSION_TYPE_MENTOR,
         start_time: 0,
-        expire_time: NOW - 1,
+        expire_time: availableAt + 86_400,
+        available_at: availableAt,
       },
     ],
     NOW,
   );
 
-  assert.equal(rows[0]?.status, "expired");
-  assert.equal(rows[0]?.statusLabel, "Термін дії сплинув");
+  assert.equal(rows[0]?.status, "planned");
+  assert.equal(rows[0]?.canStart, false);
+  assert.equal(rows[0]?.availableAt, availableAt);
+  assert.ok(rows[0]?.availableAtLabel);
 });

@@ -622,7 +622,8 @@
       "notCancelable": "A completed session cannot be canceled.",
       "invalidInput": "Invalid session ID.",
       "generic": "Could not cancel the session. Please try again."
-    }
+    },
+    "opensAt": "From {date}"
   },
   "AuthShared": {
     "backHome": "Back to home",
@@ -1327,14 +1328,14 @@
   "TeacherAssign": {
     "kicker": "Teacher",
     "title": "Assign a topic test",
-    "lead": "Pick a topic, students, and deadline. Then track who finished and who missed it.",
+    "lead": "Topic, students, open time and window end. Then track who finished and who missed it.",
     "formTitle": "New assignment",
-    "formLead": "Check students from your roster. Deadline is “now” (24h) or a specific date and time.",
+    "formLead": "Choose when the test opens and when it must be finished. Check the students.",
     "topic": "Topic",
-    "when": "When",
-    "scheduleNow": "Now",
-    "scheduleDatetime": "Date and time",
-    "dueAt": "Deadline",
+    "when": "Schedule",
+    "scheduleNow": "Open now",
+    "scheduleDatetime": "Open at date and time",
+    "dueAt": "Finish by (window end)",
     "students": "Students",
     "assign": "Assign",
     "assigning": "Assigning…",
@@ -1369,6 +1370,14 @@
       "forbidden": "You cannot access this assignment.",
       "db_error": "Database error. Try again.",
       "generic": "Could not save. Try again."
-    }
+    },
+    "availableAt": "Opens at",
+    "opensLabel": "Opens {date}"
+  },
+  "SessionScheduledNotice": {
+    "title": "Test is not open yet",
+    "lead": "Your teacher scheduled the start for {date}.",
+    "body": "Until {date} this test stays locked. Come back to Learning sessions and press Start when it opens.",
+    "backToSessions": "Back to sessions"
   }
 }

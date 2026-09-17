@@ -10,6 +10,7 @@ export type MentorAssignmentSummary = {
   themeId: number;
   themeName: string;
   tasksNumber: number;
+  availableAt: number;
   dueAt: number;
   scheduleMode: AssignmentScheduleMode;
   status: AssignmentStatus;

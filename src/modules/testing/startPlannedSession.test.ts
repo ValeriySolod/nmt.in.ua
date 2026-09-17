@@ -13,13 +13,18 @@ import {
   validateStartPlannedSessionInput,
 } from "./startPlannedSession";
 
-function makeSession(status = SESSION_STATUS_PLANNED, expireTime = 9_999_999_999) {
+function makeSession(
+  status = SESSION_STATUS_PLANNED,
+  expireTime = 9_999_999_999,
+  availableAt: number | null = null,
+) {
   return {
     id: 12,
     user_id: 1,
     theme_id: 4,
     session_status: status,
     expire_time: expireTime,
+    available_at: availableAt,
   };
 }
 
@@ -79,7 +84,7 @@ test("startPlannedSession inserts mappings and activates planned session", async
 
   const result = await startPlannedSession(
     { userId: 1, sessionId: 12 },
-    { getConnection: async () => connection },
+    { getConnection: async () => connection, ensureSchema: async () => {} },
   );
 
   assert.equal(result.sessionId, 12);
@@ -105,7 +110,7 @@ test("startPlannedSession is idempotent when mappings already exist", async () =
 
   const result = await startPlannedSession(
     { userId: 1, sessionId: 12 },
-    { getConnection: async () => connection },
+    { getConnection: async () => connection, ensureSchema: async () => {} },
   );
 
   assert.deepEqual(result, { sessionId: 12, themeId: 4, taskIds: [] });
@@ -122,7 +127,7 @@ test("startPlannedSession rejects non-planned sessions without mappings", async 
     () =>
       startPlannedSession(
         { userId: 1, sessionId: 12 },
-        { getConnection: async () => connection },
+        { getConnection: async () => connection, ensureSchema: async () => {} },
       ),
     (error: unknown) =>
       error instanceof StartPlannedSessionError &&
@@ -141,7 +146,7 @@ test("startPlannedSession never activates an expired planned row", async () => {
     () =>
       startPlannedSession(
         { userId: 1, sessionId: 12 },
-        { getConnection: async () => connection, nowSec: () => now },
+        { getConnection: async () => connection, nowSec: () => now, ensureSchema: async () => {} },
       ),
     (error: unknown) =>
       error instanceof StartPlannedSessionError &&
@@ -161,11 +166,52 @@ test("startPlannedSession rejects an expired session even when mappings already 
     () =>
       startPlannedSession(
         { userId: 1, sessionId: 12 },
-        { getConnection: async () => connection, nowSec: () => now },
+        { getConnection: async () => connection, nowSec: () => now, ensureSchema: async () => {} },
       ),
     (error: unknown) =>
       error instanceof StartPlannedSessionError &&
       error.code === "session_expired",
   );
   assert.equal(executeCalls.length, 0);
+});
+
+test("startPlannedSession rejects before available_at", async () => {
+  const now = 1_700_000_000;
+  const availableAt = now + 3600;
+  const { connection, executeCalls } = makeConnection({
+    session: makeSession(SESSION_STATUS_PLANNED, availableAt + 86_400, availableAt),
+    tasks: [{ id: 10 }],
+  });
+
+  await assert.rejects(
+    () =>
+      startPlannedSession(
+        { userId: 1, sessionId: 12 },
+        { getConnection: async () => connection, nowSec: () => now, ensureSchema: async () => {} },
+      ),
+    (error: unknown) =>
+      error instanceof StartPlannedSessionError &&
+      error.code === "not_yet_available" &&
+      error.availableAt === availableAt,
+  );
+  assert.equal(executeCalls.length, 0);
+});
+
+test("startPlannedSession activates once available_at has passed", async () => {
+  const now = 1_700_000_000;
+  const availableAt = now - 10;
+  const { connection } = makeConnection({
+    session: makeSession(
+      SESSION_STATUS_PLANNED,
+      availableAt + 86_400,
+      availableAt,
+    ),
+    tasks: [{ id: 10 }, { id: 11 }],
+  });
+
+  const result = await startPlannedSession(
+    { userId: 1, sessionId: 12 },
+    { getConnection: async () => connection, nowSec: () => now, ensureSchema: async () => {} },
+  );
+  assert.equal(result.sessionId, 12);
 });

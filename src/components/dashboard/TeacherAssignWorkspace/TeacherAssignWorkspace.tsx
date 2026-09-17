@@ -199,16 +199,26 @@ export function TeacherAssignWorkspace({
               </div>
               {scheduleMode === "datetime" ? (
                 <label className={css.field}>
-                  <span className={css.label}>{t("dueAt")}</span>
+                  <span className={css.label}>{t("availableAt")}</span>
                   <input
                     className={css.input}
                     type="datetime-local"
-                    name="dueAtLocal"
+                    name="availableAtLocal"
                     required
                     disabled={createPending}
                   />
                 </label>
               ) : null}
+              <label className={css.field}>
+                <span className={css.label}>{t("dueAt")}</span>
+                <input
+                  className={css.input}
+                  type="datetime-local"
+                  name="dueAtLocal"
+                  required
+                  disabled={createPending}
+                />
+              </label>
             </fieldset>
 
             <fieldset className={css.fieldset}>
@@ -290,6 +300,10 @@ export function TeacherAssignWorkspace({
                   >
                     <span className={css.assignTheme}>{row.themeName}</span>
                     <span className={css.assignMeta}>
+                      {t("opensLabel", {
+                        date: formatDueAt(row.availableAt, dateLocale),
+                      })}
+                      {" · "}
                       {t("dueLabel", {
                         date: formatDueAt(row.dueAt, dateLocale),
                       })}
@@ -311,6 +325,10 @@ export function TeacherAssignWorkspace({
           <div className={css.detail} aria-live="polite">
             <h3 className={css.detailTitle}>{activeDetail.themeName}</h3>
             <p className={css.detailLead}>
+              {t("opensLabel", {
+                date: formatDueAt(activeDetail.availableAt, dateLocale),
+              })}
+              {" · "}
               {t("dueLabel", {
                 date: formatDueAt(activeDetail.dueAt, dateLocale),
               })}
