@@ -105,7 +105,9 @@ export async function checkDiagnosticAnswerAction(
       mappingId: input.mappingId,
       answerNumber: input.answerNumber,
     });
-    return { status: "success", correct: result.correct };
+    // Diagnostic is always single-attempt (no retry ladder — see AGENTS.md),
+    // so every check is trivially the row's first (and only) attempt.
+    return { status: "success", correct: result.correct, firstAttempt: true };
   } catch (error) {
     if (error instanceof CheckDiagnosticAnswerError) {
       switch (error.code) {

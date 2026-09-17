@@ -11,7 +11,7 @@ import { TASK_STATUS_UNANSWERED } from "./types";
  * End-to-end regression for Practice mode's "similar task" flow: a wrong
  * answer appends one more `tasks2session` row to the SAME session
  * (`addSimilarPracticeTask.ts`), and `finishTrainerSession` must score that
- * row exactly like every other one — no separate client-side tally. A single
+ * row separately from the primary result. A single
  * in-memory `tasks2session` table is shared across `checkAnswer`,
  * `addSimilarPracticeTask` and `finishTrainerSession` calls (three separate
  * "connections" against the same fake store) so the scenario matches what
@@ -43,6 +43,8 @@ type MappingRow = {
   task_id: number;
   task_type: number;
   status: number;
+  first_attempt_status: number | null;
+  retry_used: number;
 };
 
 function makeQuizBank(): QuizTaskRow[] {
@@ -71,7 +73,10 @@ function makeSharedStore() {
     task_id: taskId,
     task_type: 1,
     status: TASK_STATUS_UNANSWERED,
+    first_attempt_status: null,
+    retry_used: 0,
   }));
+  const followUpIds = new Set<number>();
   let nextMappingId = mappings.length + 1;
   const session = {
     id: SESSION_ID,
@@ -87,6 +92,7 @@ function makeSharedStore() {
     theme_code: "ALG-01-TEST",
     theme_name: "Тестова тема",
     variant_label: null as string | null,
+    practice_streak: 0,
   };
 
   function connectionFactory(): () => Promise<SqlConnection> {
@@ -113,13 +119,22 @@ function makeSharedStore() {
                 id: row.id,
                 session_id: row.session_id,
                 status: row.status,
+                first_attempt_status: row.first_attempt_status,
+                retry_used: row.retry_used,
                 user_id: row.user_id,
                 task_type: row.task_type,
                 right_answer_n: quizTask?.right_answer_n ?? null,
                 right_answer_text: null,
                 task_kind: "mcq",
+                comments: null,
+                answer_1: quizTask?.answer_1 ?? null,
+                answer_2: quizTask?.answer_2 ?? null,
+                answer_3: quizTask?.answer_3 ?? null,
+                answer_4: quizTask?.answer_4 ?? null,
+                session_type: session.session_type,
                 session_status: session.session_status,
                 expire_time: session.expire_time,
+                practice_streak: session.practice_streak,
               },
             ] as unknown as T[];
           }
@@ -139,14 +154,22 @@ function makeSharedStore() {
               {
                 task_id: row.task_id,
                 status: row.status,
+                retry_used: row.retry_used,
                 task_type: row.task_type,
                 session_type: session.session_type,
                 session_status: session.session_status,
                 expire_time: session.expire_time,
+                practice_streak: session.practice_streak,
                 theme_id: quizTask?.theme_id ?? null,
                 difficulty: quizTask?.difficulty ?? 1,
               },
             ] as unknown as T[];
+          }
+
+          // addSimilarPracticeTask: existing-origin idempotency check — none
+          // recorded in this scenario.
+          if (sql.includes("practice_task_origin") && sql.includes("SELECT") && !sql.includes("follow_up_id")) {
+            return [] as T[];
           }
 
           // addSimilarPracticeTask: already-used task ids in this session.
@@ -192,12 +215,18 @@ function makeSharedStore() {
             return [{ ...session }] as unknown as T[];
           }
 
-          // finishTrainerSession: every mapping's current status.
-          if (sql.includes("SELECT status") && sql.includes("FROM tasks2session")) {
+          // finishTrainerSession: every mapping's scored (first-attempt) status.
+          if (
+            sql.includes("COALESCE(t2s.first_attempt_status") &&
+            sql.includes("FROM tasks2session")
+          ) {
             const [sessionId, userId] = params as number[];
             return mappings
               .filter((m) => m.session_id === sessionId && m.user_id === userId)
-              .map((m) => ({ status: m.status })) as unknown as T[];
+              .map((m) => ({
+                status: m.first_attempt_status ?? m.status,
+                follow_up_id: followUpIds.has(m.id) ? m.id : null,
+              })) as unknown as T[];
           }
 
           throw new Error(`Unhandled query in test fake: ${sql}`);
@@ -214,15 +243,41 @@ function makeSharedStore() {
               task_id: taskId,
               task_type: taskType,
               status,
+              first_attempt_status: null,
+              retry_used: 0,
             });
             return { insertId: id, affectedRows: 1 };
           }
 
-          if (sql.startsWith("UPDATE tasks2session SET status")) {
+          if (sql.includes("first_attempt_status")) {
+            const [status, firstAttemptStatus, mappingId] = params as number[];
+            const row = mappings.find((m) => m.id === mappingId);
+            if (row) {
+              row.status = status;
+              row.first_attempt_status = firstAttemptStatus;
+            }
+            return { insertId: 0, affectedRows: row ? 1 : 0 };
+          }
+
+          if (sql.includes("retry_used")) {
             const [status, mappingId] = params as number[];
             const row = mappings.find((m) => m.id === mappingId);
-            if (row) row.status = status;
+            if (row) {
+              row.status = status;
+              row.retry_used = 1;
+            }
             return { insertId: 0, affectedRows: row ? 1 : 0 };
+          }
+
+          if (sql.startsWith("INSERT INTO practice_task_origin")) {
+            followUpIds.add(Number(params[0]));
+            return { insertId: 0, affectedRows: 1 };
+          }
+
+          if (sql.startsWith("UPDATE task_sessions") && sql.includes("practice_streak")) {
+            const [streak] = params as number[];
+            session.practice_streak = streak;
+            return { insertId: 0, affectedRows: 1 };
           }
 
           if (sql.includes("UPDATE task_sessions") && sql.includes("SET right_number")) {
@@ -246,7 +301,7 @@ function makeSharedStore() {
   return { getConnection: connectionFactory(), mappings };
 }
 
-test("similar task stays in the active session and scores like every other task", async () => {
+test("similar task stays in the active session without changing primary score", async () => {
   const store = makeSharedStore();
   const deps = { getConnection: store.getConnection };
 
@@ -257,17 +312,29 @@ test("similar task stays in the active session and scores like every other task"
   );
   assert.equal(answer1.correct, true);
 
-  // Task 2 (mapping 2, task 102): incorrect.
+  // Task 2 (mapping 2, task 102): incorrect on the first attempt — Practice
+  // mode now offers one retry instead of locking immediately.
   const answer2 = await checkAnswer(
     { userId: USER_ID, sessionId: SESSION_ID, mappingId: 2, answerNumber: 4 },
     deps,
   );
   assert.equal(answer2.correct, false);
+  assert.equal(answer2.retryAvailable, true);
 
-  // "Similar task" after the miss on task 2 — appends one row to the SAME
+  // Retry also wrong — locks the row and reveals the explanation.
+  // Reinforcement ("similar task") only becomes available once this retry
+  // is consumed, not right after the first miss.
+  const answer2Retry = await checkAnswer(
+    { userId: USER_ID, sessionId: SESSION_ID, mappingId: 2, answerNumber: 3, attempt: 2 },
+    deps,
+  );
+  assert.equal(answer2Retry.correct, false);
+  assert.ok(answer2Retry.revealed);
+
+  // "Similar task" after the retry on task 2 — appends one row to the SAME
   // session rather than starting a new one.
   const similar = await addSimilarPracticeTask(
-    { userId: USER_ID, sessionId: SESSION_ID, mappingId: 2, streak: 0 },
+    { userId: USER_ID, sessionId: SESSION_ID, mappingId: 2 },
     deps,
   );
   assert.equal(similar.task.taskId, 104);
@@ -301,12 +368,9 @@ test("similar task stays in the active session and scores like every other task"
     deps,
   );
 
-  // 3 original tasks + 1 dynamically appended follow-up = 4; 1 initial miss
-  // was corrected via the follow-up, task 2 itself stays counted as wrong —
-  // 3 right answers out of 4 total.
-  assert.equal(summary.tasksNumber, 4);
-  assert.equal(summary.rightNumber, 3);
-  assert.equal(summary.percent, 75);
+  assert.equal(summary.tasksNumber, 3);
+  assert.equal(summary.rightNumber, 2);
+  assert.ok(Math.abs(summary.percent - 200 / 3) < 0.000001);
 });
 
 test("finishing without answering the appended follow-up task is rejected", async () => {
@@ -321,8 +385,12 @@ test("finishing without answering the appended follow-up task is rejected", asyn
     { userId: USER_ID, sessionId: SESSION_ID, mappingId: 2, answerNumber: 4 },
     deps,
   );
+  await checkAnswer(
+    { userId: USER_ID, sessionId: SESSION_ID, mappingId: 2, answerNumber: 3, attempt: 2 },
+    deps,
+  );
   await addSimilarPracticeTask(
-    { userId: USER_ID, sessionId: SESSION_ID, mappingId: 2, streak: 0 },
+    { userId: USER_ID, sessionId: SESSION_ID, mappingId: 2 },
     deps,
   );
   await checkAnswer(

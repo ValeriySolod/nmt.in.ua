@@ -1,0 +1,103 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.svgWrap {
+  max-width: 360px;
+}
+
+.svg {
+  width: 100%;
+  height: auto;
+}
+
+.axis {
+  stroke: var(--muted);
+  stroke-width: 1;
+}
+
+.dot {
+  fill: var(--surface);
+  stroke: var(--border);
+  stroke-width: 2;
+}
+
+.dotSelected {
+  stroke: var(--blue);
+  fill: var(--blue-soft);
+}
+
+.dotCorrect {
+  stroke: var(--green);
+  fill: var(--green-bg);
+}
+
+.dotWrong {
+  stroke: crimson;
+  fill: color-mix(in srgb, crimson 12%, var(--surface));
+}
+
+.pointLabel {
+  fill: var(--ink, currentColor);
+  font-size: 9px;
+}
+
+.points {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.point {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-muted);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.point:disabled {
+  cursor: not-allowed;
+}
+
+.point:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--green) 45%, transparent);
+  outline-offset: 2px;
+}
+
+.pointSelected {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+}
+
+.pointCorrect {
+  border-color: var(--green);
+  background: var(--green-bg);
+}
+
+.pointWrong {
+  border-color: color-mix(in srgb, crimson 55%, var(--border));
+  background: color-mix(in srgb, crimson 10%, var(--surface));
+}
+
+.checkButton {
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 10px 20px;
+  border: 2px solid var(--green);
+  border-radius: 10px;
+  background: var(--green-bg);
+  color: var(--green-dark);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.checkButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}

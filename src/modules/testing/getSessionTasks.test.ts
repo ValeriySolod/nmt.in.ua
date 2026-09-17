@@ -1,6 +1,22 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+test("restores pending retry and reveals only consumed incorrect retry", async () => {
+  const rows = [
+    { ...makeRow(1), status: -1, first_attempt_status: -1, retry_used: 0,
+      hint_level_unlocked: 2, hint_direction: "Direction", hint_rule: "Rule", hint_example: "Hidden" },
+    { ...makeRow(2), status: -1, first_attempt_status: -1, retry_used: 1,
+      revealed_answer: 2, revealed_explanation: "Explanation" },
+  ];
+  const { connection } = makeConnection(rows);
+  const result = await getSessionTasks(42, 1, { getConnection: async () => connection });
+  assert.equal(result.tasks[0].retryAvailable, true);
+  assert.equal(result.tasks[0].revealed, undefined);
+  assert.deepEqual(result.tasks[0].hints?.map((hint) => hint.text), ["Direction", "Rule"]);
+  assert.equal(result.tasks[1].retryAvailable, undefined);
+  assert.equal(result.tasks[1].revealed?.correctAnswerNumber, 2);
+});
+
 import type { SqlConnection } from "@/lib/db/mysql";
 import {
   getSessionTasks,
@@ -90,8 +106,8 @@ test("getSessionTasks joins tasks2session with quiz_tasks and maps client-safe f
   assert.match(calls[1]!.sql, /FROM tasks2session t2s/);
   assert.match(calls[1]!.sql, /INNER JOIN quiz_tasks qt ON qt\.id = t2s\.task_id/);
   assert.match(calls[1]!.sql, /WHERE t2s\.session_id = \?/);
-  assert.doesNotMatch(calls[1]!.sql, /right_answer_n/);
-  assert.doesNotMatch(calls[1]!.sql, /comments/);
+  assert.match(calls[1]!.sql, /CASE WHEN t2s.retry_used = 1 AND t2s.status = -1 THEN qt.right_answer_n ELSE NULL/);
+  assert.match(calls[1]!.sql, /CASE WHEN t2s.retry_used = 1 AND t2s.status = -1 THEN qt.comments ELSE NULL/);
   assert.deepEqual(calls[1]?.params, [42]);
 
   assert.equal(result.sessionId, 42);

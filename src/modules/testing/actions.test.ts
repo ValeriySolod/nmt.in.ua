@@ -7,6 +7,9 @@ import {
   checkAnswerAction,
   finishTrainerSessionAction,
   getTaskHintAction,
+  getTaskHintLevelAction,
+  startMistakeReviewRoundAction,
+  addSpacedRepetitionTaskAction,
   markSessionStartedAction,
   startTopicTestAction,
   type StartTopicTestActionState,
@@ -25,6 +28,15 @@ import {
   addSimilarPracticeTask,
   AddSimilarPracticeTaskError,
 } from "./addSimilarPracticeTask";
+import { getTaskHintLevel, GetTaskHintLevelError } from "./getTaskHintLevel";
+import {
+  startMistakeReviewRound,
+  StartMistakeReviewRoundError,
+} from "./startMistakeReviewRound";
+import {
+  addSpacedRepetitionTask,
+  AddSpacedRepetitionTaskError,
+} from "./addSpacedRepetitionTask";
 import { TASK_STATUS_UNANSWERED } from "./types";
 
 const IDLE_STATE: StartTopicTestActionState = { status: "idle" };
@@ -219,13 +231,12 @@ test("getTaskHintAction maps domain errors to action error codes", async () => {
   assert.deepEqual(state, { status: "error", code: "notFound" });
 });
 
-test("addSimilarPracticeTaskAction trusts the session userId and forwards the streak", async () => {
+test("addSimilarPracticeTaskAction trusts the session userId, never a client-supplied streak", async () => {
   let capturedInput: unknown;
   const spy = (async (input: {
     userId: number;
     sessionId: number;
     mappingId: number;
-    streak: number;
   }) => {
     capturedInput = input;
     return {
@@ -242,7 +253,7 @@ test("addSimilarPracticeTaskAction trusts the session userId and forwards the st
   }) as typeof addSimilarPracticeTask;
 
   const state = await addSimilarPracticeTaskAction(
-    { sessionId: 5, mappingId: 10, streak: 3 },
+    { sessionId: 5, mappingId: 10 },
     { addSimilarPracticeTask: spy, ...mockAuth },
   );
 
@@ -250,7 +261,6 @@ test("addSimilarPracticeTaskAction trusts the session userId and forwards the st
     userId: 1,
     sessionId: 5,
     mappingId: 10,
-    streak: 3,
   });
   assert.equal(state.status, "success");
 });
@@ -274,12 +284,120 @@ test("addSimilarPracticeTaskAction maps every domain error code", async () => {
     }) as typeof addSimilarPracticeTask;
 
     const state = await addSimilarPracticeTaskAction(
-      { sessionId: 5, mappingId: 10, streak: 0 },
+      { sessionId: 5, mappingId: 10 },
       { addSimilarPracticeTask: spy, ...mockAuth },
     );
 
     assert.deepEqual(state, { status: "error", code: actionCode });
   }
+});
+
+test("getTaskHintLevelAction trusts the session userId and forwards the level", async () => {
+  let capturedInput: unknown;
+  const spy = (async (input: {
+    userId: number;
+    sessionId: number;
+    mappingId: number;
+    level: 1 | 2 | 3;
+  }) => {
+    capturedInput = input;
+    return { available: true, level: 1 as const, text: "direction", isFinal: false };
+  }) as typeof getTaskHintLevel;
+
+  const state = await getTaskHintLevelAction(
+    { sessionId: 5, mappingId: 10, level: 1 },
+    { getTaskHintLevel: spy, ...mockAuth },
+  );
+
+  assert.deepEqual(capturedInput, { userId: 1, sessionId: 5, mappingId: 10, level: 1 });
+  assert.deepEqual(state, {
+    status: "success",
+    available: true,
+    level: 1,
+    text: "direction",
+    isFinal: false,
+  });
+});
+
+test("getTaskHintLevelAction maps domain errors to action error codes", async () => {
+  const spy = (async () => {
+    throw new GetTaskHintLevelError("nope", "not_eligible");
+  }) as typeof getTaskHintLevel;
+
+  const state = await getTaskHintLevelAction(
+    { sessionId: 5, mappingId: 10, level: 3 },
+    { getTaskHintLevel: spy, ...mockAuth },
+  );
+
+  assert.deepEqual(state, { status: "error", code: "notEligible" });
+});
+
+test("startMistakeReviewRoundAction trusts the session userId, never a client-supplied one", async () => {
+  let capturedInput: unknown;
+  const spy = (async (input: { userId: number; sessionId: number }) => {
+    capturedInput = input;
+    return { sessionId: 99, themeId: 7, taskIds: [101, 102] };
+  }) as typeof startMistakeReviewRound;
+
+  const state = await startMistakeReviewRoundAction(
+    { sessionId: 5 },
+    { startMistakeReviewRound: spy, ...mockAuth },
+  );
+
+  assert.deepEqual(capturedInput, { userId: 1, sessionId: 5 });
+  assert.deepEqual(state, { status: "success", sessionId: 99 });
+});
+
+test("startMistakeReviewRoundAction maps every domain error code", async () => {
+  const cases: Array<[
+    import("./startMistakeReviewRound").StartMistakeReviewRoundErrorCode,
+    string,
+  ]> = [
+    ["not_found", "notFound"],
+    ["not_completed", "notCompleted"],
+    ["no_mistakes", "noMistakes"],
+    ["invalid_input", "invalidInput"],
+    ["db_error", "generic"],
+  ];
+  for (const [domainCode, actionCode] of cases) {
+    const spy = (async () => {
+      throw new StartMistakeReviewRoundError("nope", domainCode);
+    }) as typeof startMistakeReviewRound;
+    const state = await startMistakeReviewRoundAction(
+      { sessionId: 5 },
+      { startMistakeReviewRound: spy, ...mockAuth },
+    );
+    assert.deepEqual(state, { status: "error", code: actionCode });
+  }
+});
+
+test("addSpacedRepetitionTaskAction trusts the session userId and passes through added:false", async () => {
+  let capturedInput: unknown;
+  const spy = (async (input: { userId: number; sessionId: number }) => {
+    capturedInput = input;
+    return { added: false as const };
+  }) as typeof addSpacedRepetitionTask;
+
+  const state = await addSpacedRepetitionTaskAction(
+    { sessionId: 5 },
+    { addSpacedRepetitionTask: spy, ...mockAuth },
+  );
+
+  assert.deepEqual(capturedInput, { userId: 1, sessionId: 5 });
+  assert.deepEqual(state, { status: "success", added: false });
+});
+
+test("addSpacedRepetitionTaskAction maps domain errors to action error codes", async () => {
+  const spy = (async () => {
+    throw new AddSpacedRepetitionTaskError("nope", "session_expired");
+  }) as typeof addSpacedRepetitionTask;
+
+  const state = await addSpacedRepetitionTaskAction(
+    { sessionId: 5 },
+    { addSpacedRepetitionTask: spy, ...mockAuth },
+  );
+
+  assert.deepEqual(state, { status: "error", code: "sessionExpired" });
 });
 
 test("a second submission while one is pending is rejected, not creating a duplicate session", async () => {
@@ -348,11 +466,11 @@ test("a second submission while one is pending is rejected, not creating a dupli
   assert.equal(sessionInsertCount, 1);
 });
 
-test("checkAnswerAction uses the trusted demo user and returns only { correct }", async () => {
+test("checkAnswerAction uses the trusted demo user and returns only client-safe fields", async () => {
   let capturedInput: unknown;
   const spy = (async (input: unknown) => {
     capturedInput = input;
-    return { correct: true };
+    return { correct: true, firstAttempt: true };
   }) as typeof checkAnswer;
 
   const state = await checkAnswerAction(
@@ -366,8 +484,28 @@ test("checkAnswerAction uses the trusted demo user and returns only { correct }"
     mappingId: 10,
     answerNumber: 2,
   });
-  assert.deepEqual(state, { status: "success", correct: true });
+  assert.deepEqual(state, { status: "success", correct: true, firstAttempt: true });
   assert.doesNotMatch(JSON.stringify(state), /right_answer_n/);
+});
+
+test("checkAnswerAction forwards retryAvailable and revealed only when present", async () => {
+  const spy = (async () => ({
+    correct: false,
+    firstAttempt: false,
+    revealed: { correctAnswerNumber: 2, correctAnswerText: "two", explanation: "why" },
+  })) as typeof checkAnswer;
+
+  const state = await checkAnswerAction(
+    { sessionId: 5, mappingId: 10, answerNumber: 1 },
+    { checkAnswer: spy, ...mockAuth },
+  );
+
+  assert.deepEqual(state, {
+    status: "success",
+    correct: false,
+    firstAttempt: false,
+    revealed: { correctAnswerNumber: 2, correctAnswerText: "two", explanation: "why" },
+  });
 });
 
 test("checkAnswerAction maps not_found to a client-safe error without the answer key", async () => {

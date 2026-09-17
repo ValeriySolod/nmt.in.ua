@@ -11,6 +11,7 @@ import { formatDurationSeconds } from "@/modules/sessions/types";
 import { isPracticeMode } from "@/modules/testing/sessionMode";
 import type { TrainerMode, TrainerSessionSummary } from "@/modules/testing/types";
 import Link from "next/link";
+import { useMistakeReviewRound } from "./useMistakeReviewRound";
 import css from "./TopicTrainerSummary.module.css";
 
 type TopicTrainerSummaryProps = {
@@ -25,6 +26,9 @@ type TopicTrainerSummaryProps = {
   mistakes?: SessionMistakeItem[];
   /** Guest-owned diagnostic attempt — shows the "save progress" CTA. */
   isGuest?: boolean;
+  /** Practice mode only: powers the "Робота над помилками" entry point
+   * (`startMistakeReviewRoundAction`). Omitted for every other mode. */
+  sessionId?: number;
 };
 
 export function TopicTrainerSummary({
@@ -35,6 +39,7 @@ export function TopicTrainerSummary({
   timedOut = false,
   mistakes = [],
   isGuest = false,
+  sessionId,
 }: TopicTrainerSummaryProps) {
   const t = useTranslations("TopicTrainerSummary");
   const isUltimate = mode === "ultimate";
@@ -47,6 +52,8 @@ export function TopicTrainerSummary({
     isPractice &&
     insight !== null &&
     (insight.strongThemes.length > 0 || insight.weakThemes.length > 0);
+  const mistakeReviewRound = useMistakeReviewRound(sessionId ?? summary.sessionId);
+  const showMistakeReviewEntry = isPractice && sessionId != null && summary.rightNumber < summary.tasksNumber;
 
   return (
     <section className={css.summary} aria-labelledby="trainer-summary-title">
@@ -178,6 +185,24 @@ export function TopicTrainerSummary({
           className={css.recommendations}
         />
       )}
+
+      {showMistakeReviewEntry ? (
+        <div className={css.mistakeReviewEntry}>
+          <button
+            type="button"
+            className={css.secondary}
+            onClick={() => void mistakeReviewRound.start()}
+            disabled={mistakeReviewRound.loading}
+          >
+            {mistakeReviewRound.loading ? t("startingMistakeReview") : t("workOnMistakes")}
+          </button>
+          {mistakeReviewRound.message ? (
+            <p className={css.mistakeReviewMessage} role="status">
+              {mistakeReviewRound.message}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
 
       <nav className={css.links} aria-label={t("nextSteps")}>
         {isDiagnostic && isGuest ? (

@@ -9,6 +9,9 @@ import {
   getSessionMistakeReviewAction,
   markSessionStartedAction,
   skipTaskAnswerAction,
+  getTaskHintLevelAction,
+  addSimilarPracticeTaskAction,
+  addSpacedRepetitionTaskAction,
 } from "@/modules/testing/actions";
 import type { SessionMistakeItem } from "@/modules/testing/getSessionMistakeReview";
 import { formatElapsedClock } from "@/modules/testing/sessionElapsed";
@@ -16,11 +19,15 @@ import {
   ULTIMATE_DURATION_SEC,
   ULTIMATE_TIMER_WARNING_SEC,
 } from "@/modules/testing/topicTestMode";
+import { insertFollowUpTask } from "@/modules/testing/insertFollowUpTask";
+import { isPracticeMode } from "@/modules/testing/sessionMode";
 import {
   TASK_STATUS_CORRECT,
   TASK_STATUS_INCORRECT,
   type CheckAnswerActionInput,
   type CheckAnswerActionState,
+  type HintLevel,
+  type RevealedAnswerAction,
   type SessionTask,
   type SessionTaskAnswer,
   type TrainerMode,
@@ -78,7 +85,16 @@ type TopicTrainerProps = {
   diagnosticThemeBreakdownAction?: (sessionId: number) => Promise<DiagnosticTopicInsight>;
 };
 
-type CheckResult = { correct: boolean };
+/** Practice mode's second-attempt state travels alongside the plain
+ * correct/incorrect flag: `retryAvailable` means the task is still "live"
+ * (one more click permitted); `revealed` means it's fully locked and the
+ * answer/explanation may be shown. Both are only ever set by the server
+ * (`checkAnswer.ts`) — never inferred client-side. */
+type CheckResult = {
+  correct: boolean;
+  retryAvailable?: boolean;
+  revealed?: RevealedAnswerAction;
+};
 
 function initialResults(tasks: SessionTask[]): Record<number, CheckResult> {
   const results: Record<number, CheckResult> = {};
@@ -86,10 +102,13 @@ function initialResults(tasks: SessionTask[]): Record<number, CheckResult> {
     if (task.status === TASK_STATUS_CORRECT)
       results[task.mappingId] = { correct: true };
     if (task.status === TASK_STATUS_INCORRECT)
-      results[task.mappingId] = { correct: false };
+      results[task.mappingId] = { correct: false, retryAvailable: task.retryAvailable, revealed: task.revealed };
   }
   return results;
 }
+
+/** One task's hint-ladder progress: rungs already fetched, in order. */
+type HintProgress = { level: HintLevel; text: string; isFinal: boolean }[];
 
 export function TopicTrainer({
   sessionId,
@@ -105,6 +124,7 @@ export function TopicTrainer({
   diagnosticThemeBreakdownAction,
 }: TopicTrainerProps) {
   const isUltimate = mode === "ultimate";
+  const isPractice = isPracticeMode(mode);
   const resolvedActions: TopicTrainerActionOverrides = useMemo(
     () => ({
       checkAnswer: actions?.checkAnswer ?? checkAnswerAction,
@@ -115,13 +135,18 @@ export function TopicTrainer({
     [actions?.checkAnswer, actions?.finishTrainerSession, actions?.markSessionStarted],
   );
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [taskList] = useState<SessionTask[]>(tasks);
+  const [taskList, setTaskList] = useState<SessionTask[]>(tasks);
   const [selectedByMappingId, setSelectedByMappingId] = useState<
     Record<number, SessionTaskAnswer["number"]>
   >({});
   const [resultsByMappingId, setResultsByMappingId] = useState(() =>
     initialResults(tasks),
   );
+  const [hintsByMappingId, setHintsByMappingId] = useState<Record<number, HintProgress>>(
+    () => Object.fromEntries(tasks.filter((task) => task.hints?.length).map((task) => [task.mappingId, task.hints!])),
+  );
+  const [hintLoading, setHintLoading] = useState(false);
+  const [similarTaskLoading, setSimilarTaskLoading] = useState(false);
   const [pendingMappingId, setPendingMappingId] = useState<number | null>(null);
   const [isFinishing, setIsFinishing] = useState(false);
   const [summary, setSummary] = useState<TrainerSessionSummary | null>(
@@ -222,12 +247,18 @@ export function TopicTrainer({
   const checkResult = currentTask
     ? resultsByMappingId[currentTask.mappingId]
     : undefined;
+  const hintProgress = currentTask ? hintsByMappingId[currentTask.mappingId] : undefined;
   const isPending =
     currentTask != null && pendingMappingId === currentTask.mappingId;
   const isLast = currentIndex === total - 1;
   const allAnswered =
     taskList.length > 0 &&
     taskList.every((task) => resultsByMappingId[task.mappingId] !== undefined);
+  // A task is "resolved" (locked, no more attempts) once it's correct, or
+  // wrong without a retry on offer (diagnostic/exam), or wrong AND already
+  // revealed (retry consumed). While `retryAvailable` is true the task is
+  // still "live" — one more click is allowed.
+  const isResolved = checkResult !== undefined && !checkResult.retryAvailable;
 
   if (sessionExpired && !summary) {
     return <SessionExpiredNotice />;
@@ -252,6 +283,7 @@ export function TopicTrainer({
         timedOut={timedOut}
         mistakes={mistakes}
         isGuest={isGuest}
+        sessionId={sessionId}
       />
     );
   }
@@ -276,8 +308,29 @@ export function TopicTrainer({
     }
   }
 
+  /** Practice mode only: after a task fully resolves, opportunistically
+   * check whether a theme is due for spaced repetition and silently splice
+   * one more task into the list if so. Never blocks the UI, never surfaces
+   * an error — "nothing due" and "network hiccup" look the same to the
+   * student (there was simply no repetition this time). */
+  async function maybeAddRepetition() {
+    if (!isPractice) return;
+    try {
+      const result = await addSpacedRepetitionTaskAction({ sessionId });
+      if (result.status === "success" && result.added) {
+        setTaskList((prev) => {
+          const { list } = insertFollowUpTask(prev, prev.length - 1, result.task);
+          return list;
+        });
+      }
+    } catch {
+      // Best-effort only — see doc comment above.
+    }
+  }
+
   async function handleSelect(answerNumber: SessionTaskAnswer["number"]) {
-    if (checkResult || isPending || isFinishing || answeringRef.current) return;
+    if (isPending || isFinishing || answeringRef.current) return;
+    if (isResolved) return;
     answeringRef.current = true;
 
     setSelectedByMappingId((prev) => ({
@@ -293,6 +346,7 @@ export function TopicTrainer({
         sessionId,
         mappingId: currentTask.mappingId,
         answerNumber,
+        attempt: checkResult?.retryAvailable ? 2 : 1,
       });
     } finally {
       answeringRef.current = false;
@@ -318,8 +372,64 @@ export function TopicTrainer({
 
     setResultsByMappingId((prev) => ({
       ...prev,
-      [currentTask.mappingId]: { correct: result.correct },
+      [currentTask.mappingId]: {
+        correct: result.correct,
+        retryAvailable: result.retryAvailable,
+        revealed: result.revealed,
+      },
     }));
+
+    if (isPractice && (result.correct || result.revealed)) {
+      void maybeAddRepetition();
+    }
+  }
+
+  async function handleShowNextHint() {
+    if (!isPractice || hintLoading) return;
+    const nextLevel = ((hintProgress?.length ?? 0) + 1) as HintLevel;
+    if (nextLevel > 3) return;
+    setHintLoading(true);
+    try {
+      const result = await getTaskHintLevelAction({
+        sessionId,
+        mappingId: currentTask.mappingId,
+        level: nextLevel,
+      });
+      if (result.status === "success" && result.available && result.text && result.level) {
+        setHintsByMappingId((prev) => ({
+          ...prev,
+          [currentTask.mappingId]: [
+            ...(prev[currentTask.mappingId] ?? []),
+            { level: result.level as HintLevel, text: result.text as string, isFinal: result.isFinal },
+          ],
+        }));
+      }
+    } finally {
+      setHintLoading(false);
+    }
+  }
+
+  async function handleTrySimilarTask() {
+    if (!isPractice || similarTaskLoading) return;
+    setSimilarTaskLoading(true);
+    setErrorMessage(null);
+    try {
+      const result = await addSimilarPracticeTaskAction({
+        sessionId,
+        mappingId: currentTask.mappingId,
+      });
+      if (result.status === "success") {
+        setTaskList((prev) => {
+          const { list, index } = insertFollowUpTask(prev, currentIndex, result.task);
+          setCurrentIndex(index);
+          return list;
+        });
+      } else if (result.code !== "noSimilarTask") {
+        setErrorMessage(t(`errors.similarTask.${result.code}`));
+      }
+    } finally {
+      setSimilarTaskLoading(false);
+    }
   }
 
   async function handleSkip() {
@@ -460,12 +570,16 @@ export function TopicTrainer({
         >
           {currentTask.answers.map((answer) => {
             const isSelected = selectedAnswer === answer.number;
-            const cardState = resolveAnswerCardState({
-              mode,
-              isUltimate,
-              isSelected,
-              correct: checkResult?.correct,
-            });
+            const isRevealedCorrect =
+              checkResult?.revealed?.correctAnswerNumber === answer.number;
+            const cardState = isRevealedCorrect
+              ? "correct"
+              : resolveAnswerCardState({
+                  mode,
+                  isUltimate,
+                  isSelected,
+                  correct: checkResult?.correct,
+                });
             return (
               <button
                 key={answer.number}
@@ -477,7 +591,7 @@ export function TopicTrainer({
                   cardState === "incorrect" && css.answerWrong,
                 )}
                 onClick={() => handleSelect(answer.number)}
-                disabled={isPending || checkResult !== undefined || isFinishing}
+                disabled={isPending || isResolved || isFinishing}
                 aria-pressed={isSelected}
               >
                 <span className={css.answerBadge} aria-hidden="true">
@@ -509,13 +623,60 @@ export function TopicTrainer({
               <p className="visually-hidden" role="status">
                 {feedbackKind === "neutral"
                   ? t("answerSaved")
-                  : feedbackKind === "correct"
-                    ? t("correct")
-                    : t("incorrect")}
+                  : checkResult.retryAvailable
+                    ? t("retryAvailable")
+                    : feedbackKind === "correct"
+                      ? t("correct")
+                      : t("incorrect")}
               </p>
             );
           })()
         : null}
+
+      {/* Practice-only affordances: second-attempt prompt, hint ladder,
+          reveal + reinforcement. Never rendered for diagnostic/exam. */}
+      {isPractice && checkResult?.retryAvailable ? (
+        <div className={css.practicePanel} role="status">
+          <p className={css.practiceNote}>{t("retryPrompt")}</p>
+          {hintProgress?.map((rung) => (
+            <p key={rung.level} className={css.hintText}>
+              <MathText text={rung.text} />
+            </p>
+          ))}
+          {!hintProgress || !hintProgress[hintProgress.length - 1]?.isFinal ? (
+            <button
+              type="button"
+              className={css.hintButton}
+              onClick={handleShowNextHint}
+              disabled={hintLoading}
+            >
+              {hintLoading
+                ? t("hintLoading")
+                : hintProgress && hintProgress.length > 0
+                  ? t("showNextHint")
+                  : t("showHint")}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+
+      {isPractice && checkResult?.revealed ? (
+        <div className={css.practicePanel}>
+          {checkResult.revealed.explanation ? (
+            <p className={css.hintText}>
+              <MathText text={checkResult.revealed.explanation} />
+            </p>
+          ) : null}
+          <button
+            type="button"
+            className={css.hintButton}
+            onClick={handleTrySimilarTask}
+            disabled={similarTaskLoading}
+          >
+            {similarTaskLoading ? t("similarTaskLoading") : t("similarTask")}
+          </button>
+        </div>
+      ) : null}
 
       {errorMessage ? (
         <p className={clsx(css.feedback, css.feedbackBad)} role="alert">

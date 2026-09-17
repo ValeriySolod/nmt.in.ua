@@ -22,7 +22,7 @@ const SQL_TOPIC_MISTAKES = `
   WHERE t2s.session_id = ?
     AND ts.user_id = ?
     AND ts.session_status = ?
-    AND t2s.status = ?
+    AND COALESCE(t2s.first_attempt_status, t2s.status) = ?
     AND t2s.task_type <> ?
   ORDER BY t2s.id ASC
 `;

@@ -1,5 +1,19 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+
+test("reinforcement and repetition outcomes do not change the primary score", async () => {
+  const mock = makeConnection({
+    session: makeSession(),
+    statuses: [TASK_STATUS_INCORRECT, TASK_STATUS_CORRECT, TASK_STATUS_CORRECT],
+    followUpIds: [null, 10, 11],
+  });
+  const summary = await finishTrainerSession({ userId: 1, sessionId: 5 }, {
+    getConnection: async () => mock.connection,
+  });
+  assert.equal(summary.tasksNumber, 1);
+  assert.equal(summary.rightNumber, 0);
+  assert.equal(summary.percent, 0);
+});
 import type { SqlConnection } from "@/lib/db/mysql";
 import {
   SESSION_STATUS_COMPLETED,
@@ -50,6 +64,7 @@ function makeSession(overrides: Partial<SessionRow> = {}): SessionRow {
 function makeConnection(options: {
   session?: SessionRow | null;
   statuses?: number[];
+  followUpIds?: (number | null)[];
   failUpdate?: boolean;
 }) {
   const calls: Array<{ sql: string; params?: unknown[] }> = [];
@@ -67,8 +82,9 @@ function makeConnection(options: {
         ) as unknown as T[];
       }
       if (sql.includes("FROM tasks2session")) {
-        return (options.statuses ?? []).map((status) => ({
+        return (options.statuses ?? []).map((status, index) => ({
           status,
+          follow_up_id: options.followUpIds?.[index] ?? null,
         })) as unknown as T[];
       }
       return [] as T[];

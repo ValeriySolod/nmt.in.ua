@@ -1,0 +1,146 @@
+.frame {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  max-width: var(--content-narrow, 720px);
+  margin-inline: auto;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--title, 1.6rem);
+  font-weight: 800;
+}
+
+.lead {
+  margin: 0;
+  color: var(--muted);
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 8px;
+}
+
+.tab {
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tab:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--green) 45%, transparent);
+  outline-offset: 2px;
+}
+
+.tabActive {
+  border-color: var(--green);
+  background: var(--green-bg);
+  color: var(--green-dark);
+}
+
+.taskPicker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.taskPickerItem {
+  min-height: 40px;
+  min-width: 40px;
+  padding: 6px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.taskPickerItem:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--green) 45%, transparent);
+  outline-offset: 2px;
+}
+
+.taskPickerItemActive {
+  border-color: var(--blue);
+  background: var(--green-bg);
+  color: var(--blue);
+}
+
+.card {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: 5px 6px 0 rgb(22 22 22 / 6%);
+}
+
+.card { min-width: 0; }
+
+.cardLegend {
+  margin-inline-start: 4px;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: var(--green-bg);
+  color: var(--green-dark);
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.roundHistory {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.roundHistoryLabel {
+  font-weight: 700;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.roundHistorySelect {
+  flex: 1 1 220px;
+  min-height: 44px;
+  max-width: 100%;
+  padding: 8px 36px 8px 14px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  background:
+    var(--surface)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23575044' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    no-repeat right 14px center;
+  appearance: none;
+  font-weight: 600;
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.roundHistorySelect:hover {
+  border-color: var(--green);
+}
+
+.roundHistorySelect:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--green) 45%, transparent);
+  outline-offset: 2px;
+}
+
+.roundHistorySelect:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}

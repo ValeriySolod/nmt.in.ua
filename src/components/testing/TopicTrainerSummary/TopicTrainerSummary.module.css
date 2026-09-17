@@ -99,6 +99,26 @@
   border: 1px solid var(--border);
   background: var(--surface-muted);
   color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.secondary:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.mistakeReviewEntry {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.mistakeReviewMessage {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
 }
 
 .recommendations {

@@ -1,0 +1,89 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.lines {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-muted);
+  text-align: left;
+  cursor: pointer;
+}
+
+.line:disabled {
+  cursor: not-allowed;
+}
+
+.line:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--green) 45%, transparent);
+  outline-offset: 2px;
+}
+
+.selectedLine {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+}
+
+.errorLine {
+  border-color: color-mix(in srgb, crimson 55%, var(--border));
+  background: color-mix(in srgb, crimson 10%, var(--surface));
+}
+
+.options {
+  display: grid;
+  gap: 8px;
+}
+
+.option {
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-muted);
+  text-align: left;
+  cursor: pointer;
+}
+
+.option:disabled {
+  cursor: not-allowed;
+}
+
+.selectedOption {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+}
+
+.correctOption {
+  border-color: var(--green);
+  background: var(--green-bg);
+}
+
+.checkButton {
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 10px 20px;
+  border: 2px solid var(--green);
+  border-radius: 10px;
+  background: var(--green-bg);
+  color: var(--green-dark);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.checkButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
