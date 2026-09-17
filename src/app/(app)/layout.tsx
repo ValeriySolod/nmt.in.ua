@@ -2,7 +2,6 @@ import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { UpgradeSessionCookie } from "@/components/auth/UpgradeSessionCookie";
 import { pickClientMessages } from "@/i18n/clientMessages";
 import {
-  clearSessionCookie,
   getCurrentUser,
   sessionCookieNeedsUpgrade,
 } from "@/modules/auth/getCurrentUser";
@@ -29,8 +28,8 @@ export default async function AppLayout({
   if (user) {
     const account = await findUserById(user.id);
     if (!account || account.isBanned) {
-      await clearSessionCookie();
-      redirect("/login");
+      // Cookie mutation is illegal during RSC render — use the route handler.
+      redirect("/api/auth/clear-session");
     }
   }
 
