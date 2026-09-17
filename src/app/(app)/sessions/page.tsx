@@ -133,14 +133,12 @@ async function TeacherSessions({
         selectedValue={String(studentParam)}
         basePath="/sessions"
       />
-      <LearningSessionsTable
+      <TeacherClassSessions
         rows={rows}
-        extended
-        readOnly
+        showStudent={false}
         title={t("studentTitle", { name: student.displayName })}
         lead={t("studentLead")}
         empty={t("studentEmpty")}
-        queryParams={{ student: String(studentParam) }}
       />
     </>
   );

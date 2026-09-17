@@ -535,5 +535,5 @@ npm run lint && npm test && npm run build
 
 - Той самий picker (`basePath=/sessions`); картки на мобільному, детальна таблиця з 768.
 - Модуль `teacherLearningSessions`; перегляд одного учня — `LearningSessionsTable` readOnly + extended.
-- Сортування (нові / % / тема / учень) і фільтри (статус, тема, ким створено); логін під ім’ям, таблиця з `min-width` + горизонтальний скрол.
+- Сортування ▲▼ і Excel-фільтр по заголовку колонки (однаково для всіх і одного учня); логін під ім’ям.
 - Перевірити: `demo-teacher` → `/sessions` → all → фільтри → учень.

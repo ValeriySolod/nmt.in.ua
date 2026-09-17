@@ -1,24 +1,66 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import clsx from "clsx";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useTranslations } from "next-intl";
-import { Select } from "@/components/ui/Select";
+import {
+  popoverExit,
+  popoverHidden,
+  popoverShown,
+  tweenFast,
+} from "@/lib/motionPresets";
+import { useIsClient } from "@/lib/useIsClient";
 import type { TeacherLearningSessionRow } from "@/modules/sessions/teacherLearningSessions";
 import {
   formatDurationSeconds,
   formatTimePerTask,
-  type SessionCreatedBy,
-  type SessionDisplayStatus,
 } from "@/modules/sessions/types";
 import { formatPercent, getScoreLevel } from "@/modules/results/types";
 import { queryHref } from "@/lib/queryHref";
 import css from "./TeacherClassSessions.module.css";
 
-type SortKey = "newest" | "worst" | "best" | "theme" | "student";
-type StatusFilter = "all" | SessionDisplayStatus;
-type CreatedFilter = "all" | SessionCreatedBy;
+type ColumnKey =
+  | "student"
+  | "theme"
+  | "correct"
+  | "percent"
+  | "time"
+  | "speed"
+  | "when"
+  | "createdBy"
+  | "status";
+
+type SortDir = "asc" | "desc";
+
+type SortState = {
+  key: ColumnKey;
+  dir: SortDir;
+};
+
+type FilterState = Partial<Record<ColumnKey, Set<string>>>;
+
+function useMinWidth(px: number): boolean {
+  const [matches, setMatches] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia(`(min-width: ${px}px)`);
+    const sync = () => setMatches(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, [px]);
+  return matches;
+}
 
 function scoreClass(percent: number | null): string {
   switch (getScoreLevel(percent)) {
@@ -39,268 +81,552 @@ function statusClass(status: TeacherLearningSessionRow["status"]): string {
   return css.statusPlanned;
 }
 
-function comparePercent(
-  a: number | null,
-  b: number | null,
-  direction: "asc" | "desc",
-): number {
-  if (a == null && b == null) return 0;
-  if (a == null) return 1;
-  if (b == null) return -1;
-  return direction === "asc" ? a - b : b - a;
+function dateOnlyLabel(startTimeLabel: string): string {
+  if (!startTimeLabel || startTimeLabel === "—") return "—";
+  const comma = startTimeLabel.indexOf(",");
+  if (comma >= 0) return startTimeLabel.slice(0, comma).trim();
+  return startTimeLabel.replace(/\s+\d{1,2}:\d{2}.*$/, "").trim() || startTimeLabel;
 }
+
+function timeOnlyLabel(startTimeLabel: string): string | null {
+  if (!startTimeLabel || startTimeLabel === "—") return null;
+  const comma = startTimeLabel.indexOf(",");
+  if (comma < 0) return null;
+  return startTimeLabel.slice(comma + 1).trim() || null;
+}
+
+function DateCell({ label }: { label: string }) {
+  const day = dateOnlyLabel(label);
+  const time = timeOnlyLabel(label);
+  return (
+    <span className={css.dateStack}>
+      <span className={css.dateDay}>{day}</span>
+      {time ? <span className={css.dateTime}>{time}</span> : null}
+    </span>
+  );
+}
+
+function filterValue(
+  row: TeacherLearningSessionRow,
+  key: ColumnKey,
+  labelCreated: (by: TeacherLearningSessionRow["createdBy"]) => string,
+  labelStatus: (status: TeacherLearningSessionRow["status"]) => string,
+): string {
+  switch (key) {
+    case "student":
+      return row.studentDisplayName;
+    case "theme":
+      return row.themeName;
+    case "correct":
+      return `${row.rightNumber}/${row.tasksNumber}`;
+    case "percent":
+      return formatPercent(row.percent);
+    case "time":
+      return formatDurationSeconds(row.timeSec);
+    case "speed":
+      return formatTimePerTask(row.timePerTaskSec);
+    case "when":
+      return dateOnlyLabel(row.startTimeLabel);
+    case "createdBy":
+      return labelCreated(row.createdBy);
+    case "status":
+      return labelStatus(row.status);
+  }
+}
+
+function compareRows(
+  a: TeacherLearningSessionRow,
+  b: TeacherLearningSessionRow,
+  sort: SortState,
+): number {
+  const dir = sort.dir === "asc" ? 1 : -1;
+  switch (sort.key) {
+    case "student":
+      return (
+        a.studentDisplayName.localeCompare(b.studentDisplayName, "uk") * dir ||
+        b.id - a.id
+      );
+    case "theme":
+      return a.themeName.localeCompare(b.themeName, "uk") * dir || b.id - a.id;
+    case "correct": {
+      const ap = a.tasksNumber > 0 ? a.rightNumber / a.tasksNumber : -1;
+      const bp = b.tasksNumber > 0 ? b.rightNumber / b.tasksNumber : -1;
+      return (ap - bp) * dir || b.id - a.id;
+    }
+    case "percent": {
+      const ap = a.percent ?? -1;
+      const bp = b.percent ?? -1;
+      return (ap - bp) * dir || b.id - a.id;
+    }
+    case "time":
+      return (a.timeSec - b.timeSec) * dir || b.id - a.id;
+    case "speed": {
+      const as = a.timePerTaskSec ?? -1;
+      const bs = b.timePerTaskSec ?? -1;
+      return (as - bs) * dir || b.id - a.id;
+    }
+    case "when":
+      return (a.id - b.id) * dir;
+    case "createdBy":
+      return a.createdBy.localeCompare(b.createdBy) * dir || b.id - a.id;
+    case "status":
+      return a.status.localeCompare(b.status) * dir || b.id - a.id;
+  }
+}
+
+type HeaderProps = {
+  column: ColumnKey;
+  label: string;
+  sort: SortState;
+  onSort: (key: ColumnKey, dir: SortDir) => void;
+  options: string[];
+  selected: Set<string> | null;
+  onFilterChange: (key: ColumnKey, next: Set<string> | null) => void;
+  openColumn: ColumnKey | null;
+  setOpenColumn: (key: ColumnKey | null) => void;
+};
+
+function ColumnHeader({
+  column,
+  label,
+  sort,
+  onSort,
+  options,
+  selected,
+  onFilterChange,
+  openColumn,
+  setOpenColumn,
+}: HeaderProps) {
+  const t = useTranslations("TeacherStudentSessions");
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const listId = useId();
+  const portalReady = useIsClient();
+  const reduceMotion = useReducedMotion();
+  const isOpen = openColumn === column;
+  const isSorted = sort.key === column;
+  const filtered = selected != null && selected.size < options.length;
+  const active = selected ?? new Set(options);
+
+  const [box, setBox] = useState<{
+    top: number;
+    left: number;
+    width: number;
+  } | null>(null);
+
+  const place = useCallback(() => {
+    const el = triggerRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const width = Math.min(280, Math.max(220, rect.width + 48));
+    const left = Math.min(
+      Math.max(8, rect.left),
+      Math.max(8, window.innerWidth - width - 8),
+    );
+    setBox({ top: rect.bottom + 6, left, width });
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    place();
+    const onPointer = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (
+        triggerRef.current?.contains(target) ||
+        menuRef.current?.contains(target)
+      ) {
+        return;
+      }
+      setOpenColumn(null);
+    };
+    const onReposition = () => place();
+    document.addEventListener("mousedown", onPointer);
+    window.addEventListener("resize", onReposition);
+    window.addEventListener("scroll", onReposition, true);
+    return () => {
+      document.removeEventListener("mousedown", onPointer);
+      window.removeEventListener("resize", onReposition);
+      window.removeEventListener("scroll", onReposition, true);
+    };
+  }, [isOpen, place, setOpenColumn]);
+
+  return (
+    <div className={clsx(css.headInner, filtered && css.headFiltered)}>
+      <button
+        ref={triggerRef}
+        type="button"
+        className={clsx(css.headLabel, isOpen && css.headLabelOpen)}
+        onClick={() => {
+          place();
+          setOpenColumn(isOpen ? null : column);
+        }}
+        aria-haspopup="dialog"
+        aria-expanded={isOpen}
+        aria-controls={isOpen ? listId : undefined}
+        title={t("filterHint")}
+      >
+        {label}
+      </button>
+      <span className={css.sortGroup} role="group" aria-label={t("sortBy")}>
+        <button
+          type="button"
+          className={clsx(
+            css.sortBtn,
+            isSorted && sort.dir === "asc" && css.sortBtnActive,
+          )}
+          aria-label={t("sortAsc")}
+          aria-pressed={isSorted && sort.dir === "asc"}
+          onClick={(event) => {
+            event.stopPropagation();
+            onSort(column, "asc");
+          }}
+        >
+          ▲
+        </button>
+        <button
+          type="button"
+          className={clsx(
+            css.sortBtn,
+            isSorted && sort.dir === "desc" && css.sortBtnActive,
+          )}
+          aria-label={t("sortDesc")}
+          aria-pressed={isSorted && sort.dir === "desc"}
+          onClick={(event) => {
+            event.stopPropagation();
+            onSort(column, "desc");
+          }}
+        >
+          ▼
+        </button>
+      </span>
+
+      {portalReady
+        ? createPortal(
+            <AnimatePresence>
+              {isOpen && box ? (
+                <motion.div
+                  key={`filter-${column}`}
+                  ref={menuRef}
+                  id={listId}
+                  className={css.filterMenu}
+                  role="dialog"
+                  aria-label={t("filterColumn", { column: label })}
+                  initial={reduceMotion ? false : popoverHidden}
+                  animate={popoverShown}
+                  exit={reduceMotion ? { opacity: 0 } : popoverExit}
+                  transition={reduceMotion ? { duration: 0.01 } : tweenFast}
+                  style={{
+                    position: "fixed",
+                    top: box.top,
+                    left: box.left,
+                    width: box.width,
+                  }}
+                >
+                  <label className={css.filterOption}>
+                    <input
+                      type="checkbox"
+                      checked={
+                        active.size === options.length && options.length > 0
+                      }
+                      onChange={(event) => {
+                        onFilterChange(
+                          column,
+                          event.target.checked ? null : new Set(),
+                        );
+                      }}
+                    />
+                    <span>{t("filterSelectAll")}</span>
+                  </label>
+                  <ul className={css.filterList}>
+                    {options.map((option) => (
+                      <li key={option}>
+                        <label className={css.filterOption}>
+                          <input
+                            type="checkbox"
+                            checked={active.has(option)}
+                            onChange={() => {
+                              const next = new Set(active);
+                              if (next.has(option)) next.delete(option);
+                              else next.add(option);
+                              onFilterChange(
+                                column,
+                                next.size === options.length ? null : next,
+                              );
+                            }}
+                          />
+                          <span>{option}</span>
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
+                  {filtered ? (
+                    <button
+                      type="button"
+                      className={css.filterClear}
+                      onClick={() => onFilterChange(column, null)}
+                    >
+                      {t("filterClear")}
+                    </button>
+                  ) : null}
+                </motion.div>
+              ) : null}
+            </AnimatePresence>,
+            document.body,
+          )
+        : null}
+    </div>
+  );
+}
+
+type ColumnDef = { key: ColumnKey; label: string; className: string };
 
 type TeacherClassSessionsProps = {
   rows: TeacherLearningSessionRow[];
+  showStudent?: boolean;
+  title?: string;
+  lead?: string;
+  empty?: string;
 };
 
-export function TeacherClassSessions({ rows }: TeacherClassSessionsProps) {
+export function TeacherClassSessions({
+  rows,
+  showStudent = true,
+  title,
+  lead,
+  empty,
+}: TeacherClassSessionsProps) {
   const t = useTranslations("TeacherStudentSessions");
-  const [sortBy, setSortBy] = useState<SortKey>("newest");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [themeFilter, setThemeFilter] = useState("all");
-  const [createdFilter, setCreatedFilter] = useState<CreatedFilter>("all");
+  const isDesktop = useMinWidth(768);
+  const [sort, setSort] = useState<SortState>({ key: "when", dir: "desc" });
+  const [filters, setFilters] = useState<FilterState>({});
+  const [openColumn, setOpenColumn] = useState<ColumnKey | null>(null);
 
-  const themeOptions = useMemo(() => {
-    const map = new Map<number, string>();
-    for (const row of rows) {
-      if (!map.has(row.themeId)) map.set(row.themeId, row.themeName);
+  const labelCreated = useCallback(
+    (by: TeacherLearningSessionRow["createdBy"]) =>
+      t(`createdByValues.${by}`),
+    [t],
+  );
+  const labelStatus = useCallback(
+    (status: TeacherLearningSessionRow["status"]) => t(`statuses.${status}`),
+    [t],
+  );
+
+  const columns = useMemo((): ColumnDef[] => {
+    const list: ColumnDef[] = [];
+    if (showStudent) {
+      list.push({
+        key: "student",
+        label: t("student"),
+        className: css.colStudent,
+      });
     }
-    return [...map.entries()]
-      .map(([id, name]) => ({ id, name }))
-      .sort((a, b) => a.name.localeCompare(b.name, "uk"));
-  }, [rows]);
+    list.push(
+      { key: "theme", label: t("theme"), className: css.colTheme },
+      { key: "correct", label: t("scoreDetail"), className: css.colNarrow },
+      { key: "percent", label: "%", className: css.colNarrow },
+      { key: "time", label: t("time"), className: css.colNarrow },
+      { key: "speed", label: t("speed"), className: css.colNarrow },
+      { key: "when", label: t("when"), className: css.colDate },
+      { key: "createdBy", label: t("createdBy"), className: css.colCreated },
+      { key: "status", label: t("status"), className: css.colStatus },
+    );
+    return list;
+  }, [showStudent, t]);
+
+  const optionsByColumn = useMemo(() => {
+    const map = {} as Record<ColumnKey, string[]>;
+    for (const col of columns) {
+      const set = new Set<string>();
+      for (const row of rows) {
+        set.add(filterValue(row, col.key, labelCreated, labelStatus));
+      }
+      map[col.key] = [...set].sort((a, b) => a.localeCompare(b, "uk"));
+    }
+    return map;
+  }, [columns, rows, labelCreated, labelStatus]);
 
   const visible = useMemo(() => {
     let list = rows.slice();
-    if (statusFilter !== "all") {
-      list = list.filter((row) => row.status === statusFilter);
+    for (const col of columns) {
+      const selected = filters[col.key];
+      if (!selected) continue;
+      list = list.filter((row) =>
+        selected.has(filterValue(row, col.key, labelCreated, labelStatus)),
+      );
     }
-    if (themeFilter !== "all") {
-      const themeId = Number(themeFilter);
-      list = list.filter((row) => row.themeId === themeId);
-    }
-    if (createdFilter !== "all") {
-      list = list.filter((row) => row.createdBy === createdFilter);
-    }
-
-    list.sort((a, b) => {
-      switch (sortBy) {
-        case "worst":
-          return (
-            comparePercent(a.percent, b.percent, "asc") || b.id - a.id
-          );
-        case "best":
-          return (
-            comparePercent(a.percent, b.percent, "desc") || b.id - a.id
-          );
-        case "theme":
-          return (
-            a.themeName.localeCompare(b.themeName, "uk") || b.id - a.id
-          );
-        case "student":
-          return (
-            a.studentDisplayName.localeCompare(b.studentDisplayName, "uk") ||
-            b.id - a.id
-          );
-        case "newest":
-        default:
-          return b.id - a.id;
-      }
-    });
-
+    list.sort((a, b) => compareRows(a, b, sort));
     return list;
-  }, [rows, sortBy, statusFilter, themeFilter, createdFilter]);
+  }, [rows, columns, filters, sort, labelCreated, labelStatus]);
+
+  function onSort(key: ColumnKey, dir: SortDir) {
+    setSort({ key, dir });
+  }
+
+  function onFilterChange(key: ColumnKey, next: Set<string> | null) {
+    setFilters((prev) => {
+      const copy = { ...prev };
+      if (next == null) delete copy[key];
+      else copy[key] = next;
+      return copy;
+    });
+  }
+
+  function renderStudentLink(row: TeacherLearningSessionRow): ReactNode {
+    return (
+      <Link
+        href={queryHref("/sessions", {
+          student: String(row.studentUserId),
+        })}
+        className={css.studentLink}
+      >
+        <span className={css.studentName}>{row.studentDisplayName}</span>
+        <span className={css.login}>@{row.studentLogin}</span>
+      </Link>
+    );
+  }
+
+  function renderColumnHeader(col: ColumnDef) {
+    return (
+      <ColumnHeader
+        column={col.key}
+        label={col.label}
+        sort={sort}
+        onSort={onSort}
+        options={optionsByColumn[col.key] ?? []}
+        selected={filters[col.key] ?? null}
+        onFilterChange={onFilterChange}
+        openColumn={openColumn}
+        setOpenColumn={setOpenColumn}
+      />
+    );
+  }
 
   return (
     <section className={css.root} aria-labelledby="class-sessions-title">
       <header className={css.intro}>
         <h1 id="class-sessions-title" className={css.title}>
-          {t("allTitle")}
+          {title ?? t("allTitle")}
         </h1>
-        <p className={css.lead}>{t("allLead")}</p>
+        <p className={css.lead}>{lead ?? t("allLead")}</p>
       </header>
 
       {rows.length === 0 ? (
         <p className={css.empty} role="status">
-          {t("emptyClass")}
+          {empty ?? t("emptyClass")}
         </p>
       ) : (
         <>
-          <div className={css.toolbar}>
-            <label className={css.field}>
-              <span className={css.label}>{t("sortBy")}</span>
-              <Select
-                value={sortBy}
-                onChange={(value) => setSortBy(value as SortKey)}
-                options={[
-                  { value: "newest", label: t("sortNewest") },
-                  { value: "worst", label: t("sortWorst") },
-                  { value: "best", label: t("sortBest") },
-                  { value: "theme", label: t("sortTheme") },
-                  { value: "student", label: t("sortStudent") },
-                ]}
-              />
-            </label>
-            <label className={css.field}>
-              <span className={css.label}>{t("filterStatus")}</span>
-              <Select
-                value={statusFilter}
-                onChange={(value) => setStatusFilter(value as StatusFilter)}
-                options={[
-                  { value: "all", label: t("filterAll") },
-                  { value: "completed", label: t("statuses.completed") },
-                  { value: "planned", label: t("statuses.planned") },
-                  { value: "expired", label: t("statuses.expired") },
-                ]}
-              />
-            </label>
-            <label className={css.field}>
-              <span className={css.label}>{t("filterTheme")}</span>
-              <Select
-                value={themeFilter}
-                onChange={setThemeFilter}
-                options={[
-                  { value: "all", label: t("filterAll") },
-                  ...themeOptions.map((theme) => ({
-                    value: String(theme.id),
-                    label: theme.name,
-                  })),
-                ]}
-              />
-            </label>
-            <label className={css.field}>
-              <span className={css.label}>{t("filterCreatedBy")}</span>
-              <Select
-                value={createdFilter}
-                onChange={(value) => setCreatedFilter(value as CreatedFilter)}
-                options={[
-                  { value: "all", label: t("filterAll") },
-                  { value: "user", label: t("createdByValues.user") },
-                  { value: "mentor", label: t("createdByValues.mentor") },
-                  { value: "auto", label: t("createdByValues.auto") },
-                ]}
-              />
-            </label>
-          </div>
-
           <p className={css.count} aria-live="polite">
             {t("showing", { shown: visible.length, total: rows.length })}
           </p>
 
-          {visible.length === 0 ? (
+          {!isDesktop ? (
+            <div className={css.sheetHead} role="row">
+              {columns.map((col) => (
+                <div
+                  key={col.key}
+                  className={clsx(css.sheetHeadCell, col.className)}
+                  role="columnheader"
+                >
+                  {renderColumnHeader(col)}
+                </div>
+              ))}
+            </div>
+          ) : null}
+
+          {!isDesktop && visible.length === 0 ? (
             <p className={css.empty} role="status">
               {t("filterEmpty")}
             </p>
-          ) : (
-            <>
-              <ul className={css.cardList}>
-                {visible.map((row) => (
-                  <li key={row.id} className={css.card}>
-                    <div className={css.cardTop}>
-                      <Link
-                        href={queryHref("/sessions", {
-                          student: String(row.studentUserId),
-                        })}
-                        className={css.studentLink}
-                      >
-                        <span className={css.studentName}>
-                          {row.studentDisplayName}
-                        </span>
-                        <span className={css.login}>@{row.studentLogin}</span>
-                      </Link>
-                      <span
-                        className={clsx(css.score, scoreClass(row.percent))}
-                      >
-                        {formatPercent(row.percent)}
-                      </span>
-                    </div>
+          ) : null}
+
+          {!isDesktop && visible.length > 0 ? (
+            <ul className={css.cardList}>
+              {visible.map((row) => (
+                <li key={row.id} className={css.card}>
+                  <div className={css.cardTop}>
+                    {showStudent ? (
+                      renderStudentLink(row)
+                    ) : (
+                      <span className={css.theme}>{row.themeName}</span>
+                    )}
+                    <span className={clsx(css.score, scoreClass(row.percent))}>
+                      {formatPercent(row.percent)}
+                    </span>
+                  </div>
+                  {showStudent ? (
                     <p className={css.theme}>{row.themeName}</p>
-                    <dl className={css.meta}>
-                      <div>
-                        <dt>{t("scoreDetail")}</dt>
-                        <dd>
-                          {row.rightNumber}/{row.tasksNumber}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt>{t("time")}</dt>
-                        <dd>{formatDurationSeconds(row.timeSec)}</dd>
-                      </div>
-                      <div>
-                        <dt>{t("speed")}</dt>
-                        <dd>{formatTimePerTask(row.timePerTaskSec)}</dd>
-                      </div>
+                  ) : null}
+                  <dl className={css.meta}>
+                    <div>
+                      <dt>{t("scoreDetail")}</dt>
+                      <dd>
+                        {row.rightNumber}/{row.tasksNumber}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>{t("time")}</dt>
+                      <dd>{formatDurationSeconds(row.timeSec)}</dd>
+                    </div>
+                    <div>
+                      <dt>{t("speed")}</dt>
+                      <dd>{formatTimePerTask(row.timePerTaskSec)}</dd>
+                    </div>
                       <div>
                         <dt>{t("when")}</dt>
-                        <dd>{row.startTimeLabel}</dd>
+                        <dd>
+                          <DateCell label={row.startTimeLabel} />
+                        </dd>
                       </div>
-                    </dl>
-                    <div className={css.cardFoot}>
-                      <span
-                        className={clsx(css.status, statusClass(row.status))}
-                      >
-                        {t(`statuses.${row.status}`)}
-                      </span>
-                      <span className={css.createdBy}>
-                        {t(`createdByValues.${row.createdBy}`)}
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+                  </dl>
+                  <div className={css.cardFoot}>
+                    <span className={clsx(css.status, statusClass(row.status))}>
+                      {t(`statuses.${row.status}`)}
+                    </span>
+                    <span className={css.createdBy}>
+                      {t(`createdByValues.${row.createdBy}`)}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : null}
 
-              <div className={css.tableWrap}>
-                <table className={css.table}>
-                  <thead>
+          {isDesktop ? (
+            <div className={css.tableWrap}>
+              <table className={css.table}>
+                <thead>
+                  <tr>
+                    {columns.map((col) => (
+                      <th
+                        key={col.key}
+                        scope="col"
+                        className={clsx(css.headCell, col.className)}
+                      >
+                        {renderColumnHeader(col)}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {visible.length === 0 ? (
                     <tr>
-                      <th scope="col" className={css.colStudent}>
-                        {t("student")}
-                      </th>
-                      <th scope="col" className={css.colTheme}>
-                        {t("theme")}
-                      </th>
-                      <th scope="col" className={css.colNarrow}>
-                        {t("scoreDetail")}
-                      </th>
-                      <th scope="col" className={css.colNarrow}>
-                        %
-                      </th>
-                      <th scope="col" className={css.colNarrow}>
-                        {t("time")}
-                      </th>
-                      <th scope="col" className={css.colNarrow}>
-                        {t("speed")}
-                      </th>
-                      <th scope="col" className={css.colDate}>
-                        {t("when")}
-                      </th>
-                      <th scope="col" className={css.colCreated}>
-                        {t("createdBy")}
-                      </th>
-                      <th scope="col" className={css.colStatus}>
-                        {t("status")}
-                      </th>
+                      <td
+                        className={css.emptyCell}
+                        colSpan={columns.length}
+                        role="status"
+                      >
+                        {t("filterEmpty")}
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {visible.map((row) => (
+                  ) : (
+                    visible.map((row) => (
                       <tr key={row.id}>
-                        <td className={css.colStudent}>
-                          <Link
-                            href={queryHref("/sessions", {
-                              student: String(row.studentUserId),
-                            })}
-                            className={css.studentLink}
-                          >
-                            <span className={css.studentName}>
-                              {row.studentDisplayName}
-                            </span>
-                            <span className={css.login}>
-                              @{row.studentLogin}
-                            </span>
-                          </Link>
-                        </td>
+                        {showStudent ? (
+                          <td className={css.colStudent}>
+                            {renderStudentLink(row)}
+                          </td>
+                        ) : null}
                         <td className={css.colTheme}>{row.themeName}</td>
                         <td className={css.colNarrow}>
                           {row.rightNumber}/{row.tasksNumber}
@@ -318,7 +644,9 @@ export function TeacherClassSessions({ rows }: TeacherClassSessionsProps) {
                         <td className={css.colNarrow}>
                           {formatTimePerTask(row.timePerTaskSec)}
                         </td>
-                        <td className={css.colDate}>{row.startTimeLabel}</td>
+                        <td className={css.colDate}>
+                          <DateCell label={row.startTimeLabel} />
+                        </td>
                         <td className={css.colCreated}>
                           {t(`createdByValues.${row.createdBy}`)}
                         </td>
@@ -333,12 +661,12 @@ export function TeacherClassSessions({ rows }: TeacherClassSessionsProps) {
                           </span>
                         </td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          ) : null}
         </>
       )}
 
