@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { StatusScene } from "@/components/status/StatusScene";
 import {
   readStatusLocaleFromCookie,
@@ -8,6 +8,18 @@ import {
 } from "@/i18n/statusPages";
 
 type AppError = Error & { digest?: string };
+
+function subscribeNever() {
+  return () => {};
+}
+
+function readClientLocale() {
+  return readStatusLocaleFromCookie(document.cookie);
+}
+
+function readServerLocale() {
+  return "uk";
+}
 
 export function StatusErrorView({
   error,
@@ -18,10 +30,13 @@ export function StatusErrorView({
   reset: () => void;
   layout?: "page" | "embed";
 }) {
-  const [locale, setLocale] = useState("uk");
+  const locale = useSyncExternalStore(
+    subscribeNever,
+    readClientLocale,
+    readServerLocale,
+  );
 
   useEffect(() => {
-    setLocale(readStatusLocaleFromCookie(document.cookie));
     console.error(error);
   }, [error]);
 

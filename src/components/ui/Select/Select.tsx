@@ -17,6 +17,7 @@ import {
   popoverShown,
   tweenFast,
 } from "@/lib/motionPresets";
+import { useIsClient } from "@/lib/useIsClient";
 import { findTypeaheadIndex, isTypeaheadChar } from "./findTypeaheadIndex";
 import css from "./Select.module.css";
 
@@ -113,19 +114,12 @@ export function Select({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const typeaheadRef = useRef({ query: "", at: 0 });
-  const boxRef = useRef<MenuBox | null>(null);
   const [open, setOpen] = useState(false);
   const [highlight, setHighlight] = useState(0);
   const [box, setBox] = useState<MenuBox | null>(null);
-  const [portalReady, setPortalReady] = useState(false);
+  const portalReady = useIsClient();
   const reduceMotion = useReducedMotion();
-
-  useEffect(() => {
-    setPortalReady(true);
-  }, []);
-
-  if (box) boxRef.current = box;
-  const placed = box ?? boxRef.current;
+  const isOpen = open && !cannotOpen;
 
   const selectedIndex = options.findIndex((option) => option.value === current);
   const selected = selectedIndex >= 0 ? options[selectedIndex] : undefined;
@@ -140,12 +134,7 @@ export function Select({
 
   const close = useCallback(() => {
     setOpen(false);
-    setBox(null);
   }, []);
-
-  useEffect(() => {
-    if (cannotOpen) close();
-  }, [cannotOpen, close]);
 
   const updateBox = useCallback(() => {
     const trigger = triggerRef.current;
@@ -170,7 +159,7 @@ export function Select({
   );
 
   useEffect(() => {
-    if (!open) return;
+    if (!isOpen) return;
     updateBox();
     const onPointer = (event: MouseEvent) => {
       const target = event.target as Node;
@@ -188,14 +177,14 @@ export function Select({
       window.removeEventListener("resize", onReposition);
       window.removeEventListener("scroll", onReposition, true);
     };
-  }, [open, close, updateBox]);
+  }, [isOpen, close, updateBox]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!isOpen) return;
     document
       .getElementById(`${listId}-opt-${highlight}`)
       ?.scrollIntoView({ block: "nearest" });
-  }, [open, highlight, listId]);
+  }, [isOpen, highlight, listId]);
 
   function pick(index: number) {
     const option = options[index];
@@ -229,7 +218,7 @@ export function Select({
     const from = repeating ? highlight + 1 : highlight;
     const index = findTypeaheadIndex(labels, repeating ? key : query, from);
     if (index < 0 || options[index]?.disabled) return;
-    if (open) {
+    if (isOpen) {
       setHighlight(index);
       return;
     }
@@ -241,13 +230,13 @@ export function Select({
 
     if (event.key === "ArrowDown") {
       event.preventDefault();
-      if (!open) openMenu();
+      if (!isOpen) openMenu();
       else moveHighlight(1);
       return;
     }
     if (event.key === "ArrowUp") {
       event.preventDefault();
-      if (!open) openMenu();
+      if (!isOpen) openMenu();
       else moveHighlight(-1);
       return;
     }
@@ -255,7 +244,7 @@ export function Select({
       event.preventDefault();
       const first = enabledIndexes(options)[0];
       if (first == null) return;
-      if (!open) openMenu(first);
+      if (!isOpen) openMenu(first);
       else setHighlight(first);
       return;
     }
@@ -264,19 +253,19 @@ export function Select({
       const enabled = enabledIndexes(options);
       const last = enabled[enabled.length - 1];
       if (last == null) return;
-      if (!open) openMenu(last);
+      if (!isOpen) openMenu(last);
       else setHighlight(last);
       return;
     }
     if (event.key === "Escape") {
-      if (!open) return;
+      if (!isOpen) return;
       event.preventDefault();
       close();
       return;
     }
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
-      if (!open) {
+      if (!isOpen) {
         openMenu();
         return;
       }
@@ -291,7 +280,7 @@ export function Select({
 
   const triggerLabel = selected?.label ?? placeholder ?? "";
   const showPlaceholder = !selected;
-  const activeId = open ? `${listId}-opt-${highlight}` : undefined;
+  const activeId = isOpen ? `${listId}-opt-${highlight}` : undefined;
 
   return (
     <div
@@ -307,12 +296,12 @@ export function Select({
         className={clsx(
           css.trigger,
           variant === "compact" && css.triggerCompact,
-          open && css.triggerOpen,
+          isOpen && css.triggerOpen,
         )}
         role="combobox"
         aria-haspopup="listbox"
-        aria-expanded={open}
-        aria-controls={open ? listId : undefined}
+        aria-expanded={isOpen}
+        aria-controls={isOpen ? listId : undefined}
         aria-activedescendant={activeId}
         aria-label={ariaLabel}
         aria-labelledby={ariaLabelledBy}
@@ -322,7 +311,7 @@ export function Select({
         title={title}
         disabled={cannotOpen}
         onClick={() => {
-          if (open) close();
+          if (isOpen) close();
           else openMenu();
         }}
         onKeyDown={onKeyDown}
@@ -331,7 +320,7 @@ export function Select({
           {triggerLabel}
         </span>
         <svg
-          className={clsx(css.chevron, open && css.chevronOpen)}
+          className={clsx(css.chevron, isOpen && css.chevronOpen)}
           width="12"
           height="8"
           viewBox="0 0 12 8"
@@ -350,7 +339,7 @@ export function Select({
       {portalReady
         ? createPortal(
             <AnimatePresence>
-              {open && placed ? (
+              {isOpen && box ? (
                 <motion.div
                   key="select-menu"
                   ref={menuRef}
@@ -364,10 +353,10 @@ export function Select({
                   transition={reduceMotion ? { duration: 0.01 } : tweenFast}
                   style={{
                     position: "fixed",
-                    top: placed.top,
-                    left: placed.left,
-                    width: placed.width,
-                    maxHeight: placed.maxHeight,
+                    top: box.top,
+                    left: box.left,
+                    width: box.width,
+                    maxHeight: box.maxHeight,
                   }}
                 >
                   {options.map((option, index) => {
