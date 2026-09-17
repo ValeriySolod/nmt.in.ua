@@ -74,6 +74,13 @@ export function TeacherAssignWorkspace({
   const [pickedId, setPickedId] = useState<number | null>(null);
   const [editing, setEditing] = useState(false);
   const [editIds, setEditIds] = useState<Set<number>>(new Set());
+  const [sortBy, setSortBy] = useState<"newest" | "opens" | "due" | "theme">(
+    "newest",
+  );
+  const [filterThemeId, setFilterThemeId] = useState<string>("all");
+  const [filterProgress, setFilterProgress] = useState<
+    "all" | "pending" | "overdue" | "done"
+  >("all");
 
   const [createState, createAction, createPending] = useActionState(
     createMentorAssignmentAction,
@@ -100,14 +107,50 @@ export function TeacherAssignWorkspace({
   const preferredId =
     createState.status === "success" ? (createState.assignmentId ?? null) : null;
 
+  const filteredAssignments = useMemo(() => {
+    let rows = [...assignments];
+    if (filterThemeId !== "all") {
+      const themeId = Number(filterThemeId);
+      rows = rows.filter((row) => row.themeId === themeId);
+    }
+    if (filterProgress === "overdue") {
+      rows = rows.filter((row) => row.overdueCount > 0);
+    } else if (filterProgress === "pending") {
+      rows = rows.filter(
+        (row) => row.completedCount + row.overdueCount < row.memberCount,
+      );
+    } else if (filterProgress === "done") {
+      rows = rows.filter(
+        (row) =>
+          row.memberCount > 0 && row.completedCount === row.memberCount,
+      );
+    }
+    rows.sort((a, b) => {
+      switch (sortBy) {
+        case "opens":
+          return a.availableAt - b.availableAt || b.id - a.id;
+        case "due":
+          return a.dueAt - b.dueAt || b.id - a.id;
+        case "theme":
+          return (
+            a.themeName.localeCompare(b.themeName, dateLocale) || b.id - a.id
+          );
+        case "newest":
+        default:
+          return b.createdAt - a.createdAt || b.id - a.id;
+      }
+    });
+    return rows;
+  }, [assignments, filterThemeId, filterProgress, sortBy, dateLocale]);
+
   const activeId = useMemo(() => {
-    const candidate = pickedId ?? preferredId ?? assignments[0]?.id ?? null;
+    const candidate = pickedId ?? preferredId ?? filteredAssignments[0]?.id ?? null;
     if (candidate == null) return null;
-    if (!assignments.some((row) => row.id === candidate)) {
-      return assignments[0]?.id ?? null;
+    if (!filteredAssignments.some((row) => row.id === candidate)) {
+      return filteredAssignments[0]?.id ?? null;
     }
     return candidate;
-  }, [pickedId, preferredId, assignments]);
+  }, [pickedId, preferredId, filteredAssignments]);
 
   const activeDetail =
     activeId == null ? null : (detailsById[activeId] ?? null);
@@ -287,38 +330,96 @@ export function TeacherAssignWorkspace({
         {assignments.length === 0 ? (
           <p className={css.empty}>{t("listEmpty")}</p>
         ) : (
-          <ul className={css.assignList}>
-            {assignments.map((row) => {
-              const active = row.id === activeId;
-              return (
-                <li key={row.id}>
-                  <button
-                    type="button"
-                    className={clsx(css.assignItem, active && css.assignActive)}
-                    onClick={() => openAssignment(row.id)}
-                    aria-expanded={active}
-                  >
-                    <span className={css.assignTheme}>{row.themeName}</span>
-                    <span className={css.assignMeta}>
-                      {t("opensLabel", {
-                        date: formatDueAt(row.availableAt, dateLocale),
-                      })}
-                      {" · "}
-                      {t("dueLabel", {
-                        date: formatDueAt(row.dueAt, dateLocale),
-                      })}
-                      {" · "}
-                      {t("counts", {
-                        done: row.completedCount,
-                        overdue: row.overdueCount,
-                        total: row.memberCount,
-                      })}
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+          <>
+            <div className={css.listToolbar}>
+              <label className={css.field}>
+                <span className={css.label}>{t("sortBy")}</span>
+                <Select
+                  value={sortBy}
+                  onChange={(value) =>
+                    setSortBy(value as "newest" | "opens" | "due" | "theme")
+                  }
+                  options={[
+                    { value: "newest", label: t("sortNewest") },
+                    { value: "opens", label: t("sortOpens") },
+                    { value: "due", label: t("sortDue") },
+                    { value: "theme", label: t("sortTheme") },
+                  ]}
+                />
+              </label>
+              <label className={css.field}>
+                <span className={css.label}>{t("filterTheme")}</span>
+                <Select
+                  value={filterThemeId}
+                  onChange={setFilterThemeId}
+                  options={[
+                    { value: "all", label: t("filterAll") },
+                    ...themes.map((theme) => ({
+                      value: String(theme.id),
+                      label: theme.name,
+                    })),
+                  ]}
+                />
+              </label>
+              <label className={css.field}>
+                <span className={css.label}>{t("filterProgress")}</span>
+                <Select
+                  value={filterProgress}
+                  onChange={(value) =>
+                    setFilterProgress(
+                      value as "all" | "pending" | "overdue" | "done",
+                    )
+                  }
+                  options={[
+                    { value: "all", label: t("filterAll") },
+                    { value: "pending", label: t("filterPending") },
+                    { value: "overdue", label: t("filterOverdue") },
+                    { value: "done", label: t("filterDone") },
+                  ]}
+                />
+              </label>
+            </div>
+
+            {filteredAssignments.length === 0 ? (
+              <p className={css.empty}>{t("filterEmpty")}</p>
+            ) : (
+              <ul className={css.assignList}>
+                {filteredAssignments.map((row) => {
+                  const active = row.id === activeId;
+                  return (
+                    <li key={row.id}>
+                      <button
+                        type="button"
+                        className={clsx(
+                          css.assignItem,
+                          active && css.assignActive,
+                        )}
+                        onClick={() => openAssignment(row.id)}
+                        aria-expanded={active}
+                      >
+                        <span className={css.assignTheme}>{row.themeName}</span>
+                        <span className={css.assignMeta}>
+                          {t("opensLabel", {
+                            date: formatDueAt(row.availableAt, dateLocale),
+                          })}
+                          {" · "}
+                          {t("dueLabel", {
+                            date: formatDueAt(row.dueAt, dateLocale),
+                          })}
+                          {" · "}
+                          {t("counts", {
+                            done: row.completedCount,
+                            overdue: row.overdueCount,
+                            total: row.memberCount,
+                          })}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </>
         )}
 
         {activeDetail ? (

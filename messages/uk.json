@@ -623,7 +623,8 @@
       "invalidInput": "Невірний ідентифікатор сесії.",
       "generic": "Не вдалося скасувати сесію. Спробуйте ще раз."
     },
-    "opensAt": "З {date}"
+    "opensAt": "З {date}",
+    "dueAt": "До {date}"
   },
   "AuthShared": {
     "backHome": "На головну",
@@ -1345,6 +1346,18 @@
     "listTitle": "Призначені тести",
     "listLead": "Натисніть тест, щоб побачити учнів: зелений — пройшли, рожевий — не встигли.",
     "listEmpty": "Ще немає призначень.",
+    "sortBy": "Сортування",
+    "sortNewest": "Спочатку нові",
+    "sortOpens": "За відкриттям",
+    "sortDue": "За дедлайном",
+    "sortTheme": "За темою",
+    "filterTheme": "Тема",
+    "filterProgress": "Прогрес",
+    "filterAll": "Усі",
+    "filterPending": "Ще є незавершені",
+    "filterOverdue": "Є прострочені",
+    "filterDone": "Усі пройшли",
+    "filterEmpty": "Немає призначень за цими фільтрами.",
     "dueLabel": "До {date}",
     "counts": "пройшли {done} · прострочили {overdue} · усього {total}",
     "progress": {

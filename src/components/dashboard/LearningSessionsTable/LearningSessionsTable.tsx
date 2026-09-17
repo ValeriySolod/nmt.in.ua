@@ -223,14 +223,23 @@ export function LearningSessionsTable({
                     </>
                   ) : null}
                   <td className={css.colStatus}>
-                    <span className={clsx(statusClass(row.status))}>
-                      {t(`statuses.${row.status}`)}
-                    </span>
-                    {row.availableAtLabel && row.status === "planned" ? (
-                      <span className={css.scheduledHint}>
-                        {t("opensAt", { date: row.availableAtLabel })}
+                    <div className={css.statusStack}>
+                      <span className={clsx(statusClass(row.status))}>
+                        {t(`statuses.${row.status}`)}
                       </span>
-                    ) : null}
+                      {row.availableAtLabel && row.status === "planned" ? (
+                        <span className={css.scheduledHint}>
+                          {t("opensAt", { date: row.availableAtLabel })}
+                        </span>
+                      ) : null}
+                      {row.dueAtLabel &&
+                      row.status === "planned" &&
+                      row.createdBy === "mentor" ? (
+                        <span className={css.scheduledHint}>
+                          {t("dueAt", { date: row.dueAtLabel })}
+                        </span>
+                      ) : null}
+                    </div>
                   </td>
                   <td className={css.colActions}>
                     <SessionActions row={row} />

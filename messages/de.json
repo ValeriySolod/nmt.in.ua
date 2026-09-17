@@ -623,7 +623,8 @@
       "invalidInput": "Ungültige Sitzungs-ID.",
       "generic": "Die Sitzung konnte nicht abgebrochen werden. Bitte versuche es erneut."
     },
-    "opensAt": "Ab {date}"
+    "opensAt": "Ab {date}",
+    "dueAt": "Bis {date}"
   },
   "AuthShared": {
     "backHome": "Zur Startseite",
@@ -1345,6 +1346,18 @@
     "listTitle": "Zugewiesene Tests",
     "listLead": "Test öffnen: grün = erledigt, rosa = überfällig.",
     "listEmpty": "Noch keine Zuweisungen.",
+    "sortBy": "Sortierung",
+    "sortNewest": "Neueste zuerst",
+    "sortOpens": "Nach Öffnung",
+    "sortDue": "Nach Frist",
+    "sortTheme": "Nach Thema",
+    "filterTheme": "Thema",
+    "filterProgress": "Fortschritt",
+    "filterAll": "Alle",
+    "filterPending": "Noch offen",
+    "filterOverdue": "Mit Überfälligen",
+    "filterDone": "Alle fertig",
+    "filterEmpty": "Keine Zuweisungen für diese Filter.",
     "dueLabel": "Bis {date}",
     "counts": "fertig {done} · überfällig {overdue} · gesamt {total}",
     "progress": {

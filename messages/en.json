@@ -623,7 +623,8 @@
       "invalidInput": "Invalid session ID.",
       "generic": "Could not cancel the session. Please try again."
     },
-    "opensAt": "From {date}"
+    "opensAt": "From {date}",
+    "dueAt": "Due {date}"
   },
   "AuthShared": {
     "backHome": "Back to home",
@@ -1345,6 +1346,18 @@
     "listTitle": "Assigned tests",
     "listLead": "Open a test to see students: green = done, pink = overdue.",
     "listEmpty": "No assignments yet.",
+    "sortBy": "Sort",
+    "sortNewest": "Newest first",
+    "sortOpens": "By open time",
+    "sortDue": "By deadline",
+    "sortTheme": "By topic",
+    "filterTheme": "Topic",
+    "filterProgress": "Progress",
+    "filterAll": "All",
+    "filterPending": "Still incomplete",
+    "filterOverdue": "Has overdue",
+    "filterDone": "All done",
+    "filterEmpty": "No assignments match these filters.",
     "dueLabel": "Due {date}",
     "counts": "done {done} · overdue {overdue} · total {total}",
     "progress": {

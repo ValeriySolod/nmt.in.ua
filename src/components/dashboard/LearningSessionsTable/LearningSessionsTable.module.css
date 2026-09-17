@@ -96,7 +96,6 @@
   text-align: left;
   vertical-align: middle;
   font-size: 0.88rem;
-  overflow: hidden;
 }
 
 .table th {
@@ -130,7 +129,7 @@
 }
 
 .colTheme {
-  width: 36%;
+  width: 32%;
   font-weight: 700;
   overflow-wrap: break-word;
   word-break: normal;
@@ -153,13 +152,21 @@
 }
 
 .colStatus {
-  width: 14%;
-  display: grid;
-  gap: 4px;
+  width: 18%;
+  overflow: visible;
 }
 
 .colActions {
-  width: 16%;
+  width: 20%;
+  overflow: visible;
+}
+
+.statusStack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
 }
 
 .colDate,
@@ -261,22 +268,25 @@
 .scheduledBadge {
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
-  padding: 0 12px;
+  max-width: 100%;
+  min-height: 36px;
+  padding: 4px 10px;
   border: 1px dashed rgb(31 143 69 / 40%);
   border-radius: var(--radius-pill);
   background: var(--green-bg);
   color: var(--green-dark);
-  font-size: var(--fs-small);
+  font-size: 0.75rem;
   font-weight: 700;
-  white-space: nowrap;
+  white-space: normal;
+  line-height: 1.25;
 }
 
 .actions {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
   min-width: 0;
 }
 

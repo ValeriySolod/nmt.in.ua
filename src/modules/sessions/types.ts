@@ -28,6 +28,9 @@ export type LearningSessionRow = {
   /** When a mentor assignment opens; null if immediate / unknown. */
   availableAt: number | null;
   availableAtLabel: string | null;
+  /** End of mentor assignment window (due / expire). */
+  dueAt: number | null;
+  dueAtLabel: string | null;
   /** False while waiting for availableAt on a planned mentor assignment. */
   canStart: boolean;
   createdByLabel: string;
@@ -48,6 +51,7 @@ export type TaskSessionRecord = {
   start_time: number;
   expire_time: number;
   available_at?: number | null;
+  due_at?: number | null;
 };
 
 export function sessionPercent(
@@ -152,18 +156,25 @@ export function formatTimePerTask(seconds: number | null): string {
   return seconds.toFixed(1).replace(".", ",");
 }
 
+function asUnixSec(value: unknown): number | null {
+  if (value == null) return null;
+  const n = typeof value === "bigint" ? Number(value) : Number(value);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return Math.trunc(n);
+}
+
 export function buildLearningSessionRows(
   sessions: TaskSessionRecord[],
   nowSec: number = nowUnixSec(),
 ): LearningSessionRow[] {
   return sessions.map((session, index) => {
     const status = resolveSessionDisplayStatus(session, nowSec);
-    const availableAt =
-      session.available_at != null &&
-      Number.isFinite(session.available_at) &&
-      session.available_at > 0
-        ? session.available_at
-        : null;
+    const availableAt = asUnixSec(session.available_at);
+    const dueAtRaw =
+      asUnixSec(session.due_at) ??
+      (session.session_type === SESSION_TYPE_MENTOR
+        ? asUnixSec(session.expire_time)
+        : null);
     const waiting =
       status === "planned" && availableAt != null && nowSec < availableAt;
     return {
@@ -181,6 +192,8 @@ export function buildLearningSessionRows(
       availableAtLabel: availableAt
         ? formatSessionStartTime(availableAt)
         : null,
+      dueAt: dueAtRaw,
+      dueAtLabel: dueAtRaw ? formatSessionStartTime(dueAtRaw) : null,
       canStart: status === "planned" && !waiting,
       createdBy: resolveSessionCreatedBy(session.session_type),
       createdByLabel: sessionCreatedByLabel(session.session_type),

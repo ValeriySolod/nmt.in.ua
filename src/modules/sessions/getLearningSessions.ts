@@ -52,7 +52,8 @@ export async function getLearningSessions(
     ts.session_type,
     ts.start_time,
     ts.expire_time,
-    ma.available_at
+    ma.available_at,
+    ma.due_at
   FROM task_sessions ts
   INNER JOIN themes t ON t.id = ts.theme_id
   LEFT JOIN mentor_assignment_members mam ON mam.session_id = ts.id
@@ -77,6 +78,7 @@ export async function getLearningSessions(
       start_time: number;
       expire_time: number;
       available_at: number | null;
+      due_at: number | null;
     }>(sql, [userId]);
 
     const nowSec = deps.nowSec ?? nowUnixSec;
