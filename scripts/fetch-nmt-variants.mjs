@@ -143,13 +143,6 @@ async function parseVariant(meta) {
   let html = await res.text();
   html = await rewriteImages(html);
 
-  const cards = [
-    ...html.matchAll(
-      /<div class="task-card"[^>]*id="q(\d+)"[\s\S]*?<form class="q-test"[\s\S]*?<\/form>[\s\S]*?(?=<a name="q\d+"|<\/div>\s*<script|$)/gi,
-    ),
-  ];
-
-  // Fallback: split by task-card anchors
   const chunks = html.split(/<a name="q\d+"><\/a>/).slice(1);
   const tasks = [];
 
