@@ -224,7 +224,7 @@
   "Consultations": {
     "kicker": "Consultation",
     "title": "Teacher consultations",
-    "studentLead": "Leave a request — every teacher will see it in the cabinet. There is no personal student–teacher link yet.",
+    "studentLead": "Pick a teacher in the carousel or send a general request. Ratings help other students.",
     "teacherLead": "All student requests. There is no student–teacher assignment yet — teachers and admins share this list.",
     "formTitle": "New request",
     "formLead": "Briefly describe what you need help with — or just send the request.",
@@ -270,6 +270,32 @@
       "generic": "Could not save. Please try again.",
       "notFound": "This request no longer exists.",
       "invalidTransition": "That status change is not allowed."
+    },
+    "carouselTitle": "Teachers",
+    "carouselLead": "Scroll the cards, leave a rating, and request a personal consultation.",
+    "carouselEmpty": "No public teacher cards yet. You can still send a general request below.",
+    "carouselAria": "Teachers carousel",
+    "sortAria": "Sort teachers",
+    "sortRating": "Rating",
+    "sortName": "Name",
+    "sortCity": "City",
+    "scrollPrev": "Previous teachers",
+    "scrollNext": "Next teachers",
+    "ratingSummary": "{avg} · {count} ratings",
+    "ratingNone": "No ratings yet",
+    "rateAria": "Rate teacher {name}",
+    "ratingStar": "Score {score} of 5",
+    "personalCta": "Personal consultation",
+    "personalSelected": "Personal consultation: {name}",
+    "personalClear": "Clear",
+    "personalNotePrefix": "[Personal · {name}]",
+    "notePlaceholderPersonal": "What do you need from {name}?",
+    "submitPersonal": "Request a personal consultation",
+    "ratingErrors": {
+      "invalid_input": "Choose a score from 1 to 5.",
+      "forbidden": "Only students can rate teachers.",
+      "not_found": "This teacher is no longer in the list.",
+      "generic": "Could not save the rating. Please try again."
     }
   },
   "TopicTestStart": {

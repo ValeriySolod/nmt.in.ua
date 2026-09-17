@@ -72,7 +72,16 @@ export async function createConsultationRequestAction(
     return { status: "error", code: "forbidden" };
   }
 
-  const note = String(formData.get("note") ?? "");
+  const noteRaw = String(formData.get("note") ?? "").trim();
+  const personalNotePrefix = String(formData.get("personalNotePrefix") ?? "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .slice(0, 160);
+  const note = personalNotePrefix
+    ? noteRaw
+      ? `${personalNotePrefix} ${noteRaw}`
+      : personalNotePrefix
+    : noteRaw;
 
   try {
     const result = await deps.createConsultationRequest({
