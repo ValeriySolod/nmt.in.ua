@@ -77,12 +77,13 @@ export function MatchingTaskCard({ taskId, roundId, diagnostic = false, onAnswer
   if (loading) return <p role="status">{t("loading")}</p>;
   if (!task) return <p role="alert">{error ?? t("loadError")}</p>;
 
+  const leftItems = task.leftItems;
   const revealed = result?.revealed ?? null;
   const isLocked = result !== null && !result.retryAvailable;
-  const complete = task.leftItems.every((item) => pairs[item.id] !== undefined);
+  const complete = leftItems.every((item) => pairs[item.id] !== undefined);
   const leftFocusIndex = Math.max(
     0,
-    task.leftItems.findIndex((item) => item.id === activeLeft),
+    leftItems.findIndex((item) => item.id === activeLeft),
   );
 
   function pickLeft(id: number) {
@@ -103,32 +104,31 @@ export function MatchingTaskCard({ taskId, roundId, diagnostic = false, onAnswer
 
   function onLeftKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     if (isLocked) return;
-    const items = task.leftItems;
     const fromEvent = leftRefs.current.findIndex((node) => node === event.target);
     const current = fromEvent >= 0 ? fromEvent : leftFocusIndex;
-    const last = items.length - 1;
+    const last = leftItems.length - 1;
 
     if (event.key === "ArrowDown") {
       event.preventDefault();
-      const next = nextIndex(current, 1, items.length);
-      pickLeft(items[next]!.id);
+      const next = nextIndex(current, 1, leftItems.length);
+      pickLeft(leftItems[next]!.id);
       leftRefs.current[next]?.focus();
     } else if (event.key === "ArrowUp") {
       event.preventDefault();
-      const next = nextIndex(current, -1, items.length);
-      pickLeft(items[next]!.id);
+      const next = nextIndex(current, -1, leftItems.length);
+      pickLeft(leftItems[next]!.id);
       leftRefs.current[next]?.focus();
     } else if (event.key === "Home") {
       event.preventDefault();
-      pickLeft(items[0]!.id);
+      pickLeft(leftItems[0]!.id);
       leftRefs.current[0]?.focus();
     } else if (event.key === "End") {
       event.preventDefault();
-      pickLeft(items[last]!.id);
+      pickLeft(leftItems[last]!.id);
       leftRefs.current[last]?.focus();
     } else if (event.key === "ArrowRight") {
       event.preventDefault();
-      const currentItem = items[current];
+      const currentItem = leftItems[current];
       if (currentItem && activeLeft == null) pickLeft(currentItem.id);
       pendingRightFocus.current = true;
       if (activeLeft != null) focusFirstRight();
@@ -203,7 +203,7 @@ export function MatchingTaskCard({ taskId, roundId, diagnostic = false, onAnswer
           aria-label={t("matchingLeftLabel")}
           onKeyDown={onLeftKeyDown}
         >
-          {task.leftItems.map((item, index) => {
+          {leftItems.map((item, index) => {
             const chosenId = pairs[item.id];
             const chosen = rightOrder.find((r) => r.id === chosenId);
             const ok = revealed && chosenId === revealed.correctPairs[item.id];
