@@ -7,6 +7,7 @@ import { FindErrorTaskCard } from "@/components/practice/FindErrorTaskCard";
 import { GraphTaskCard } from "@/components/practice/GraphTaskCard";
 import { MatchingTaskCard } from "@/components/practice/MatchingTaskCard";
 import { BlankTaskCard } from "@/components/practice/BlankTaskCard";
+import { Select } from "@/components/ui/Select";
 import { startRoundAction, getRoundAction, listRoundsAction, finishRoundAction, skipRoundTaskAction, startMistakeRoundAction } from "@/modules/stage2/roundActions";
 import type { RoundSnapshot, RoundSummary } from "@/modules/stage2/rounds";
 import css from "./InteractiveFormatsShowcase.module.css";
@@ -51,10 +52,20 @@ export function InteractiveFormatsShowcase() {
     </div>
     <label className={css.roundHistory}>
       <span className={css.roundHistoryLabel}>{t("roundHistory")}</span>
-      <select className={css.roundHistorySelect} value={round?.id ?? ""} disabled={busy} onChange={event => { const id = Number(event.target.value); if (id) void run(() => getRoundAction(id), true); }}>
-        <option value="">{t("selectRound")}</option>
-        {history.map(item => <option key={item.id} value={item.id}>#{item.id} — {t(item.mode === "practice" ? "practiceRound" : "diagnosticRound")} — {t(item.completed ? "roundCompleted" : "roundActive")}</option>)}
-      </select>
+      <Select
+        className={css.roundHistorySelect}
+        value={round?.id ? String(round.id) : ""}
+        placeholder={t("selectRound")}
+        disabled={busy}
+        options={history.map((item) => ({
+          value: String(item.id),
+          label: `#${item.id} — ${t(item.mode === "practice" ? "practiceRound" : "diagnosticRound")} — ${t(item.completed ? "roundCompleted" : "roundActive")}`,
+        }))}
+        onChange={(next) => {
+          const parsed = Number(next);
+          if (parsed) void run(() => getRoundAction(parsed), true);
+        }}
+      />
     </label>
     {error && <p role="alert">{t("checkError")}</p>}
     {round && <>

@@ -272,7 +272,7 @@
 .startLink,
 .cancelButton {
   box-sizing: border-box;
-  min-height: 34px;
+  min-height: 44px;
   border-radius: var(--radius-pill);
   font-size: 0.8rem;
   font-weight: 700;
@@ -295,8 +295,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  min-width: 34px;
+  width: 44px;
+  min-width: 44px;
   padding: 0;
   border: 1px solid color-mix(in srgb, crimson 45%, var(--line));
   background: color-mix(in srgb, crimson 8%, var(--surface));

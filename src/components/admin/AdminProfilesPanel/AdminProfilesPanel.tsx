@@ -1,11 +1,12 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import clsx from "clsx";
 import { isDemoAccountLogin } from "@/modules/auth/demoLogin";
 import { roleLabel, type UserRole, USER_ROLES } from "@/modules/auth/client";
+import { queryHref } from "@/lib/queryHref";
 import {
   deleteProfileAction,
   setProfileBannedAction,
@@ -22,6 +23,7 @@ type RoleFilter = "all" | UserRole;
 type AdminProfilesPanelProps = {
   profiles: AdminProfile[];
   currentUserId: number;
+  roleFilter?: RoleFilter;
 };
 
 function formatCreatedAt(iso: string, locale: string): string {
@@ -44,10 +46,10 @@ function formatDateTime(iso: string, locale: string): string {
 export function AdminProfilesPanel({
   profiles,
   currentUserId,
+  roleFilter = "all",
 }: AdminProfilesPanelProps) {
   const t = useTranslations("AdminProfiles");
   const router = useRouter();
-  const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
   const [banState, banAction, banPending] = useActionState(
     setProfileBannedAction,
     BAN_INITIAL,
@@ -98,7 +100,12 @@ export function AdminProfilesPanel({
               roleFilter === "all" && css.filterChipActive,
             )}
             aria-pressed={roleFilter === "all"}
-            onClick={() => setRoleFilter("all")}
+            onClick={() =>
+              router.replace(
+                queryHref("/profiles", { role: null }),
+                { scroll: false },
+              )
+            }
           >
             {t("filterAll", { count: profiles.length })}
           </button>
@@ -113,7 +120,12 @@ export function AdminProfilesPanel({
                   roleFilter === role && css.filterChipActive,
                 )}
                 aria-pressed={roleFilter === role}
-                onClick={() => setRoleFilter(role)}
+                onClick={() =>
+                  router.replace(
+                    queryHref("/profiles", { role }),
+                    { scroll: false },
+                  )
+                }
               >
                 {t("filterRole", { role: roleLabel(role), count })}
               </button>
@@ -198,7 +210,17 @@ export function AdminProfilesPanel({
 
                   {canModerate ? (
                     <div className={css.actions}>
-                      <form action={banAction}>
+                      <form
+                        action={banAction}
+                        onSubmit={(event) => {
+                          const message = profile.isBanned
+                            ? t("unbanConfirm", { name: profile.displayName })
+                            : t("banConfirm", { name: profile.displayName });
+                          if (!window.confirm(message)) {
+                            event.preventDefault();
+                          }
+                        }}
+                      >
                         <input
                           type="hidden"
                           name="userId"

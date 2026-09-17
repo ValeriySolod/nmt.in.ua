@@ -84,6 +84,7 @@
 
 .section {
   padding-block: var(--section-y);
+  scroll-margin-top: 5.5rem;
 }
 
 .sectionHead {
@@ -219,7 +220,7 @@
 }
 
 .btnSmall {
-  min-height: 40px;
+  min-height: 44px;
   padding: 8px 16px;
   font-size: var(--fs-small);
 }
@@ -230,6 +231,7 @@
   position: sticky;
   top: 0;
   z-index: 30;
+  padding-top: env(safe-area-inset-top, 0px);
   border-bottom: 1px solid transparent;
   background: rgb(241 234 216 / 88%);
   backdrop-filter: blur(16px);
@@ -308,7 +310,10 @@
 
 .headerLink {
   position: relative;
-  padding-block: 4px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-block: 10px;
   color: var(--muted);
   font-size: var(--fs-small);
   font-weight: 600;

@@ -7,6 +7,7 @@ import { listStudents } from "@/modules/auth/users";
 import { requireUser } from "@/modules/auth/getCurrentUser";
 import { getAvailableTopicThemes } from "@/modules/testing/getAvailableTopicThemes";
 import { getLearningSessions } from "@/modules/sessions/getLearningSessions";
+import { isQueryFlagOn, readSearchParam } from "@/lib/queryHref";
 
 const item = getNavItem("/sessions");
 
@@ -16,8 +17,14 @@ export const metadata = createPageMetadata({
   path: item.href,
 });
 
-export default async function SessionsPage() {
+type SessionsPageProps = {
+  searchParams: Promise<{ extended?: string | string[] }>;
+};
+
+export default async function SessionsPage({ searchParams }: SessionsPageProps) {
   const user = await requireUser();
+  const params = await searchParams;
+  const extended = isQueryFlagOn(readSearchParam(params.extended));
   const [rows, themes, students] = await Promise.all([
     getLearningSessions(user.id),
     canAssignMentorSessions(user.role)
@@ -37,7 +44,7 @@ export default async function SessionsPage() {
           defaultUserId={students[0]?.id ?? 1}
         />
       ) : null}
-      <LearningSessionsTable rows={rows} />
+      <LearningSessionsTable rows={rows} extended={extended} />
     </>
   );
 }

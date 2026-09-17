@@ -18,6 +18,7 @@ import {
   MAX_DIFFICULTY,
   MIN_DIFFICULTY,
 } from "@/modules/content-import/schema";
+import { Select } from "@/components/ui/Select";
 import css from "./AdminTaskForm.module.css";
 
 const SAVE_INITIAL: SaveQuizTaskActionState = { status: "idle" };
@@ -195,21 +196,18 @@ export function AdminTaskForm({
 
             <label className={css.formRow}>
               <span className={css.formLabel}>{t("rightAnswer")}</span>
-              <select
-                className={css.select}
+              <Select
                 name="rightAnswerN"
                 value={form.rightAnswerN}
-                onChange={(e) =>
-                  setForm({ ...form, rightAnswerN: e.target.value })
-                }
                 disabled={savePending}
-              >
-                {[1, 2, 3, 4].map((n) => (
-                  <option key={n} value={n}>
-                    {n}.
-                  </option>
-                ))}
-              </select>
+                options={[1, 2, 3, 4].map((n) => ({
+                  value: String(n),
+                  label: `${n}.`,
+                }))}
+                onChange={(next) =>
+                  setForm({ ...form, rightAnswerN: next })
+                }
+              />
             </label>
 
             <label className={css.formRow}>
@@ -231,20 +229,17 @@ export function AdminTaskForm({
 
             <label className={css.formRow}>
               <span className={css.formLabel}>{t("theme")}</span>
-              <select
-                className={css.select}
+              <Select
                 name="themeId"
                 value={form.themeId}
-                onChange={(e) => setForm({ ...form, themeId: e.target.value })}
                 required
                 disabled={savePending}
-              >
-                {themes.map((theme, index) => (
-                  <option key={theme.id} value={theme.id}>
-                    {formatThemeLabel(index, theme)}
-                  </option>
-                ))}
-              </select>
+                options={themes.map((theme, index) => ({
+                  value: String(theme.id),
+                  label: formatThemeLabel(index, theme),
+                }))}
+                onChange={(next) => setForm({ ...form, themeId: next })}
+              />
             </label>
 
             <label className={css.formRow}>

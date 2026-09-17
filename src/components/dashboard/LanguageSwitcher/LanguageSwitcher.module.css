@@ -1,68 +1,137 @@
-.switcher {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  padding: 3px;
-  border: 1px solid var(--line-soft);
-  border-radius: var(--radius-pill);
-  background: rgb(253 251 244 / 72%);
+.root {
+  position: relative;
+  flex: none;
 }
 
-.languageButton {
+.trigger {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border: 0;
-  border-radius: 50%;
-  overflow: hidden;
+  gap: 6px;
+  min-height: 44px;
+  padding: 6px 12px 6px 10px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-pill);
+  background: rgb(253 251 244 / 78%);
+  color: var(--ink);
   font: inherit;
-  font-size: var(--fs-kicker);
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  font-size: var(--fs-small);
+  font-weight: 700;
   cursor: pointer;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  transition: transform var(--t), box-shadow var(--t), filter var(--t);
+  transition:
+    border-color var(--t) var(--ease),
+    background-color var(--t) var(--ease),
+    box-shadow var(--t) var(--ease);
 }
 
-/* Ukraine: split flag puts the label across both halves, so neither flag color reads on
-   both — black is the best single-color compromise (clear on yellow, legible on blue). */
-.uk {
-  color: #14140f;
-  background-image: url("/icons/flags/ua.svg");
+.trigger:hover:not(:disabled),
+.trigger:focus-visible {
+  border-color: rgb(31 143 69 / 45%);
+  background: var(--surface);
 }
 
-/* English / UK: real Union Jack artwork. The flag's center is the red St George's
-   cross, so white stays readable for the label there. */
-.en {
-  color: #ffffff;
-  background-image: url("/icons/flags/uk.svg");
+.trigger:disabled {
+  cursor: wait;
 }
 
-/* Germany: label sits on the red middle band, so white stays readable there. */
-.de {
-  color: #ffffff;
-  background-image: url("/icons/flags/de.svg");
+.code {
+  display: grid;
+  flex: none;
+  place-items: center;
+  min-width: 1.75rem;
+  padding: 2px 6px;
+  border-radius: var(--radius-pill);
+  background: var(--grad-mint);
+  color: var(--green-dark);
+  font-size: var(--fs-kicker);
+  font-weight: 800;
+  letter-spacing: 0.04em;
 }
 
-.languageButton:disabled {
-  cursor: default;
+.currentName {
+  display: none;
+  max-width: 9rem;
+  overflow: hidden;
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-.languageButton:hover:not(:disabled) {
-  transform: scale(1.08);
-  box-shadow: var(--shadow-sm);
-  filter: brightness(1.05);
+.chevron {
+  flex: none;
+  color: var(--muted);
+  transition: transform var(--t) var(--ease);
 }
 
-.languageButton:active:not(:disabled) {
-  transform: scale(0.94);
+.chevronOpen {
+  transform: rotate(180deg);
 }
 
-/* current locale, kept legible against every flag background via a neutral gap + brand ring */
-.languageButton[data-active="true"] {
-  box-shadow: 0 0 0 2px var(--surface), var(--ring);
+.menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  inset-inline-end: 0;
+  z-index: 50;
+  display: grid;
+  min-width: 11.5rem;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border: 1px solid rgb(253 251 244 / 72%);
+  border-radius: var(--radius-lg);
+  background: var(--grad-glass);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(14px);
+}
+
+@supports not (backdrop-filter: blur(4px)) {
+  .menu {
+    background: var(--surface);
+  }
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-small);
+  font-weight: 600;
+  text-align: start;
+  cursor: pointer;
+}
+
+.option:hover,
+.option:focus-visible {
+  background: var(--surface-hover);
+}
+
+.optionActive {
+  background: var(--grad-mint);
+  color: var(--green-dark);
+  font-weight: 700;
+}
+
+.optionActive:hover,
+.optionActive:focus-visible {
+  background: var(--grad-mint);
+}
+
+@media (min-width: 768px) {
+  .currentName {
+    display: inline;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trigger,
+  .chevron {
+    transition: none;
+  }
 }

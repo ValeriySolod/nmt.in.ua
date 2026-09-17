@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { getTranslations } from "next-intl/server";
+import { SkipLink } from "@/components/ui/SkipLink";
 import { SITE_NAME } from "@/constants/seo";
 import css from "./DiagnosticShell.module.css";
 
@@ -31,9 +32,11 @@ export async function DiagnosticShell({
   mathDecor,
 }: DiagnosticShellProps) {
   const t = await getTranslations("AuthShared");
+  const tCommon = await getTranslations("Common");
 
   return (
     <div className={css.page}>
+      <SkipLink label={tCommon("skipToContent")} />
       <div className={css.decor} aria-hidden>
         <span className={css.decorGrid} />
         <span className={css.decorOrbA} />
@@ -124,7 +127,7 @@ export async function DiagnosticShell({
             {t("backHome")}
           </Link>
 
-          <Link href="/" className={css.brand} aria-label={SITE_NAME}>
+          <Link href="/" className={css.brand} aria-label={SITE_NAME} translate="no">
             <span className={css.brandGlyph} aria-hidden>
               ∑
             </span>
@@ -132,7 +135,9 @@ export async function DiagnosticShell({
           </Link>
         </div>
 
-        {children}
+        <main id="main-content" className={css.main} tabIndex={-1}>
+          {children}
+        </main>
       </div>
     </div>
   );

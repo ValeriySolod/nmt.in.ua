@@ -18,6 +18,7 @@ import type { SessionMistakeItem } from "@/modules/testing/getSessionMistakeRevi
 import type { RecommendedAction } from "@/modules/recommendations";
 import { TopicTrainerSummary } from "@/components/testing/TopicTrainerSummary";
 import { MathText } from "@/components/ui/MathText";
+import { Select } from "@/components/ui/Select";
 
 import styles from "./NmtTrainer.module.css";
 
@@ -39,7 +40,15 @@ function formatTime(seconds: number) {
   return `${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
 }
 
-function TaskBody({ text, className }: { text: string; className?: string }) {
+function TaskBody({
+  text,
+  className,
+  imageAlt,
+}: {
+  text: string;
+  className?: string;
+  imageAlt: string;
+}) {
   const parts = text.split(/!\[\]\(([^)]+)\)/g);
   return (
     <div className={className}>
@@ -50,7 +59,7 @@ function TaskBody({ text, className }: { text: string; className?: string }) {
               {/* External/local static under /nmt/osvita — sized fluidly */}
               <Image
                 src={part}
-                alt=""
+                alt={imageAlt}
                 width={604}
                 height={340}
                 className={styles.taskImage}
@@ -284,7 +293,11 @@ export function NmtTrainer({
 
       <div className={styles.task}>
         <p className={styles.taskName}>{currentTask.name}</p>
-        <TaskBody text={currentTask.taskText} className={styles.taskText} />
+        <TaskBody
+          text={currentTask.taskText}
+          className={styles.taskText}
+          imageAlt={t("taskImageAlt", { n: currentIndex + 1 })}
+        />
 
         {kind === "mcq" ? (
           <div className={styles.answers}>
@@ -370,7 +383,8 @@ export function NmtTrainer({
             {[0, 1, 2].map((row) => (
               <label key={row} className={styles.matchRow}>
                 <span>{row + 1}</span>
-                <select
+                <Select
+                  className={styles.matchSelect}
                   value={
                     selectedAnswer
                       ? (selectedAnswer.match(
@@ -378,24 +392,22 @@ export function NmtTrainer({
                         )?.[1] ?? "")
                       : matchDraft[row]
                   }
+                  placeholder={t("matchPick")}
                   disabled={locked}
-                  onChange={(event) => {
+                  options={MATCH_LETTERS.map((letter) => ({
+                    value: letter,
+                    label: letter.toUpperCase(),
+                  }))}
+                  onChange={(next) => {
                     if (!currentTask) return;
-                    const next = [...matchDraft] as [string, string, string];
-                    next[row] = event.target.value;
+                    const nextDraft = [...matchDraft] as [string, string, string];
+                    nextDraft[row] = next;
                     setMatchDraftByMapping((prev) => ({
                       ...prev,
-                      [currentTask.mappingId]: next,
+                      [currentTask.mappingId]: nextDraft,
                     }));
                   }}
-                >
-                  <option value="">{t("matchPick")}</option>
-                  {MATCH_LETTERS.map((letter) => (
-                    <option key={letter} value={letter}>
-                      {letter.toUpperCase()}
-                    </option>
-                  ))}
-                </select>
+                />
               </label>
             ))}
             <button

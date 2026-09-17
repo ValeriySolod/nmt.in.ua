@@ -76,8 +76,8 @@
   border-color: rgb(31 143 69 / 40%);
 }
 
-.input:focus,
-.textarea:focus {
+.input:focus-visible,
+.textarea:focus-visible {
   outline: none;
   border-color: var(--green);
   box-shadow: var(--ring);

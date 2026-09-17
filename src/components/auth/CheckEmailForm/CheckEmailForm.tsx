@@ -45,6 +45,7 @@ export function CheckEmailForm({ email }: CheckEmailFormProps) {
               type="email"
               name="email"
               autoComplete="email"
+              spellCheck={false}
               required
               maxLength={255}
               disabled={pending}

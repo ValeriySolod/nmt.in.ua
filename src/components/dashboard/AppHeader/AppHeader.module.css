@@ -2,7 +2,8 @@
   position: sticky;
   top: 0;
   z-index: 40;
-  height: var(--header-h);
+  height: calc(var(--header-h) + env(safe-area-inset-top, 0px));
+  padding-top: env(safe-area-inset-top, 0px);
   border-bottom: 1px solid transparent;
   background: rgb(241 234 216 / 88%);
   backdrop-filter: blur(16px);
@@ -154,8 +155,8 @@
   align-items: center;
   justify-content: center;
   flex: none;
-  min-height: 36px;
-  padding: 6px 10px;
+  min-height: 44px;
+  padding: 8px 12px;
   border: 1px solid var(--line-soft);
   border-radius: var(--radius-pill);
   background: rgb(253 251 244 / 78%);
@@ -183,7 +184,7 @@
   flex: 1 1 auto;
   min-width: 0;
   max-width: 11.5rem;
-  min-height: 40px;
+  min-height: 44px;
   padding: 3px 10px 3px 3px;
   border: 1px solid var(--line-soft);
   border-radius: var(--radius-pill);
@@ -259,7 +260,7 @@
   }
 
   .homeLink {
-    min-height: 40px;
+    min-height: 44px;
     padding: 8px 12px;
   }
 

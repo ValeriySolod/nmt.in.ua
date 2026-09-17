@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { useActionState, useEffect, useRef, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { useActionState } from "react";
 import clsx from "clsx";
 import {
   registerAction,
@@ -14,7 +13,21 @@ import {
   PASSWORD_MIN_LEN,
 } from "@/modules/auth/validateRegistration";
 import type { RegisterRole } from "../RegisterRolePicker/RegisterRolePicker";
+import { focusNamedControl } from "../focusFormError";
 import css from "../auth.module.css";
+
+const REGISTER_ERROR_FIELD: Record<string, string> = {
+  requiredFields: "displayName",
+  invalidDisplayName: "displayName",
+  invalidLogin: "login",
+  loginTaken: "login",
+  reservedLogin: "login",
+  invalidEmail: "email",
+  emailTaken: "email",
+  passwordTooShort: "password",
+  passwordTooLong: "password",
+  passwordMismatch: "passwordConfirm",
+};
 
 const INITIAL: RegisterActionState = { status: "idle" };
 
@@ -36,6 +49,15 @@ export function RegisterForm({
   const t = useTranslations("RegisterForm");
   const [state, formAction, pending] = useActionState(registerAction, INITIAL);
   const isTeacher = role === "teacher";
+  const formRef = useRef<HTMLFormElement>(null);
+  const alertRef = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    if (state.status !== "error") return;
+    const field = REGISTER_ERROR_FIELD[state.code];
+    if (field && focusNamedControl(formRef.current, field)) return;
+    alertRef.current?.focus();
+  }, [state]);
 
   return (
     <div className={css.card}>
@@ -55,7 +77,7 @@ export function RegisterForm({
         </p>
       </header>
 
-      <form className={css.form} action={formAction}>
+      <form ref={formRef} className={css.form} action={formAction}>
         <input type="hidden" name="next" value={nextPath} />
         <input type="hidden" name="from" value={from ?? ""} />
         <input type="hidden" name="role" value={role} />
@@ -79,6 +101,7 @@ export function RegisterForm({
             className={css.input}
             name="login"
             autoComplete="username"
+            spellCheck={false}
             required
             minLength={3}
             maxLength={50}
@@ -96,6 +119,7 @@ export function RegisterForm({
             type="email"
             name="email"
             autoComplete="email"
+            spellCheck={false}
             required
             maxLength={255}
             disabled={pending}
@@ -135,7 +159,12 @@ export function RegisterForm({
         </label>
 
         {state.status === "error" ? (
-          <p className={clsx(css.alert, css.alertError)} role="alert">
+          <p
+            ref={alertRef}
+            className={clsx(css.alert, css.alertError)}
+            role="alert"
+            tabIndex={-1}
+          >
             {t(`errors.${state.code}`)}
           </p>
         ) : null}

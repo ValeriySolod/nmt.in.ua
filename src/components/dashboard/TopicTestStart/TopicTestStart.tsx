@@ -5,6 +5,7 @@ import { useActionState, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { PageFrame, PagePanel } from "@/components/dashboard/PageFrame";
+import { Select } from "@/components/ui/Select";
 import {
   startTopicTestAction,
   type StartTopicTestActionState,
@@ -104,21 +105,22 @@ export function TopicTestStart({
             <div className={css.fields}>
               <label className={css.field}>
                 <span className={css.label}>{t("selectTopic")}</span>
-                <select
-                  className={css.select}
+                <Select
                   name="themeId"
-                  value={selectedThemeId}
-                  onChange={(event) =>
-                    setOverrideThemeId(Number(event.currentTarget.value))
-                  }
+                  value={String(selectedThemeId)}
                   disabled={controlsDisabled}
-                >
-                  {themes.map((theme, index) => (
-                    <option key={theme.id} value={theme.id}>
-                      {formatThemeLabel(index, theme)}
-                    </option>
-                  ))}
-                </select>
+                  options={themes.map((theme, index) => ({
+                    value: String(theme.id),
+                    label: formatThemeLabel(index, theme),
+                  }))}
+                  onChange={(next) => {
+                    const nextId = Number(next);
+                    setOverrideThemeId(nextId);
+                    const params = new URLSearchParams(searchParams.toString());
+                    params.set("theme", String(nextId));
+                    router.replace(`/?${params.toString()}`, { scroll: false });
+                  }}
+                />
               </label>
 
               <div className={css.fieldCount}>

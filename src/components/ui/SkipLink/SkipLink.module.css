@@ -1,0 +1,32 @@
+.skip {
+  position: fixed;
+  left: var(--space-sm);
+  top: var(--space-sm);
+  z-index: 120;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--green-dark);
+  font-size: var(--fs-small);
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: var(--shadow-md);
+  transform: translateY(-200%);
+}
+
+.skip:focus,
+.skip:focus-visible {
+  transform: none;
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
+@media print {
+  .skip {
+    display: none;
+  }
+}

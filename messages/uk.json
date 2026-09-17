@@ -21,6 +21,7 @@
   },
   "LanguageSwitcher": {
     "aria": "Мова сайту",
+    "triggerAria": "Мова сайту, зараз {name}",
     "ukFull": "Українська",
     "enFull": "English",
     "deFull": "Deutsch"
@@ -64,6 +65,7 @@
     "photoSaving": "Зберігаємо…",
     "photoSaved": "Фото оновлено.",
     "photoRemove": "Прибрати фото",
+    "photoRemoveConfirm": "Прибрати фото профілю?",
     "photoRemoving": "Прибираємо…",
     "photoRemoved": "Фото прибрано.",
     "demoLockedPhoto": "На демо-акаунті фото змінити не можна.",
@@ -141,7 +143,8 @@
     "contact": "Написати"
   },
   "Common": {
-    "soon": "Незабаром"
+    "soon": "Незабаром",
+    "skipToContent": "Перейти до змісту"
   },
   "RecommendedActions": {
     "title": "Рекомендовані дії",
@@ -170,7 +173,7 @@
     "addTitle": "Додати учня",
     "addLead": "Логін має збігатися з обліковим записом ролі «учень».",
     "login": "Логін учня",
-    "loginPlaceholder": "demo-student",
+    "loginPlaceholder": "demo-student…",
     "loginHint": "Точний логін, як при вході.",
     "add": "Додати",
     "adding": "Додаємо…",
@@ -179,6 +182,7 @@
     "listLead": "Відв’язати можна будь-коли — обліковий запис учня не видаляється.",
     "empty": "Ще немає прив’язаних учнів. Додайте першого за логіном.",
     "unlink": "Відв’язати",
+    "unlinkConfirm": "Відв’язати учня {name} (@{login})?",
     "unlinking": "Прибираємо…",
     "unlinked": "Учня відв’язано.",
     "errors": {
@@ -225,7 +229,7 @@
     "formTitle": "Новий запит",
     "formLead": "Коротко напишіть, з чим потрібна допомога — або просто надішліть запит.",
     "noteLabel": "Повідомлення (необовʼязково)",
-    "notePlaceholder": "Наприклад, з якої теми потрібна допомога",
+    "notePlaceholder": "Наприклад, з якої теми потрібна допомога…",
     "noteHint": "До 1000 символів. Можна залишити порожнім.",
     "submit": "Запитати консультацію",
     "submitting": "Надсилаємо…",
@@ -415,6 +419,7 @@
     "mistakeMaterials": "Матеріали в підручнику",
     "mistakePractice": "Тест за темою",
     "mistakeThemeUnknown": "Тему для цього завдання ще не визначено.",
+    "taskImageAlt": "Зображення до завдання {n}",
     "saveDiagnosticProgress": "Зберегти прогрес — зареєструйся",
     "workOnMistakes": "Робота над помилками",
     "startingMistakeReview": "Готуємо завдання…",
@@ -599,6 +604,7 @@
     "actions": "Дії",
     "start": "Старт",
     "cancelSession": "Скасувати сесію {id}",
+    "cancelConfirm": "Скасувати сесію «{theme}»?",
     "hint": "Заплановані сесії «Авто» зʼявляються після завершення тестів зі слабким результатом. Натисніть «Старт», щоб розпочати.",
     "statuses": {
       "completed": "Виконано",
@@ -1129,6 +1135,7 @@
   "nmtTrainer": {
     "title": "Симулятор НМТ",
     "taskProgress": "Завдання {current} з {total}",
+    "taskImageAlt": "Зображення до завдання {n}",
     "tasks": "Завдання",
     "answered": "Відповіді: {answered}/{total}",
     "finishing": "Завершення…",
@@ -1222,6 +1229,8 @@
     "filterRole": "{role} ({count})",
     "ban": "Забанити",
     "unban": "Розбанити",
+    "banConfirm": "Забанити акаунт «{name}»?",
+    "unbanConfirm": "Розбанити акаунт «{name}»?",
     "delete": "Видалити",
     "deleteConfirm": "Видалити акаунт «{name}»? Це незворотно.",
     "selfLocked": "Це ваш акаунт — дії недоступні.",
