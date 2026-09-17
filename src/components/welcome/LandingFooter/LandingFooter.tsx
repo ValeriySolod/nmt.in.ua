@@ -19,7 +19,7 @@ export async function LandingFooter() {
       <div className={css.container}>
         <div className={css.footerInner}>
           <div>
-            <p className={css.brand}>
+            <p className={css.brand} translate="no">
               <span className={css.brandGlyph} aria-hidden>
                 ∑
               </span>

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useActionState } from "react";
+import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import {
   cancelLearningSessionAction,
@@ -13,12 +14,14 @@ import {
   formatTimePerTask,
 } from "@/modules/sessions/types";
 import { useTranslations } from "next-intl";
+import { queryHref } from "@/lib/queryHref";
 import css from "./LearningSessionsTable.module.css";
 
 const CANCEL_INITIAL: CancelLearningSessionActionState = { status: "idle" };
 
 type LearningSessionsTableProps = {
   rows: LearningSessionRow[];
+  extended?: boolean;
 };
 
 function formatPercent(percent: number | null): string {
@@ -51,7 +54,15 @@ function SessionActions({ row }: { row: LearningSessionRow }) {
           {t("start")}
         </Link>
       )}
-      <form action={formAction} className={css.cancelForm}>
+      <form
+        action={formAction}
+        className={css.cancelForm}
+        onSubmit={(event) => {
+          if (!window.confirm(t("cancelConfirm", { theme: row.themeName }))) {
+            event.preventDefault();
+          }
+        }}
+      >
         <input type="hidden" name="sessionId" value={row.id} />
         <button
           type="submit"
@@ -71,9 +82,13 @@ function SessionActions({ row }: { row: LearningSessionRow }) {
   );
 }
 
-export function LearningSessionsTable({ rows }: LearningSessionsTableProps) {
+export function LearningSessionsTable({
+  rows,
+  extended = false,
+}: LearningSessionsTableProps) {
   const t = useTranslations("LearningSessionsTable");
-  const [showExtendedInfo, setShowExtendedInfo] = useState(false);
+  const router = useRouter();
+  const showExtendedInfo = extended;
 
   return (
     <section
@@ -93,7 +108,14 @@ export function LearningSessionsTable({ rows }: LearningSessionsTableProps) {
                 className={css.detailsToggle}
                 aria-expanded={showExtendedInfo}
                 aria-controls="learning-sessions-table"
-                onClick={() => setShowExtendedInfo((current) => !current)}
+                onClick={() =>
+                  router.replace(
+                    queryHref("/sessions", {
+                      extended: showExtendedInfo ? null : "1",
+                    }),
+                    { scroll: false },
+                  )
+                }
               >
                 {showExtendedInfo ? t("compactInfo") : t("extendedInfo")}
               </button>

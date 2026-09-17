@@ -15,7 +15,15 @@ type TopicTrainerMistakeReviewProps = {
   showThemeLinks?: boolean;
 };
 
-function MistakeBody({ text, className }: { text: string; className?: string }) {
+function MistakeBody({
+  text,
+  className,
+  imageAlt,
+}: {
+  text: string;
+  className?: string;
+  imageAlt: string;
+}) {
   const parts = text.split(/!\[\]\(([^)]+)\)/g);
   return (
     <div className={className}>
@@ -25,7 +33,7 @@ function MistakeBody({ text, className }: { text: string; className?: string }) 
             <span key={index} className={css.taskImageWrap}>
               <Image
                 src={part}
-                alt=""
+                alt={imageAlt}
                 width={604}
                 height={340}
                 className={css.taskImage}
@@ -65,9 +73,17 @@ export function TopicTrainerMistakeReview({
             className={css.item}
           >
             <p className={css.itemName}>{item.name}</p>
-            <MistakeBody text={item.taskText} className={css.itemText} />
+            <MistakeBody
+              text={item.taskText}
+              className={css.itemText}
+              imageAlt={t("taskImageAlt", { n: index + 1 })}
+            />
             {item.comment ? (
-              <MistakeBody text={item.comment} className={css.comment} />
+              <MistakeBody
+                text={item.comment}
+                className={css.comment}
+                imageAlt={t("taskImageAlt", { n: index + 1 })}
+              />
             ) : null}
             {showThemeLinks ? (
               item.themeId != null && item.themeName ? (

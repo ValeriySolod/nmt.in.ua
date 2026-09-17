@@ -1,0 +1,236 @@
+.page {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  align-content: center;
+  min-height: 100dvh;
+  overflow-x: clip;
+  color: var(--ink-deep);
+  background: var(--grad-aurora);
+}
+
+.embed {
+  min-height: 0;
+  padding-block: var(--space-xl);
+  background: transparent;
+}
+
+.decor {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.embed .decor {
+  display: none;
+}
+
+.decorGrid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgb(94 76 40 / 11%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(94 76 40 / 11%) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: linear-gradient(180deg, rgb(0 0 0 / 65%), rgb(0 0 0 / 18%) 70%);
+}
+
+.orbA,
+.orbB {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(10px);
+}
+
+.orbA {
+  top: -10rem;
+  right: -6rem;
+  width: min(70vw, 28rem);
+  height: min(70vw, 28rem);
+  background: radial-gradient(circle, rgb(31 143 69 / 18%), transparent 68%);
+}
+
+.orbB {
+  bottom: -8rem;
+  left: -7rem;
+  width: min(60vw, 24rem);
+  height: min(60vw, 24rem);
+  background: radial-gradient(circle, rgb(150 118 62 / 16%), transparent 70%);
+}
+
+.shell {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: var(--space-lg);
+  width: 100%;
+  max-width: 44rem;
+  margin-inline: auto;
+  padding: var(--space-lg) var(--container-pad) var(--space-3xl);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  justify-self: start;
+  min-height: 44px;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.glyph {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-md);
+  background: var(--grad-brand);
+  color: #f6f1e2;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+}
+
+.card {
+  display: grid;
+  gap: var(--space-md);
+  min-width: 0;
+  padding: var(--space-lg);
+  border: 1px solid rgb(253 251 244 / 72%);
+  border-radius: var(--radius-xl);
+  background: var(--grad-glass);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(14px);
+}
+
+@supports not (backdrop-filter: blur(4px)) {
+  .card {
+    background: var(--surface);
+  }
+}
+
+.kicker {
+  justify-self: start;
+  margin: 0;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--grad-mint);
+  color: var(--green-dark);
+  font-size: var(--fs-kicker);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-h1);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+.accent {
+  background: var(--grad-brand);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.lead {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--fs-lead);
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+.art {
+  justify-self: center;
+  width: 100%;
+  max-width: 22rem;
+  margin: var(--space-xs) 0 0;
+}
+
+.artImg {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.loadingWrap {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-sm);
+  padding-block: var(--space-sm);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-top: var(--space-xs);
+}
+
+.primary,
+.ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 12px 22px;
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-body);
+  font-weight: 700;
+}
+
+.primary {
+  border: 0;
+  background: var(--grad-brand);
+  color: #f6f1e2;
+  box-shadow: 0 12px 26px rgb(17 83 42 / 28%);
+}
+
+.ghost {
+  border: 1px solid var(--line-soft);
+  background: rgb(253 251 244 / 78%);
+  color: var(--green-dark);
+}
+
+.primary:hover,
+.ghost:hover,
+.primary:focus-visible,
+.ghost:focus-visible {
+  transform: translateY(-2px);
+}
+
+.digest {
+  margin: 0;
+  color: var(--subtle);
+  font-size: var(--fs-kicker);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 768px) {
+  .card {
+    padding: var(--space-xl);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orbA,
+  .orbB,
+  .primary,
+  .ghost {
+    animation: none;
+    transform: none;
+  }
+}

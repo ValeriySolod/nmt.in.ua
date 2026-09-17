@@ -285,8 +285,7 @@
   font-weight: 600;
 }
 
-.openInput,
-.matchRow select {
+.openInput {
   min-height: 44px;
   padding: 10px 14px;
   border: 1px solid var(--line);
@@ -294,6 +293,10 @@
   background: var(--surface);
   color: var(--ink);
   font: inherit;
+}
+
+.matchSelect {
+  min-width: 0;
 }
 
 .matchRow {

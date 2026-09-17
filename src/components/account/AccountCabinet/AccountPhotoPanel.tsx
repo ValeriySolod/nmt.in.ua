@@ -12,7 +12,7 @@ import {
   uploadAvatarAction,
   type UploadAvatarActionState,
 } from "@/modules/auth/actions";
-import { AVATAR_ACCEPT, AVATAR_MAX_BYTES } from "@/modules/auth/avatarConstants";
+import { AVATAR_ACCEPT, AVATAR_CROP_PX, AVATAR_MAX_BYTES } from "@/modules/auth/avatarConstants";
 import { UserAvatar } from "@/components/account/UserAvatar";
 import { cropAvatarFile } from "./cropAvatar";
 import css from "./AccountCabinet.module.css";
@@ -139,7 +139,13 @@ export function AccountPhotoPanel({ user, demoLocked }: AccountPhotoPanelProps) 
         <span className={css.photoPreview} aria-hidden>
           {preview ? (
             // eslint-disable-next-line @next/next/no-img-element -- local preview or per-user API blob
-            <img className={css.photoPreviewImg} src={preview} alt="" />
+            <img
+              className={css.photoPreviewImg}
+              src={preview}
+              alt=""
+              width={AVATAR_CROP_PX}
+              height={AVATAR_CROP_PX}
+            />
           ) : (
             <UserAvatar user={user} className={css.photoPreviewFace} />
           )}
@@ -171,7 +177,14 @@ export function AccountPhotoPanel({ user, demoLocked }: AccountPhotoPanelProps) 
           </form>
 
           {savedSrc ? (
-            <form action={removeAction}>
+            <form
+              action={removeAction}
+              onSubmit={(event) => {
+                if (!window.confirm(t("photoRemoveConfirm"))) {
+                  event.preventDefault();
+                }
+              }}
+            >
               <button
                 type="submit"
                 className={css.logout}

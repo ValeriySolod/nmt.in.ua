@@ -46,6 +46,7 @@ export function AppHeader({
           href="/"
           className={css.brand}
           aria-label={t("siteName")}
+          translate="no"
         >
           <span className={css.logo} aria-hidden>
             <span className={css.logoEq}>∑</span>

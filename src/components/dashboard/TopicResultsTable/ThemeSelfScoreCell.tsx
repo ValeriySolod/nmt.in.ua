@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import clsx from "clsx";
+import { Select } from "@/components/ui/Select";
 import { saveThemeSelfScoreAction } from "@/modules/self-score/actions";
 import css from "./TopicResultsTable.module.css";
 
@@ -69,25 +69,22 @@ export function ThemeSelfScoreCell({
       <label className={css.visuallyHidden} htmlFor={`self-score-${themeId}`}>
         {labels.aria}
       </label>
-      <select
+      <Select
         id={`self-score-${themeId}`}
-        className={clsx(css.selfScoreSelect, score == null && css.selfScoreEmpty)}
-        value={score ?? ""}
+        variant="compact"
+        value={score == null ? "" : String(score)}
+        placeholder="—"
         disabled={pending}
+        aria-label={labels.aria}
         aria-busy={pending}
         aria-invalid={error}
         title={error ? labels.errorGeneric : undefined}
-        onChange={(event) => onChange(event.currentTarget.value)}
-      >
-        <option value="" disabled>
-          —
-        </option>
-        {SCORES.map((n) => (
-          <option key={n} value={n}>
-            {n}
-          </option>
-        ))}
-      </select>
+        options={SCORES.map((n) => ({
+          value: String(n),
+          label: String(n),
+        }))}
+        onChange={onChange}
+      />
     </div>
   );
 }

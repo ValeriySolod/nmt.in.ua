@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import clsx from "clsx";
 import { PASSWORD_MAX_LEN } from "@/modules/auth/validateRegistration";
 import { loginAction, type LoginActionState } from "@/modules/auth/actions";
+import { focusNamedControl } from "../focusFormError";
 import css from "../auth.module.css";
 
 const INITIAL: LoginActionState = { status: "idle" };
@@ -17,6 +18,16 @@ type LoginFormProps = {
 export function LoginForm({ nextPath }: LoginFormProps) {
   const t = useTranslations("LoginForm");
   const [state, formAction, pending] = useActionState(loginAction, INITIAL);
+  const formRef = useRef<HTMLFormElement>(null);
+  const alertRef = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    if (state.status !== "error") return;
+    if (state.code === "requiredFields" || state.code === "invalidCredentials") {
+      if (focusNamedControl(formRef.current, "login")) return;
+    }
+    alertRef.current?.focus();
+  }, [state]);
 
   const registerHref =
     nextPath === "/"
@@ -31,7 +42,7 @@ export function LoginForm({ nextPath }: LoginFormProps) {
         <p className={css.lead}>{t("lead")}</p>
       </header>
 
-      <form className={css.form} action={formAction}>
+      <form ref={formRef} className={css.form} action={formAction}>
         <input type="hidden" name="next" value={nextPath} />
 
         <label className={css.field}>
@@ -40,6 +51,7 @@ export function LoginForm({ nextPath }: LoginFormProps) {
             className={css.input}
             name="login"
             autoComplete="username"
+            spellCheck={false}
             required
             disabled={pending}
           />
@@ -65,7 +77,12 @@ export function LoginForm({ nextPath }: LoginFormProps) {
         </p>
 
         {state.status === "error" ? (
-          <p className={clsx(css.alert, css.alertError)} role="alert">
+          <p
+            ref={alertRef}
+            className={clsx(css.alert, css.alertError)}
+            role="alert"
+            tabIndex={-1}
+          >
             {t(`errors.${state.code}`)}
             {state.code === "emailUnverified" ? (
               <>

@@ -11,6 +11,7 @@
 .field {
   display: grid;
   gap: var(--space-sm);
+  max-width: 36rem;
 }
 
 .label {
@@ -19,29 +20,6 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-}
-
-.select {
-  width: 100%;
-  max-width: 36rem;
-  min-height: 48px;
-  padding: 12px 40px 12px 14px;
-  border: 1px solid var(--line-soft);
-  border-radius: var(--radius-md);
-  appearance: none;
-  background:
-    var(--surface)
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%231f2320' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
-    no-repeat right 14px center;
-  color: var(--ink);
-  font-size: var(--fs-body);
-  font-weight: 650;
-  cursor: pointer;
-}
-
-.select:hover,
-.select:focus-visible {
-  border-color: rgb(31 143 69 / 45%);
 }
 
 .actions {

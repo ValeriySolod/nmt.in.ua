@@ -21,8 +21,9 @@
   },
   "LanguageSwitcher": {
     "aria": "Sprache der Website",
-    "ukFull": "Ukrainisch",
-    "enFull": "Englisch",
+    "triggerAria": "Sprache der Website, aktuell {name}",
+    "ukFull": "Українська",
+    "enFull": "English",
     "deFull": "Deutsch"
   },
   "Sidebar": {
@@ -64,6 +65,7 @@
     "photoSaving": "Wird gespeichert…",
     "photoSaved": "Foto aktualisiert.",
     "photoRemove": "Foto entfernen",
+    "photoRemoveConfirm": "Profilfoto entfernen?",
     "photoRemoving": "Wird entfernt…",
     "photoRemoved": "Foto entfernt.",
     "demoLockedPhoto": "Auf dem Demo-Konto kann das Foto nicht geändert werden.",
@@ -141,7 +143,8 @@
     "contact": "Kontakt"
   },
   "Common": {
-    "soon": "Demnächst"
+    "soon": "Demnächst",
+    "skipToContent": "Zum Inhalt springen"
   },
   "RecommendedActions": {
     "title": "Empfohlene Aktionen",
@@ -170,7 +173,7 @@
     "addTitle": "Schüler hinzufügen",
     "addLead": "Der Login muss zu einem Konto mit der Rolle „Schüler“ gehören.",
     "login": "Schüler-Login",
-    "loginPlaceholder": "demo-student",
+    "loginPlaceholder": "demo-student…",
     "loginHint": "Genau der Login wie beim Anmelden.",
     "add": "Hinzufügen",
     "adding": "Wird hinzugefügt…",
@@ -179,6 +182,7 @@
     "listLead": "Das Aufheben der Verknüpfung löscht das Schülerkonto nicht.",
     "empty": "Noch keine verknüpften Schüler. Füge den ersten über den Login hinzu.",
     "unlink": "Verknüpfung aufheben",
+    "unlinkConfirm": "{name} (@{login}) aus der Liste entfernen?",
     "unlinking": "Wird entfernt…",
     "unlinked": "Verknüpfung aufgehoben.",
     "errors": {
@@ -225,7 +229,7 @@
     "formTitle": "Neue Anfrage",
     "formLead": "Beschreibe kurz, wobei du Hilfe brauchst — oder sende die Anfrage einfach so.",
     "noteLabel": "Nachricht (optional)",
-    "notePlaceholder": "Zum Beispiel, zu welchem Thema du Hilfe brauchst",
+    "notePlaceholder": "Zum Beispiel, zu welchem Thema du Hilfe brauchst…",
     "noteHint": "Bis zu 1000 Zeichen. Das Feld darf leer bleiben.",
     "submit": "Beratung anfragen",
     "submitting": "Senden…",
@@ -415,6 +419,7 @@
     "mistakeMaterials": "Materialien im Lehrbuch",
     "mistakePractice": "Themen-Test",
     "mistakeThemeUnknown": "Thema für diese Aufgabe ist noch nicht zugeordnet.",
+    "taskImageAlt": "Abbildung zu Aufgabe {n}",
     "saveDiagnosticProgress": "Fortschritt speichern — registrieren",
     "workOnMistakes": "Fehler bearbeiten",
     "startingMistakeReview": "Aufgaben werden vorbereitet…",
@@ -599,6 +604,7 @@
     "actions": "Aktionen",
     "start": "Start",
     "cancelSession": "Sitzung {id} abbrechen",
+    "cancelConfirm": "Sitzung „{theme}“ abbrechen?",
     "hint": "Geplante „Auto“-Sitzungen erscheinen nach Tests mit einem schwachen Ergebnis. Klicke auf „Start“, um zu beginnen.",
     "statuses": {
       "completed": "Abgeschlossen",
@@ -1129,6 +1135,7 @@
   "nmtTrainer": {
     "title": "NMT-Simulator",
     "taskProgress": "Aufgabe {current} von {total}",
+    "taskImageAlt": "Abbildung zu Aufgabe {n}",
     "tasks": "Aufgaben",
     "answered": "Beantwortet: {answered}/{total}",
     "finishing": "Wird beendet…",
@@ -1222,6 +1229,8 @@
     "filterRole": "{role} ({count})",
     "ban": "Sperren",
     "unban": "Entsperren",
+    "banConfirm": "Konto „{name}“ sperren?",
+    "unbanConfirm": "Sperre für „{name}“ aufheben?",
     "delete": "Löschen",
     "deleteConfirm": "Konto „{name}“ löschen? Das kann nicht rückgängig gemacht werden.",
     "selfLocked": "Das ist Ihr Konto — Aktionen nicht verfügbar.",

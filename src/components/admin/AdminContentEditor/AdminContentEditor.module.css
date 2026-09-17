@@ -70,7 +70,6 @@
   font-size: var(--fs-small);
 }
 
-.select,
 .input {
   width: 100%;
   min-height: 44px;
@@ -85,8 +84,7 @@
     box-shadow var(--t) var(--ease);
 }
 
-.select:focus,
-.input:focus {
+.input:focus-visible {
   outline: none;
   border-color: var(--green);
   box-shadow: var(--ring);

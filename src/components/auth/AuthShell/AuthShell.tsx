@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { getTranslations } from "next-intl/server";
+import { SkipLink } from "@/components/ui/SkipLink";
 import { SITE_NAME } from "@/constants/seo";
 import css from "../auth.module.css";
 
@@ -18,12 +19,14 @@ type AuthShellProps = {
 /** Shared frame for /login and /register: aurora background, brand, marketing column. */
 export async function AuthShell({ children, aside, asideExtra }: AuthShellProps) {
   const t = await getTranslations("AuthShared");
+  const tCommon = await getTranslations("Common");
   const badge = aside?.badge ?? t("asideBadge");
   const title = aside?.title ?? t("asideTitle");
   const lead = aside?.lead ?? t("asideLead");
 
   return (
     <div className={css.page}>
+      <SkipLink label={tCommon("skipToContent")} />
       <div className={css.decor} aria-hidden>
         <span className={css.decorGrid} />
         <span className={css.decorOrbA} />
@@ -50,7 +53,7 @@ export async function AuthShell({ children, aside, asideExtra }: AuthShellProps)
             {t("backHome")}
           </Link>
 
-          <Link href="/" className={css.brand} aria-label={SITE_NAME}>
+          <Link href="/" className={css.brand} aria-label={SITE_NAME} translate="no">
             <span className={css.brandGlyph} aria-hidden>
               ∑
             </span>
@@ -61,12 +64,14 @@ export async function AuthShell({ children, aside, asideExtra }: AuthShellProps)
         <div className={css.layout}>
           <aside className={css.aside}>
             <p className={css.asideBadge}>{badge}</p>
-            <h2 className={css.asideTitle}>{title}</h2>
+            <p className={css.asideTitle}>{title}</p>
             <p className={css.asideLead}>{lead}</p>
             {asideExtra}
           </aside>
 
-          {children}
+          <main id="main-content" className={css.main} tabIndex={-1}>
+            {children}
+          </main>
         </div>
       </div>
     </div>

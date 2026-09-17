@@ -227,6 +227,7 @@ export function TeacherRegisterForm({
             className={css.input}
             name="login"
             autoComplete="username"
+            spellCheck={false}
             required
             minLength={3}
             maxLength={50}
