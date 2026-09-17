@@ -128,6 +128,8 @@ alwaysApply: true
 - `TeacherPublicCard` — публічна картка `/t/{slug}` у `DiagnosticShell` (без кабінетного chrome).
 - `TeacherStudentsPanel` — `/students` для teacher/admin: додати учня за логіном, список, відв’язати. Учні пункт меню не бачать.
 - `TeacherAssignWorkspace` — `/assign`: призначити тест за темою кільком учням (зараз / дата-час), список призначень і статуси.
+- `TeacherStudentResultsPicker` / `TeacherClassResults` — `/results` для teacher/admin: «усі учні» або один учень; агрегат по темах; клік по темі → список учнів від гіршого середнього.
+- На `/results` викладач обирає учня зі списку й бачить спроби / середній % / швидкість (без самооцінки).
 
 `src/components/ui/` — спільні контроли:
 
@@ -520,3 +522,10 @@ npm run lint && npm test && npm run build
   у деталі — зелений (пройшов) / рожевий (не встиг), скасування, зміна переліку учнів.
 - Таблиці `mentor_assignments` + `mentor_assignment_members` (`033` + lazy schema).
 - Перевірити: 375 / 768 / 1240 / 1440 / 1920; `demo-teacher` → `/students` → `/assign`.
+
+### 2026-09-17 — результати всіх учнів на `/results`
+
+- У випадайці перший пункт «Результати для всіх учнів»; учні в списку від гіршого середнього.
+- Таблиця тем групи (гірші середні вище); клік по темі → панель учнів з середніми, теж worst-first.
+- Модуль `teacherStudentResults` + `TeacherClassResults` / розширений picker.
+- Перевірити: `demo-teacher` → `/results` → all → тема → учень.

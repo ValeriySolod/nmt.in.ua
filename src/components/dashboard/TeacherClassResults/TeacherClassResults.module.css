@@ -1,0 +1,93 @@
+.rowActive td {
+  background: color-mix(in srgb, var(--green-bg) 55%, var(--surface));
+}
+
+.themePanel {
+  margin-top: var(--space-lg);
+  display: grid;
+  gap: var(--space-sm);
+  padding: var(--space-lg);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  background: var(--grad-glass);
+  box-shadow: var(--shadow-sm);
+}
+
+.themeTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-h3);
+  font-weight: 700;
+  color: var(--ink-deep);
+}
+
+.themeLead {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--fs-small);
+}
+
+.studentList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2xs);
+}
+
+.studentItem {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  align-items: center;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+@media (min-width: 768px) {
+  .studentItem {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto;
+  }
+}
+
+.studentName {
+  font-weight: 700;
+  color: var(--ink-deep);
+  text-decoration: none;
+}
+
+.studentName:hover,
+.studentName:focus-visible {
+  color: var(--green-dark);
+}
+
+.login {
+  color: var(--subtle);
+  font-weight: 600;
+  font-size: var(--fs-small);
+}
+
+.studentMeta {
+  color: var(--muted);
+  font-size: var(--fs-small);
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 768px) {
+  .studentMeta {
+    grid-column: auto;
+  }
+}
+
+.studentScore {
+  justify-self: end;
+  min-width: 3.5rem;
+  text-align: center;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+}

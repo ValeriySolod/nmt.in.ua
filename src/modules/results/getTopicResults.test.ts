@@ -50,10 +50,12 @@ test("buildTopicResultRows aggregates overall, last three, and speed", () => {
   assert.equal(rows[0]?.overallPercent, 65);
   assert.equal(rows[0]?.lastThreePercent, 70);
   assert.equal(rows[0]?.avgSecondsPerTask, 6.65);
+  assert.equal(rows[0]?.attemptsCount, 4);
 
   assert.equal(rows[1]?.overallPercent, 40);
   assert.equal(rows[1]?.lastThreePercent, 40);
   assert.equal(rows[1]?.avgSecondsPerTask, 11);
+  assert.equal(rows[1]?.attemptsCount, 1);
 });
 
 test("buildTopicResultRows keeps empty metrics for themes without sessions", () => {
@@ -67,6 +69,7 @@ test("buildTopicResultRows keeps empty metrics for themes without sessions", () 
     themeCode: "ALG-07-EQ",
     themeName: "Рівняння",
     displayIndex: 1,
+    attemptsCount: 0,
     overallPercent: null,
     lastThreePercent: null,
     avgSecondsPerTask: null,
@@ -105,7 +108,10 @@ test("getTopicResults composes theme results with the self-score fallback", asyn
       if (sql.includes("FROM themes")) {
         return [{ id: 1, name: "Тема", ord: 0 }] as unknown as T[];
       }
-      if (sql.includes("FROM task_sessions")) {
+      if (sql.includes("COUNT(*) AS attempts")) {
+        return [{ theme_id: 1, attempts: 2 }] as unknown as T[];
+      }
+      if (sql.includes("ROW_NUMBER()")) {
         return [] as unknown as T[];
       }
       if (sql.includes("FROM user_self_scores")) {
@@ -123,6 +129,7 @@ test("getTopicResults composes theme results with the self-score fallback", asyn
 
   const rows = await getTopicResults(1, { getConnection: async () => connection });
   assert.equal(rows[0]?.selfScore, 6);
+  assert.equal(rows[0]?.attemptsCount, 2);
 });
 
 test("getTopicResults excludes expired unfinished attempts before the per-theme window, via the injected clock", async () => {
@@ -136,7 +143,10 @@ test("getTopicResults excludes expired unfinished attempts before the per-theme 
       if (sql.includes("FROM themes")) {
         return [{ id: 1, name: "Тема", ord: 0 }] as unknown as T[];
       }
-      if (sql.includes("FROM task_sessions")) {
+      if (sql.includes("COUNT(*) AS attempts")) {
+        return [] as unknown as T[];
+      }
+      if (sql.includes("ROW_NUMBER()")) {
         sessionsSql = sql;
         sessionsParams = params;
         return [] as unknown as T[];
