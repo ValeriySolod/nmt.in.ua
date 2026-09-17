@@ -38,6 +38,14 @@ const SQL_SESSION_TASKS = `
     t2s.id AS mapping_id,
     t2s.task_id,
     t2s.status,
+    t2s.first_attempt_status,
+    t2s.retry_used,
+    t2s.hint_level_unlocked,
+    CASE WHEN t2s.hint_level_unlocked >= 1 THEN qt.hint_direction ELSE NULL END AS hint_direction,
+    CASE WHEN t2s.hint_level_unlocked >= 2 THEN qt.hint_rule ELSE NULL END AS hint_rule,
+    CASE WHEN t2s.hint_level_unlocked >= 3 THEN qt.hint_example ELSE NULL END AS hint_example,
+    CASE WHEN t2s.retry_used = 1 AND t2s.status = -1 THEN qt.right_answer_n ELSE NULL END AS revealed_answer,
+    CASE WHEN t2s.retry_used = 1 AND t2s.status = -1 THEN qt.comments ELSE NULL END AS revealed_explanation,
     qt.name,
     qt.task_text,
     qt.answer_1,
@@ -89,6 +97,14 @@ type SessionTaskRow = {
   mapping_id: number;
   task_id: number;
   status: number;
+  first_attempt_status?: number | null;
+  retry_used?: number;
+  hint_level_unlocked?: number;
+  hint_direction?: string | null;
+  hint_rule?: string | null;
+  hint_example?: string | null;
+  revealed_answer?: number | null;
+  revealed_explanation?: string | null;
   name: string;
   task_text: string;
   answer_1: string | null;
@@ -163,6 +179,19 @@ function mapRow(row: SessionTaskRow, isNmt: boolean): SessionTask {
     taskText: normalize(row.task_text),
     answers,
     status: row.status,
+    ...(!isNmt && row.hint_level_unlocked ? { hints:
+      [row.hint_direction, row.hint_rule, row.hint_example].flatMap((text, index) =>
+        index < row.hint_level_unlocked! && text?.trim()
+          ? [{ level: (index + 1) as 1 | 2 | 3, text: text.trim(), isFinal: index === 2 }]
+          : []) } : {}),
+    ...(!isNmt && row.first_attempt_status === -1 && row.status === -1 && row.retry_used === 0
+      ? { retryAvailable: true } : {}),
+    ...(!isNmt && row.retry_used === 1 && row.status === -1
+      ? { revealed: {
+          correctAnswerNumber: row.revealed_answer ?? null,
+          correctAnswerText: answers.find((answer) => answer.number === row.revealed_answer)?.text ?? null,
+          explanation: row.revealed_explanation?.trim() || null,
+        } } : {}),
     ...(isNmt ? { taskKind: row.task_kind as NmtTaskKind } : {}),
   };
 }

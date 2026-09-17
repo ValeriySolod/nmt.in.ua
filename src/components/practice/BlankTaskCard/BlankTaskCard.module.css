@@ -1,0 +1,81 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.blanksRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.label {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.input {
+  min-height: 44px;
+  width: 88px;
+  padding: 8px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: 1rem;
+  text-align: center;
+}
+
+.input:disabled {
+  cursor: not-allowed;
+}
+
+.input:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--green) 45%, transparent);
+  outline-offset: 2px;
+}
+
+.inputOk {
+  border-color: var(--green);
+  background: var(--green-bg);
+}
+
+.inputBad {
+  border-color: color-mix(in srgb, crimson 55%, var(--border));
+  background: color-mix(in srgb, crimson 10%, var(--surface));
+}
+
+.blankStatus {
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.checkButton {
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 10px 20px;
+  border: 2px solid var(--green);
+  border-radius: 10px;
+  background: var(--green-bg);
+  color: var(--green-dark);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.checkButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}

@@ -28,10 +28,17 @@ const SQL_SELECT_SESSION = `
   FOR UPDATE
 `;
 
+/** `COALESCE(first_attempt_status, status)`: the permanent first-attempt
+ * outcome when present (see migration 020), falling back to `status` for
+ * legacy rows or non-Practice sessions where the two never diverge. This is
+ * what must be scored — a Practice-mode retry/reinforcement/repetition can
+ * change `status` afterwards but must never change the stored score. */
 const SQL_SELECT_STATUSES = `
-  SELECT status
-  FROM tasks2session
-  WHERE session_id = ? AND user_id = ?
+  SELECT COALESCE(t2s.first_attempt_status, t2s.status) AS status,
+    po.tasks2session_id AS follow_up_id
+  FROM tasks2session t2s
+  LEFT JOIN practice_task_origin po ON po.tasks2session_id = t2s.id
+  WHERE t2s.session_id = ? AND t2s.user_id = ?
   FOR UPDATE
 `;
 
@@ -95,6 +102,7 @@ type SessionRow = {
 };
 
 type StatusRow = {
+  follow_up_id?: number | null;
   status: number;
 };
 
@@ -226,8 +234,9 @@ export async function finishTrainerSession(
         );
       }
 
-      const tasksNumber = refreshedMappings.length;
-      const rightNumber = refreshedMappings.filter(
+      const primaryMappings = refreshedMappings.filter((row) => row.follow_up_id == null);
+      const tasksNumber = primaryMappings.length;
+      const rightNumber = primaryMappings.filter(
         (row) => row.status === TASK_STATUS_CORRECT,
       ).length;
       const elapsed = resolveSessionElapsedSec(session.start_time, nowSec());

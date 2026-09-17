@@ -15,6 +15,8 @@ const INELIGIBLE_SESSION_TYPES = [4, 5];
 const SQL_SELECT_HINT = `
   SELECT
     t2s.status,
+    t2s.first_attempt_status,
+    t2s.retry_used,
     t2s.task_type,
     ts.session_type,
     ts.session_status,
@@ -55,6 +57,8 @@ export class GetTaskHintError extends Error {
 
 type HintRow = {
   status: number;
+  first_attempt_status?: number | null;
+  retry_used?: number;
   task_type: number;
   session_type: number;
   session_status: number;
@@ -138,6 +142,9 @@ export async function getTaskHint(
         row.status === TASK_STATUS_INCORRECT;
 
       const comment = row.comments?.trim() || "";
+      if (row.first_attempt_status != null && row.retry_used !== 1 && row.session_status !== SESSION_STATUS_COMPLETED) {
+        return { available: false, hint: null };
+      }
       if (!eligible || comment === "") {
         return { available: false, hint: null };
       }

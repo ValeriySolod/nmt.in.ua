@@ -32,6 +32,9 @@ export {
   markSessionStartedAction,
   getTaskHintAction,
   addSimilarPracticeTaskAction,
+  getTaskHintLevelAction,
+  startMistakeReviewRoundAction,
+  addSpacedRepetitionTaskAction,
   type StartTopicTestActionState,
 } from "./actions";
 export {
@@ -104,6 +107,33 @@ export type {
   AddSimilarPracticeTaskInput,
   AddSimilarPracticeTaskResult,
 } from "./addSimilarPracticeTask";
+export { getTaskHintLevel, GetTaskHintLevelError } from "./getTaskHintLevel";
+export type {
+  GetTaskHintLevelInput,
+  GetTaskHintLevelResult,
+  HintLevel,
+} from "./getTaskHintLevel";
+export {
+  startMistakeReviewRound,
+  StartMistakeReviewRoundError,
+} from "./startMistakeReviewRound";
+export type {
+  StartMistakeReviewRoundInput,
+  StartMistakeReviewRoundResult,
+} from "./startMistakeReviewRound";
+export {
+  addSpacedRepetitionTask,
+  AddSpacedRepetitionTaskError,
+} from "./addSpacedRepetitionTask";
+export type {
+  AddSpacedRepetitionTaskInput,
+  AddSpacedRepetitionTaskResult,
+} from "./addSpacedRepetitionTask";
+export {
+  findThemeDueForRepetition,
+  REPETITION_INTERVAL,
+} from "./practiceSpacedRepetition";
+export type { AnsweredTopicTask } from "./practiceSpacedRepetition";
 export {
   selectFollowUpCandidate,
   pickPracticeFollowUpTaskId,

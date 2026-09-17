@@ -1,0 +1,90 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-muted);
+  text-align: left;
+  cursor: pointer;
+}
+
+.row:disabled {
+  cursor: not-allowed;
+}
+
+.row:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--green) 45%, transparent);
+  outline-offset: 2px;
+}
+
+.active {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+}
+
+.matched {
+  border-color: var(--green);
+  background: var(--green-bg);
+}
+
+.wrongMatch {
+  border-color: color-mix(in srgb, crimson 55%, var(--border));
+  background: color-mix(in srgb, crimson 10%, var(--surface));
+}
+
+.chip {
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--surface-hover);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.taken {
+  opacity: 0.6;
+}
+
+.checkButton {
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 10px 20px;
+  border: 2px solid var(--green);
+  border-radius: 10px;
+  background: var(--green-bg);
+  color: var(--green-dark);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.checkButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+@media (min-width: 768px) {
+  .columns {
+    grid-template-columns: 1fr 1fr;
+  }
+}
