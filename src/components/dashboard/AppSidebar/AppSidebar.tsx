@@ -31,6 +31,7 @@ const NAV_ICONS: Record<string, string> = {
   "/materials/textbook": "▣",
   "/problems": "ƒ",
   "/feedback": "★",
+  "/practice/interactive": "◐",
   "/settings": "⚙",
   "/consultations": "✉",
 };
@@ -45,6 +46,7 @@ const NAV_KEYS: Record<string, string> = {
   "/materials/textbook": "materials",
   "/problems": "problems",
   "/feedback": "feedback",
+  "/practice/interactive": "interactiveFormats",
   "/settings": "settings",
   "/consultations": "consultations",
 };

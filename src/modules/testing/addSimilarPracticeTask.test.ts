@@ -11,22 +11,32 @@ import { TASK_STATUS_CORRECT, TASK_STATUS_INCORRECT, TASK_STATUS_UNANSWERED } fr
 type SourceRow = {
   task_id: number;
   status: number;
+  retry_used: number;
   task_type: number;
   session_type: number;
   session_status: number;
   expire_time: number;
+  practice_streak: number;
   theme_id: number | null;
   difficulty: number;
 };
 
+/** `retry_used: 1` by default — reinforcement is only offered once the
+ * Practice-mode retry has been consumed (the SECOND wrong attempt), see
+ * `checkAnswer.ts`. `practice_streak: 0` — the server-tracked streak is
+ * always reset by the wrong first attempt that led here (see
+ * `checkAnswer.ts`), matching the real column's guaranteed value at this
+ * point in the flow. */
 function makeSourceRow(overrides: Partial<SourceRow> = {}): SourceRow {
   return {
     task_id: 100,
     status: TASK_STATUS_INCORRECT,
+    retry_used: 1,
     task_type: 1,
     session_type: 1,
     session_status: SESSION_STATUS_CREATED,
     expire_time: 9_999_999_999,
+    practice_streak: 0,
     theme_id: 7,
     difficulty: 1,
     ...overrides,
@@ -91,6 +101,9 @@ function makeConnection(options: Options = {}) {
       if (sql.startsWith("INSERT INTO tasks2session")) {
         return { insertId: 999, affectedRows: failInsert ? 0 : 1 };
       }
+      if (sql.startsWith("INSERT INTO practice_task_origin")) {
+        return { insertId: 0, affectedRows: 1 };
+      }
       return { insertId: 0, affectedRows: 0 };
     },
     commit: async () => {
@@ -113,14 +126,14 @@ function makeConnection(options: Options = {}) {
   };
 }
 
-const validInput = { userId: 1, sessionId: 5, mappingId: 10, streak: 0 };
+const validInput = { userId: 1, sessionId: 5, mappingId: 10 };
 
 test("rejects invalid input", async () => {
   const mock = makeConnection();
   await assert.rejects(
     () =>
       addSimilarPracticeTask(
-        { ...validInput, streak: -1 },
+        { ...validInput, mappingId: 0 },
         { getConnection: async () => mock.connection },
       ),
     (error: unknown) =>
@@ -160,6 +173,60 @@ test("rejects when the source task was not answered incorrectly", async () => {
       addSimilarPracticeTask(validInput, { getConnection: async () => mock.connection }),
     (error: unknown) =>
       error instanceof AddSimilarPracticeTaskError && error.code === "not_incorrect",
+  );
+  assert.ok(mock.isRolledBack());
+  assert.ok(!mock.isCommitted());
+});
+
+test("a duplicate/concurrent request for the same source mapping returns the existing follow-up, not a second one", async () => {
+  const mock = makeConnection();
+  // Simulate a follow-up already recorded for mappingId 10 by a prior
+  // (or concurrent, now-committed) call.
+  const originalQuery = mock.connection.query;
+  mock.connection.query = (async <T,>(sql: string, params: unknown[] = []) => {
+    if (sql.includes("practice_task_origin") && sql.includes("SELECT")) {
+      return [{ tasks2session_id: 777 }] as unknown as T[];
+    }
+    if (sql.includes("mapping_id") && sql.includes("quiz_tasks")) {
+      return [
+        {
+          mapping_id: 777,
+          id: 105,
+          name: "Existing follow-up",
+          task_text: "already added",
+          answer_1: "1",
+          answer_2: "2",
+          answer_3: "3",
+          answer_4: "4",
+        },
+      ] as unknown as T[];
+    }
+    return originalQuery<T>(sql, params);
+  }) as typeof mock.connection.query;
+
+  const result = await addSimilarPracticeTask(validInput, {
+    getConnection: async () => mock.connection,
+  });
+
+  assert.equal(result.mappingId, 777);
+  assert.equal(result.task.taskId, 105);
+  // No new tasks2session row was inserted for this duplicate request.
+  assert.equal(
+    mock.calls.filter((c) => c.sql?.startsWith("INSERT INTO tasks2session")).length,
+    0,
+  );
+  assert.ok(mock.isCommitted());
+});
+
+test("rejects a similar task before the retry has been consumed", async () => {
+  const mock = makeConnection({
+    source: [makeSourceRow({ retry_used: 0 })],
+  });
+  await assert.rejects(
+    () =>
+      addSimilarPracticeTask(validInput, { getConnection: async () => mock.connection }),
+    (error: unknown) =>
+      error instanceof AddSimilarPracticeTaskError && error.code === "retry_pending",
   );
   assert.ok(mock.isRolledBack());
   assert.ok(!mock.isCommitted());
@@ -236,8 +303,14 @@ test("reports no_similar_task when the theme bank is exhausted", async () => {
   assert.ok(mock.isRolledBack());
 });
 
-test("prefers a harder task once the streak clears the adaptive threshold", async () => {
+test("streak is read from the session row, not the client — no streak field accepted as input", async () => {
+  // The server-tracked practice_streak is always 0 by the time reinforcement
+  // is eligible (see the doc comment in addSimilarPracticeTask.ts), so this
+  // never prefers a harder candidate — it just proves a (nonexistent, since
+  // TS no longer accepts it) client-supplied streak can't influence the pick,
+  // and that the call still succeeds normally.
   const mock = makeConnection({
+    source: [makeSourceRow({ practice_streak: 5 })], // even if somehow nonzero
     candidates: [
       { id: 100, difficulty: 1 },
       { id: 101, difficulty: 1 },
@@ -245,11 +318,13 @@ test("prefers a harder task once the streak clears the adaptive threshold", asyn
     ],
   });
 
-  const result = await addSimilarPracticeTask(
-    { ...validInput, streak: 3 },
-    { getConnection: async () => mock.connection },
-  );
+  const result = await addSimilarPracticeTask(validInput, {
+    getConnection: async () => mock.connection,
+  });
 
+  // A streak of 5 (>= ADAPTIVE_STREAK_THRESHOLD) DOES still prefer the
+  // harder candidate when the column happens to carry a nonzero value —
+  // proving the value legitimately comes from the DB row, not a hardcoded 0.
   assert.equal(result.task.taskId, 102);
 });
 

@@ -38,6 +38,15 @@ import {
   addSimilarPracticeTask,
   AddSimilarPracticeTaskError,
 } from "./addSimilarPracticeTask";
+import { getTaskHintLevel, GetTaskHintLevelError } from "./getTaskHintLevel";
+import {
+  startMistakeReviewRound,
+  StartMistakeReviewRoundError,
+} from "./startMistakeReviewRound";
+import {
+  addSpacedRepetitionTask,
+  AddSpacedRepetitionTaskError,
+} from "./addSpacedRepetitionTask";
 import type {
   CheckAnswerActionInput,
   CheckAnswerActionState,
@@ -51,6 +60,12 @@ import type {
   GetTaskHintActionState,
   AddSimilarPracticeTaskActionInput,
   AddSimilarPracticeTaskActionState,
+  GetTaskHintLevelActionInput,
+  GetTaskHintLevelActionState,
+  StartMistakeReviewRoundActionInput,
+  StartMistakeReviewRoundActionState,
+  AddSpacedRepetitionTaskActionInput,
+  AddSpacedRepetitionTaskActionState,
 } from "./types";
 import { getTranslations } from "next-intl/server";
 
@@ -218,6 +233,7 @@ export async function checkAnswerAction(
       userId,
       sessionId: input.sessionId,
       mappingId: input.mappingId,
+      ...(input.attempt !== undefined ? { attempt: input.attempt } : {}),
       ...(input.answerNumber !== undefined
         ? { answerNumber: input.answerNumber }
         : {}),
@@ -225,7 +241,13 @@ export async function checkAnswerAction(
         ? { answerText: input.answerText }
         : {}),
     });
-    return { status: "success", correct: result.correct };
+    return {
+      status: "success",
+      correct: result.correct,
+      firstAttempt: result.firstAttempt,
+      ...(result.retryAvailable ? { retryAvailable: result.retryAvailable } : {}),
+      ...(result.revealed ? { revealed: result.revealed } : {}),
+    };
   } catch (error) {
     if (error instanceof CheckAnswerError) {
       switch (error.code) {
@@ -499,7 +521,6 @@ export async function addSimilarPracticeTaskAction(
       userId,
       sessionId: input.sessionId,
       mappingId: input.mappingId,
-      streak: input.streak,
     });
     return { status: "success", mappingId: result.mappingId, task: result.task };
   } catch (error) {
@@ -513,6 +534,8 @@ export async function addSimilarPracticeTaskAction(
           return { status: "error", code: "notEligible" };
         case "not_incorrect":
           return { status: "error", code: "notIncorrect" };
+        case "retry_pending":
+          return { status: "error", code: "retryPending" };
         case "no_similar_task":
           return { status: "error", code: "noSimilarTask" };
         case "session_expired":
@@ -523,6 +546,145 @@ export async function addSimilarPracticeTaskAction(
     }
 
     console.error("addSimilarPracticeTaskAction: unexpected error", error);
+    return { status: "error", code: "generic" };
+  }
+}
+
+type GetTaskHintLevelActionDeps = AuthDeps & {
+  getTaskHintLevel: typeof getTaskHintLevel;
+};
+
+/**
+ * Server Action for the Practice-mode 3-rung hint ladder. Each rung must be
+ * requested explicitly (never sends the next rung ahead of the one asked
+ * for) — see `getTaskHintLevel.ts` for the server-enforced sequential ratchet.
+ */
+export async function getTaskHintLevelAction(
+  input: GetTaskHintLevelActionInput,
+  deps: GetTaskHintLevelActionDeps = { getTaskHintLevel, ...defaultAuthDeps },
+): Promise<GetTaskHintLevelActionState> {
+  try {
+    const userId = await deps.requireUserId();
+    const result = await deps.getTaskHintLevel({
+      userId,
+      sessionId: input.sessionId,
+      mappingId: input.mappingId,
+      level: input.level,
+    });
+    return {
+      status: "success",
+      available: result.available,
+      level: result.level,
+      text: result.text,
+      isFinal: result.isFinal,
+    };
+  } catch (error) {
+    if (error instanceof GetTaskHintLevelError) {
+      switch (error.code) {
+        case "invalid_input":
+          return { status: "error", code: "invalidInput" };
+        case "not_found":
+          return { status: "error", code: "notFound" };
+        case "not_eligible":
+          return { status: "error", code: "notEligible" };
+        case "session_expired":
+          return { status: "error", code: "sessionExpired" };
+        default:
+          return { status: "error", code: "generic" };
+      }
+    }
+
+    console.error("getTaskHintLevelAction: unexpected error", error);
+    return { status: "error", code: "generic" };
+  }
+}
+
+type StartMistakeReviewRoundActionDeps = AuthDeps & {
+  startMistakeReviewRound: typeof startMistakeReviewRound;
+};
+
+/**
+ * Server Action for "Work on mistakes" — starts a brand-new topic-test
+ * session containing the wrong/skipped tasks of an already-completed
+ * session. Never mutates the original session's stored summary.
+ */
+export async function startMistakeReviewRoundAction(
+  input: StartMistakeReviewRoundActionInput,
+  deps: StartMistakeReviewRoundActionDeps = {
+    startMistakeReviewRound,
+    ...defaultAuthDeps,
+  },
+): Promise<StartMistakeReviewRoundActionState> {
+  try {
+    const userId = await deps.requireUserId();
+    const result = await deps.startMistakeReviewRound({
+      userId,
+      sessionId: input.sessionId,
+    });
+    return { status: "success", sessionId: result.sessionId };
+  } catch (error) {
+    if (error instanceof StartMistakeReviewRoundError) {
+      switch (error.code) {
+        case "invalid_input":
+          return { status: "error", code: "invalidInput" };
+        case "not_found":
+          return { status: "error", code: "notFound" };
+        case "not_completed":
+          return { status: "error", code: "notCompleted" };
+        case "no_mistakes":
+          return { status: "error", code: "noMistakes" };
+        default:
+          return { status: "error", code: "generic" };
+      }
+    }
+
+    console.error("startMistakeReviewRoundAction: unexpected error", error);
+    return { status: "error", code: "generic" };
+  }
+}
+
+type AddSpacedRepetitionTaskActionDeps = AuthDeps & {
+  addSpacedRepetitionTask: typeof addSpacedRepetitionTask;
+};
+
+/**
+ * Server Action checked opportunistically after an answer to see whether a
+ * theme is due for spaced repetition. `{ added: false }` is a normal result
+ * (nothing due, or no candidate task), not an error.
+ */
+export async function addSpacedRepetitionTaskAction(
+  input: AddSpacedRepetitionTaskActionInput,
+  deps: AddSpacedRepetitionTaskActionDeps = {
+    addSpacedRepetitionTask,
+    ...defaultAuthDeps,
+  },
+): Promise<AddSpacedRepetitionTaskActionState> {
+  try {
+    const userId = await deps.requireUserId();
+    const result = await deps.addSpacedRepetitionTask({
+      userId,
+      sessionId: input.sessionId,
+    });
+    return result.added
+      ? { status: "success", added: true, mappingId: result.mappingId, task: result.task }
+      : { status: "success", added: false };
+  } catch (error) {
+    if (error instanceof AddSpacedRepetitionTaskError) {
+      switch (error.code) {
+        case "invalid_input":
+          return { status: "error", code: "invalidInput" };
+        case "not_found":
+          return { status: "error", code: "notFound" };
+        case "not_eligible":
+          return { status: "error", code: "notEligible" };
+        case "session_expired":
+          return { status: "error", code: "sessionExpired" };
+        default:
+          return { status: "error", code: "generic" };
+      }
+    }
+
+    console.error("addSpacedRepetitionTaskAction: unexpected error", error);
     return { status: "error", code: "generic" };
   }
 }

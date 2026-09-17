@@ -24,6 +24,9 @@ export type SessionTask = {
   taskText: string;
   answers: SessionTaskAnswer[];
   status: number;
+  retryAvailable?: boolean;
+  revealed?: RevealedAnswerAction;
+  hints?: { level: 1 | 2 | 3; text: string; isFinal: boolean }[];
   /** Present on simulator tasks from `nmt_quiz_tasks`. Topic tests omit it. */
   taskKind?: NmtTaskKind;
 };
@@ -62,6 +65,7 @@ export const TASK_STATUS_INCORRECT = -1;
 export type CheckAnswerActionInput = {
   sessionId: number;
   mappingId: number;
+  attempt?: 1 | 2;
   answerNumber?: 1 | 2 | 3 | 4 | 5;
   /** Open / matching NMT answers (e.g. "-35" or "1b;2c;3a"). */
   answerText?: string;
@@ -74,8 +78,20 @@ export type CheckAnswerErrorCode =
   | "sessionExpired"
   | "generic";
 
+export type RevealedAnswerAction = {
+  correctAnswerNumber: number | null;
+  correctAnswerText: string | null;
+  explanation: string | null;
+};
+
 export type CheckAnswerActionState =
-  | { status: "success"; correct: boolean }
+  | {
+      status: "success";
+      correct: boolean;
+      firstAttempt: boolean;
+      retryAvailable?: true;
+      revealed?: RevealedAnswerAction;
+    }
   | { status: "error"; code: CheckAnswerErrorCode };
 export type FinishTrainerSessionActionInput = {
   sessionId: number;
@@ -164,9 +180,6 @@ export type GetTaskHintActionState =
 export type AddSimilarPracticeTaskActionInput = {
   sessionId: number;
   mappingId: number;
-  /** Consecutive-correct streak going into the task just answered
-   * incorrectly — see `practiceAdaptive.ts`. */
-  streak: number;
 };
 
 export type AddSimilarPracticeTaskErrorCode =
@@ -174,6 +187,7 @@ export type AddSimilarPracticeTaskErrorCode =
   | "notFound"
   | "notEligible"
   | "notIncorrect"
+  | "retryPending"
   | "noSimilarTask"
   | "sessionExpired"
   | "generic";
@@ -181,3 +195,59 @@ export type AddSimilarPracticeTaskErrorCode =
 export type AddSimilarPracticeTaskActionState =
   | { status: "success"; mappingId: number; task: SessionTask }
   | { status: "error"; code: AddSimilarPracticeTaskErrorCode };
+
+export type HintLevel = 1 | 2 | 3;
+
+export type GetTaskHintLevelActionInput = {
+  sessionId: number;
+  mappingId: number;
+  level: HintLevel;
+};
+
+export type GetTaskHintLevelErrorCode =
+  | "invalidInput"
+  | "notFound"
+  | "notEligible"
+  | "sessionExpired"
+  | "generic";
+
+export type GetTaskHintLevelActionState =
+  | {
+      status: "success";
+      available: boolean;
+      level: HintLevel | null;
+      text: string | null;
+      isFinal: boolean;
+    }
+  | { status: "error"; code: GetTaskHintLevelErrorCode };
+
+export type StartMistakeReviewRoundActionInput = {
+  sessionId: number;
+};
+
+export type StartMistakeReviewRoundErrorCode =
+  | "invalidInput"
+  | "notFound"
+  | "notCompleted"
+  | "noMistakes"
+  | "generic";
+
+export type StartMistakeReviewRoundActionState =
+  | { status: "success"; sessionId: number }
+  | { status: "error"; code: StartMistakeReviewRoundErrorCode };
+
+export type AddSpacedRepetitionTaskActionInput = {
+  sessionId: number;
+};
+
+export type AddSpacedRepetitionTaskErrorCode =
+  | "invalidInput"
+  | "notFound"
+  | "notEligible"
+  | "sessionExpired"
+  | "generic";
+
+export type AddSpacedRepetitionTaskActionState =
+  | { status: "success"; added: true; mappingId: number; task: SessionTask }
+  | { status: "success"; added: false }
+  | { status: "error"; code: AddSpacedRepetitionTaskErrorCode };

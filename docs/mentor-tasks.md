@@ -358,6 +358,91 @@ Ctrl+V у симуляторі — як і раніше відкритий пу�
 
 ---
 
+## Таска 6.9 — Розширення інтерактивних тестів (Stage 1 і Stage 2 функціонально закриті; блокер — міграції не прогнані на живій БД)
+
+**Мета.** П'ять нових форматів завдань (збери розв'язання, знайди помилку, інтерактивний граф, встав у пропуски, matching) + другий шанс/сходинка підказок/робота над помилками/посилене повторення для Practice-режиму (topic-test, `TrainerMode: "standard"`). Діагностика й іспит (Ultimate/симулятор НМТ) залишаються нейтральними без змін.
+
+### Зовнішній референс
+
+Репозиторій `tony-kobs/nmt-test-individual` доступний і прочитаний (через `gh api`): `src/hooks/usePractice.ts` (єдиний state-machine хук: `phase` idle/answering/revealed/done, один рівень підказки, `startMistakes()` повторно проганяє неправильні id), `OrderTask.tsx` (клік по кроку додає/скасовує його в списку обраного порядку, кнопка «Перевірити» активна лише коли обрано всі кроки), `GraphTask.tsx` (SVG-точки, клік = миттєва відповідь), `MatchingTask.tsx` (клік лівого → клік правого, чіп показує поточну пару), `BlanksTask.tsx` (звичайні `<input>` на кожен пропуск). Кодову базу й залежності не копіювали — ужито лише як поведінковий референс, адаптований під CSS Modules + Server Actions + `SessionTask`/`TASK_STATUS_*` цього репозиторію (докладніше — коментарі у відповідних компонентах).
+
+### Контент-аудит (Stage 2)
+
+Кожен із 5 форматів отримав 4 повністю зроблені задачі (3 оригінальні + 1 варіант з іншими числами) — problem statement, правильна відповідь(і), пояснення, 3 рівні підказки (напрямок → правило → приклад, без розкриття відповіді). Увесь контент — оригінально авторський (як і наявний банк `quiz_tasks`/`nmt_quiz_tasks` без зовнішніх джерел), теми навмисно ті самі, що вже є в банку (лінійні/квадратні рівняння, відсотки, планіметрія кутів, графіки функцій). Кожен факт перевірено прямим обчисленням — повне звірення у `docs/content-review/stage2-tasks-2026-09-16.md`.
+
+### Що реалізовано — Stage 1 (backend + UI)
+
+1. **Другий шанс після помилки** (`checkAnswer.ts`) — `tasks2session.first_attempt_status`/`retry_used`, друга помилка розкриває відповідь + пояснення (`revealed`).
+2. **Сходинка підказок 1→2→3** (`getTaskHintLevel.ts`, `quiz_tasks.hint_direction`/`hint_rule`, `tasks2session.hint_level_unlocked` як серверний замок від "стрибка").
+3. **"Робота над помилками"** (`startMistakeReviewRound.ts`) — нова сесія з тими task_id, що неправильні/пропущені за первинним результатом (`COALESCE(first_attempt_status, status)`).
+4. **Підсилення схожим завданням** (`addSimilarPracticeTask.ts`) — після другого невдалого кроку (`retry_used === 1`), з дедуплікацією через `practice_task_origin` (UNIQUE KEY + ідемпотентне повернення вже доданого follow-up при дублюючому запиті).
+5. **Відкладене повторення теми** (`practiceSpacedRepetition.ts` чиста функція + `addSpacedRepetitionTask.ts` DB-обв'язка), серіалізовано через `FOR UPDATE` на рядку сесії — без подвійної вставки при паралельних викликах.
+
+Плюс виправлення після власного рев'ю: **streak більше не client-supplied** (сервер сам веде `task_sessions.practice_streak`, `checkAnswer.ts` реально викликає `nextPracticeStreak` замість того щоб лишати це непідключеним контрактом); guest/demo структурно не можуть досягнути жодного нового коду (окремий `src/modules/diagnostic/*` потік, увесь testing-шар вимагає `requireSessionUserId()`).
+
+**UI підключено** в `TopicTrainer.tsx`/`TopicTrainerSummary.tsx` (без окремого `usePractice`-хука — інакший стан уже й так тримався в `TopicTrainer`, форкати його в новий хук не давало відчутного виграшу за відведений час):
+- Друга спроба: кнопки відповіді знову активні після першої помилки (`isResolved` замінив стару логіку блокування), картка правильної відповіді підсвічується при розкритті.
+- Сходинка підказок: кнопка «Показати підказку» → «Наступна підказка», текст рівня показується накопичувально.
+- Розкриття: пояснення + кнопка «Спробувати схоже завдання» (`addSimilarPracticeTaskAction`, вставка через наявний `insertFollowUpTask`).
+- Повторення теми: опортуністичний виклик `addSpacedRepetitionTaskAction` після кожної відповіді в Practice-режимі, мовчки додає завдання в кінець списку, якщо є що повторити.
+- "Робота над помилками": кнопка в підсумку Practice-сесії (`useMistakeReviewRound`, новий файл `TopicTrainerSummary/useMistakeReviewRound.ts` — окремо від `TopicTrainer.tsx`, щоб уникнути циклічного імпорту) → редірект на нову сесію.
+- i18n: нові ключі в `TopicTrainer`/`TopicTrainerSummary` у всіх трьох `messages/{uk,en,de}.json`.
+- Клавіатура/фокус/дотик: усе на нативних `<button>`, наявні токени фокусу (`:focus-visible`), нічого нового на drag — узгоджено з рештою `TopicTrainer`.
+
+### Що реалізовано — Stage 2 (5 форматів, усі 5 раніше відомих прогалин закриті)
+
+Архітектурне рішення: **не** розширювати `tasks2session`/`task_sessions` (немає вільного `session_type`) — кожен формат отримав власні таблиці контенту + одну спільну `practice_stage2_attempts` (той самий retry/reveal автомат, що й Stage 1, через переговорну функцію `runStage2Attempt`), плюс новий шар "раундів" (`practice_interactive_rounds`/`practice_interactive_round_tasks`, `src/modules/stage2/rounds.ts`) — див. нижче.
+
+- **Збери розв'язання** — `order_tasks`/`order_task_steps`, `src/modules/stage2/orderTask.ts`, точний збіг послідовності.
+- **Знайди помилку** — `find_error_tasks`/`find_error_task_lines`, `findErrorTask.ts`, потрібно вгадати і рядок, і виправлення (обидва разом).
+- **Інтерактивний граф** — `graph_tasks`/`graph_task_points`, `graphTask.ts`, точний збіг множини обраних точок.
+- **Matching** — `matching_tasks`/`matching_task_pairs`, `matchingTask.ts`, кожен рядок сам є парою (лівий id = правильний правий id).
+- **Пропуски** — `blank_tasks`/`blank_task_blanks`, `blankTask.ts`, незалежна перевірка кожного пропуску (`checkBlankTaskAnswer` повертає `perBlank`), нормалізація як у `checkAnswer.ts` (коми/крапки).
+
+Кожен формат: чиста checker-функція (юніт-тест без БД), DB-обв'язка через `runStage2Attempt` (retry/reveal, `FOR UPDATE`), Server Action (`getXAction`/`submitXAction`, обидві через `requireSessionUserId()`), CSS-Modules компонент. Усі 5 дій у `src/modules/stage2/actions.ts` дотримуються однакового контракту: `requireUserId()` → `withRound()` (перевіряє членство завдання в раунді користувача) → домен-специфічна дія → якщо раунд `diagnostic` і ще не завершений, відповідь ніколи не показує `correct`/`revealed` клієнту.
+
+**Закриття 5 раніше відкритих прогалин (перевірено кодом і тестами, не лише заявлено):**
+
+1. **UI-доступ до id 2-4 кожного формату** — ЗАКРИТО. `/practice/interactive` тепер працює через "раунди" (`startRoundAction`/`getRoundAction`): `SQL_CATALOG` у `rounds.ts` збирає всі task id 1-4 кожного з 5 форматів (20 задач) в один раунд; `InteractiveFormatsShowcase.tsx` рендерить `taskPicker` з кнопкою на кожне завдання раунду — усі 20 задач реально клікабельні, не лише id=1. Тест `rounds.test.ts:168` ("new round orders available catalog across formats and keeps all twenty tasks") це перевіряє.
+2. **Durable perBlank** — ЗАКРИТО. `blankTask.ts`: `submitBlankTaskAnswer` завжди зберігає сирий `submitted_json` через `runStage2Attempt`; при ідемпотентному перечитуванні вже заблокованого рядка (`lastPerBlank` порожній, бо checker не викликався) `perBlank` детерміновано перераховується з ЗБЕРЕЖЕНОГО `submitted_json` (не з поточного запиту). `getBlankTask` так само реконструює `perBlank` із збереженої відповіді при кожному читанні. Тести: `blankTask.test.ts` — "DETERMINISTIC RECOVERY" (3 тести, рядки 161/192/209) саме на переживання перезавантаження/повторного читання/іншого пристрою.
+3. **`/practice/interactive` у користувацькому шляху** — ЗАКРИТО. Додано в `DASHBOARD_NAV` (`src/constants/navigation.ts`) і в іконки/підписи сайдбару (`AppSidebar.tsx`) — сторінка тепер лінк першого рівня в кабінеті, не прихована демо-сторінка. Раунди підтримують і `practice`, і `diagnostic` режим із тими самими правилами нейтральності, що й Stage 1 (діагностичний раунд не показує correct/revealed до завершення — `stage2Attempt.ts` рядки 100-101, 166; `peekStage2Attempt` рядок 195), історію раундів (`listRoundsAction`) і "Робота над помилками" (`startMistakeRoundAction`, той самий принцип `COALESCE(first_attempt_status,...)`, що й Stage 1, реалізований через `first_attempt_status !== 1` у `rounds.ts:155`). Перезавантаження/повторний вхід: `getRoundAction(round.id)` відновлює точний стан раунду (`toRoundSnapshot`) з БД, клієнтський стан не є єдиним джерелом правди.
+4. **Аудит безпеки/ідемпотентності по кожному формату** — ЗАКРИТО, окремо на кожен із 5 форматів. Усі дії резолвлять `userId` виключно через `requireSessionUserId()`; `practice_stage2_attempts` унікальний за `(format, task_id, user_id, round_id)` (міграція 031) — неможливо підмінити чужий прогрес; `runStage2Attempt` бере `FOR UPDATE` на рядку користувача і на рядку раунду/завдання, перевіряє що раунд не `completed` і завдання не `skipped` перед прийняттям відповіді (гонка "завершення між авторизацією і записом" — тест `rounds.test.ts:155`); `expectedAttempt` (1|2) захищає від "стрибка" одразу до другої спроби; `withRound` (`roundContext.ts`) відхиляє завдання, що не належить раунду користувача, до виклику домен-логіки. Транзакційність: `blankTask.submitBlankTaskAnswer`, `getBlankTaskHintLevel`, `rounds.mutate` — усі в `beginTransaction`/`commit`/`rollback`.
+5. **Витік відповіді через приклад-підказку** — ЗАКРИТО. Міграція `029_analogous_hint_examples.sql` додала `hint_example` для кожного з 20 seed-завдань — і для кожного явно взяті **інші числові дані** ("Інші дані: ..."), не значення поточної задачі (перевірено вручну по всіх 20 рядках при рецензії). `hintLadder.ts` (`resolveStage2Rung`) додатково гейтить будь-який фолбек на `explanation` (яке МОЖЕ містити відповідь) до моменту, коли `retry_used === 1` — рівень 3 без авторського `example` ніколи не показується завчасно. Тести: `hintLadder.test.ts` — "answer-leakage gate" (рядок 13), "authored analogous example unlocks sequentially before retry without current explanation" (рядок 74).
+
+Демо/UI: `/practice/interactive` (`InteractiveFormatsShowcase`) — керує раундами (старт practice/diagnostic, вибір активного завдання, пропустити, завершити раунд, робота над помилками), нативні `<button>`/`<input>`, `:focus-visible`, текст-і-стан разом (не лише колір).
+
+### Нові міграції (написані й вичитані, НЕ застосовані/НЕ перевірені на живому MySQL)
+
+- `scripts/sql/026_practice_retry_and_hint_ladder.sql` — `tasks2session.first_attempt_status`/`retry_used`/`hint_level_unlocked`; `quiz_tasks.hint_direction`/`hint_rule`.
+- `scripts/sql/027_practice_task_origin.sql` — `task_sessions.practice_streak`; таблиця `practice_task_origin`.
+- `scripts/sql/028_stage2_task_formats.sql` — усі 10 нових Stage 2 таблиць + спільна `practice_stage2_attempts` + seed-контент (4 задачі на формат).
+- `scripts/sql/029_analogous_hint_examples.sql` — `hint_example` (третій щабель підказки) на всіх 6 таблицях завдань (Stage 1 `quiz_tasks` + 5 Stage 2), заповнення 20 seed-рядків.
+- `scripts/sql/030_mistake_review_link.sql` — `task_sessions.mistake_review_session_id`.
+- `scripts/sql/031_interactive_rounds.sql` — таблиці `practice_interactive_rounds`/`practice_interactive_round_tasks`; змінює унікальний ключ `practice_stage2_attempts` на `(format, task_id, user_id, round_id)`.
+
+**Жодна не виконана на живій базі.** У цьому середовищі досі немає локального/тестового MySQL: `mysql`/`mysqld` не встановлені (`which` не знаходить жодного), Docker Desktop встановлено, але демон не запущений (`docker ps` не з'єднується — `open //./pipe/dockerDesktopLinuxEngine`), а `.env.local` вказує на реальний віддалений хостинг — там нічого не запускали й не запускатимуть. Перед деплоєм — обов'язково прогнати на ізольованій тестовій копії строго в порядку 026 → 027 → 028 → 029 → 030 → 031 (031 змінює унікальний ключ, тому має йти після 028).
+
+### Тестування (перевірено повторно після закриття 5 прогалин)
+
+- Повний `npm test`: **859 pass / 3 skip (ті самі попередні, непов'язані) / 0 fail** (862 тести всього).
+- `npm run lint`: **0 errors** (ті самі 4 попередні непов'язані warning — `scripts/fetch-nmt-variants.mjs`, `LearningSessionsTable.tsx`).
+- `npx tsc --noEmit`: **0 errors.**
+- `npm run build`: успішно; `/practice/interactive` у списку маршрутів; без DB EACCES цього разу.
+- `git diff --check`: чисто (лише CRLF-попередження на існуючих файлах).
+- Цільові тести окремо зелені: `src/modules/stage2/{rounds,hintLadder,blankTask,stage2Attempt,actions,roundActions}.test.ts` та всі інші `stage2/*.test.ts`.
+- Ручний QA залогіненого користувача (клавіатура/дотик/реальний вхід) — **не проведений**, немає доступної тестової БД у середовищі (див. блокер нижче).
+
+### Що лишається відкритим
+
+- Ручна QA (клавіатура/дотик/реальний логін) залогіненого користувача — неможлива без тестової БД у цьому середовищі.
+- Шість нових міграцій (026-031) не застосовані на жодній реальній/тестовій базі — це єдиний блокер перед тим, як вважати 6.9 повністю готовою до продакшена.
+
+**Файли (основні):** `src/modules/testing/*` (Stage 1), `src/modules/stage2/*` (Stage 2 backend: формати, `rounds.ts`, `roundActions.ts`, `roundContext.ts`, `hintLadder.ts`), `src/components/testing/TopicTrainer*` (Stage 1 UI), `src/components/practice/{Order,FindError,Graph,Matching,Blank}TaskCard`, `src/components/practice/InteractiveFormatsShowcase`, `src/app/(app)/practice/interactive/page.tsx`, `src/constants/navigation.ts`, `src/components/dashboard/AppSidebar/AppSidebar.tsx`, `messages/{uk,en,de}.json`, `scripts/sql/026-031_*.sql`, `docs/content-review/stage2-tasks-2026-09-16.md`.
+
+**Пріоритет:** Must (черга 3) — **Stage 1 закрито** (backend + UI, протестовано); **Stage 2 функціонально повна** для всіх 5 форматів (backend, UI-доступ до всіх 20 задач, безпека/ідемпотентність по кожному формату, захист від витоку відповіді через підказку, durable perBlank, навігаційна інтеграція — усе перевірено тестами й повторним прогоном повного тестового ланцюжка). **Не позначати остаточно готовою до продакшена**, поки міграції 026-031 не прогнані на реальній/тестовій базі і не проведено ручного QA залогіненого користувача — це єдині лишки, обидва впираються в брак тестової БД у поточному середовищі, а не в код.
+
+---
+
 ## Довідка: куди класти код
 
 | Таска | Модуль / UI |

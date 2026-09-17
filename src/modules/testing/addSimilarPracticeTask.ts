@@ -23,10 +23,12 @@ const SQL_SELECT_SOURCE = `
   SELECT
     t2s.task_id,
     t2s.status,
+    t2s.retry_used,
     t2s.task_type,
     ts.session_type,
     ts.session_status,
     ts.expire_time,
+    ts.practice_streak,
     qt.theme_id,
     qt.difficulty
   FROM tasks2session t2s
@@ -51,15 +53,33 @@ const SQL_SELECT_NEW_TASK = `
   FROM quiz_tasks WHERE id = ?
 `;
 
+/** Idempotency/concurrency guard (see migration 027): a 'similar' follow-up
+ * already recorded for this exact source mapping means a duplicate/retried
+ * request should return that same follow-up, never insert a second one.
+ * The source row's own `FOR UPDATE` lock above already serializes two
+ * concurrent calls for the same `mappingId`, so by the time a second call
+ * reaches this check the first call's origin row (if any) is already
+ * committed and visible. */
+const SQL_SELECT_EXISTING_ORIGIN = `
+  SELECT tasks2session_id FROM practice_task_origin
+  WHERE origin = 'similar' AND source_mapping_id = ?
+`;
+
+const SQL_SELECT_EXISTING_TASK = `
+  SELECT t2s.id AS mapping_id, qt.id, qt.name, qt.task_text,
+    qt.answer_1, qt.answer_2, qt.answer_3, qt.answer_4
+  FROM tasks2session t2s
+  INNER JOIN quiz_tasks qt ON qt.id = t2s.task_id
+  WHERE t2s.id = ?
+`;
+
+const SQL_INSERT_ORIGIN =
+  "INSERT INTO practice_task_origin (tasks2session_id, session_id, origin, source_mapping_id, created_at) VALUES (?, ?, 'similar', ?, ?)";
+
 export type AddSimilarPracticeTaskInput = {
   userId: number;
   sessionId: number;
   mappingId: number;
-  /** Consecutive-correct streak going into the task that was just answered
-   * incorrectly — lets adaptive difficulty still favor a harder follow-up
-   * for a student who was otherwise on a strong run (see
-   * `practiceAdaptive.ts`). */
-  streak: number;
 };
 
 export type AddSimilarPracticeTaskResult = {
@@ -72,6 +92,7 @@ export type AddSimilarPracticeTaskErrorCode =
   | "not_found"
   | "not_eligible"
   | "not_incorrect"
+  | "retry_pending"
   | "no_similar_task"
   | "session_expired"
   | "db_error";
@@ -89,10 +110,12 @@ export class AddSimilarPracticeTaskError extends Error {
 type SourceRow = {
   task_id: number;
   status: number;
+  retry_used: number;
   task_type: number;
   session_type: number;
   session_status: number;
   expire_time: number;
+  practice_streak: number;
   theme_id: number | null;
   difficulty: number;
 };
@@ -108,6 +131,10 @@ type NewTaskRow = {
   answer_3: string | null;
   answer_4: string | null;
 };
+
+type ExistingOriginRow = { tasks2session_id: number };
+
+type ExistingTaskRow = NewTaskRow & { mapping_id: number };
 
 type AddSimilarPracticeTaskDeps = {
   getConnection: () => Promise<SqlConnection>;
@@ -162,16 +189,14 @@ export async function addSimilarPracticeTask(
   rawInput: AddSimilarPracticeTaskInput,
   deps: AddSimilarPracticeTaskDeps = { getConnection: loadDefaultConnection },
 ): Promise<AddSimilarPracticeTaskResult> {
-  const { userId, sessionId, mappingId, streak } = rawInput;
+  const { userId, sessionId, mappingId } = rawInput;
   if (
     !isPositiveInt(userId) ||
     !isPositiveInt(sessionId) ||
-    !isPositiveInt(mappingId) ||
-    !Number.isInteger(streak) ||
-    streak < 0
+    !isPositiveInt(mappingId)
   ) {
     throw new AddSimilarPracticeTaskError(
-      "userId, sessionId, mappingId must be positive integers and streak a non-negative integer.",
+      "userId, sessionId, mappingId must be positive integers.",
       "invalid_input",
     );
   }
@@ -225,6 +250,39 @@ export async function addSimilarPracticeTask(
         );
       }
 
+      // Now that Practice mode gives one retry after a first wrong answer
+      // (see checkAnswer.ts), reinforcement must wait for that retry to be
+      // consumed — i.e. the SECOND wrong attempt — instead of firing right
+      // after the first miss.
+      if (source.retry_used !== 1) {
+        await connection.rollback();
+        throw new AddSimilarPracticeTaskError(
+          "A similar task is only offered once the retry has been used.",
+          "retry_pending",
+        );
+      }
+
+      // Idempotency/concurrency guard — see migration 027's note and
+      // `SQL_SELECT_EXISTING_ORIGIN` above.
+      const existingOrigin = await connection.query<ExistingOriginRow>(
+        SQL_SELECT_EXISTING_ORIGIN,
+        [mappingId],
+      );
+      if (existingOrigin[0]) {
+        const existingTaskRows = await connection.query<ExistingTaskRow>(
+          SQL_SELECT_EXISTING_TASK,
+          [existingOrigin[0].tasks2session_id],
+        );
+        const existingTask = existingTaskRows[0];
+        if (existingTask) {
+          await connection.commit();
+          return {
+            mappingId: existingTask.mapping_id,
+            task: mapNewTask(existingTask, existingTask.mapping_id),
+          };
+        }
+      }
+
       const usedRows = await connection.query<UsedIdRow>(
         SQL_SELECT_USED_TASK_IDS,
         [sessionId],
@@ -235,9 +293,23 @@ export async function addSimilarPracticeTask(
         SQL_SELECT_CANDIDATES,
         [source.theme_id],
       );
+      // The streak is read from the session row the server itself tracks
+      // (`checkAnswer.ts`) — never a client-supplied number a student could
+      // inflate to force a harder follow-up. Note this is necessarily 0 by
+      // the time reinforcement fires: the wrong FIRST attempt that started
+      // this whole flow already reset `practice_streak` to 0 (a wrong
+      // answer always resets the streak, by definition), so
+      // `resolvePreferredDifficulty` returns `null` here every time and
+      // `selectFollowUpCandidate` falls back to "any task in the theme".
+      // This intentionally drops the old client-trusted "still prefer a
+      // harder follow-up if the student was on a hot streak before this
+      // miss" heuristic in favor of not trusting client-supplied state —
+      // reinforcement after two wrong attempts reinforcing at the SAME
+      // difficulty (rather than harder) is arguably the more defensible
+      // pedagogical default anyway.
       const preferredDifficulty = resolvePreferredDifficulty(
         source.difficulty,
-        streak,
+        source.practice_streak,
       );
       const pickedId = selectFollowUpCandidate(
         candidateRows,
@@ -277,6 +349,21 @@ export async function addSimilarPracticeTask(
         await connection.rollback();
         throw new AddSimilarPracticeTaskError(
           "Follow-up task could not be loaded.",
+          "db_error",
+        );
+      }
+
+      const nowSecValue = nowSec();
+      const originInsert = await connection.execute(SQL_INSERT_ORIGIN, [
+        inserted.insertId,
+        sessionId,
+        mappingId,
+        nowSecValue,
+      ]);
+      if (originInsert.affectedRows !== 1) {
+        await connection.rollback();
+        throw new AddSimilarPracticeTaskError(
+          "Failed to record the follow-up task's origin.",
           "db_error",
         );
       }
