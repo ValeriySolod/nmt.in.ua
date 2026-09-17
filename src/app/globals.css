@@ -11,6 +11,12 @@ body {
   overflow-x: clip;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  touch-action: manipulation;
+}
+
+body {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px);
 }
 
 html::-webkit-scrollbar,
@@ -33,7 +39,8 @@ body::-webkit-scrollbar {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
   color: inherit;
 }
@@ -41,6 +48,43 @@ select {
 a {
   color: inherit;
   text-decoration: none;
+}
+
+html,
+body {
+  cursor: default;
+}
+
+a,
+button,
+summary,
+label,
+[role="button"],
+[role="menuitem"],
+[role="tab"],
+[role="combobox"],
+[role="option"] {
+  cursor: pointer;
+}
+
+:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+textarea,
+input {
+  cursor: text;
+}
+
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+input[type="checkbox"],
+input[type="radio"],
+input[type="file"],
+input[type="range"] {
+  cursor: pointer;
 }
 
 /* ---------------------------------------------------------------------------

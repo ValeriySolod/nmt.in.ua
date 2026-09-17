@@ -156,7 +156,7 @@ export function TeacherProfileEditor({
             name="contactUrl"
             defaultValue={profile.contactUrl}
             maxLength={TEACHER_PROFILE_CONTACT_URL_MAX}
-            placeholder="https://"
+            placeholder="https://…"
             disabled={pending}
           />
         </label>
@@ -183,6 +183,7 @@ export function TeacherProfileEditor({
             className={css.share}
             onClick={copyShareLink}
             disabled={!profile.slug}
+            aria-live="polite"
           >
             {copied ? t("copied") : t("copyLink")}
           </button>

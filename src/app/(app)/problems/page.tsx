@@ -8,6 +8,7 @@ import {
   getWorkbookThemes,
 } from "@/modules/testing/getProblems";
 import { parseThemeQueryParam } from "@/modules/testing/parseThemeQueryParam";
+import { isQueryFlagOn, readSearchParam } from "@/lib/queryHref";
 
 const item = getNavItem("/problems");
 
@@ -18,24 +19,25 @@ export const metadata = createPageMetadata({
 });
 
 type ProblemsPageProps = {
-  searchParams: Promise<{ theme?: string | string[] }>;
+  searchParams: Promise<{
+    theme?: string | string[];
+    options?: string | string[];
+    key?: string | string[];
+  }>;
 };
-
-function readThemeParam(raw: string | string[] | undefined): string | undefined {
-  if (Array.isArray(raw)) return raw[0];
-  return raw;
-}
 
 export default async function ProblemsPage({ searchParams }: ProblemsPageProps) {
   const t = await getTranslations("ProblemsWorkbook");
   const params = await searchParams;
   const themes = await getWorkbookThemes();
-  const requested = parseThemeQueryParam(readThemeParam(params.theme));
+  const requested = parseThemeQueryParam(readSearchParam(params.theme));
   const themeId =
     requested && themes.some((theme) => theme.id === requested)
       ? requested
       : (themes[0]?.id ?? 0);
   const problems = themeId ? await getWorkbookProblems(themeId) : [];
+  const showOptions = readSearchParam(params.options) !== "0";
+  const showKey = isQueryFlagOn(readSearchParam(params.key));
 
   if (themes.length === 0) {
     return (
@@ -46,6 +48,12 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
   }
 
   return (
-    <ProblemsWorkbook themes={themes} themeId={themeId} problems={problems} />
+    <ProblemsWorkbook
+      themes={themes}
+      themeId={themeId}
+      problems={problems}
+      showOptions={showOptions}
+      showKey={showKey}
+    />
   );
 }

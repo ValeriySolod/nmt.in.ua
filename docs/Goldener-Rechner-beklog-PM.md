@@ -237,6 +237,7 @@ Word-копія документів проєкту **немає** — джер�
 | Експорт PDF / Word | Відкрито | — | Не розпочато |
 | Переклад контенту з бази (теми, завдання) | Відкладено | — | Свідомо не входило в i18n. Завдання лишаються українською |
 | Перф: TTFB / бандл / SQL | Готово | 10.09 | Guest `/` поза `(app)`; diagnostic у marketing; cookie upgrade; KaTeX chunk; вікно сесій `/results`; osvita compress |
+| A11y, кастомний select, 404 / error / loading | Готово | 17.09 | Skip-link, `Select` замість нативного списку, Motion на reveal/меню, `StatusScene` |
 
 ## 7. Хронологія (що було насправді)
 
@@ -289,6 +290,7 @@ Word-копія документів проєкту **немає** — джер�
 | — | Реєстрація викладача `/register/teacher` | 6 / 7 | 10.09: pending + WayForPay Purchase/webhook; локальний bypass «Оплата пройшла» без переходу на шлюз; живі ключі не в git |
 | — | Групи / ДЗ / Google / PWA / AI | 6–7 | Версія 2 |
 | 7.0 | Дроби в підручнику: генератор `fractionAddition` підключено до Practice mode | 2 | Готово 11.09: `/practice/fractions`, 5 рівнів, задачі ефемерні (не пишуться в `quiz_tasks`) |
+| — | A11y + Select + status-сторінки | 7 | Готово 17.09: skip-link, кастомні списки, 404/error/loading |
 
 ## 10. Питання, які лишаються за PM
 

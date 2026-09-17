@@ -6,7 +6,7 @@
 
 Джерело правди — Markdown. Word/docx копій немає.
 
-Оновлено 16 вересня 2026.
+Оновлено 17 вересня 2026.
 
 ---
 
@@ -397,13 +397,13 @@ Ultimate/НМТ/діагностика лишились без змін. Зар�
 - Контейнер один: клас `.container`. Секція на всю ширину, контейнер усередині.
 - Не використовуй чистий `#fff` — лише `var(--surface)` або теплий папір. Фон сторінки `--page #efe8d7`.
 - Іконки — інлайн SVG з `currentColor`. Нових іконкових пакетів не ставимо.
-- Анімації лише `transform` / `opacity`. Scroll-reveal — готовий `Reveal`. Вимикати через `prefers-reduced-motion`.
+- Анімації лише `transform` / `opacity`. Scroll-reveal — `Reveal` (Motion `whileInView`). Вимикати через `prefers-reduced-motion`. Списки — `Select`, не нативний `<select>`. 404 / помилка / loading — `src/components/status/StatusScene`.
 
 Граблі, які вже ловили: `display: grid` без колонок роздуває блок — став `grid-template-columns: minmax(0, 1fr)`. Пілюля в grid тягнеться на всю ширину — потрібен `justify-self`, не `align-self`.
 
 ## 9. Локалізація
 
-Інтерфейс: uk / en / de через next-intl. Мова в cookie, URL без `/en`. Перемикач — на лендінгу (`LandingHeader`).
+Інтерфейс: uk / en / de через next-intl. Мова в cookie, URL без `/en`. Перемикач — пілюля `LanguageSwitcher` на лендінгу (`LandingHeader`) і на публічній візитці `/t/{slug}`: коди UA / EN / DE, у меню ендоніми (Українська, English, Deutsch), без прапорів. `ModeTabs` — стрілки / Home / End. Небезпечні дії в кабінеті (скасувати сесію, відв’язати учня, бан, прибрати фото, видалити профіль) питають `window.confirm` перед submit.
 
 - Новий рядок UI → три файли `messages/*.json`.
 - Назви тем і тексти завдань з БД не перекладаємо. Не заводь на це задачу «заодно».
@@ -436,9 +436,10 @@ Ultimate/НМТ/діагностика лишились без змін. Зар�
 | Публічна візитка викладача | `src/modules/teachers`, `/account`, `/t/{slug}` | Мала | ✅ 13.09; адмін без візитки з 16.09 |
 | Реєстрація викладача + WayForPay | `/register/teacher`, `src/modules/payments` | Середня | ⏸️ UI оплати приховано 16.09; безкоштовний teacher на `/register?role=teacher`. WayForPay код лишається |
 | Email verify + reset (Resend) | `src/modules/auth`, `src/modules/mail`, `/verify-email` | Середня | ✅ 16.09: блок логіну до verify; forgot/reset; без ключа — log |
+| A11y + Select + 404/error | `SkipLink`, `Select`, `StatusScene`, Motion | Мала | ✅ 17.09: skip-link, кастомні списки, status-сторінки |
 | Перф (TTFB / бандл) | `(app)`/`(marketing)` layouts, `catalogCache`, `sampleRandomIds` | — | ✅ 10.09: без `ORDER BY RAND()`, кеш довідників, cookie-профіль |
 
-Карта app router: `src/app/page.tsx` — `/` (гість легкий / учень → CabinetHome); `src/app/(marketing)/` — welcome / login / register / diagnostic / `t/[slug]`; `src/app/(app)/` — кабінет (`force-dynamic`). Root layout лише `html`/`body` + `globals.css`.
+Карта app router: `src/app/page.tsx` — `/` (гість легкий / учень → CabinetHome); `src/app/(marketing)/` — welcome / login / register / diagnostic / `t/[slug]`; `src/app/(app)/` — кабінет (`force-dynamic`). Root layout лише `html`/`body` + `globals.css`. Неіснуючий публічний шлях на кшталт `/welcome/немає` дає кастомний 404; випадковий `/foo` без сесії — редірект на `/login` (auth-guard).
 
 Поза першим релізом (не хапати «бо цікаво»): іменовані групи / CRM викладача, ДЗ, PDF, Google-логін, AI-перевірка, типи завдань окрім вибору з 4 варіантів, повноцінний PWA. Це версія 2 — питайте PM.
 

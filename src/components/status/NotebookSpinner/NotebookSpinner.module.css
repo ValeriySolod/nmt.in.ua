@@ -1,0 +1,63 @@
+.spinner {
+  display: grid;
+  place-items: center;
+  width: 5.5rem;
+  height: 5.5rem;
+}
+
+.face {
+  overflow: visible;
+}
+
+.paper {
+  fill: var(--surface);
+  stroke: var(--line-soft);
+  stroke-width: 1.5;
+}
+
+.grid {
+  stroke: rgb(94 76 40 / 18%);
+  stroke-width: 1;
+}
+
+.orbit {
+  fill: none;
+  stroke: var(--green-soft);
+  stroke-width: 2;
+}
+
+.trace {
+  fill: none;
+  stroke: var(--green);
+  stroke-width: 2.75;
+  stroke-linecap: round;
+  stroke-dasharray: 28 92;
+  transform-origin: 40px 40px;
+  animation: spin 1.15s linear infinite;
+}
+
+.nib {
+  fill: var(--green-dark);
+  transform-origin: 40px 40px;
+  animation: spin 1.15s linear infinite;
+}
+
+.sigma {
+  fill: var(--green-dark);
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trace,
+  .nib {
+    animation: none;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

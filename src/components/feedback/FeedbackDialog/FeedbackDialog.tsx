@@ -2,9 +2,17 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useTranslations } from "next-intl";
 import clsx from "clsx";
 import { ModeTabs } from "@/components/ui/ModeTabs";
+import {
+  dialogHidden,
+  dialogShown,
+  overlayHidden,
+  overlayShown,
+  tweenFast,
+} from "@/lib/motionPresets";
 import { submitFeedbackAction } from "@/modules/feedback/actions";
 import type { SubmitFeedbackActionErrorCode } from "@/modules/feedback/actions";
 import {
@@ -47,6 +55,12 @@ export function FeedbackDialog({
   const t = useTranslations("Feedback");
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
+  const reduceMotion = useReducedMotion();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const [score, setScore] = useState<ScoreTab>("none");
   const [message, setMessage] = useState("");
   const [email, setEmail] = useState("");
@@ -55,24 +69,66 @@ export function FeedbackDialog({
     null,
   );
   const [done, setDone] = useState(false);
+  const errorRef = useRef<HTMLParagraphElement>(null);
+  const messageRef = useRef<HTMLTextAreaElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!errorCode) return;
+    if (errorCode === "message_required") {
+      messageRef.current?.focus();
+      return;
+    }
+    if (errorCode === "invalid_email") {
+      emailRef.current?.focus();
+      return;
+    }
+    errorRef.current?.focus();
+  }, [errorCode]);
 
   useEffect(() => {
     if (!open) return;
-    const previous = document.body.style.overflow;
+    const previousOverflow = document.body.style.overflow;
+    const previousFocus = document.activeElement;
     document.body.style.overflow = "hidden";
     dialogRef.current?.focus();
 
+    const FOCUSABLE =
+      "button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex=\"-1\"])";
+
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const dialog = dialogRef.current;
+      if (!dialog) return;
+      const nodes = [...dialog.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
+        (node) => !node.hasAttribute("disabled") && node.tabIndex !== -1,
+      );
+      if (nodes.length === 0) return;
+      const first = nodes[0];
+      const last = nodes[nodes.length - 1];
+      const active = document.activeElement;
+      if (event.shiftKey && (active === first || active === dialog)) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
+
     window.addEventListener("keydown", onKey);
     return () => {
-      document.body.style.overflow = previous;
+      document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", onKey);
+      if (previousFocus instanceof HTMLElement) previousFocus.focus();
     };
   }, [open, onClose]);
 
-  if (!open || typeof document === "undefined") return null;
+  if (!mounted) return null;
 
   const numericScore = score === "none" ? null : Number(score);
   const showMessage =
@@ -105,8 +161,18 @@ export function FeedbackDialog({
 
   // Sidebar uses transform + overflow, which would trap position:fixed.
   return createPortal(
-    <div className={css.overlay} role="presentation" onClick={onClose}>
-      <div
+    <AnimatePresence>
+      {open ? (
+    <motion.div
+      className={css.overlay}
+      role="presentation"
+      onClick={onClose}
+      initial={reduceMotion ? false : overlayHidden}
+      animate={overlayShown}
+      exit={overlayHidden}
+      transition={reduceMotion ? { duration: 0.01 } : tweenFast}
+    >
+      <motion.div
         ref={dialogRef}
         className={css.dialog}
         role="dialog"
@@ -114,6 +180,10 @@ export function FeedbackDialog({
         aria-labelledby={titleId}
         tabIndex={-1}
         onClick={(event) => event.stopPropagation()}
+        initial={reduceMotion ? false : dialogHidden}
+        animate={dialogShown}
+        exit={reduceMotion ? overlayHidden : dialogHidden}
+        transition={reduceMotion ? { duration: 0.01 } : tweenFast}
       >
         {done ? (
           <div className={css.success}>
@@ -166,6 +236,7 @@ export function FeedbackDialog({
                 <label className={css.field}>
                   <span className={css.prompt}>{t("messageRequired")}</span>
                   <textarea
+                    ref={messageRef}
                     className={css.textarea}
                     value={message}
                     onChange={(event) => setMessage(event.target.value)}
@@ -180,11 +251,14 @@ export function FeedbackDialog({
                 <label className={css.field}>
                   <span className={css.label}>{t("emailLabel")}</span>
                   <input
+                    ref={emailRef}
                     className={css.input}
                     type="email"
+                    name="email"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     autoComplete="email"
+                    spellCheck={false}
                     disabled={pending}
                   />
                   <span className={css.hint}>{t("emailHint")}</span>
@@ -192,7 +266,12 @@ export function FeedbackDialog({
               ) : null}
 
               {errorCode ? (
-                <p className={clsx(css.alert, css.alertError)} role="alert">
+                <p
+                  ref={errorRef}
+                  className={clsx(css.alert, css.alertError)}
+                  role="alert"
+                  tabIndex={-1}
+                >
                   {t(`errors.${errorCode}`)}
                 </p>
               ) : null}
@@ -217,8 +296,10 @@ export function FeedbackDialog({
             </form>
           </>
         )}
-      </div>
-    </div>,
+      </motion.div>
+    </motion.div>
+      ) : null}
+    </AnimatePresence>,
     document.body,
   );
 }

@@ -1,4 +1,6 @@
+import { getTranslations } from "next-intl/server";
 import { JsonLd } from "@/components/seo";
+import { SkipLink } from "@/components/ui/SkipLink";
 import {
   buildOrganizationJsonLd,
   buildWebApplicationJsonLd,
@@ -20,8 +22,11 @@ const structuredData = [
 ];
 
 export async function WelcomeLanding() {
+  const t = await getTranslations("Common");
+
   return (
     <div className={css.page}>
+      <SkipLink label={t("skipToContent")} />
       <JsonLd data={structuredData} />
       <div className={css.decor} aria-hidden>
         <span className={css.decorGrid} />
@@ -32,7 +37,7 @@ export async function WelcomeLanding() {
 
       <div className={css.shell}>
         <LandingHeader />
-        <main>
+        <main id="main-content" tabIndex={-1}>
           <Hero />
           <Features />
           <Steps />

@@ -77,7 +77,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  min-height: 40px;
+  min-height: 44px;
   padding: 8px 16px 8px 12px;
   border: 1px solid var(--line-soft);
   border-radius: var(--radius-pill);
@@ -138,6 +138,10 @@
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-2xl);
   align-items: start;
+}
+
+.main {
+  min-width: 0;
 }
 
 /* --- marketing aside ------------------------------------------------------- */
@@ -336,7 +340,7 @@
   border-color: rgb(31 143 69 / 40%);
 }
 
-.input:focus {
+.input:focus-visible {
   outline: none;
   border-color: var(--green);
   box-shadow: var(--ring);
@@ -484,6 +488,11 @@
     grid-template-columns: minmax(0, 1fr) minmax(0, 32rem);
     gap: var(--space-3xl);
     align-items: start;
+  }
+
+  .main {
+    justify-self: end;
+    width: 100%;
   }
 
   .aside {

@@ -21,9 +21,10 @@
   },
   "LanguageSwitcher": {
     "aria": "Site language",
-    "ukFull": "Ukrainian",
+    "triggerAria": "Site language, currently {name}",
+    "ukFull": "Українська",
     "enFull": "English",
-    "deFull": "German"
+    "deFull": "Deutsch"
   },
   "Sidebar": {
     "ariaLabel": "Dashboard navigation",
@@ -64,6 +65,7 @@
     "photoSaving": "Saving…",
     "photoSaved": "Photo updated.",
     "photoRemove": "Remove photo",
+    "photoRemoveConfirm": "Remove the profile photo?",
     "photoRemoving": "Removing…",
     "photoRemoved": "Photo removed.",
     "demoLockedPhoto": "The photo cannot be changed on a demo account.",
@@ -141,7 +143,8 @@
     "contact": "Get in touch"
   },
   "Common": {
-    "soon": "Coming soon"
+    "soon": "Coming soon",
+    "skipToContent": "Skip to content"
   },
   "RecommendedActions": {
     "title": "Recommended actions",
@@ -170,7 +173,7 @@
     "addTitle": "Add a student",
     "addLead": "The login must match an account with the student role.",
     "login": "Student login",
-    "loginPlaceholder": "demo-student",
+    "loginPlaceholder": "demo-student…",
     "loginHint": "Exact login, as used at sign-in.",
     "add": "Add",
     "adding": "Adding…",
@@ -179,6 +182,7 @@
     "listLead": "Unlinking does not delete the student’s account.",
     "empty": "No linked students yet. Add the first one by login.",
     "unlink": "Unlink",
+    "unlinkConfirm": "Unlink {name} (@{login})?",
     "unlinking": "Removing…",
     "unlinked": "Student unlinked.",
     "errors": {
@@ -225,7 +229,7 @@
     "formTitle": "New request",
     "formLead": "Briefly describe what you need help with — or just send the request.",
     "noteLabel": "Message (optional)",
-    "notePlaceholder": "For example, which topic you need help with",
+    "notePlaceholder": "For example, which topic you need help with…",
     "noteHint": "Up to 1000 characters. You can leave this blank.",
     "submit": "Ask for a consultation",
     "submitting": "Sending…",
@@ -415,6 +419,7 @@
     "mistakeMaterials": "Textbook materials",
     "mistakePractice": "Topic test",
     "mistakeThemeUnknown": "Topic for this task is not mapped yet.",
+    "taskImageAlt": "Image for task {n}",
     "saveDiagnosticProgress": "Save progress — sign up",
     "workOnMistakes": "Work on mistakes",
     "startingMistakeReview": "Preparing tasks…",
@@ -599,6 +604,7 @@
     "actions": "Actions",
     "start": "Start",
     "cancelSession": "Cancel session {id}",
+    "cancelConfirm": "Cancel session “{theme}”?",
     "hint": "Planned “Auto” sessions appear after completing tests with a low result. Click “Start” to begin.",
     "statuses": {
       "completed": "Completed",
@@ -1129,6 +1135,7 @@
   "nmtTrainer": {
     "title": "NMT Simulator",
     "taskProgress": "Task {current} of {total}",
+    "taskImageAlt": "Image for task {n}",
     "tasks": "Tasks",
     "answered": "Answered: {answered}/{total}",
     "finishing": "Finishing…",
@@ -1222,6 +1229,8 @@
     "filterRole": "{role} ({count})",
     "ban": "Ban",
     "unban": "Unban",
+    "banConfirm": "Ban account “{name}”?",
+    "unbanConfirm": "Unban account “{name}”?",
     "delete": "Delete",
     "deleteConfirm": "Delete account “{name}”? This cannot be undone.",
     "selfLocked": "This is your account — actions are unavailable.",

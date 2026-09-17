@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import type { AuthUser } from "@/modules/auth/client";
 import { PresenceHeartbeat } from "@/components/dashboard/PresenceHeartbeat";
+import { SkipLink } from "@/components/ui/SkipLink";
 import { useTranslations } from "next-intl";
 import css from "./DashboardShell.module.css";
 
@@ -80,6 +81,7 @@ export function DashboardShell({
   user,
 }: DashboardShellProps) {
   const t = useTranslations("Dashboard");
+  const tCommon = useTranslations("Common");
 
   const pathname = usePathname();
 
@@ -161,6 +163,7 @@ export function DashboardShell({
 
   return (
     <div className={css.shell}>
+      <SkipLink label={tCommon("skipToContent")} />
       <PresenceHeartbeat />
       <div className={css.noPrint}>
         <div className={css.decor} aria-hidden>
@@ -205,7 +208,9 @@ export function DashboardShell({
         </div>
 
         <div className={css.content}>
-          <main className={css.main}>{children}</main>
+          <main id="main-content" className={css.main} tabIndex={-1}>
+            {children}
+          </main>
         </div>
       </div>
     </div>

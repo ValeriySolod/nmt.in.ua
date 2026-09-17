@@ -3,9 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import clsx from "clsx";
-import { useState } from "react";
 import { PageFrame, PagePanel } from "@/components/dashboard/PageFrame";
 import { MathText } from "@/components/ui/MathText";
+import { Select } from "@/components/ui/Select";
+import { queryHref } from "@/lib/queryHref";
 import type {
   WorkbookProblem,
   WorkbookTheme,
@@ -16,17 +17,31 @@ type ProblemsWorkbookProps = {
   themes: WorkbookTheme[];
   themeId: number;
   problems: WorkbookProblem[];
+  showOptions: boolean;
+  showKey: boolean;
 };
+
+function problemsHref(
+  themeId: number,
+  showOptions: boolean,
+  showKey: boolean,
+): string {
+  return queryHref("/problems", {
+    theme: String(themeId),
+    options: showOptions ? null : "0",
+    key: showKey ? "1" : null,
+  });
+}
 
 export function ProblemsWorkbook({
   themes,
   themeId,
   problems,
+  showOptions,
+  showKey,
 }: ProblemsWorkbookProps) {
   const t = useTranslations("ProblemsWorkbook");
   const router = useRouter();
-  const [showOptions, setShowOptions] = useState(true);
-  const [showKey, setShowKey] = useState(false);
 
   const selected = themes.find((theme) => theme.id === themeId);
 
@@ -40,42 +55,54 @@ export function ProblemsWorkbook({
         >
           <label className={css.field}>
             <span className={css.label}>{t("selectTopic")}</span>
-            <select
-              className={css.select}
+            <Select
               name="theme"
-              value={themeId}
-              onChange={(event) => {
-                router.replace(`/problems?theme=${event.target.value}`);
-              }}
+              value={String(themeId)}
               aria-label={t("selectTopic")}
-            >
-              {themes.map((theme, index) => (
-                <option key={theme.id} value={theme.id}>
-                  {index + 1}. {theme.name}
-                </option>
-              ))}
-            </select>
+              options={themes.map((theme, index) => ({
+                value: String(theme.id),
+                label: `${index + 1}. ${theme.name}`,
+              }))}
+              onChange={(next) => {
+                router.replace(
+                  problemsHref(Number(next), showOptions, showKey),
+                  { scroll: false },
+                );
+              }}
+            />
           </label>
 
           <div className={css.actions} role="group" aria-label={t("displayAria")}>
             <button
               type="button"
               className={clsx(css.ghost, !showOptions && css.ghostActive)}
-              onClick={() => setShowOptions(false)}
+              onClick={() =>
+                router.replace(problemsHref(themeId, false, showKey), {
+                  scroll: false,
+                })
+              }
             >
               {t("hideOptions")}
             </button>
             <button
               type="button"
               className={clsx(css.ghost, showOptions && css.ghostActive)}
-              onClick={() => setShowOptions(true)}
+              onClick={() =>
+                router.replace(problemsHref(themeId, true, showKey), {
+                  scroll: false,
+                })
+              }
             >
               {t("showOptions")}
             </button>
             <button
               type="button"
               className={clsx(css.ghost, showKey && css.ghostActive)}
-              onClick={() => setShowKey((open) => !open)}
+              onClick={() =>
+                router.replace(problemsHref(themeId, showOptions, !showKey), {
+                  scroll: false,
+                })
+              }
               aria-pressed={showKey}
             >
               {t("toggleKey")}

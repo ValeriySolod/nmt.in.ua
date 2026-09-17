@@ -115,7 +115,21 @@ export function TeacherStudentsPanel({ students }: TeacherStudentsPanelProps) {
                   <p className={css.name}>{student.displayName}</p>
                   <p className={css.login}>@{student.login}</p>
                 </div>
-                <form action={unlinkAction}>
+                <form
+                  action={unlinkAction}
+                  onSubmit={(event) => {
+                    if (
+                      !window.confirm(
+                        t("unlinkConfirm", {
+                          name: student.displayName,
+                          login: student.login,
+                        }),
+                      )
+                    ) {
+                      event.preventDefault();
+                    }
+                  }}
+                >
                   <input
                     type="hidden"
                     name="studentUserId"

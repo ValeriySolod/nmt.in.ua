@@ -8,6 +8,7 @@ import {
   assignMentorSessionAction,
   type AssignMentorSessionActionState,
 } from "@/modules/sessions/actions";
+import { Select } from "@/components/ui/Select";
 import type { AvailableTopicTheme } from "@/modules/testing/types";
 import css from "./MentorAssignPanel.module.css";
 
@@ -46,36 +47,30 @@ export function MentorAssignPanel({
         <div className={css.row}>
           <label className={css.field}>
             <span className={css.label}>{t("student")}</span>
-            <select
+            <Select
               name="userId"
-              className={css.select}
               defaultValue={String(defaultUserId)}
               disabled={pending}
               required
-            >
-              {students.map((student) => (
-                <option key={student.id} value={student.id}>
-                  {student.displayName}
-                </option>
-              ))}
-            </select>
+              options={students.map((student) => ({
+                value: String(student.id),
+                label: student.displayName,
+              }))}
+            />
           </label>
 
           <label className={css.field}>
             <span className={css.label}>{t("topic")}</span>
-            <select
+            <Select
               name="themeId"
-              className={css.select}
               defaultValue={String(themes[0]!.id)}
               disabled={pending}
               required
-            >
-              {themes.map((theme) => (
-                <option key={theme.id} value={theme.id}>
-                  {theme.name}
-                </option>
-              ))}
-            </select>
+              options={themes.map((theme) => ({
+                value: String(theme.id),
+                label: theme.name,
+              }))}
+            />
           </label>
 
           <button type="submit" className={css.submit} disabled={pending}>

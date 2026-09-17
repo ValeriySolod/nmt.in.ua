@@ -13,6 +13,7 @@ import type {
   AdminQuizTaskListItem,
   AdminThemeOption,
 } from "@/modules/admin-content/types";
+import { Select } from "@/components/ui/Select";
 import css from "./AdminContentEditor.module.css";
 
 const DELETE_INITIAL: DeleteQuizTaskActionState = { status: "idle" };
@@ -70,25 +71,19 @@ export function AdminContentEditor({
         </h2>
         <label className={css.themeField}>
           <span className={css.themeLabel}>{t("chooseTheme")}</span>
-          <select
-            className={css.select}
-            value={themeId ?? ""}
-            onChange={(event) => {
-              const next = Number(event.target.value);
-              if (Number.isInteger(next) && next > 0) onThemeChange(next);
-            }}
+          <Select
+            value={themeId != null ? String(themeId) : ""}
+            placeholder={t("noThemes")}
             disabled={themes.length === 0}
-          >
-            {themes.length === 0 ? (
-              <option value="">{t("noThemes")}</option>
-            ) : (
-              themes.map((theme, index) => (
-                <option key={theme.id} value={theme.id}>
-                  {formatThemeLabel(index, theme)}
-                </option>
-              ))
-            )}
-          </select>
+            options={themes.map((theme, index) => ({
+              value: String(theme.id),
+              label: formatThemeLabel(index, theme),
+            }))}
+            onChange={(next) => {
+              const parsed = Number(next);
+              if (Number.isInteger(parsed) && parsed > 0) onThemeChange(parsed);
+            }}
+          />
         </label>
         {selectedTheme ? (
           <p className={css.themeMeta}>

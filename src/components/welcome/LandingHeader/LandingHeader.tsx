@@ -18,7 +18,7 @@ export async function LandingHeader() {
   return (
     <header className={css.header}>
       <div className={`${css.container} ${css.headerInner}`}>
-        <Link href={user ? "/welcome" : "/"} className={css.brand} aria-label={SITE_NAME}>
+        <Link href={user ? "/welcome" : "/"} className={css.brand} aria-label={SITE_NAME} translate="no">
           <span className={css.brandGlyph} aria-hidden>
             ∑
           </span>

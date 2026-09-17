@@ -104,7 +104,6 @@
   text-transform: uppercase;
 }
 
-.select,
 .input {
   width: 100%;
   min-height: 44px;
@@ -116,8 +115,7 @@
   font: inherit;
 }
 
-.select:focus,
-.input:focus {
+.input:focus-visible {
   outline: none;
   border-color: var(--green);
   box-shadow: var(--ring);

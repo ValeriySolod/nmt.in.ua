@@ -84,6 +84,8 @@ alwaysApply: true
 ## Доступність і рух
 
 - Тап-таргет ≥ 44×44. `:focus-visible` — глобальне кільце `--ring`, не знімати.
+  На інпутах теж `:focus-visible`, не `:focus` (інакше кільце на кліку).
+- Skip-link `SkipLink` → `#main-content` на лендінгу, auth, діагностиці й у `DashboardShell`.
 - Контраст тексту ≥ 4.5:1; на градієнтах перевіряти окремо.
 - Кожна секція — `<section aria-labelledby="…">` з реальним заголовком.
 - Анімації: тільки `transform` / `opacity`. Scroll-reveal через `Reveal`/`Stagger`
@@ -102,8 +104,8 @@ alwaysApply: true
 
 `src/components/welcome/` — секції лендінгу, кожна власна папка з `.module.css`:
 
-- `WelcomeLanding` — композиція сторінки, шари фону, JSON-LD.
-- `LandingHeader` — липкий хедер, лого + CTA (вхід / реєстрація).
+- `WelcomeLanding` — композиція сторінки, шари фону, JSON-LD, skip-link.
+- `LandingHeader` — липкий хедер, лого, `LanguageSwitcher`, CTA (вхід / реєстрація).
 - `Hero` — h1, лід, дві CTA, hero-візуал (`/landing/hero-paper.webp`), метрики.
 - `Features` — можливості кабінету, картки-сітка.
 - `Steps` — «як це працює», нумеровані кроки.
@@ -115,8 +117,9 @@ alwaysApply: true
 
 `src/components/dashboard/` — робочий простір після входу, та сама палітра й токени, що й лендінг:
 
-- `DashboardShell` — aurora-фон, сітка зошита, орби; сайдбар + main.
+- `DashboardShell` — aurora-фон, сітка зошита, орби; сайдбар + `main#main-content` + skip-link.
 - `AppHeader` — липке скло, бренд-гліф як на лендінгу, профіль веде на `/account`.
+- `LanguageSwitcher` — скляна пілюля UA/EN/DE, меню з ендонімами (не прапори). На лендінгу й `/t/{slug}`.
 - `AppSidebar` — скляна навігація, активний пункт `--grad-mint`.
 - `PageFrame` / `PagePanel` — kicker-пілюля (не на старті тесту), `--fs-h1` display, скляна картка.
 - `TopicTestStart` — домашня робоча сторінка: вітання + тема + кількість завдань (поле / розмір банку). Без Ultimate і без самооцінки.
@@ -124,6 +127,13 @@ alwaysApply: true
 - `TeacherProfileEditor` — візитка викладача на `/account` (slug, headline, bio, city, subjects, contact URL, is_public, копія лінка). Адмін редактор не бачить.
 - `TeacherPublicCard` — публічна картка `/t/{slug}` у `DiagnosticShell` (без кабінетного chrome).
 - `TeacherStudentsPanel` — `/students` для teacher/admin: додати учня за логіном, список, відв’язати. Учні пункт меню не бачать.
+
+`src/components/ui/` — спільні контроли:
+
+- `Select` — скляний combobox замість нативного `<select>` (тема, задачник, matching, адмін). Клавіатура: стрілки, Home/End, друк, Escape.
+- `SkipLink` → `#main-content`. `Reveal` — scroll-in через Motion (`whileInView`), без bounce.
+
+`src/components/status/` — `StatusScene` + `NotebookSpinner` для `not-found` / `error` / `loading`.
 
 `src/components/consultations/` — заявки на консультацію:
 
@@ -465,3 +475,39 @@ npm run lint && npm test && npm run build
 
 - Адмін не бачить «Останні результати», «Досягнення», «Час навчання» і публічну візитку.
 - Лишаються фото, пароль, вихід.
+
+### 2026-09-17 — skip-link, фокус, перемикач мови
+
+- `SkipLink` → `#main-content` на лендінгу, `AuthShell`, `DiagnosticShell`, `DashboardShell`.
+  Якорі `#features` / `#steps` / `#faq` мають `scroll-margin-top: 5.5rem`.
+- Форми: `:focus-visible` замість `:focus`; login/email `spellCheck={false}`.
+- `LanguageSwitcher` більше не кружечки з прапорами. Пілюля з кодом UA/EN/DE
+  (з 768 — ендонім) і меню Українська / English / Deutsch. Cookie як раніше.
+- Тап-таргети хедера / скасування сесії ≥ 44px. Бренд `translate="no"`.
+- `FeedbackDialog`: `overscroll-behavior: contain`, пастка Tab, повернення фокуса.
+
+### 2026-09-17 — курсор на тексті
+
+- `html, body { cursor: default }` — I-beam лише в полях вводу. Клікабельне — `pointer`.
+
+### 2026-09-17 — підтвердження, ModeTabs, тема в URL
+
+- `window.confirm` перед скасуванням сесії, відв’язкою учня, баном/розбаном і зняттям фото
+  (той самий патерн, що вже був на видаленні профілю).
+- `ModeTabs`: roving `tabIndex`, стрілки / Home / End.
+- `TopicTestStart`: зміна теми пише `/?theme=`.
+- Картинки в симуляторі НМТ і розборі помилок: `alt` «Зображення до завдання N».
+
+### 2026-09-17 — кастомний Select + URL-стан
+
+- Спільний `Select` (`src/components/ui/Select`): скло, м’ята на активному, галочка, портал меню.
+  Замінює нативні списки на старті тесту, у задачнику, matching НМТ, самооцінці, адмінці.
+- `queryHref`: `/sessions?extended=1`, `/profiles?role=`, `/problems?theme=&options=&key=`.
+
+### 2026-09-17 — Motion і status-сторінки
+
+- Пакет `motion`: `Reveal` через `whileInView`; меню Select / мови і модалка відгуку — `AnimatePresence`.
+  Крива як `--ease`, без пружин. `prefers-reduced-motion` вимикає.
+- `app/not-found.tsx`, `error.tsx`, `global-error.tsx`; loading у `(app)` і `(marketing)`.
+  Ілюстрації `public/status/*.webp`. Спінер — циркуль навколо ∑, не стороння бібліотека.
+  Перевірити: `/welcome/щось-неіснуюче` (гість); у кабінеті неіснуючий шлях. Випадковий `/foo` без сесії лишається редіректом на логін.
