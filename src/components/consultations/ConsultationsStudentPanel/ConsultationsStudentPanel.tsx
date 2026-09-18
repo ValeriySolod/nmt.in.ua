@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import {
   createConsultationRequestAction,
@@ -11,12 +11,15 @@ import {
   NOTE_MAX_LEN,
   type ConsultationRequestView,
 } from "@/modules/consultations/types";
+import type { TeacherCarouselItem } from "@/modules/teachers/types";
+import { TeachersCarousel } from "../TeachersCarousel";
 import css from "./ConsultationsStudentPanel.module.css";
 
 const INITIAL: CreateConsultationActionState = { status: "idle" };
 
 type ConsultationsStudentPanelProps = {
   openRequest: ConsultationRequestView | null;
+  teachers: TeacherCarouselItem[];
 };
 
 function formatWhen(iso: string, locale: string): string {
@@ -59,8 +62,11 @@ function OpenRequestCard({
 
 export function ConsultationsStudentPanel({
   openRequest,
+  teachers,
 }: ConsultationsStudentPanelProps) {
   const t = useTranslations("Consultations");
+  const formRef = useRef<HTMLElement>(null);
+  const [selected, setSelected] = useState<TeacherCarouselItem | null>(null);
   const [state, formAction, pending] = useActionState(
     createConsultationRequestAction,
     INITIAL,
@@ -69,18 +75,56 @@ export function ConsultationsStudentPanel({
   const shownRequest =
     openRequest ?? (state.status === "success" ? state.request : null);
 
+  useEffect(() => {
+    if (!selected) return;
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [selected]);
+
+  function onSelectPersonal(teacher: TeacherCarouselItem) {
+    setSelected(teacher);
+  }
+
+  function clearSelected() {
+    setSelected(null);
+  }
+
   return (
     <div className={css.layout}>
+      <TeachersCarousel
+        teachers={teachers}
+        selectedTeacherUserId={selected?.userId ?? null}
+        onSelectPersonal={onSelectPersonal}
+      />
+
       {shownRequest ? (
         <OpenRequestCard request={shownRequest} />
       ) : (
-        <section className={css.panel} aria-labelledby="consultation-form-title">
+        <section
+          ref={formRef}
+          className={css.panel}
+          aria-labelledby="consultation-form-title"
+        >
           <div>
             <h2 id="consultation-form-title" className={css.panelTitle}>
               {t("formTitle")}
             </h2>
             <p className={css.panelLead}>{t("formLead")}</p>
           </div>
+
+          {selected ? (
+            <div className={css.personalChip} role="status">
+              <span>
+                {t("personalSelected", { name: selected.displayName })}
+              </span>
+              <button
+                type="button"
+                className={css.personalClear}
+                onClick={clearSelected}
+              >
+                {t("personalClear")}
+              </button>
+            </div>
+          ) : null}
 
           {state.status === "error" ? (
             <p className={clsx(css.alert, css.alertError)} role="alert">
@@ -89,6 +133,20 @@ export function ConsultationsStudentPanel({
           ) : null}
 
           <form className={css.form} action={formAction}>
+            {selected ? (
+              <>
+                <input
+                  type="hidden"
+                  name="personalTeacherName"
+                  value={selected.displayName}
+                />
+                <input
+                  type="hidden"
+                  name="personalNotePrefix"
+                  value={t("personalNotePrefix", { name: selected.displayName })}
+                />
+              </>
+            ) : null}
             <label className={css.field}>
               <span className={css.label}>{t("noteLabel")}</span>
               <textarea
@@ -97,12 +155,22 @@ export function ConsultationsStudentPanel({
                 rows={4}
                 maxLength={NOTE_MAX_LEN}
                 disabled={pending}
-                placeholder={t("notePlaceholder")}
+                placeholder={
+                  selected
+                    ? t("notePlaceholderPersonal", {
+                        name: selected.displayName,
+                      })
+                    : t("notePlaceholder")
+                }
               />
               <span className={css.hint}>{t("noteHint")}</span>
             </label>
             <button type="submit" className={css.submit} disabled={pending}>
-              {pending ? t("submitting") : t("submit")}
+              {pending
+                ? t("submitting")
+                : selected
+                  ? t("submitPersonal")
+                  : t("submit")}
             </button>
           </form>
         </section>

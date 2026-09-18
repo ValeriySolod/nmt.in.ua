@@ -1,0 +1,255 @@
+.section {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-sm);
+}
+
+.header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-sm);
+  align-items: start;
+}
+
+.headerCopy {
+  display: grid;
+  gap: 6px;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-h4);
+  font-weight: 700;
+}
+
+.lead {
+  margin: 0;
+  max-width: 40rem;
+  color: var(--muted);
+  font-size: var(--fs-small);
+  line-height: 1.5;
+}
+
+.controls {
+  display: flex;
+  gap: var(--space-2xs);
+  justify-content: flex-end;
+}
+
+.navBtn {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    border-color var(--t) var(--ease),
+    background var(--t) var(--ease);
+}
+
+.navBtn:hover,
+.navBtn:focus-visible {
+  border-color: rgb(31 143 69 / 45%);
+  background: var(--green-bg);
+}
+
+.track {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(16.5rem, 18.5rem);
+  gap: var(--space-sm);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 2px;
+  padding-block: 2px 8px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.track:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow: var(--ring);
+  border-radius: var(--radius-md);
+}
+
+.card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-sm);
+  align-content: start;
+  height: 100%;
+  padding: var(--space-md);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  background: var(--grad-glass);
+  box-shadow: var(--shadow-sm);
+  scroll-snap-align: start;
+  backdrop-filter: blur(10px);
+}
+
+@supports not (backdrop-filter: blur(4px)) {
+  .card {
+    background: rgb(253 251 244 / 92%);
+  }
+}
+
+.cardSelected {
+  border-color: rgb(31 143 69 / 55%);
+  box-shadow: var(--shadow-md);
+}
+
+.identity {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-sm);
+  align-items: start;
+}
+
+.avatar {
+  width: 52px;
+  height: 52px;
+  flex: none;
+  font-size: 0.95rem;
+}
+
+.identityCopy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-body);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.headline,
+.city {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--fs-small);
+  line-height: 1.4;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--grad-mint);
+  color: var(--ink);
+  font-size: var(--fs-kicker);
+  font-weight: 600;
+}
+
+.ratingBlock {
+  display: grid;
+  gap: 6px;
+}
+
+.ratingMeta {
+  margin: 0;
+  color: var(--subtle);
+  font-size: var(--fs-small);
+}
+
+.stars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.star {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: rgb(94 76 40 / 28%);
+  cursor: pointer;
+  transition: color var(--t) var(--ease);
+}
+
+.star:hover:not(:disabled),
+.star:focus-visible:not(:disabled) {
+  color: rgb(31 143 69 / 70%);
+}
+
+.starOn {
+  color: var(--green);
+}
+
+.star:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.personal {
+  margin-top: auto;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--grad-brand);
+  color: #f6f1e2;
+  font-weight: 700;
+  font-size: var(--fs-small);
+  cursor: pointer;
+  transition: filter var(--t) var(--ease);
+}
+
+.personal:hover,
+.personal:focus-visible {
+  filter: brightness(1.05);
+}
+
+.error {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: rgb(180 60 40 / 10%);
+  color: var(--ink);
+  font-size: var(--fs-small);
+}
+
+@media (min-width: 768px) {
+  .header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+  }
+
+  .track {
+    grid-auto-columns: minmax(18rem, 20rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track {
+    scroll-behavior: auto;
+  }
+
+  .navBtn,
+  .star,
+  .personal {
+    transition: none;
+  }
+}

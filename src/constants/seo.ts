@@ -9,7 +9,7 @@ export const SITE_DESCRIPTION =
 
 export const SITE_KEYWORDS = [
   "НМТ",
-  "НМТ 2026",
+  "НМТ 2027",
   "НМТ математика",
   "підготовка до НМТ",
   "математика НМТ",
