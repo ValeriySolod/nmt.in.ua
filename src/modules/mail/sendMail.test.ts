@@ -4,7 +4,7 @@ import test from "node:test";
 import { DEFAULT_SITE_URL } from "@/constants/seo";
 import { absoluteUrl, mailDeliveryMode, resolveMailSiteUrl } from "./sendMail";
 
-test("resolveMailSiteUrl prefers SITE_URL over NEXT_PUBLIC_SITE_URL", () => {
+test("resolveMailSiteUrl prefers SITE_URL and ignores NEXT_PUBLIC_SITE_URL", () => {
   assert.equal(
     resolveMailSiteUrl({
       SITE_URL: "https://nmt.in.ua/",
@@ -15,14 +15,25 @@ test("resolveMailSiteUrl prefers SITE_URL over NEXT_PUBLIC_SITE_URL", () => {
   );
 });
 
-test("resolveMailSiteUrl uses NEXT_PUBLIC_SITE_URL when SITE_URL is empty", () => {
+test("resolveMailSiteUrl uses MAIL_SITE_URL when SITE_URL is empty", () => {
   assert.equal(
     resolveMailSiteUrl({
       SITE_URL: "  ",
-      NEXT_PUBLIC_SITE_URL: "https://nmt.in.ua",
+      MAIL_SITE_URL: "https://nmt.in.ua",
+      NEXT_PUBLIC_SITE_URL: "http://localhost:3000",
       NODE_ENV: "development",
     }),
     "https://nmt.in.ua",
+  );
+});
+
+test("resolveMailSiteUrl ignores localhost SITE_URL in production", () => {
+  assert.equal(
+    resolveMailSiteUrl({
+      SITE_URL: "http://localhost:3000",
+      NODE_ENV: "production",
+    }),
+    DEFAULT_SITE_URL,
   );
 });
 

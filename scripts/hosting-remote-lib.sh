@@ -110,6 +110,9 @@ start_site_node() {
   (
     cd "$SITE"
     export NODE_ENV=production PORT HOST TMPDIR="$tmpdir"
+    export SITE_URL="${SITE_URL:-https://nmt.in.ua}"
+    export MAIL_SITE_URL="${MAIL_SITE_URL:-$SITE_URL}"
+    export NEXT_PUBLIC_SITE_URL="${NEXT_PUBLIC_SITE_URL:-https://nmt.in.ua}"
     export PATH="/usr/local/node24/bin:/usr/local/bin:/usr/bin:${PATH}"
     nohup npm run start -- --port="$PORT" --host="$HOST" >>"$LOG" 2>&1 &
     echo $! > "$PIDFILE"
