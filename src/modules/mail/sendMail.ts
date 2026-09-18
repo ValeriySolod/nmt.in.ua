@@ -15,25 +15,50 @@ export type SendMailResult =
 
 export type MailSiteEnv = {
   SITE_URL?: string;
+  MAIL_SITE_URL?: string;
   NEXT_PUBLIC_SITE_URL?: string;
   NODE_ENV?: string;
   [key: string]: string | undefined;
 };
 
+const MAIL_ORIGIN_KEYS = ["SITE_URL", "MAIL_SITE_URL"] as const;
+
+/** Dynamic key so `next build` cannot replace the value with a compile-time constant. */
+function readEnv(env: MailSiteEnv, name: string): string {
+  return String(env[name] ?? "").trim();
+}
+
+function stripSlash(url: string): string {
+  return url.replace(/\/$/, "");
+}
+
+function isLocalOrigin(url: string): boolean {
+  try {
+    const host = new URL(url).hostname;
+    return host === "localhost" || host === "127.0.0.1";
+  } catch {
+    return /localhost|127\.0\.0\.1/i.test(url);
+  }
+}
+
 /**
  * Public origin for verify / reset links.
  *
- * Do not read `process.env.NEXT_PUBLIC_SITE_URL` as a static member: Next
- * inlines that at `next build`. CI has no public URL, so the compiled
- * server used localhost even when the host `.env.production` was correct.
- * Bracket access keeps a runtime lookup; production still falls back to
- * nmt.in.ua if both env vars are empty.
+ * Read `SITE_URL` (or `MAIL_SITE_URL`) at runtime. Do not use
+ * `NEXT_PUBLIC_SITE_URL` here: Next inlines that at `next build`, so CI/local
+ * empty/localhost leaked into production emails even when `.env.production`
+ * was correct. Production never returns localhost.
  */
 export function resolveMailSiteUrl(env: MailSiteEnv = process.env): string {
-  const raw =
-    env["SITE_URL"]?.trim() || env["NEXT_PUBLIC_SITE_URL"]?.trim() || "";
-  if (raw) return raw.replace(/\/$/, "");
-  if (env.NODE_ENV === "production") return DEFAULT_SITE_URL;
+  for (const key of MAIL_ORIGIN_KEYS) {
+    const raw = readEnv(env, key);
+    if (!raw) continue;
+    if (readEnv(env, "NODE_ENV") === "production" && isLocalOrigin(raw)) {
+      continue;
+    }
+    return stripSlash(raw);
+  }
+  if (readEnv(env, "NODE_ENV") === "production") return DEFAULT_SITE_URL;
   return "http://localhost:3000";
 }
 

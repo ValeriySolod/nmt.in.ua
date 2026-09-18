@@ -208,6 +208,11 @@ ensure_env() {
   else
     printf '\nSITE_URL=https://nmt.in.ua\n' >> "$dest"
   fi
+  if grep -q '^MAIL_SITE_URL=' "$dest"; then
+    sed -i 's|^MAIL_SITE_URL=.*|MAIL_SITE_URL=https://nmt.in.ua|' "$dest"
+  else
+    printf '\nMAIL_SITE_URL=https://nmt.in.ua\n' >> "$dest"
+  fi
   if grep -q '^NEXT_PUBLIC_SITE_URL=' "$dest"; then
     sed -i 's|^NEXT_PUBLIC_SITE_URL=.*|NEXT_PUBLIC_SITE_URL=https://nmt.in.ua|' "$dest"
   else

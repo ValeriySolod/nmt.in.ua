@@ -16,6 +16,14 @@ const dir = __dirname;
 
 if (process.env.NODE_ENV === "production") {
   loadEnvFile(path.join(dir, ".env.production"));
+  const origin = "https://nmt.in.ua";
+  const site = String(process.env.SITE_URL || "").trim();
+  if (!site || /localhost|127\.0\.0\.1/i.test(site)) {
+    process.env.SITE_URL = origin;
+  }
+  if (!String(process.env.MAIL_SITE_URL || "").trim()) {
+    process.env.MAIL_SITE_URL = process.env.SITE_URL;
+  }
 }
 
 const portEnv = process.env.PORT || "3000";
