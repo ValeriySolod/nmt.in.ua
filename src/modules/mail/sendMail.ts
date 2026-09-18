@@ -50,10 +50,18 @@ function mailFrom(): string {
   );
 }
 
+export function mailDeliveryMode(
+  env: MailSiteEnv = process.env,
+): "resend" | "log" | "unavailable" {
+  if (env.RESEND_API_KEY?.trim()) return "resend";
+  if (env.NODE_ENV === "production") return "unavailable";
+  return "log";
+}
+
 /**
  * Sends transactional email via Resend when `RESEND_API_KEY` is set.
- * Without a key (local/dev), logs the message and returns ok so flows
- * can be tested without a mailbox.
+ * Without a key, local/dev logs the message and returns ok. Production
+ * without a key fails closed — otherwise the UI pretends the letter left.
  */
 export async function sendMail(
   input: SendMailInput,
@@ -62,7 +70,12 @@ export async function sendMail(
   if (!to) return { ok: false, error: "missing_to" };
 
   const apiKey = process.env.RESEND_API_KEY?.trim();
-  if (!apiKey) {
+  const mode = mailDeliveryMode();
+  if (mode !== "resend" || !apiKey) {
+    if (mode === "unavailable") {
+      console.error("sendMail: RESEND_API_KEY is missing");
+      return { ok: false, error: "missing_api_key" };
+    }
     console.info(
       "[mail:log]",
       JSON.stringify({

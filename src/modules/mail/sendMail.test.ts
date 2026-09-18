@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { DEFAULT_SITE_URL } from "@/constants/seo";
-import { absoluteUrl, resolveMailSiteUrl } from "./sendMail";
+import { absoluteUrl, mailDeliveryMode, resolveMailSiteUrl } from "./sendMail";
 
 test("resolveMailSiteUrl prefers SITE_URL over NEXT_PUBLIC_SITE_URL", () => {
   assert.equal(
@@ -45,5 +45,14 @@ test("absoluteUrl builds verify-email links on the production origin", () => {
   assert.equal(
     absoluteUrl("/verify-email?token=abc", { NODE_ENV: "production" }),
     `${DEFAULT_SITE_URL}/verify-email?token=abc`,
+  );
+});
+
+test("mailDeliveryMode logs locally and fails closed in production without a key", () => {
+  assert.equal(mailDeliveryMode({ NODE_ENV: "development" }), "log");
+  assert.equal(mailDeliveryMode({ NODE_ENV: "production" }), "unavailable");
+  assert.equal(
+    mailDeliveryMode({ NODE_ENV: "production", RESEND_API_KEY: "re_test" }),
+    "resend",
   );
 });
