@@ -1,5 +1,7 @@
 import "server-only";
 
+import { DEFAULT_SITE_URL } from "@/constants/seo";
+
 export type SendMailInput = {
   to: string;
   subject: string;
@@ -11,14 +13,32 @@ export type SendMailResult =
   | { ok: true; mode: "resend" | "log" }
   | { ok: false; error: string };
 
-function siteUrl(): string {
-  const raw = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+export type MailSiteEnv = {
+  SITE_URL?: string;
+  NEXT_PUBLIC_SITE_URL?: string;
+  NODE_ENV?: string;
+  [key: string]: string | undefined;
+};
+
+/**
+ * Public origin for verify / reset links.
+ *
+ * Do not read `process.env.NEXT_PUBLIC_SITE_URL` as a static member: Next
+ * inlines that at `next build`. CI has no public URL, so the compiled
+ * server used localhost even when the host `.env.production` was correct.
+ * Bracket access keeps a runtime lookup; production still falls back to
+ * nmt.in.ua if both env vars are empty.
+ */
+export function resolveMailSiteUrl(env: MailSiteEnv = process.env): string {
+  const raw =
+    env["SITE_URL"]?.trim() || env["NEXT_PUBLIC_SITE_URL"]?.trim() || "";
   if (raw) return raw.replace(/\/$/, "");
+  if (env.NODE_ENV === "production") return DEFAULT_SITE_URL;
   return "http://localhost:3000";
 }
 
-export function absoluteUrl(path: string): string {
-  const base = siteUrl();
+export function absoluteUrl(path: string, env: MailSiteEnv = process.env): string {
+  const base = resolveMailSiteUrl(env);
   if (!path.startsWith("/")) return `${base}/${path}`;
   return `${base}${path}`;
 }

@@ -67,12 +67,49 @@ wait_nmt_port_free() {
   return 1
 }
 
+# Account-wide PHP upload_tmp_dir is $HOME/.system/tmp (also ~/tmp).
+# Node/npm must not share it with WordPress/Moodle on this user.
+nmt_tmp_dir() {
+  printf '%s' "$(dirname "$SITE")/tmp"
+}
+
+ensure_nmt_tmp() {
+  local d
+  d="$(nmt_tmp_dir)"
+  mkdir -p "$d"
+  chmod 700 "$d" 2>/dev/null || true
+  printf '%s' "$d"
+}
+
+# Leftover PHP in the shared tmp is what the host AV flagged (Tiny File Manager
+# / obfuscated dropper). Session files sess_* stay; they belong to PHP apps.
+clean_shared_php_tmp() {
+  local dir="${HOME}/.system/tmp" f base head
+  [ -d "$dir" ] || return 0
+  for f in "$dir"/*; do
+    [ -f "$f" ] || continue
+    base="$(basename "$f")"
+    case "$base" in
+      sess_*) continue ;;
+    esac
+    head="$(dd if="$f" bs=5 count=1 2>/dev/null || true)"
+    case "$head" in
+      '<?php')
+        rm -f "$f" && echo "removed php tmp ${base}"
+        ;;
+    esac
+  done
+  return 0
+}
+
 # Same command the hosting panel uses for this site.
 start_site_node() {
+  local tmpdir
+  tmpdir="$(ensure_nmt_tmp)"
   mkdir -p "$(dirname "$LOG")"
   (
     cd "$SITE"
-    export NODE_ENV=production PORT HOST
+    export NODE_ENV=production PORT HOST TMPDIR="$tmpdir"
     export PATH="/usr/local/node24/bin:/usr/local/bin:/usr/bin:${PATH}"
     nohup npm run start -- --port="$PORT" --host="$HOST" >>"$LOG" 2>&1 &
     echo $! > "$PIDFILE"
@@ -91,15 +128,18 @@ health_ok() {
 }
 
 wait_health() {
-  local i code
+  local i code body
+  body="$(ensure_nmt_tmp)/nmt-health.body"
   for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
-    code="$(curl -sS -o /tmp/nmt-health.body -w '%{http_code}' --max-time 10 "http://${HOST}:${PORT}/" || echo 000)"
+    code="$(curl -sS -o "$body" -w '%{http_code}' --max-time 10 "http://${HOST}:${PORT}/" || echo 000)"
     echo "health try ${i} -> ${code}"
     if health_ok "$code"; then
+      rm -f "$body"
       return 0
     fi
     sleep 2
   done
+  rm -f "$body"
   echo "---- last 60 lines of ${LOG} ----" >&2
   tail -n 60 "$LOG" >&2 || true
   return 1
