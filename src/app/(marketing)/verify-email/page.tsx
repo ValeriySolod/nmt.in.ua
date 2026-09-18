@@ -1,8 +1,18 @@
+import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { VerifyEmailResult } from "@/components/auth/VerifyEmailResult/VerifyEmailResult";
 import { createPageMetadata } from "@/constants/seo";
-import { verifyEmailAction } from "@/modules/auth/actions";
+
+export const dynamic = "force-dynamic";
+
+const VERIFY_ERRORS = ["invalid", "expired", "used", "generic"] as const;
+type VerifyErrorCode = (typeof VERIFY_ERRORS)[number];
+
+function parseError(raw: string | string[] | undefined): VerifyErrorCode {
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  return VERIFY_ERRORS.find((code) => code === value) ?? "invalid";
+}
 
 export async function generateMetadata() {
   const t = await getTranslations("Metadata.verifyEmail");
@@ -16,7 +26,7 @@ export async function generateMetadata() {
 }
 
 type VerifyEmailPageProps = {
-  searchParams: Promise<{ token?: string | string[] }>;
+  searchParams: Promise<{ token?: string | string[]; error?: string | string[] }>;
 };
 
 export default async function VerifyEmailPage({
@@ -26,13 +36,13 @@ export default async function VerifyEmailPage({
   const raw = Array.isArray(params.token) ? params.token[0] : params.token;
   const token = (raw ?? "").trim();
 
-  const result = token
-    ? await verifyEmailAction(token)
-    : ({ status: "error", code: "invalid" } as const);
+  if (token) {
+    redirect(`/api/auth/verify-email?token=${encodeURIComponent(token)}`);
+  }
 
   return (
     <AuthShell>
-      <VerifyEmailResult result={result} />
+      <VerifyEmailResult code={parseError(params.error)} />
     </AuthShell>
   );
 }

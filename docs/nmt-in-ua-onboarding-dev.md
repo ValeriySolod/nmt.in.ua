@@ -447,7 +447,7 @@ Ultimate/НМТ/діагностика лишились без змін. Зар�
 | Сесії учнів | `/sessions`, `teacherLearningSessions` | Мала | ✅ 17.09: усі / один учень; картки→таблиця; детальні бали без старту/скасування |
 | Публічна візитка викладача | `src/modules/teachers`, `/account`, `/t/{slug}` | Мала | ✅ 13.09; адмін без візитки з 16.09 |
 | Реєстрація викладача + WayForPay | `/register/teacher`, `src/modules/payments` | Середня | ⏸️ UI оплати приховано 16.09; безкоштовний teacher на `/register?role=teacher`. WayForPay код лишається |
-| Email verify + reset (Resend) | `src/modules/auth`, `src/modules/mail`, `/verify-email` | Середня | ✅ 16.09: блок логіну до verify; forgot/reset; без ключа — log. 18.09: прод-листи з `SITE_URL` / `https://nmt.in.ua`, не localhost. AV на спільному PHP tmp ріже outbound усього акаунта — після чистки пересканувати панель |
+| Email verify + reset (Resend) | `src/modules/auth`, `src/modules/mail`, `/verify-email` | Середня | ✅ 16.09: блок логіну до verify; forgot/reset; без ключа — log. 18.09: прод-листи з `SITE_URL` / `https://nmt.in.ua`, не localhost. Підтвердження через `GET /api/auth/verify-email` (cookie в RSC давала фейкову помилку). AV на спільному PHP tmp ріже outbound усього акаунта — після чистки пересканувати панель |
 | A11y + Select + 404/error | `SkipLink`, `Select`, `StatusScene`, Motion | Мала | ✅ 17.09: skip-link, кастомні списки, status-сторінки |
 | Перф (TTFB / бандл) | `(app)`/`(marketing)` layouts, `catalogCache`, `sampleRandomIds` | — | ✅ 10.09: без `ORDER BY RAND()`, кеш довідників, cookie-профіль |
 
