@@ -349,6 +349,7 @@ export type VerifyEmailActionState =
   | { status: "ok" }
   | { status: "error"; code: "invalid" | "expired" | "used" | "generic" };
 
+/** Call from the client (or a Route Handler). Cookie writes fail in RSC render. */
 export async function verifyEmailAction(
   token: string,
 ): Promise<VerifyEmailActionState> {
