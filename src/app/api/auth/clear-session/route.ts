@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { absoluteSiteUrl } from "@/lib/siteOrigin";
 import { clearSessionCookie } from "@/modules/auth/getCurrentUser";
 
 /**
@@ -7,8 +8,11 @@ import { clearSessionCookie } from "@/modules/auth/getCurrentUser";
  * Cookie writes are not allowed during Server Component render (App layout),
  * so banned / missing accounts redirect here instead of calling
  * `clearSessionCookie` inline.
+ *
+ * Absolute Location must use SITE_URL — `request.url` is the internal
+ * 127.1.10.37 listener behind the hosting proxy.
  */
-export async function GET(request: Request) {
+export async function GET() {
   await clearSessionCookie();
-  return NextResponse.redirect(new URL("/login", request.url));
+  return NextResponse.redirect(absoluteSiteUrl("/login"));
 }

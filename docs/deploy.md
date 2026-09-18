@@ -49,7 +49,7 @@ bash scripts/rollback-hosting.sh --yes
 
 Поки секрету немає — воркфлоу впаде **до** SSH, сайт не чіпає.
 
-Обовʼязкові змінні на прод: `DB_*`, `SESSION_SECRET`, `CONTENT_IMPORT_API_KEY`, `ADMIN_API_KEY`, `MAX_BODY_BYTES=8388608`, `SITE_URL=https://nmt.in.ua`, `MAIL_SITE_URL=https://nmt.in.ua`, `NEXT_PUBLIC_SITE_URL=https://nmt.in.ua`. Листи читають лише `SITE_URL` / `MAIL_SITE_URL` у рантаймі (динамічний ключ). `NEXT_PUBLIC_*` інлайниться на збірці — у verify/reset його більше немає, бо порожнє/localhost з CI потрапляло в лист. Для реальних листів ще `RESEND_API_KEY` (і бажано `MAIL_FROM` з перевіреного домену). Без ключа Next у production більше не робить вигляд, що лист пішов; деплой ключ сам не підставляє.
+Обовʼязкові змінні на прод: `DB_*`, `SESSION_SECRET`, `CONTENT_IMPORT_API_KEY`, `ADMIN_API_KEY`, `MAX_BODY_BYTES=8388608`, `SITE_URL=https://nmt.in.ua`, `MAIL_SITE_URL=https://nmt.in.ua`, `NEXT_PUBLIC_SITE_URL=https://nmt.in.ua`. Листи й 303 після verify/logout читають лише `SITE_URL` / `MAIL_SITE_URL` у рантаймі. Не брати origin з `request.url` — Node слухає `127.1.10.37`, і браузер інакше йде на localhost, хоча пошта вже підтверджена. `NEXT_PUBLIC_*` інлайниться на збірці. Для реальних листів ще `RESEND_API_KEY` (і бажано `MAIL_FROM` з перевіреного домену). Без ключа Next у production більше не робить вигляд, що лист пішов; деплой ключ сам не підставляє.
 
 Без `SESSION_SECRET` у production вхід і реєстрація падають (`createSessionToken`). Ключ не комітити і не світити в логах. Згенерувати один раз: `openssl rand -hex 32` — і записати в обидва `.env.production` (store + `www`).
 

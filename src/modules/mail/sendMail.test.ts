@@ -35,6 +35,13 @@ test("resolveMailSiteUrl ignores localhost SITE_URL in production", () => {
     }),
     DEFAULT_SITE_URL,
   );
+  assert.equal(
+    resolveMailSiteUrl({
+      SITE_URL: "http://127.1.10.37:3000",
+      NODE_ENV: "production",
+    }),
+    DEFAULT_SITE_URL,
+  );
 });
 
 test("resolveMailSiteUrl falls back to nmt.in.ua in production", () => {

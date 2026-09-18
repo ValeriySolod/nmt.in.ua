@@ -1,6 +1,10 @@
 import "server-only";
 
-import { DEFAULT_SITE_URL } from "@/constants/seo";
+import {
+  absoluteSiteUrl,
+  resolveSiteUrl,
+  type SiteOriginEnv,
+} from "@/lib/siteOrigin";
 
 export type SendMailInput = {
   to: string;
@@ -13,60 +17,10 @@ export type SendMailResult =
   | { ok: true; mode: "resend" | "log" }
   | { ok: false; error: string };
 
-export type MailSiteEnv = {
-  SITE_URL?: string;
-  MAIL_SITE_URL?: string;
-  NEXT_PUBLIC_SITE_URL?: string;
-  NODE_ENV?: string;
-  [key: string]: string | undefined;
-};
+export type MailSiteEnv = SiteOriginEnv;
 
-const MAIL_ORIGIN_KEYS = ["SITE_URL", "MAIL_SITE_URL"] as const;
-
-/** Dynamic key so `next build` cannot replace the value with a compile-time constant. */
-function readEnv(env: MailSiteEnv, name: string): string {
-  return String(env[name] ?? "").trim();
-}
-
-function stripSlash(url: string): string {
-  return url.replace(/\/$/, "");
-}
-
-function isLocalOrigin(url: string): boolean {
-  try {
-    const host = new URL(url).hostname;
-    return host === "localhost" || host === "127.0.0.1";
-  } catch {
-    return /localhost|127\.0\.0\.1/i.test(url);
-  }
-}
-
-/**
- * Public origin for verify / reset links.
- *
- * Read `SITE_URL` (or `MAIL_SITE_URL`) at runtime. Do not use
- * `NEXT_PUBLIC_SITE_URL` here: Next inlines that at `next build`, so CI/local
- * empty/localhost leaked into production emails even when `.env.production`
- * was correct. Production never returns localhost.
- */
-export function resolveMailSiteUrl(env: MailSiteEnv = process.env): string {
-  for (const key of MAIL_ORIGIN_KEYS) {
-    const raw = readEnv(env, key);
-    if (!raw) continue;
-    if (readEnv(env, "NODE_ENV") === "production" && isLocalOrigin(raw)) {
-      continue;
-    }
-    return stripSlash(raw);
-  }
-  if (readEnv(env, "NODE_ENV") === "production") return DEFAULT_SITE_URL;
-  return "http://localhost:3000";
-}
-
-export function absoluteUrl(path: string, env: MailSiteEnv = process.env): string {
-  const base = resolveMailSiteUrl(env);
-  if (!path.startsWith("/")) return `${base}/${path}`;
-  return `${base}${path}`;
-}
+export const resolveMailSiteUrl = resolveSiteUrl;
+export const absoluteUrl = absoluteSiteUrl;
 
 function mailFrom(): string {
   return (

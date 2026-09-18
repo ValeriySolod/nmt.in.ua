@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { absoluteSiteUrl } from "@/lib/siteOrigin";
 import { verifyEmailAction } from "@/modules/auth/actions";
 
 export const dynamic = "force-dynamic";
@@ -8,6 +9,10 @@ export const dynamic = "force-dynamic";
  * Email links hit `/verify-email?token=`, which redirects here.
  * Cookie writes are illegal during RSC render — same reason as
  * `/api/auth/clear-session`.
+ *
+ * Do not build the 303 from `request.url`: the Node listener is
+ * 127.1.10.37, so the browser would leave nmt.in.ua after a successful
+ * verify. Always use SITE_URL.
  */
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -17,10 +22,11 @@ export async function GET(request: Request) {
     : ({ status: "error", code: "invalid" } as const);
 
   if (result.status === "ok") {
-    return NextResponse.redirect(new URL("/", request.url), 303);
+    return NextResponse.redirect(absoluteSiteUrl("/"), 303);
   }
 
-  const failed = new URL("/verify-email", request.url);
-  failed.searchParams.set("error", result.code);
-  return NextResponse.redirect(failed, 303);
+  return NextResponse.redirect(
+    absoluteSiteUrl(`/verify-email?error=${encodeURIComponent(result.code)}`),
+    303,
+  );
 }

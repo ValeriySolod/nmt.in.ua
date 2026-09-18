@@ -2,10 +2,15 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { PUBLIC_PAGE_PATHS } from "@/constants/publicRoutes";
 import { clientIp, isBlockedPath } from "@/lib/security";
+import { absoluteSiteUrl } from "@/lib/siteOrigin";
 import {
   SESSION_COOKIE_NAME,
   verifySessionToken,
 } from "@/modules/auth/sessionToken";
+
+function redirectOnSite(path: string): NextResponse {
+  return NextResponse.redirect(absoluteSiteUrl(path));
+}
 
 type Bucket = { count: number; resetAt: number };
 
@@ -113,17 +118,13 @@ async function authGuard(request: NextRequest): Promise<NextResponse | null> {
   const session = token ? await verifySessionToken(token) : null;
 
   if (!session) {
-    const loginUrl = request.nextUrl.clone();
-    loginUrl.pathname = "/login";
+    const loginUrl = new URL(absoluteSiteUrl("/login"));
     loginUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
   if (requiresAdmin(pathname) && session.role !== "admin") {
-    const home = request.nextUrl.clone();
-    home.pathname = "/";
-    home.search = "";
-    return NextResponse.redirect(home);
+    return redirectOnSite("/");
   }
 
   if (
@@ -131,10 +132,7 @@ async function authGuard(request: NextRequest): Promise<NextResponse | null> {
     session.role !== "teacher" &&
     session.role !== "admin"
   ) {
-    const home = request.nextUrl.clone();
-    home.pathname = "/";
-    home.search = "";
-    return NextResponse.redirect(home);
+    return redirectOnSite("/");
   }
 
   return null;
