@@ -15,7 +15,7 @@ export async function generateMetadata() {
 }
 
 type CheckEmailPageProps = {
-  searchParams: Promise<{ email?: string | string[] }>;
+  searchParams: Promise<{ email?: string | string[]; mail?: string | string[] }>;
 };
 
 export default async function CheckEmailPage({
@@ -24,10 +24,11 @@ export default async function CheckEmailPage({
   const params = await searchParams;
   const raw = Array.isArray(params.email) ? params.email[0] : params.email;
   const email = (raw ?? "").trim().toLowerCase();
+  const mail = Array.isArray(params.mail) ? params.mail[0] : params.mail;
 
   return (
     <AuthShell>
-      <CheckEmailForm email={email} />
+      <CheckEmailForm email={email} mailFailed={mail === "failed"} />
     </AuthShell>
   );
 }

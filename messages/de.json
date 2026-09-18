@@ -1359,6 +1359,8 @@
     "title": "E-Mail prüfen",
     "lead": "Wir haben einen Bestätigungslink gesendet. Fehlt er, prüfe den Spam oder sende erneut.",
     "leadWithEmail": "Nachricht an {email} gesendet. Fehlt sie, prüfe den Spam oder sende erneut.",
+    "leadFailed": "Konto erstellt, aber die E-Mail ist nicht rausgegangen. Bitte erneut senden.",
+    "leadFailedWithEmail": "Konto für {email} erstellt, aber die E-Mail ist nicht rausgegangen. Bitte erneut senden.",
     "email": "E-Mail",
     "resend": "Erneut senden",
     "resending": "Wird gesendet…",

@@ -202,6 +202,17 @@ ensure_env() {
   else
     printf '\nMAX_BODY_BYTES=8388608\n' >> "$dest"
   fi
+
+  if grep -q '^SITE_URL=' "$dest"; then
+    sed -i 's|^SITE_URL=.*|SITE_URL=https://nmt.in.ua|' "$dest"
+  else
+    printf '\nSITE_URL=https://nmt.in.ua\n' >> "$dest"
+  fi
+  if grep -q '^NEXT_PUBLIC_SITE_URL=' "$dest"; then
+    sed -i 's|^NEXT_PUBLIC_SITE_URL=.*|NEXT_PUBLIC_SITE_URL=https://nmt.in.ua|' "$dest"
+  else
+    printf '\nNEXT_PUBLIC_SITE_URL=https://nmt.in.ua\n' >> "$dest"
+  fi
 }
 
 echo "==> Extract ${RELEASE_ID} (live site still running)..."

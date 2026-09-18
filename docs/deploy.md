@@ -49,7 +49,7 @@ bash scripts/rollback-hosting.sh --yes
 
 Поки секрету немає — воркфлоу впаде **до** SSH, сайт не чіпає.
 
-Обовʼязкові змінні на прод: `DB_*`, `SESSION_SECRET`, `CONTENT_IMPORT_API_KEY`, `ADMIN_API_KEY`, `MAX_BODY_BYTES=8388608`, `NEXT_PUBLIC_SITE_URL=https://nmt.in.ua`, `SITE_URL=https://nmt.in.ua` (листи verify / reset; без них код у production сам бере `https://nmt.in.ua`, не localhost).
+Обовʼязкові змінні на прод: `DB_*`, `SESSION_SECRET`, `CONTENT_IMPORT_API_KEY`, `ADMIN_API_KEY`, `MAX_BODY_BYTES=8388608`, `NEXT_PUBLIC_SITE_URL=https://nmt.in.ua`, `SITE_URL=https://nmt.in.ua` (листи verify / reset; без них код у production сам бере `https://nmt.in.ua`, не localhost). Для реальних листів у store + `www` ще `RESEND_API_KEY` (і бажано `MAIL_FROM` з перевіреного домену). Без ключа Next у production більше не робить вигляд, що лист пішов; деплой ключ сам не підставляє.
 
 Збірка в Actions інлайнить `NEXT_PUBLIC_*`. Тому воркфлоу задає `NEXT_PUBLIC_SITE_URL=https://nmt.in.ua` на кроці `npm run build`. Листи читають `SITE_URL` / `NEXT_PUBLIC_SITE_URL` через дужковий доступ (`process.env["SITE_URL"]`), щоб підхопити живий `.env.production`, а не порожнє значення з CI.
 

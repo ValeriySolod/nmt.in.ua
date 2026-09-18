@@ -155,19 +155,20 @@ export async function registerAction(
     }
   }
 
+  let mailed = false;
   try {
-    await sendEmailVerificationMail({
+    const result = await sendEmailVerificationMail({
       userId,
       email: validated.value.email,
       displayName: validated.value.displayName,
     });
+    mailed = result.ok;
   } catch (error) {
     console.error("registerAction: send verify mail failed", error);
   }
 
-  redirect(
-    `/register/check-email?email=${encodeURIComponent(validated.value.email)}`,
-  );
+  const checkEmail = `/register/check-email?email=${encodeURIComponent(validated.value.email)}`;
+  redirect(mailed ? checkEmail : `${checkEmail}&mail=failed`);
 }
 
 export async function demoLoginAction(
@@ -333,11 +334,12 @@ export async function resendVerificationAction(
   }
 
   try {
-    await sendEmailVerificationMail({
+    const mailed = await sendEmailVerificationMail({
       userId: user.id,
       email: user.email ?? email,
       displayName: user.displayName,
     });
+    if (!mailed.ok) return { status: "error", code: "generic" };
   } catch (error) {
     console.error("resendVerificationAction failed", error);
     return { status: "error", code: "generic" };
@@ -408,11 +410,12 @@ export async function forgotPasswordAction(
   }
 
   try {
-    await sendPasswordResetMail({
+    const mailed = await sendPasswordResetMail({
       userId: user.id,
       email: user.email ?? email,
       displayName: user.displayName,
     });
+    if (!mailed.ok) return { status: "error", code: "generic" };
   } catch (error) {
     console.error("forgotPasswordAction failed", error);
     return { status: "error", code: "generic" };

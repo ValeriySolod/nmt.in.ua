@@ -58,7 +58,7 @@ npm run dev
 | `SESSION_SECRET` | Підпис cookie `nmt_session` | На проді вхід небезпечний / зламаний |
 | `SITE_URL` | Origin у листах verify / reset | Локально — `http://localhost:3000`; на проді без змінної — `https://nmt.in.ua` (не localhost) |
 | `NEXT_PUBLIC_SITE_URL` | Canonical / WayForPay URL (інлайниться на `next build`) | SEO падає на `https://nmt.in.ua` |
-| `RESEND_API_KEY` | Листи verify / reset пароля | Без ключа — `[mail:log]` у консоль (зручно локально) |
+| `RESEND_API_KEY` | Листи verify / reset пароля | Локально без ключа — `[mail:log]` у консоль. На проді без ключа лист не йде. |
 | `MAIL_FROM` | From для Resend (опційно) | Дефолт sandbox Resend |
 | `WAYFORPAY_MERCHANT_ACCOUNT` | Еквайринг WayForPay (UI зараз на паузі) | Без ключів checkout не підписується. Пісочниця: `test_merch_n1`. Лише `.env.local` / хостинг |
 | `WAYFORPAY_MERCHANT_SECRET_KEY` | SecretKey HMAC_MD5 (Purchase + serviceUrl) | Разом із account; ніколи в git |

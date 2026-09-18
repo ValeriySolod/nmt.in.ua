@@ -14,9 +14,13 @@ const INITIAL: ResendVerifyActionState = { status: "idle" };
 
 type CheckEmailFormProps = {
   email: string;
+  mailFailed?: boolean;
 };
 
-export function CheckEmailForm({ email }: CheckEmailFormProps) {
+export function CheckEmailForm({
+  email,
+  mailFailed = false,
+}: CheckEmailFormProps) {
   const t = useTranslations("CheckEmail");
   const [state, action, pending] = useActionState(
     resendVerificationAction,
@@ -30,7 +34,13 @@ export function CheckEmailForm({ email }: CheckEmailFormProps) {
         <p className={css.kicker}>{t("kicker")}</p>
         <h1 className={css.title}>{t("title")}</h1>
         <p className={css.lead}>
-          {hasPrefill ? t("leadWithEmail", { email }) : t("lead")}
+          {mailFailed && state.status === "idle"
+            ? hasPrefill
+              ? t("leadFailedWithEmail", { email })
+              : t("leadFailed")
+            : hasPrefill
+              ? t("leadWithEmail", { email })
+              : t("lead")}
         </p>
       </header>
 
@@ -62,9 +72,9 @@ export function CheckEmailForm({ email }: CheckEmailFormProps) {
           {t("resent")}
         </p>
       ) : null}
-      {state.status === "error" ? (
+      {state.status === "error" || (mailFailed && state.status === "idle") ? (
         <p className={clsx(css.alert, css.alertError)} role="alert">
-          {t(`errors.${state.code}`)}
+          {t(`errors.${state.status === "error" ? state.code : "generic"}`)}
         </p>
       ) : null}
 
