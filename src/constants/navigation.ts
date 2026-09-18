@@ -29,6 +29,13 @@ export const DASHBOARD_NAV: NavItem[] = [
     status: "ready",
   },
   {
+    href: "/assign",
+    label: "Призначити тест за темою",
+    description:
+      "Викладач обирає тему, учнів і термін — і бачить, хто вже пройшов.",
+    status: "ready",
+  },
+  {
     href: "/students",
     label: "Мої учні",
     description: "Список учнів викладача: додати за логіном або відв’язати.",

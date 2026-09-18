@@ -59,6 +59,7 @@ npm run dev
 | `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` | MySQL |
 | `DB_CONNECTION_LIMIT`, `DB_CONNECT_TIMEOUT_MS`, `DB_MAX_IDLE`, `DB_IDLE_TIMEOUT_MS` | тюнінг пулу; `DB_IDLE_TIMEOUT_MS` тримати нижче `wait_timeout` сервера |
 | `NEXT_PUBLIC_SITE_URL` | canonical URL для SEO, `returnUrl` / `serviceUrl` WayForPay |
+| `SITE_URL` | origin у листах verify / reset (runtime, не інлайниться на збірці). На проді без змінної — `https://nmt.in.ua` |
 | `CONTENT_IMPORT_API_KEY` | Bearer для `POST /api/import` і Server Action імпорту (admin) |
 | `ADMIN_API_KEY` | Bearer для `POST /api/admin/sessions` |
 | `SESSION_SECRET` | HMAC-секрет для cookie `nmt_session` (обовʼязково в production) |

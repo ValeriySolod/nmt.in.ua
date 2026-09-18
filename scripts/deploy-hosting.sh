@@ -239,9 +239,12 @@ if [ -d "${SITE}/node_modules" ]; then
   rm -rf "${STAGE}/node_modules"
   cp -a "${SITE}/node_modules" "${STAGE}/node_modules"
 fi
+mkdir -p "${APP_ROOT}/tmp"
+chmod 700 "${APP_ROOT}/tmp" 2>/dev/null || true
 # Subshell: do not cd this script into STAGE (mv would take us with it).
 (
   cd "$STAGE"
+  export TMPDIR="${APP_ROOT}/tmp"
   printf 'ignore-scripts=false\n' > .npmrc
   npm_config_ignore_scripts=false npm install --omit=dev --no-audit --no-fund --prefer-offline
 )
@@ -293,6 +296,8 @@ fi
 find "$RELEASES" -mindepth 1 -maxdepth 1 -type d \
   ! -path "$PREVIOUS" ! -path "$FAILED" \
   -exec rm -rf {} + 2>/dev/null || true
+
+clean_shared_php_tmp
 
 echo "OK: nmt.in.ua is up (BUILD_ID=$(cat "${SITE}/.next/BUILD_ID") release=${RELEASE_ID})"
 REMOTE

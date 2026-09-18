@@ -12,6 +12,7 @@ export type {
 export { unlinkStudent, validateUnlinkStudentInput } from "./unlinkStudent";
 export type { UnlinkStudentInput } from "./unlinkStudent";
 export { getTeacherStudents } from "./getTeacherStudents";
+export { isTeacherStudentLinked } from "./isTeacherStudentLinked";
 export {
   addTeacherStudentAction,
   unlinkTeacherStudentAction,

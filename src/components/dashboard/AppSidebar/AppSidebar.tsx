@@ -8,6 +8,7 @@ import { DASHBOARD_NAV } from "@/constants/navigation";
 import type { UserRole } from "@/modules/auth/client";
 import {
   ADMIN_NAV_HREFS,
+  canAssignMentorSessions,
   canImportContent,
   canManageProfiles,
   canManageStudents,
@@ -25,6 +26,7 @@ const NAV_ICONS: Record<string, string> = {
   "/": "∑",
   "/results": "%",
   "/sessions": "⏱",
+  "/assign": "✎",
   "/students": "◈",
   "/profiles": "◉",
   "/simulator": "◎",
@@ -40,6 +42,7 @@ const NAV_KEYS: Record<string, string> = {
   "/": "home",
   "/results": "results",
   "/sessions": "sessions",
+  "/assign": "assign",
   "/students": "students",
   "/profiles": "profiles",
   "/simulator": "simulator",
@@ -58,6 +61,8 @@ export function AppSidebar({ open, onNavigate, role }: AppSidebarProps) {
   const pathname = usePathname();
   const navItems = DASHBOARD_NAV.filter((item) => {
     if (role === "admin") return ADMIN_NAV_SET.has(item.href);
+    if (role === "teacher" && item.href === "/") return false;
+    if (item.href === "/assign") return canAssignMentorSessions(role);
     if (item.href === "/settings") return canImportContent(role);
     if (item.href === "/feedback") return canImportContent(role);
     if (item.href === "/profiles") return canManageProfiles(role);

@@ -46,7 +46,8 @@
       "settings": "Einstellungen",
       "consultations": "Lehrerberatungen",
       "homeAdmin": "Aufgaben nach Thema",
-      "profiles": "Profile"
+      "profiles": "Profile",
+      "assign": "Thementest zuweisen"
     }
   },
   "RecentResults": {
@@ -224,7 +225,7 @@
   "Consultations": {
     "kicker": "Beratung",
     "title": "Lehrerberatungen",
-    "studentLead": "Hinterlasse eine Anfrage — alle Lehrkräfte sehen sie im Kabinett. Eine persönliche Zuordnung Schüler–Lehrkraft gibt es noch nicht.",
+    "studentLead": "Wähle eine Lehrkraft in der Karussell-Liste oder sende eine allgemeine Anfrage. Bewertungen helfen anderen Schülern.",
     "teacherLead": "Alle Schüleranfragen. Eine Zuordnung Schüler–Lehrkraft gibt es noch nicht — die Liste ist für Lehrkräfte und Admins gemeinsam.",
     "formTitle": "Neue Anfrage",
     "formLead": "Beschreibe kurz, wobei du Hilfe brauchst — oder sende die Anfrage einfach so.",
@@ -270,6 +271,32 @@
       "generic": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
       "notFound": "Diese Anfrage existiert nicht mehr.",
       "invalidTransition": "Diese Statusänderung ist nicht erlaubt."
+    },
+    "carouselTitle": "Lehrkräfte",
+    "carouselLead": "Karten durchscrollen, bewerten und eine persönliche Beratung anfragen.",
+    "carouselEmpty": "Noch keine öffentlichen Lehrkraft-Karten. Du kannst unten eine allgemeine Anfrage senden.",
+    "carouselAria": "Lehrkräfte-Karussell",
+    "sortAria": "Lehrkräfte sortieren",
+    "sortRating": "Bewertung",
+    "sortName": "Name",
+    "sortCity": "Stadt",
+    "scrollPrev": "Vorherige Lehrkräfte",
+    "scrollNext": "Nächste Lehrkräfte",
+    "ratingSummary": "{avg} · {count} Bewertungen",
+    "ratingNone": "Noch keine Bewertungen",
+    "rateAria": "Lehrkraft {name} bewerten",
+    "ratingStar": "Note {score} von 5",
+    "personalCta": "Persönliche Beratung",
+    "personalSelected": "Persönliche Beratung: {name}",
+    "personalClear": "Entfernen",
+    "personalNotePrefix": "[Persönlich · {name}]",
+    "notePlaceholderPersonal": "Wobei brauchst du Hilfe von {name}?",
+    "submitPersonal": "Persönliche Beratung anfragen",
+    "ratingErrors": {
+      "invalid_input": "Wähle eine Note von 1 bis 5.",
+      "forbidden": "Nur Schüler können bewerten.",
+      "not_found": "Diese Lehrkraft ist nicht mehr in der Liste.",
+      "generic": "Bewertung konnte nicht gespeichert werden. Bitte erneut versuchen."
     }
   },
   "TopicTestStart": {
@@ -549,15 +576,82 @@
   },
   "TopicResultsTable": {
     "title": "Ergebnisse nach Thema",
-    "lead": "Fortschritt nach Thema: Ergebnis, letzte Versuche, Tempo und Selbsteinschätzung.",
+    "lead": "Fortschritt nach Thema: Versuche, Durchschnitt %, letzte Tests, Tempo und Selbsteinschätzung.",
     "topic": "Thema",
-    "overall": "Gesamt",
-    "lastThree": "Letzte 3 Tests",
+    "attempts": "Versuche",
+    "overall": "Durchschnitt %",
+    "lastThree": "Letzte 3",
     "speed": "Geschwindigkeit, Sek./Aufgabe",
     "selfScore": "Selbsteinschätzung",
     "selfScoreAria": "Selbsteinschätzung für «{theme}» von 1 bis 5",
     "selfScoreError": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
-    "hint": "Leere Felder zeigen Themen ohne abgeschlossene Versuche. Selbsteinschätzung 1–5 in der rechten Spalte. Farben: Grün ≥70%, Gelb 40–69%, Rot <40%."
+    "emptyAttempts": "Noch keine abgeschlossenen Versuche nach Thema.",
+    "hint": "Leere Felder zeigen Themen ohne abgeschlossene Versuche. Selbsteinschätzung 1–5 in der rechten Spalte. Farben: Grün ≥70%, Gelb 40–69%, Rot <40%.",
+    "hintTeacher": "Versuche = alle abgeschlossenen Tests zum Thema. Durchschnitt % und Tempo aus dieser Historie. Farben: Grün ≥70%, Gelb 40–69%, Rot <40%."
+  },
+  "TeacherStudentResults": {
+    "student": "Schüler",
+    "pickStudent": "Schüler wählen",
+    "allStudents": "Ergebnisse aller Schüler",
+    "allSessions": "Sitzungen aller Schüler",
+    "backToAll": "← Alle Schüler",
+    "studentOption": "{name} (@{login}) · {score}",
+    "noStudents": "Zuerst Schüler unter „Meine Schüler“ hinzufügen.",
+    "forbidden": "Dieser Schüler ist nicht in Ihrer Liste.",
+    "title": "Ergebnisse: {name}",
+    "lead": "Versuche, Durchschnittsergebnis und Tempo je Thema.",
+    "allTitle": "Alle Schüler nach Thema",
+    "allLead": "Gruppendurchschnitte. Schwächere Themen zuerst. Thema anklicken für Schülerliste.",
+    "allHint": "Schüler unter einem Thema sind vom niedrigsten zum höchsten Schnitt sortiert.",
+    "emptyClass": "Noch keine abgeschlossenen Versuche der Schüler.",
+    "topic": "Thema",
+    "studentsCol": "Schüler",
+    "attempts": "Versuche",
+    "overall": "Durchschnitt %",
+    "lastThree": "Letzte 3",
+    "speed": "Tempo",
+    "themeStudentsTitle": "Schüler · {theme}",
+    "themeStudentsLead": "Durchschnitte von schlecht nach gut.",
+    "themeStudentsEmpty": "Noch kein Schüler hat dieses Thema abgeschlossen.",
+    "themeStudentMeta": "{attempts} Versuche · Schnitt {percent} · {speed} Sek./Aufg."
+  },
+  "TeacherStudentSessions": {
+    "noStudents": "Zuerst Schüler unter „Meine Schüler“ hinzufügen.",
+    "forbidden": "Dieser Schüler ist nicht in Ihrer Liste.",
+    "allTitle": "Lernsitzungen aller Schüler",
+    "allLead": "Klick auf die Kopfzeile für Excel-Filter; ▲▼ sortiert. Gleich für alle und einen Schüler.",
+    "emptyClass": "Noch keine Sitzungen der Schüler.",
+    "filterEmpty": "Keine Sitzungen für diese Filter.",
+    "hint": "Name antippen für die Historie eines Schülers. Start und Abbruch bleiben beim Schüler.",
+    "showing": "{shown} von {total} angezeigt",
+    "sortBy": "Sortierung",
+    "sortAsc": "Aufsteigend",
+    "sortDesc": "Absteigend",
+    "filterHint": "Spaltenfilter",
+    "filterColumn": "Filter: {column}",
+    "filterSelectAll": "(Alle)",
+    "filterClear": "Filter löschen",
+    "student": "Schüler",
+    "theme": "Thema",
+    "scoreDetail": "Richtig",
+    "time": "Zeit, Sek.",
+    "speed": "Sek./Aufg.",
+    "when": "Datum",
+    "createdBy": "Von",
+    "status": "Status",
+    "studentTitle": "Sitzungen: {name}",
+    "studentLead": "Detaillierte Versuchshistorie. ▲▼ und Kopfzeilenfilter — wie bei allen Schülern.",
+    "studentEmpty": "Dieser Schüler hat noch keine Sitzungen.",
+    "statuses": {
+      "completed": "Erledigt",
+      "planned": "Geplant",
+      "expired": "Abgelaufen"
+    },
+    "createdByValues": {
+      "auto": "Auto",
+      "mentor": "Mentor",
+      "user": "Nutzer"
+    }
   },
   "Diagnostic": {
     "kicker": "Einstufungstest",
@@ -621,11 +715,13 @@
       "notCancelable": "Eine abgeschlossene Sitzung kann nicht abgebrochen werden.",
       "invalidInput": "Ungültige Sitzungs-ID.",
       "generic": "Die Sitzung konnte nicht abgebrochen werden. Bitte versuche es erneut."
-    }
+    },
+    "opensAt": "Ab {date}",
+    "dueAt": "Bis {date}"
   },
   "AuthShared": {
     "backHome": "Zur Startseite",
-    "asideBadge": "NMT 2026 · Mathematik",
+    "asideBadge": "NMT 2027 · Mathematik",
     "asideTitle": "Ihr Bereich für die NMT-Vorbereitung in Mathematik",
     "asideLead": "Eine Anmeldung — und Sie sehen Ihre Schwachstellen, den Verlauf der Versuche und die nächsten Schritte.",
     "asidePoints": {
@@ -645,7 +741,7 @@
       "cabinet": "Arbeitsbereich"
     },
     "hero": {
-      "badge": "NMT 2026 · Mathematik",
+      "badge": "NMT 2027 · Mathematik",
       "titleStart": "Vorbereitung auf die NMT in Mathematik —",
       "titleAccent": "systematisch und mit Ergebnis",
       "lead": "Ein Online-Bereich, der Ihre Schwachstellen zeigt, im Prüfungsformat trainiert und einen klaren Plan für die nächsten Schritte gibt. Ohne verstreute PDFs und zufällige Tests.",
@@ -1102,6 +1198,10 @@
     "resetPassword": {
       "title": "Neues Passwort",
       "description": "Neues Passwort für den Lernbereich festlegen."
+    },
+    "assign": {
+      "title": "Thementest zuweisen",
+      "description": "Thementests an Schüler mit Frist und Fortschrittsstatus zuweisen."
     }
   },
   "SettingsPage": {
@@ -1318,5 +1418,72 @@
       "passwordMismatch": "Passwörter stimmen nicht überein.",
       "generic": "Passwort konnte nicht gespeichert werden. Erneut versuchen."
     }
+  },
+  "TeacherAssign": {
+    "kicker": "Lehrkraft",
+    "title": "Thementest zuweisen",
+    "lead": "Thema, Schüler, Öffnung und Fensterende. Dann Status: grün fertig, rosa überfällig.",
+    "formTitle": "Neue Zuweisung",
+    "formLead": "Wählen Sie Öffnungszeit und Frist. Schüler anhaken.",
+    "topic": "Thema",
+    "when": "Zeitplan",
+    "scheduleNow": "Jetzt öffnen",
+    "scheduleDatetime": "Ab Datum/Uhrzeit öffnen",
+    "dueAt": "Fertig bis (Fensterende)",
+    "students": "Schüler",
+    "assign": "Zuweisen",
+    "assigning": "Wird zugewiesen…",
+    "created": "Zuweisung erstellt. Sie erscheint in der Liste.",
+    "noThemes": "Keine Themen verfügbar.",
+    "noStudents": "Zuerst Schüler unter „Meine Schüler“ hinzufügen.",
+    "listTitle": "Zugewiesene Tests",
+    "listLead": "Test öffnen: grün = erledigt, rosa = überfällig.",
+    "listEmpty": "Noch keine Zuweisungen.",
+    "sortBy": "Sortierung",
+    "sortNewest": "Neueste zuerst",
+    "sortOpens": "Nach Öffnung",
+    "sortDue": "Nach Frist",
+    "sortTheme": "Nach Thema",
+    "filterTheme": "Thema",
+    "filterProgress": "Fortschritt",
+    "filterAll": "Alle",
+    "filterPending": "Noch offen",
+    "filterOverdue": "Mit Überfälligen",
+    "filterDone": "Alle fertig",
+    "filterEmpty": "Keine Zuweisungen für diese Filter.",
+    "dueLabel": "Bis {date}",
+    "counts": "fertig {done} · überfällig {overdue} · gesamt {total}",
+    "progress": {
+      "completed": "Erledigt",
+      "overdue": "Überfällig",
+      "pending": "Offen"
+    },
+    "cancel": "Zuweisung stornieren",
+    "cancelling": "Wird storniert…",
+    "cancelConfirm": "Diese Zuweisung stornieren? Offene Sitzungen werden entfernt.",
+    "editMembers": "Schülerliste ändern",
+    "editClose": "Editor schließen",
+    "saveMembers": "Schüler speichern",
+    "saving": "Speichern…",
+    "membersSaved": "Schülerliste aktualisiert.",
+    "errors": {
+      "invalid_input": "Thema, Schüler und Datum prüfen.",
+      "theme_not_found": "Thema nicht gefunden.",
+      "no_students": "Mindestens einen Schüler wählen.",
+      "students_not_linked": "Schüler muss in Ihrer Liste sein.",
+      "not_found": "Zuweisung nicht gefunden.",
+      "cancelled": "Zuweisung bereits storniert.",
+      "forbidden": "Kein Zugriff auf diese Zuweisung.",
+      "db_error": "Datenbankfehler. Erneut versuchen.",
+      "generic": "Speichern fehlgeschlagen. Erneut versuchen."
+    },
+    "availableAt": "Öffnet um",
+    "opensLabel": "Öffnet {date}"
+  },
+  "SessionScheduledNotice": {
+    "title": "Test noch nicht geöffnet",
+    "lead": "Die Lehrkraft hat den Start für {date} geplant.",
+    "body": "Bis {date} bleibt der Test gesperrt. Kommen Sie später zu den Lernsitzungen zurück und starten Sie dann.",
+    "backToSessions": "Zu den Sitzungen"
   }
 }

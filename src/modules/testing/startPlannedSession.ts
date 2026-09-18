@@ -9,14 +9,23 @@ import {
 import { nowUnixSec } from "./sessionElapsed";
 import { isSessionExpired } from "./sessionExpiry";
 import { TOPIC_TEST_TASK_COUNT } from "./startTopicTest";
+import { ensureMentorAssignmentsSchema } from "@/modules/mentor-assignments/schema";
 
 const TASK_TYPE_TOPIC = 1;
 const TASK_STATUS_UNANSWERED = 0;
 
 const SQL_SELECT_SESSION = `
-  SELECT id, user_id, theme_id, session_status, expire_time
-  FROM task_sessions
-  WHERE id = ? AND user_id = ?
+  SELECT
+    ts.id,
+    ts.user_id,
+    ts.theme_id,
+    ts.session_status,
+    ts.expire_time,
+    ma.available_at
+  FROM task_sessions ts
+  LEFT JOIN mentor_assignment_members mam ON mam.session_id = ts.id
+  LEFT JOIN mentor_assignments ma ON ma.id = mam.assignment_id
+  WHERE ts.id = ? AND ts.user_id = ?
   FOR UPDATE
 `;
 
@@ -52,6 +61,7 @@ export type StartPlannedSessionErrorCode =
   | "invalid_input"
   | "not_found"
   | "not_planned"
+  | "not_yet_available"
   | "session_expired"
   | "insufficient_tasks"
   | "db_error";
@@ -60,6 +70,7 @@ export class StartPlannedSessionError extends Error {
   constructor(
     message: string,
     public readonly code: StartPlannedSessionErrorCode,
+    public readonly availableAt?: number,
   ) {
     super(message);
     this.name = "StartPlannedSessionError";
@@ -69,6 +80,7 @@ export class StartPlannedSessionError extends Error {
 type StartPlannedSessionDeps = {
   getConnection: () => Promise<SqlConnection>;
   nowSec?: () => number;
+  ensureSchema?: () => Promise<void>;
 };
 
 type SessionRow = {
@@ -77,6 +89,7 @@ type SessionRow = {
   theme_id: number;
   session_status: number;
   expire_time: number;
+  available_at: number | null;
 };
 
 type CountRow = {
@@ -121,6 +134,9 @@ export async function startPlannedSession(
 ): Promise<StartPlannedSessionResult> {
   const input = validateStartPlannedSessionInput(rawInput);
 
+  await (deps.ensureSchema ??
+    (() => ensureMentorAssignmentsSchema(deps.getConnection)))();
+
   try {
     const connection = await deps.getConnection();
     try {
@@ -146,14 +162,30 @@ export async function startPlannedSession(
       // reached in practice here, but kept consistent with every other
       // guard in this codebase).
       const nowSec = deps.nowSec ?? nowUnixSec;
+      const now = nowSec();
       if (
         session.session_status !== SESSION_STATUS_COMPLETED &&
-        isSessionExpired(session.expire_time, nowSec())
+        isSessionExpired(session.expire_time, now)
       ) {
         await connection.rollback();
         throw new StartPlannedSessionError(
           "This planned session's 24h lifetime has expired.",
           "session_expired",
+        );
+      }
+
+      const availableAt =
+        session.available_at != null &&
+        Number.isFinite(session.available_at) &&
+        session.available_at > 0
+          ? session.available_at
+          : null;
+      if (availableAt != null && now < availableAt) {
+        await connection.rollback();
+        throw new StartPlannedSessionError(
+          "This planned session is not available yet.",
+          "not_yet_available",
+          availableAt,
         );
       }
 

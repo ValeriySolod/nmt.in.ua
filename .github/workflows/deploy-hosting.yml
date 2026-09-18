@@ -29,6 +29,8 @@ jobs:
           cache: npm
 
       - name: Install, test, lint, build
+        env:
+          NEXT_PUBLIC_SITE_URL: https://nmt.in.ua
         run: |
           npm ci
           npm test

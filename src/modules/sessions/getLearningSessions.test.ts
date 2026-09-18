@@ -41,7 +41,10 @@ function makeConnection(rows: Row[]) {
 test("getLearningSessions filters by the requesting user's id", async () => {
   const { connection, calls } = makeConnection([]);
 
-  await getLearningSessions(42, { getConnection: async () => connection });
+  await getLearningSessions(42, {
+    getConnection: async () => connection,
+    ensureSchema: async () => {},
+  });
 
   assert.equal(calls.length, 1);
   assert.match(calls[0]!.sql, /WHERE ts\.user_id = \?/);
@@ -60,7 +63,10 @@ test("getLearningSessions resolves the theme name via the themes join on task_se
     },
   };
 
-  await getLearningSessions(1, { getConnection: async () => spyConnection });
+  await getLearningSessions(1, {
+    getConnection: async () => spyConnection,
+    ensureSchema: async () => {},
+  });
 
   assert.match(calls[0]!.sql, /INNER JOIN themes t ON t\.id = ts\.theme_id/);
   assert.match(calls[0]!.sql, /t\.name AS theme_name/);
@@ -69,7 +75,10 @@ test("getLearningSessions resolves the theme name via the themes join on task_se
 test("getLearningSessions releases the connection", async () => {
   const { connection, isReleased } = makeConnection([]);
 
-  await getLearningSessions(1, { getConnection: async () => connection });
+  await getLearningSessions(1, {
+    getConnection: async () => connection,
+    ensureSchema: async () => {},
+  });
 
   assert.equal(isReleased(), true);
 });
@@ -92,6 +101,7 @@ test("a completed topic test is visible with its stored percent and elapsed time
 
   const [row] = await getLearningSessions(1, {
     getConnection: async () => connection,
+    ensureSchema: async () => {},
   });
 
   assert.equal(row?.status, "completed");
@@ -120,6 +130,7 @@ test("an unfinished topic test is listed as planned with a start/continue link t
   const [row] = await getLearningSessions(1, {
     getConnection: async () => connection,
     nowSec: () => 1_700_000_000,
+    ensureSchema: async () => {},
   });
 
   assert.equal(row?.status, "planned");
@@ -147,6 +158,7 @@ test("an unfinished topic test past its 24h deadline is listed as expired, not p
   const [row] = await getLearningSessions(1, {
     getConnection: async () => connection,
     nowSec: () => now,
+    ensureSchema: async () => {},
   });
 
   assert.equal(row?.status, "expired");

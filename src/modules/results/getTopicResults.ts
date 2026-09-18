@@ -40,6 +40,15 @@ const SQL_USER_SESSIONS = `
   ORDER BY id DESC
 `;
 
+const SQL_ATTEMPT_COUNTS = `
+  SELECT theme_id, COUNT(*) AS attempts
+  FROM task_sessions
+  WHERE user_id = ?
+    AND session_status = ${SESSION_STATUS_COMPLETED}
+    AND theme_id IS NOT NULL
+  GROUP BY theme_id
+`;
+
 type GetTopicResultsDeps = {
   getConnection: () => Promise<SqlConnection>;
   nowSec?: () => number;
@@ -63,6 +72,16 @@ export function attachSelfScores(
   }));
 }
 
+export function attachAttemptCounts(
+  rows: TopicResultRow[],
+  counts: Map<number, number>,
+): TopicResultRow[] {
+  return rows.map((row) => ({
+    ...row,
+    attemptsCount: counts.get(row.themeId) ?? row.attemptsCount,
+  }));
+}
+
 /** Aggregated progress by theme for a student, including the self-score
  * column ("Самооцінка" on /results). */
 export async function getTopicResults(
@@ -78,15 +97,25 @@ export async function getTopicResults(
     right_number: number;
     time: number;
   }[];
+  let attemptRows: { theme_id: number; attempts: number }[];
   try {
     themes = await connection.query(SQL_THEMES);
     const nowSec = deps.nowSec ?? nowUnixSec;
     sessions = await connection.query(SQL_USER_SESSIONS, [userId, nowSec()]);
+    attemptRows = await connection.query(SQL_ATTEMPT_COUNTS, [userId]);
   } finally {
     connection.release();
   }
 
-  const rows = buildTopicResultRows(themes, sessions);
+  const counts = new Map<number, number>();
+  for (const row of attemptRows) {
+    counts.set(row.theme_id, Number(row.attempts) || 0);
+  }
+
+  const rows = attachAttemptCounts(
+    buildTopicResultRows(themes, sessions),
+    counts,
+  );
   const latestSelfScores = await getLatestSelfScoresForResults(userId, {
     getConnection: deps.getConnection,
   });

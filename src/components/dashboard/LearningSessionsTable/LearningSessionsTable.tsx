@@ -22,6 +22,13 @@ const CANCEL_INITIAL: CancelLearningSessionActionState = { status: "idle" };
 type LearningSessionsTableProps = {
   rows: LearningSessionRow[];
   extended?: boolean;
+  /** Hide start/cancel — for teacher viewing a student's sessions. */
+  readOnly?: boolean;
+  title?: string;
+  lead?: string;
+  empty?: string;
+  /** Kept when toggling compact/extended (e.g. `student`). */
+  queryParams?: Record<string, string | null | undefined>;
 };
 
 function formatPercent(percent: number | null): string {
@@ -47,9 +54,15 @@ function SessionActions({ row }: { row: LearningSessionRow }) {
     return null;
   }
 
+  const waiting = row.status === "planned" && !row.canStart;
+
   return (
     <div className={css.actions}>
-      {row.status === "expired" ? null : (
+      {row.status === "expired" ? null : waiting ? (
+        <span className={css.scheduledBadge} title={row.availableAtLabel ?? undefined}>
+          {t("opensAt", { date: row.availableAtLabel ?? "—" })}
+        </span>
+      ) : (
         <Link href={`/session/${row.id}`} className={css.startLink}>
           {t("start")}
         </Link>
@@ -85,6 +98,11 @@ function SessionActions({ row }: { row: LearningSessionRow }) {
 export function LearningSessionsTable({
   rows,
   extended = false,
+  readOnly = false,
+  title,
+  lead,
+  empty,
+  queryParams,
 }: LearningSessionsTableProps) {
   const t = useTranslations("LearningSessionsTable");
   const router = useRouter();
@@ -97,11 +115,11 @@ export function LearningSessionsTable({
     >
       <header className={css.intro}>
         <h1 id="learning-sessions-title" className={css.title}>
-          {t("title")}
+          {title ?? t("title")}
         </h1>
         <div className={css.descriptionRow}>
-          <p className={css.lead}>{t("lead")}</p>
-          {rows.length > 0 ? (
+          <p className={css.lead}>{lead ?? t("lead")}</p>
+          {rows.length > 0 && !readOnly ? (
             <div className={css.tableControls}>
               <button
                 type="button"
@@ -111,6 +129,7 @@ export function LearningSessionsTable({
                 onClick={() =>
                   router.replace(
                     queryHref("/sessions", {
+                      ...queryParams,
                       extended: showExtendedInfo ? null : "1",
                     }),
                     { scroll: false },
@@ -126,7 +145,7 @@ export function LearningSessionsTable({
 
       {rows.length === 0 ? (
         <p className={css.empty} role="status">
-          {t("empty")}
+          {empty ?? t("empty")}
         </p>
       ) : (
         <div
@@ -181,9 +200,11 @@ export function LearningSessionsTable({
                 <th scope="col" className={css.colStatus}>
                   {t("status")}
                 </th>
-                <th scope="col" className={css.colActions}>
-                  {t("actions")}
-                </th>
+                {readOnly ? null : (
+                  <th scope="col" className={css.colActions}>
+                    {t("actions")}
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -217,13 +238,29 @@ export function LearningSessionsTable({
                     </>
                   ) : null}
                   <td className={css.colStatus}>
-                    <span className={clsx(statusClass(row.status))}>
-                      {t(`statuses.${row.status}`)}
-                    </span>
+                    <div className={css.statusStack}>
+                      <span className={clsx(statusClass(row.status))}>
+                        {t(`statuses.${row.status}`)}
+                      </span>
+                      {row.availableAtLabel && row.status === "planned" ? (
+                        <span className={css.scheduledHint}>
+                          {t("opensAt", { date: row.availableAtLabel })}
+                        </span>
+                      ) : null}
+                      {row.dueAtLabel &&
+                      row.status === "planned" &&
+                      row.createdBy === "mentor" ? (
+                        <span className={css.scheduledHint}>
+                          {t("dueAt", { date: row.dueAtLabel })}
+                        </span>
+                      ) : null}
+                    </div>
                   </td>
-                  <td className={css.colActions}>
-                    <SessionActions row={row} />
-                  </td>
+                  {readOnly ? null : (
+                    <td className={css.colActions}>
+                      <SessionActions row={row} />
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

@@ -29,7 +29,8 @@ alwaysApply: true
 
 - `scripts/deploy-hosting.sh` — єдиний шлях (локально і CI, `--skip-build`).
 - `scripts/rewrite-next-build-paths.sh` — після кожної збірки перед tar.
-- `scripts/hosting-remote-lib.sh` — стоп / старт / health (`ps`/`awk`).
+- `scripts/hosting-remote-lib.sh` — стоп / старт / health (`ps`/`awk`); Node `TMPDIR` = `nmt.in.ua/tmp`, не `~/.system/tmp`.
+- `scripts/hosting-clean-php-tmp.sh` — прибрати PHP-шелли з акаунтного tmp (`sess_*` не чіпає).
 - `scripts/rollback-hosting.sh --yes`
 - Секрет `HOSTING_SSH_KEY` = PEM для `levelhst@levelhst.ftp.tools`.
 

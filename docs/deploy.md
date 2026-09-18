@@ -49,7 +49,9 @@ bash scripts/rollback-hosting.sh --yes
 
 Поки секрету немає — воркфлоу впаде **до** SSH, сайт не чіпає.
 
-Обовʼязкові змінні на прод: `DB_*`, `SESSION_SECRET`, `CONTENT_IMPORT_API_KEY`, `ADMIN_API_KEY`, `MAX_BODY_BYTES=8388608`.
+Обовʼязкові змінні на прод: `DB_*`, `SESSION_SECRET`, `CONTENT_IMPORT_API_KEY`, `ADMIN_API_KEY`, `MAX_BODY_BYTES=8388608`, `NEXT_PUBLIC_SITE_URL=https://nmt.in.ua`, `SITE_URL=https://nmt.in.ua` (листи verify / reset; без них код у production сам бере `https://nmt.in.ua`, не localhost).
+
+Збірка в Actions інлайнить `NEXT_PUBLIC_*`. Тому воркфлоу задає `NEXT_PUBLIC_SITE_URL=https://nmt.in.ua` на кроці `npm run build`. Листи читають `SITE_URL` / `NEXT_PUBLIC_SITE_URL` через дужковий доступ (`process.env["SITE_URL"]`), щоб підхопити живий `.env.production`, а не порожнє значення з CI.
 
 Без `SESSION_SECRET` у production вхід і реєстрація падають (`createSessionToken`). Ключ не комітити і не світити в логах. Згенерувати один раз: `openssl rand -hex 32` — і записати в обидва `.env.production` (store + `www`).
 
@@ -91,6 +93,7 @@ mysql ... < scripts/sql/007_user_self_scores.sql
 | `scripts/rollback-hosting.sh` | Повернути `releases/previous` (`--yes`) |
 | `scripts/manual-deploy-hosting.sh` | Аліас на `deploy-hosting.sh` |
 | `scripts/ensure-hosting-max-body-bytes.sh` | Виставити `MAX_BODY_BYTES=8388608` на хості |
+| `scripts/hosting-clean-php-tmp.sh` | Прибрати PHP-шелли з акаунтного `~/.system/tmp` (не чіпає `sess_*`) |
 
 Хост: Node `/usr/local/node24/bin`, bind `127.1.10.37:3000`. Інші сайти на цьому акаунті теж слухають `:3000`, але **інший** `127.x` — їх не чіпати.
 
@@ -133,6 +136,7 @@ proxy_set_header X-Forwarded-For $remote_addr;
 4. **Bash на хості без `/dev/fd`.** `<(ps …)` падає: `/dev/fd/62: No such file or directory`. Немає `ss`/`lsof`. Стоп — тільки `ps | awk` по `127.1.10.37` + `node server.js` / `npm run start`. Старт як у панелі.
 5. **glibc 2.28.** Свіжий `@next/swc` хоче 2.29. Беремо живі `node_modules` з поточного `www`, потім `npm install`.
 6. **Немає `SESSION_SECRET`.** Сайт 200, але логін / реєстрація ламаються. Деплой копіює store; якщо в store ключа не було — треба дописати вручну і перезапустити лише nmt Node.
+7. **PHP-шелли в `~/.system/tmp` (18.09.2026).** Це не nmt.in.ua: на тому ж UID живуть WordPress / Moodle. 16.09 ~22:47 у спільний PHP `upload_tmp_dir` потрапили копії Tiny File Manager і обфускований dropper (тягне payload з GitLab). Антивірус панелі заблокував **вихідні** з’єднання на весь акаунт — Resend і будь-який зовнішній API з Node теж падають. nmt не має `.php`. Після чистки в панелі треба **повторне сканування**, інакше обмеження не знімуться. Node/npm пишуть у `/home/levelhst/nmt.in.ua/tmp`, не в `.system/tmp`. Повний захист — окремий хостинг-акаунт для nmt, бо PHP і Node — один користувач.
 
 ## Чого більше немає
 

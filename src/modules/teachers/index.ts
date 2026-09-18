@@ -12,19 +12,27 @@ export {
 } from "./types";
 export type {
   PublicTeacherCard,
+  TeacherCarouselItem,
   TeacherProfile,
   TeacherProfileFieldError,
   TeacherProfileInput,
 } from "./types";
 export { ensureTeacherProfileSchema } from "./schema";
+export { ensureTeacherRatingsSchema } from "./ratingsSchema";
 export {
   getOwnTeacherProfile,
   getPublicTeacherCard,
   saveTeacherProfile,
   TeacherProfileError,
 } from "./store";
-export { saveTeacherProfileAction } from "./actions";
-export type { SaveTeacherProfileActionState } from "./actions";
+export { listPublicTeachersForCarousel } from "./listPublicTeachers";
+export { rateTeacher, RateTeacherError } from "./rateTeacher";
+export type { RateTeacherInput, RateTeacherResult } from "./rateTeacher";
+export { saveTeacherProfileAction, rateTeacherAction } from "./actions";
+export type {
+  SaveTeacherProfileActionState,
+  RateTeacherActionResult,
+} from "./actions";
 export {
   normalizeSlug,
   parseSubjects,
