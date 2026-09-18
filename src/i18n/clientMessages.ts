@@ -18,6 +18,7 @@ export const CORE_CLIENT_NAMESPACES = [
   "TopicTrainer",
   "TopicTrainerSummary",
   "SessionExpiredNotice",
+  "SessionScheduledNotice",
   "LearningSessionsTable",
   "ProblemsWorkbook",
   "simulator",
@@ -30,6 +31,9 @@ export const CORE_CLIENT_NAMESPACES = [
   // `(app)` layout does not re-pick messages mid-chain.
   "Consultations",
   "TeacherStudents",
+  "TeacherAssign",
+  "TeacherStudentResults",
+  "TeacherStudentSessions",
   "AdminContent",
   "AdminProfiles",
 ] as const;

@@ -3,6 +3,8 @@ export type TopicResultRow = {
   themeCode: string;
   themeName: string;
   displayIndex: number;
+  /** Completed attempts counted for this theme (full history when attached). */
+  attemptsCount: number;
   overallPercent: number | null;
   lastThreePercent: number | null;
   avgSecondsPerTask: number | null;
@@ -75,18 +77,21 @@ export function buildTopicResultRows(
 
   return themes.map((theme, index) => {
     const themeSessions = sessionsByTheme.get(theme.id) ?? [];
-    const percents = themeSessions
+    const finished = themeSessions.filter(
+      (session) => session.tasks_number > 0 && session.time > 0,
+    );
+    const percents = finished
       .map((session) =>
         sessionPercent(session.tasks_number, session.right_number),
       )
       .filter((value): value is number => value !== null);
-    const lastThreePercents = themeSessions
+    const lastThreePercents = finished
       .slice(0, 3)
       .map((session) =>
         sessionPercent(session.tasks_number, session.right_number),
       )
       .filter((value): value is number => value !== null);
-    const speeds = themeSessions
+    const speeds = finished
       .map((session) => sessionSpeed(session.tasks_number, session.time))
       .filter((value): value is number => value !== null);
 
@@ -95,6 +100,7 @@ export function buildTopicResultRows(
       themeCode: theme.code?.trim() || `T-${theme.id}`,
       themeName: theme.name.trim(),
       displayIndex: index + 1,
+      attemptsCount: finished.length,
       overallPercent: average(percents),
       lastThreePercent: average(lastThreePercents),
       avgSecondsPerTask: average(speeds),

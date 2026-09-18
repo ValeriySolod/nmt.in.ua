@@ -1,0 +1,44 @@
+.bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2xs);
+  margin-bottom: var(--space-md);
+  max-width: 28rem;
+}
+
+.backAll {
+  justify-self: start;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 2px;
+  color: var(--green-dark);
+  font-size: var(--fs-small);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.backAll:hover,
+.backAll:focus-visible {
+  color: var(--green);
+  text-decoration: underline;
+}
+
+.field {
+  display: grid;
+  gap: var(--space-2xs);
+}
+
+.label {
+  color: var(--subtle);
+  font-size: var(--fs-kicker);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.empty {
+  margin: 0 0 var(--space-md);
+  color: var(--muted);
+  font-size: var(--fs-small);
+}

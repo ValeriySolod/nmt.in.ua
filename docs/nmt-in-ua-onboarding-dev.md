@@ -20,7 +20,7 @@ nmt.in.ua — тренажер підготовки до НМТ з матема�
 | Роль | Що може |
 | --- | --- |
 | Учень (`student`) | Тести, симулятор, результати, свої сесії, реєстрація |
-| Викладач (`teacher`) | Усе як учень + призначити сесію на `/sessions` + черга консультацій на `/consultations` + «Мої учні» на `/students` + публічна візитка на `/account` (`/t/{slug}`) |
+| Викладач (`teacher`) | Призначити тест на `/assign` + результати учнів на `/results` (усі / один учень; теми з гіршим середнім вище; клік по темі → учні від гіршого бала) + навчальні сесії учнів на `/sessions` (усі / один, детальна таблиця) + «Мої учні» на `/students` + консультації + візитка. Без пункту «Тест за обраною темою» в меню. |
 | Адмін (`admin`) | Імпорт на `/settings`, відгуки `/feedback`, профілі `/profiles`; **без** публічної візитки й навчальних віджетів на `/account` |
 
 ## 2. Перший день — чекліст
@@ -72,7 +72,7 @@ npm run dev
 | Логін | Пароль | Роль | Навіщо зайти |
 | --- | --- | --- | --- |
 | `demo-student` | `demo123` | Учень | Тести, результати, свої сесії |
-| `demo-teacher` | `demo123` | Викладач | Панель призначення на `/sessions`; «Мої учні» на `/students`; візитка на `/account` |
+| `demo-teacher` | `demo123` | Викладач | Призначення на `/assign`; «Мої учні» на `/students`; візитка на `/account` |
 | `demo-admin` | `demo123` | Адмін | Імпорт `/settings`, відгуки `/feedback`, профілі `/profiles`; `/account` без візитки й навчальних віджетів |
 
 Таблиця `app_users` створюється сама при першому запиті. Legacy-таблицю `users` на хостингу не чіпаємо. Якщо старі сесії «прилипли» до demo-student: `npm run reset-demo-student`.
@@ -160,6 +160,7 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 | `src/modules/fractionPractice/` | Server Actions, що підключають `problemGenerators/fractionAddition` до `/practice/fractions` — жодного запису в БД (11.09) |
 | `src/modules/recommendations/` | Статистика, правила, граф тем, авто-сесії |
 | `src/modules/sessions/` | Список сесій, createMentorSession |
+| `src/modules/mentor-assignments/` | Групове призначення тестів викладачем (`/assign`) |
 | `src/modules/results/` | Агрегати для `/results` і сайдбару |
 | `src/modules/teachers/` | Публічна візитка + карусель/рейтинги на `/consultations` |
 | `messages/uk.json`, `en.json`, `de.json` | Тексти інтерфейсу |
@@ -187,6 +188,7 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 | Тест | `src/modules/testing` | `startTopicTest`, `startNmtSimulator`, `checkAnswer`, `finishTrainerSession`, `getTaskHint`, `addSimilarPracticeTask` (Практика, 11.09) |
 | Рекомендації | `src/modules/recommendations` | `getStudentTopicStats`, `recommendNextActions`, `persistRecommendations` |
 | Сесії | `src/modules/sessions` | `getLearningSessions`, `createMentorSession`, cancel |
+| Призначення тестів | `src/modules/mentor-assignments` | `createMentorAssignment`, list/detail, cancel, update members |
 | Учні викладача | `src/modules/teacher-students` | `linkStudentByLogin`, `unlinkStudent`, `getTeacherStudents` — ручний зв’язок за логіном |
 | Самооцінка | `src/modules/self-score` | `recordSelfScore`, `saveThemeSelfScoreAction` (колонка на `/results`), `getLatestSelfScoresForResults` — історія 1–10, ніколи не перезаписується |
 | Діагностика (гість) | `src/modules/diagnostic` | `startDiagnosticTest`, owner-aware `checkDiagnosticAnswer`/`finishDiagnosticSession`/`getDiagnosticSessionTasks`/`markDiagnosticSessionStarted`, `claimGuestProgress` — усе окремо від `testing`, щоб не чіпати протестований topic-test код |
@@ -216,6 +218,7 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 
 | `user_self_scores` | Самооцінка (6.3–6.4), **історія, ніколи не перезаписується** | `user_id`/`guest_token` (рівно один із двох), `theme_id` nullable (NULL = загальна оцінка), `score` 1–10, `source` `diagnostic_overall`/`pre_topic`, `created_at` |
 | `teacher_students` | Список «Мої учні» | `teacher_user_id` + `student_user_id` (unique pair, FK на `app_users`). Ліниво: `ensureTeacherStudentsSchema`. DDL: `scripts/sql/017_teacher_students.sql` |
+| `mentor_assignments` / `mentor_assignment_members` | Групове ДЗ викладача | Тема + `due_at` + члени з `session_id`. Ліниво: `ensureMentorAssignmentsSchema`. DDL: `scripts/sql/033_mentor_assignments.sql` |
 
 
 **`right_answer_n` і `comments` не віддавай клієнту**, поки відповідь не перевірена або сесія не завершена. Перевірка завжди на сервері.
@@ -269,7 +272,7 @@ Cookie `nmt_guest` **ніколи** не перевіряється в `src/prox
 | Звичайний тест | `/` → TopicTestStart | скільки впишеш (макс. банк теми) | Розбір одразу після відповіді |
 | Симулятор НМТ | `/simulator` | варіант (офіційний), 60 хв | `session_type = 4`, банк `nmt_quiz_tasks` |
 | Авто-сесія | з’являється на `/sessions` | як тест | Створює recommend після фінішу |
-| Ментор-сесія | викладач на `/sessions` | як тест | `session_type = 3`, Старт / × |
+| Ментор-сесія | викладач на `/assign` | як тест | `session_type = 3`, Старт / ×; групове призначення з дедлайном |
 | Діагностика (гість/учень) | `/diagnostic` (публічний) | до 3 завдань з кожної теми з ≥3 завданнями, макс. 10 тем (30 завдань) | `session_type = 5`, `theme_id = NULL`, одна сесія на всю спробу; перед стартом — загальна самооцінка 1–10 |
 
 **Практика vs Діагностика (11.09.2026).** `src/modules/testing/sessionMode.ts` дає
@@ -339,6 +342,7 @@ Ultimate/НМТ/діагностика лишились без змін. Зар�
 | `/materials/textbook` | Учень+ | Єдиний підручник: зміст + один розділ `?topic=<themes.code>` |
 | `/problems` | Учень+ | Задачник: друкований тест по темі |
 | `/account` | Учень+ | Фото / пароль / вихід. Учень і викладач — результати + заглушки; викладач — візитка; адмін — без них |
+| `/assign` | Лише teacher/admin | Призначити тест: відкриття зараз / з дати-часу + кінець вікна (дедлайн), галочки учнів, статуси |
 | `/students` | Лише teacher/admin | «Мої учні»: додати за логіном, список, відв’язати |
 | `/consultations` | Учень+ | Учень: карусель публічних викладачів (рейтинг / сортування / персональна консультація) + один відкритий запит. Викладач/адмін: черга всіх заявок |
 | `/practice/fractions` | Учень+ | Генерована практика: додавання дробів, 5 рівнів. Посилання з `TopicTestStart` (`/`) |
@@ -434,6 +438,9 @@ Ultimate/НМТ/діагностика лишились без змін. Зар�
 | 6.2 Відгук | `src/modules/feedback` | Мала | ✅ |
 | Консультації | `/consultations` | Мала | ✅ 17.09: карусель публічних викладачів + рейтинг + персональна заявка; черга викладачів без змін |
 | Мої учні | `src/modules/teacher-students`, `/students` | Мала | ✅ 11.09: ручне прив’язування за логіном (teacher/admin) |
+| Призначити тест | `src/modules/mentor-assignments`, `/assign` | Середня | ✅ 17.09: мульти-учні, дедлайн, статуси зелений/рожевий, скасування й зміна списку |
+| Результати учнів | `/results`, `teacherStudentResults` | Мала | ✅ 17.09: «усі учні» у випадайці, worst-first; клік по темі → середні учнів |
+| Сесії учнів | `/sessions`, `teacherLearningSessions` | Мала | ✅ 17.09: усі / один учень; картки→таблиця; детальні бали без старту/скасування |
 | Публічна візитка викладача | `src/modules/teachers`, `/account`, `/t/{slug}` | Мала | ✅ 13.09; адмін без візитки з 16.09 |
 | Реєстрація викладача + WayForPay | `/register/teacher`, `src/modules/payments` | Середня | ⏸️ UI оплати приховано 16.09; безкоштовний teacher на `/register?role=teacher`. WayForPay код лишається |
 | Email verify + reset (Resend) | `src/modules/auth`, `src/modules/mail`, `/verify-email` | Середня | ✅ 16.09: блок логіну до verify; forgot/reset; без ключа — log |
@@ -462,6 +469,6 @@ Ultimate/НМТ/діагностика лишились без змін. Зар�
 - На `/` обери тему, звичайний режим, Старт — потрапиш у `/session/[id]`.
 - Відповідай, заверши, подивись підсумок і поради.
 - Відкрий `/results` і `/sessions` — ті самі цифри мають збігатися.
-- Вийди, зайди як `demo-teacher`, на `/sessions` признач сесію `demo-student`. На `/students` додай того ж учня за логіном. На `/account` заповни візитку, постав «опублікувати», відкрий `/t/{slug}` інкогніто.
+- Вийди, зайди як `demo-teacher`, на `/students` додай `demo-student`, на `/assign` признач тему «на зараз», на `/results` і `/sessions` глянь «усі учні». На `/account` заповни візитку, постав «опублікувати», відкрий `/t/{slug}` інкогніто.
 - Зайди як `demo-admin`, глянь форму на `/settings`. Не імпортуй випадковий файл у спільну базу без узгодження.
 - Відкрий `/simulator` — це не той самий код, що короткий тест (`NmtTrainer`, `session_type` 4).

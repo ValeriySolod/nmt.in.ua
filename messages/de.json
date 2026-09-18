@@ -46,7 +46,8 @@
       "settings": "Einstellungen",
       "consultations": "Lehrerberatungen",
       "homeAdmin": "Aufgaben nach Thema",
-      "profiles": "Profile"
+      "profiles": "Profile",
+      "assign": "Thementest zuweisen"
     }
   },
   "RecentResults": {
@@ -575,15 +576,82 @@
   },
   "TopicResultsTable": {
     "title": "Ergebnisse nach Thema",
-    "lead": "Fortschritt nach Thema: Ergebnis, letzte Versuche, Tempo und Selbsteinschätzung.",
+    "lead": "Fortschritt nach Thema: Versuche, Durchschnitt %, letzte Tests, Tempo und Selbsteinschätzung.",
     "topic": "Thema",
-    "overall": "Gesamt",
-    "lastThree": "Letzte 3 Tests",
+    "attempts": "Versuche",
+    "overall": "Durchschnitt %",
+    "lastThree": "Letzte 3",
     "speed": "Geschwindigkeit, Sek./Aufgabe",
     "selfScore": "Selbsteinschätzung",
     "selfScoreAria": "Selbsteinschätzung für «{theme}» von 1 bis 5",
     "selfScoreError": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
-    "hint": "Leere Felder zeigen Themen ohne abgeschlossene Versuche. Selbsteinschätzung 1–5 in der rechten Spalte. Farben: Grün ≥70%, Gelb 40–69%, Rot <40%."
+    "emptyAttempts": "Noch keine abgeschlossenen Versuche nach Thema.",
+    "hint": "Leere Felder zeigen Themen ohne abgeschlossene Versuche. Selbsteinschätzung 1–5 in der rechten Spalte. Farben: Grün ≥70%, Gelb 40–69%, Rot <40%.",
+    "hintTeacher": "Versuche = alle abgeschlossenen Tests zum Thema. Durchschnitt % und Tempo aus dieser Historie. Farben: Grün ≥70%, Gelb 40–69%, Rot <40%."
+  },
+  "TeacherStudentResults": {
+    "student": "Schüler",
+    "pickStudent": "Schüler wählen",
+    "allStudents": "Ergebnisse aller Schüler",
+    "allSessions": "Sitzungen aller Schüler",
+    "backToAll": "← Alle Schüler",
+    "studentOption": "{name} (@{login}) · {score}",
+    "noStudents": "Zuerst Schüler unter „Meine Schüler“ hinzufügen.",
+    "forbidden": "Dieser Schüler ist nicht in Ihrer Liste.",
+    "title": "Ergebnisse: {name}",
+    "lead": "Versuche, Durchschnittsergebnis und Tempo je Thema.",
+    "allTitle": "Alle Schüler nach Thema",
+    "allLead": "Gruppendurchschnitte. Schwächere Themen zuerst. Thema anklicken für Schülerliste.",
+    "allHint": "Schüler unter einem Thema sind vom niedrigsten zum höchsten Schnitt sortiert.",
+    "emptyClass": "Noch keine abgeschlossenen Versuche der Schüler.",
+    "topic": "Thema",
+    "studentsCol": "Schüler",
+    "attempts": "Versuche",
+    "overall": "Durchschnitt %",
+    "lastThree": "Letzte 3",
+    "speed": "Tempo",
+    "themeStudentsTitle": "Schüler · {theme}",
+    "themeStudentsLead": "Durchschnitte von schlecht nach gut.",
+    "themeStudentsEmpty": "Noch kein Schüler hat dieses Thema abgeschlossen.",
+    "themeStudentMeta": "{attempts} Versuche · Schnitt {percent} · {speed} Sek./Aufg."
+  },
+  "TeacherStudentSessions": {
+    "noStudents": "Zuerst Schüler unter „Meine Schüler“ hinzufügen.",
+    "forbidden": "Dieser Schüler ist nicht in Ihrer Liste.",
+    "allTitle": "Lernsitzungen aller Schüler",
+    "allLead": "Klick auf die Kopfzeile für Excel-Filter; ▲▼ sortiert. Gleich für alle und einen Schüler.",
+    "emptyClass": "Noch keine Sitzungen der Schüler.",
+    "filterEmpty": "Keine Sitzungen für diese Filter.",
+    "hint": "Name antippen für die Historie eines Schülers. Start und Abbruch bleiben beim Schüler.",
+    "showing": "{shown} von {total} angezeigt",
+    "sortBy": "Sortierung",
+    "sortAsc": "Aufsteigend",
+    "sortDesc": "Absteigend",
+    "filterHint": "Spaltenfilter",
+    "filterColumn": "Filter: {column}",
+    "filterSelectAll": "(Alle)",
+    "filterClear": "Filter löschen",
+    "student": "Schüler",
+    "theme": "Thema",
+    "scoreDetail": "Richtig",
+    "time": "Zeit, Sek.",
+    "speed": "Sek./Aufg.",
+    "when": "Datum",
+    "createdBy": "Von",
+    "status": "Status",
+    "studentTitle": "Sitzungen: {name}",
+    "studentLead": "Detaillierte Versuchshistorie. ▲▼ und Kopfzeilenfilter — wie bei allen Schülern.",
+    "studentEmpty": "Dieser Schüler hat noch keine Sitzungen.",
+    "statuses": {
+      "completed": "Erledigt",
+      "planned": "Geplant",
+      "expired": "Abgelaufen"
+    },
+    "createdByValues": {
+      "auto": "Auto",
+      "mentor": "Mentor",
+      "user": "Nutzer"
+    }
   },
   "Diagnostic": {
     "kicker": "Einstufungstest",
@@ -647,7 +715,9 @@
       "notCancelable": "Eine abgeschlossene Sitzung kann nicht abgebrochen werden.",
       "invalidInput": "Ungültige Sitzungs-ID.",
       "generic": "Die Sitzung konnte nicht abgebrochen werden. Bitte versuche es erneut."
-    }
+    },
+    "opensAt": "Ab {date}",
+    "dueAt": "Bis {date}"
   },
   "AuthShared": {
     "backHome": "Zur Startseite",
@@ -1128,6 +1198,10 @@
     "resetPassword": {
       "title": "Neues Passwort",
       "description": "Neues Passwort für den Lernbereich festlegen."
+    },
+    "assign": {
+      "title": "Thementest zuweisen",
+      "description": "Thementests an Schüler mit Frist und Fortschrittsstatus zuweisen."
     }
   },
   "SettingsPage": {
@@ -1344,5 +1418,72 @@
       "passwordMismatch": "Passwörter stimmen nicht überein.",
       "generic": "Passwort konnte nicht gespeichert werden. Erneut versuchen."
     }
+  },
+  "TeacherAssign": {
+    "kicker": "Lehrkraft",
+    "title": "Thementest zuweisen",
+    "lead": "Thema, Schüler, Öffnung und Fensterende. Dann Status: grün fertig, rosa überfällig.",
+    "formTitle": "Neue Zuweisung",
+    "formLead": "Wählen Sie Öffnungszeit und Frist. Schüler anhaken.",
+    "topic": "Thema",
+    "when": "Zeitplan",
+    "scheduleNow": "Jetzt öffnen",
+    "scheduleDatetime": "Ab Datum/Uhrzeit öffnen",
+    "dueAt": "Fertig bis (Fensterende)",
+    "students": "Schüler",
+    "assign": "Zuweisen",
+    "assigning": "Wird zugewiesen…",
+    "created": "Zuweisung erstellt. Sie erscheint in der Liste.",
+    "noThemes": "Keine Themen verfügbar.",
+    "noStudents": "Zuerst Schüler unter „Meine Schüler“ hinzufügen.",
+    "listTitle": "Zugewiesene Tests",
+    "listLead": "Test öffnen: grün = erledigt, rosa = überfällig.",
+    "listEmpty": "Noch keine Zuweisungen.",
+    "sortBy": "Sortierung",
+    "sortNewest": "Neueste zuerst",
+    "sortOpens": "Nach Öffnung",
+    "sortDue": "Nach Frist",
+    "sortTheme": "Nach Thema",
+    "filterTheme": "Thema",
+    "filterProgress": "Fortschritt",
+    "filterAll": "Alle",
+    "filterPending": "Noch offen",
+    "filterOverdue": "Mit Überfälligen",
+    "filterDone": "Alle fertig",
+    "filterEmpty": "Keine Zuweisungen für diese Filter.",
+    "dueLabel": "Bis {date}",
+    "counts": "fertig {done} · überfällig {overdue} · gesamt {total}",
+    "progress": {
+      "completed": "Erledigt",
+      "overdue": "Überfällig",
+      "pending": "Offen"
+    },
+    "cancel": "Zuweisung stornieren",
+    "cancelling": "Wird storniert…",
+    "cancelConfirm": "Diese Zuweisung stornieren? Offene Sitzungen werden entfernt.",
+    "editMembers": "Schülerliste ändern",
+    "editClose": "Editor schließen",
+    "saveMembers": "Schüler speichern",
+    "saving": "Speichern…",
+    "membersSaved": "Schülerliste aktualisiert.",
+    "errors": {
+      "invalid_input": "Thema, Schüler und Datum prüfen.",
+      "theme_not_found": "Thema nicht gefunden.",
+      "no_students": "Mindestens einen Schüler wählen.",
+      "students_not_linked": "Schüler muss in Ihrer Liste sein.",
+      "not_found": "Zuweisung nicht gefunden.",
+      "cancelled": "Zuweisung bereits storniert.",
+      "forbidden": "Kein Zugriff auf diese Zuweisung.",
+      "db_error": "Datenbankfehler. Erneut versuchen.",
+      "generic": "Speichern fehlgeschlagen. Erneut versuchen."
+    },
+    "availableAt": "Öffnet um",
+    "opensLabel": "Öffnet {date}"
+  },
+  "SessionScheduledNotice": {
+    "title": "Test noch nicht geöffnet",
+    "lead": "Die Lehrkraft hat den Start für {date} geplant.",
+    "body": "Bis {date} bleibt der Test gesperrt. Kommen Sie später zu den Lernsitzungen zurück und starten Sie dann.",
+    "backToSessions": "Zu den Sitzungen"
   }
 }

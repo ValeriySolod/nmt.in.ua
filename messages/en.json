@@ -46,7 +46,8 @@
       "settings": "Settings",
       "consultations": "Teacher consultations",
       "homeAdmin": "Tasks by topic",
-      "profiles": "Profiles"
+      "profiles": "Profiles",
+      "assign": "Assign topic test"
     }
   },
   "RecentResults": {
@@ -575,15 +576,82 @@
   },
   "TopicResultsTable": {
     "title": "Results by topic",
-    "lead": "Progress by topic: score, recent attempts, speed, and self-assessment.",
+    "lead": "Progress by topic: attempts, average %, recent tests, speed, and self-assessment.",
     "topic": "Topic",
-    "overall": "Overall",
-    "lastThree": "Last 3 tests",
+    "attempts": "Attempts",
+    "overall": "Average %",
+    "lastThree": "Last 3",
     "speed": "Speed, sec/task",
     "selfScore": "Self-assessment",
     "selfScoreAria": "Self-assessment for «{theme}» from 1 to 5",
     "selfScoreError": "Could not save. Try again.",
-    "hint": "Empty cells mean topics with no completed attempts. Set a 1–5 self-assessment in the rightmost column. Colors: green ≥70%, yellow 40–69%, red <40%."
+    "emptyAttempts": "No completed attempts by topic yet.",
+    "hint": "Empty cells mean topics with no completed attempts. Set a 1–5 self-assessment in the rightmost column. Colors: green ≥70%, yellow 40–69%, red <40%.",
+    "hintTeacher": "Attempts are all completed tests for the topic. Average % and speed use that history. Colors: green ≥70%, yellow 40–69%, red <40%."
+  },
+  "TeacherStudentResults": {
+    "student": "Student",
+    "pickStudent": "Choose a student",
+    "allStudents": "Results for all students",
+    "allSessions": "All students’ sessions",
+    "backToAll": "← All students",
+    "studentOption": "{name} (@{login}) · {score}",
+    "noStudents": "Add students on “My students” first.",
+    "forbidden": "This student is not on your roster.",
+    "title": "Results: {name}",
+    "lead": "Attempts, average score and speed for each topic.",
+    "allTitle": "All students by topic",
+    "allLead": "Group averages. Weaker topics first. Click a topic to see students.",
+    "allHint": "Students under a topic are sorted from lowest average to highest.",
+    "emptyClass": "Students have no completed attempts yet.",
+    "topic": "Topic",
+    "studentsCol": "Students",
+    "attempts": "Attempts",
+    "overall": "Average %",
+    "lastThree": "Last 3",
+    "speed": "Speed",
+    "themeStudentsTitle": "Students · {theme}",
+    "themeStudentsLead": "Average scores from worst to best.",
+    "themeStudentsEmpty": "No student has completed this topic yet.",
+    "themeStudentMeta": "{attempts} attempts · avg {percent} · {speed} s/task"
+  },
+  "TeacherStudentSessions": {
+    "noStudents": "Add students on “My students” first.",
+    "forbidden": "This student is not on your roster.",
+    "allTitle": "All students’ learning sessions",
+    "allLead": "Click a header for an Excel-style filter; ▲▼ arrows sort. Same for all students and one student.",
+    "emptyClass": "Students have no sessions yet.",
+    "filterEmpty": "No sessions match these filters.",
+    "hint": "Tap a student name to open only their history. Start and cancel stay with the student.",
+    "showing": "Showing {shown} of {total}",
+    "sortBy": "Sort",
+    "sortAsc": "Ascending",
+    "sortDesc": "Descending",
+    "filterHint": "Column filter",
+    "filterColumn": "Filter: {column}",
+    "filterSelectAll": "(All)",
+    "filterClear": "Clear filter",
+    "student": "Student",
+    "theme": "Topic",
+    "scoreDetail": "Correct",
+    "time": "Time, s",
+    "speed": "s/task",
+    "when": "Date",
+    "createdBy": "By",
+    "status": "Status",
+    "studentTitle": "Sessions: {name}",
+    "studentLead": "Detailed attempt history. ▲▼ sort and header filters — same as for all students.",
+    "studentEmpty": "This student has no sessions yet.",
+    "statuses": {
+      "completed": "Completed",
+      "planned": "Planned",
+      "expired": "Expired"
+    },
+    "createdByValues": {
+      "auto": "Auto",
+      "mentor": "Mentor",
+      "user": "User"
+    }
   },
   "Diagnostic": {
     "kicker": "Diagnostic test",
@@ -647,7 +715,9 @@
       "notCancelable": "A completed session cannot be canceled.",
       "invalidInput": "Invalid session ID.",
       "generic": "Could not cancel the session. Please try again."
-    }
+    },
+    "opensAt": "From {date}",
+    "dueAt": "Due {date}"
   },
   "AuthShared": {
     "backHome": "Back to home",
@@ -1128,6 +1198,10 @@
     "resetPassword": {
       "title": "New password",
       "description": "Set a new password for the learning workspace."
+    },
+    "assign": {
+      "title": "Assign topic test",
+      "description": "Assign topic tests to your students with a deadline and progress statuses."
     }
   },
   "SettingsPage": {
@@ -1344,5 +1418,72 @@
       "passwordMismatch": "Passwords do not match.",
       "generic": "Could not save the password. Try again."
     }
+  },
+  "TeacherAssign": {
+    "kicker": "Teacher",
+    "title": "Assign a topic test",
+    "lead": "Topic, students, open time and window end. Then track who finished and who missed it.",
+    "formTitle": "New assignment",
+    "formLead": "Choose when the test opens and when it must be finished. Check the students.",
+    "topic": "Topic",
+    "when": "Schedule",
+    "scheduleNow": "Open now",
+    "scheduleDatetime": "Open at date and time",
+    "dueAt": "Finish by (window end)",
+    "students": "Students",
+    "assign": "Assign",
+    "assigning": "Assigning…",
+    "created": "Assignment created. It appears in the list.",
+    "noThemes": "No topics available.",
+    "noStudents": "Add students on “My students” first.",
+    "listTitle": "Assigned tests",
+    "listLead": "Open a test to see students: green = done, pink = overdue.",
+    "listEmpty": "No assignments yet.",
+    "sortBy": "Sort",
+    "sortNewest": "Newest first",
+    "sortOpens": "By open time",
+    "sortDue": "By deadline",
+    "sortTheme": "By topic",
+    "filterTheme": "Topic",
+    "filterProgress": "Progress",
+    "filterAll": "All",
+    "filterPending": "Still incomplete",
+    "filterOverdue": "Has overdue",
+    "filterDone": "All done",
+    "filterEmpty": "No assignments match these filters.",
+    "dueLabel": "Due {date}",
+    "counts": "done {done} · overdue {overdue} · total {total}",
+    "progress": {
+      "completed": "Done",
+      "overdue": "Overdue",
+      "pending": "Pending"
+    },
+    "cancel": "Cancel assignment",
+    "cancelling": "Cancelling…",
+    "cancelConfirm": "Cancel this assignment? Unfinished student sessions will be removed.",
+    "editMembers": "Change student list",
+    "editClose": "Hide editor",
+    "saveMembers": "Save students",
+    "saving": "Saving…",
+    "membersSaved": "Student list updated.",
+    "errors": {
+      "invalid_input": "Check the topic, students, and date.",
+      "theme_not_found": "Topic not found.",
+      "no_students": "Select at least one student.",
+      "students_not_linked": "Student must be on your roster.",
+      "not_found": "Assignment not found.",
+      "cancelled": "This assignment is already cancelled.",
+      "forbidden": "You cannot access this assignment.",
+      "db_error": "Database error. Try again.",
+      "generic": "Could not save. Try again."
+    },
+    "availableAt": "Opens at",
+    "opensLabel": "Opens {date}"
+  },
+  "SessionScheduledNotice": {
+    "title": "Test is not open yet",
+    "lead": "Your teacher scheduled the start for {date}.",
+    "body": "Until {date} this test stays locked. Come back to Learning sessions and press Start when it opens.",
+    "backToSessions": "Back to sessions"
   }
 }
