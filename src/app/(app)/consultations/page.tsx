@@ -10,6 +10,7 @@ import {
   getOpenConsultationRequestForStudent,
 } from "@/modules/consultations/getConsultationRequests";
 import { toConsultationRequestView } from "@/modules/consultations/types";
+import { listPublicTeachersForCarousel } from "@/modules/teachers";
 import { getTranslations } from "next-intl/server";
 
 const item = getNavItem("/consultations");
@@ -55,9 +56,19 @@ export default async function ConsultationsPage() {
     );
   }
 
+  let teachers: Awaited<ReturnType<typeof listPublicTeachersForCarousel>> = [];
+  try {
+    teachers = await listPublicTeachersForCarousel(user.id);
+  } catch (error) {
+    console.error("consultations: listPublicTeachersForCarousel failed", error);
+  }
+
   return (
     <PageFrame kicker={t("kicker")} title={t("title")} lead={t("studentLead")}>
-      <ConsultationsStudentPanel openRequest={openRequest} />
+      <ConsultationsStudentPanel
+        openRequest={openRequest}
+        teachers={teachers}
+      />
     </PageFrame>
   );
 }

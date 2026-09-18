@@ -162,7 +162,7 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 | `src/modules/sessions/` | Список сесій, createMentorSession |
 | `src/modules/mentor-assignments/` | Групове призначення тестів викладачем (`/assign`) |
 | `src/modules/results/` | Агрегати для `/results` і сайдбару |
-| `src/modules/teachers/` | Публічна візитка: slug, lazy `teacher_profiles`, `/t/{slug}` |
+| `src/modules/teachers/` | Публічна візитка + карусель/рейтинги на `/consultations` |
 | `messages/uk.json`, `en.json`, `de.json` | Тексти інтерфейсу |
 | `src/app/globals.css` | Дизайн-токени. Новий колір — сюди, не в компонент |
 | `.cursor/rules/design-system.mdc` | Правила верстки. Читати перед CSS |
@@ -195,7 +195,7 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 | Генератори завдань | `src/modules/problemGenerators` | Чисті функції, без БД/Next. `fractionAddition`: `generateFractionAdditionTask`, `validateFractionAdditionAnswer`, seed-based RNG |
 | Практика дробів | `src/modules/fractionPractice` | `startFractionPracticeTaskAction`/`nextFractionPracticeTaskAction`/`checkFractionPracticeAnswerAction` — обгортка над `problemGenerators/fractionAddition` для `/practice/fractions`, без запису в `task_sessions`/`tasks2session` |
 | Візитка викладача | `src/modules/teachers` | `getOwnTeacherProfile` / `getPublicTeacherCard` / `saveTeacherProfileAction`; публічна лише якщо `is_public` і роль teacher/admin |
-| Консультації | `src/modules/consultations` | `createConsultationRequest` (один відкритий на учня), `getConsultationRequests` / `getOpenConsultationRequestForStudent`, `updateConsultationRequestStatus` (pending → acknowledged → closed) |
+| Консультації | `src/modules/consultations` (+ карусель з `teachers`) | `createConsultationRequest`, inbox; учень також бачить публічних викладачів і ставить рейтинг |
 
 ### 6.2. Таблиці MySQL, які чіпаємо
 
@@ -204,7 +204,8 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 | `app_users` | Наші акаунти | `login`, `email` / `email_verified_at` (022; реєстрація + блок логіну до verify, демо exempt), `role`, `is_banned` (020), `last_login_at` / `last_seen_at` (021). Не плутати з legacy `users` |
 | `auth_tokens` | Verify / reset | `user_id`, `purpose` email_verify\|password_reset, `token_hash`, `expires_at`, `used_at`. SQL `023_auth_tokens.sql` + lazy `ensureAuthTokenSchema`. Листи через Resend (`RESEND_API_KEY` / `MAIL_FROM`) або log у dev |
 | `user_avatars` | Фото профілю | `user_id`, `mime`, `bytes` MEDIUMBLOB. Лениво `CREATE` у `ensureAuthSchema` / `015_user_avatars.sql` |
-| `teacher_profiles` | Публічна візитка | `user_id`, `slug` unique, `headline`, `bio`, `city`, `subjects` (JSON), `contact_url`, `is_public`. `018_teacher_profiles.sql` + lazy `ensureTeacherProfileSchema`. **018:** `016` уже `task_sessions_expire_time`; консультації — `019`; «мої учні» — `017` |
+| `teacher_profiles` | Публічна візитка | `user_id`, `slug` unique, `headline`, `bio`, `city`, `subjects` (JSON), `contact_url`, `is_public`. `018_teacher_profiles.sql` + lazy `ensureTeacherProfileSchema` |
+| `teacher_ratings` | Оцінки учнів викладачам (1–5) | PK `(teacher_user_id, student_user_id)`, `score`. `032_teacher_ratings.sql` + lazy `ensureTeacherRatingsSchema` |
 | `teacher_payments` | Pending реєстрація викладача до оплати WayForPay | `reference`, hashed пароль, `status` pending/paid/failed, `provider`, `external_order_id`; `user_id` після Approved. SQL `014_teacher_payments.sql` |
 | `themes` | Теми тесту | `id`, `code` (unique, напр. `ALG-08-QUAD-EQ` — якір розділу підручника), `name`, `description`, `ord` |
 | `theme_connections` | Граф «наступна тема» | `vertex_start` → `vertex_finish` |
@@ -343,7 +344,7 @@ Ultimate/НМТ/діагностика лишились без змін. Зар�
 | `/account` | Учень+ | Фото / пароль / вихід. Учень і викладач — результати + заглушки; викладач — візитка; адмін — без них |
 | `/assign` | Лише teacher/admin | Призначити тест: відкриття зараз / з дати-часу + кінець вікна (дедлайн), галочки учнів, статуси |
 | `/students` | Лише teacher/admin | «Мої учні»: додати за логіном, список, відв’язати |
-| `/consultations` | Учень+ | Учень: один відкритий запит. Викладач/адмін: черга всіх заявок (побачено / закрито) |
+| `/consultations` | Учень+ | Учень: карусель публічних викладачів (рейтинг / сортування / персональна консультація) + один відкритий запит. Викладач/адмін: черга всіх заявок |
 | `/practice/fractions` | Учень+ | Генерована практика: додавання дробів, 5 рівнів. Посилання з `TopicTestStart` (`/`) |
 
 ### 6.5. Генеровані завдання: `fractionAddition` → Practice mode (11.09.2026)
@@ -435,7 +436,7 @@ Ultimate/НМТ/діагностика лишились без змін. Зар�
 | 6.6 Задачник | `src/app/problems`, таблиця `problems` | Середня | ✅ 08.09 (UI з JSON-каталогу, без MySQL на read) |
 | 6.3–6.4 Діагностика | `/diagnostic` | Велика | ✅; відкрито: політика тем при >10 eligible |
 | 6.2 Відгук | `src/modules/feedback` | Мала | ✅ |
-| Консультації | `/consultations` | Мала | ✅ 10.09: заявки `consultation_requests` (`019`); без привʼязки учень↔викладач |
+| Консультації | `/consultations` | Мала | ✅ 17.09: карусель публічних викладачів + рейтинг + персональна заявка; черга викладачів без змін |
 | Мої учні | `src/modules/teacher-students`, `/students` | Мала | ✅ 11.09: ручне прив’язування за логіном (teacher/admin) |
 | Призначити тест | `src/modules/mentor-assignments`, `/assign` | Середня | ✅ 17.09: мульти-учні, дедлайн, статуси зелений/рожевий, скасування й зміна списку |
 | Результати учнів | `/results`, `teacherStudentResults` | Мала | ✅ 17.09: «усі учні» у випадайці, worst-first; клік по темі → середні учнів |

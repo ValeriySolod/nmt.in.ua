@@ -27,6 +27,13 @@ export type PublicTeacherCard = TeacherProfile & {
   avatarRev?: number;
 };
 
+/** Public card plus rating stats for the consultations carousel. */
+export type TeacherCarouselItem = PublicTeacherCard & {
+  avgRating: number | null;
+  ratingCount: number;
+  myRating: number | null;
+};
+
 export type TeacherProfileInput = {
   slug: string;
   headline: string;
