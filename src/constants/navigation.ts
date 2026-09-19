@@ -74,13 +74,6 @@ export const DASHBOARD_NAV: NavItem[] = [
     status: "ready",
   },
   {
-    href: "/practice/interactive",
-    label: "Інтерактивні формати",
-    description:
-      "Нові формати завдань: збери розв'язання, знайди помилку, графік, встанови відповідність, пропуски.",
-    status: "ready",
-  },
-  {
     href: "/settings",
     label: "Налаштування",
     description: "Імпорт навчального контенту та параметри облікового запису.",

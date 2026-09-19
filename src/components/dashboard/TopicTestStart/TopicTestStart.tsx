@@ -5,6 +5,7 @@ import { useActionState, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { PageFrame, PagePanel } from "@/components/dashboard/PageFrame";
+import { InteractiveFormatsShowcase } from "@/components/practice/InteractiveFormatsShowcase";
 import { Select } from "@/components/ui/Select";
 import {
   startTopicTestAction,
@@ -16,7 +17,11 @@ import {
 } from "@/modules/testing/parseThemeQueryParam";
 import { TOPIC_TEST_TASK_COUNT } from "@/modules/testing/topicTestMode";
 import type { AvailableTopicTheme } from "@/modules/testing/types";
+import clsx from "clsx";
 import css from "./TopicTestStart.module.css";
+
+/** `?tab=interactive` opens the interactive formats tab (legacy `/practice/interactive` redirects here). */
+const INTERACTIVE_TAB_PARAM = "interactive";
 
 const INITIAL_STATE: StartTopicTestActionState = { status: "idle" };
 
@@ -54,6 +59,17 @@ export function TopicTestStart({
       router.replace(`/session/${state.sessionId}`);
     }
   }, [state, router]);
+
+  const activeTab =
+    searchParams.get("tab") === INTERACTIVE_TAB_PARAM ? "interactive" : "topics";
+
+  function selectTab(tab: "topics" | "interactive") {
+    const params = new URLSearchParams(searchParams.toString());
+    if (tab === "interactive") params.set("tab", INTERACTIVE_TAB_PARAM);
+    else params.delete("tab");
+    const query = params.toString();
+    router.replace(query ? `/?${query}` : "/", { scroll: false });
+  }
 
   const isRedirecting = state.status === "success";
   const hasThemes = themes.length > 0;
@@ -94,6 +110,46 @@ export function TopicTestStart({
       }
       lead={t("lead")}
     >
+      <div className={css.tabs} role="tablist" aria-label={t("tabsAria")}>
+        <button
+          type="button"
+          role="tab"
+          id="topic-tab-topics"
+          aria-selected={activeTab === "topics"}
+          aria-controls="topic-panel-topics"
+          className={clsx(css.tab, activeTab === "topics" && css.tabActive)}
+          onClick={() => selectTab("topics")}
+        >
+          {t("tabTopics")}
+        </button>
+        <button
+          type="button"
+          role="tab"
+          id="topic-tab-interactive"
+          aria-selected={activeTab === "interactive"}
+          aria-controls="topic-panel-interactive"
+          className={clsx(css.tab, activeTab === "interactive" && css.tabActive)}
+          onClick={() => selectTab("interactive")}
+        >
+          {t("tabInteractive")}
+        </button>
+      </div>
+
+      {activeTab === "interactive" ? (
+        <div
+          role="tabpanel"
+          id="topic-panel-interactive"
+          aria-labelledby="topic-tab-interactive"
+        >
+          <InteractiveFormatsShowcase embedded />
+        </div>
+      ) : (
+        <div
+          className={css.panelStack}
+          role="tabpanel"
+          id="topic-panel-topics"
+          aria-labelledby="topic-tab-topics"
+        >
       {!hasThemes ? (
         <p className={css.error} role="status">
           {t("noThemes")}
@@ -188,6 +244,8 @@ export function TopicTestStart({
           {t("fractionPracticeCta")} →
         </Link>
       </PagePanel>
+        </div>
+      )}
     </PageFrame>
   );
 }

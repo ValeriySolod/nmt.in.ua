@@ -42,7 +42,6 @@
       "materials": "Lehrbuch",
       "problems": "Aufgabenbank",
       "feedback": "Feedback",
-      "interactiveFormats": "Interaktive Formate",
       "settings": "Einstellungen",
       "consultations": "Lehrerberatungen",
       "homeAdmin": "Aufgaben nach Thema",
@@ -300,6 +299,9 @@
     }
   },
   "TopicTestStart": {
+    "tabsAria": "Testmodi",
+    "tabTopics": "Thementests",
+    "tabInteractive": "Interaktive Formate",
     "title": "Test zum ausgewählten Thema",
     "helloStart": "Hallo,",
     "formTitle": "Neues Training",
