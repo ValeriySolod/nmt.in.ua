@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import clsx from "clsx";
 import { OrderTaskCard } from "@/components/practice/OrderTaskCard";
 import { FindErrorTaskCard } from "@/components/practice/FindErrorTaskCard";
 import { GraphTaskCard } from "@/components/practice/GraphTaskCard";
@@ -12,7 +13,7 @@ import { startRoundAction, getRoundAction, listRoundsAction, finishRoundAction, 
 import type { RoundSnapshot, RoundSummary } from "@/modules/stage2/rounds";
 import css from "./InteractiveFormatsShowcase.module.css";
 
-export function InteractiveFormatsShowcase() {
+export function InteractiveFormatsShowcase({ embedded = false }: { embedded?: boolean } = {}) {
   const t = useTranslations("Stage2");
   const [round, setRound] = useState<RoundSnapshot | null>(null);
   const [history, setHistory] = useState<RoundSummary[]>([]);
@@ -43,12 +44,12 @@ export function InteractiveFormatsShowcase() {
   const labels = { order: t("formatOrder"), find_error: t("formatFindError"), graph: t("formatGraph"), matching: t("formatMatching"), blank: t("formatBlank") };
   const props = task && round ? { taskId: task.taskId, roundId: round.id, diagnostic,
     onAnswered: () => { if (diagnostic) void run(() => getRoundAction(round.id)); } } : null;
-  return <div className={css.frame}>
-    <h1 className={css.title}>{t("pageTitle")}</h1>
+  return <div className={embedded ? css.embeddedFrame : css.frame}>
+    {embedded ? <h2 className={css.title}>{t("pageTitle")}</h2> : <h1 className={css.title}>{t("pageTitle")}</h1>}
     <p className={css.lead}>{t("roundLead")}</p>
     <div className={css.tabs}>
-      <button className={css.tab} disabled={busy} onClick={() => void run(() => startRoundAction("practice"), true)}>{t("practiceRound")}</button>
-      <button className={css.tab} disabled={busy} onClick={() => void run(() => startRoundAction("diagnostic"), true)}>{t("diagnosticRound")}</button>
+      <button className={clsx(css.tab, css.modeTab)} disabled={busy} onClick={() => void run(() => startRoundAction("practice"), true)}>{t("practiceRound")}</button>
+      <button className={clsx(css.tab, css.modeTab)} disabled={busy} onClick={() => void run(() => startRoundAction("diagnostic"), true)}>{t("diagnosticRound")}</button>
     </div>
     <label className={css.roundHistory}>
       <span className={css.roundHistoryLabel}>{t("roundHistory")}</span>
