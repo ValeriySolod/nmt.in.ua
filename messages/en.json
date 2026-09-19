@@ -42,7 +42,6 @@
       "materials": "Textbook",
       "problems": "Problem bank",
       "feedback": "Feedback",
-      "interactiveFormats": "Interactive formats",
       "settings": "Settings",
       "consultations": "Teacher consultations",
       "homeAdmin": "Tasks by topic",
@@ -300,6 +299,9 @@
     }
   },
   "TopicTestStart": {
+    "tabsAria": "Test modes",
+    "tabTopics": "Topic tests",
+    "tabInteractive": "Interactive formats",
     "title": "Test by selected topic",
     "helloStart": "Hello,",
     "formTitle": "New practice",

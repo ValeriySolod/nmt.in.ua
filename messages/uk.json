@@ -42,7 +42,6 @@
       "materials": "Підручник",
       "problems": "Задачник",
       "feedback": "Відгуки",
-      "interactiveFormats": "Інтерактивні формати",
       "settings": "Налаштування",
       "consultations": "Консультації викладачів",
       "homeAdmin": "Завдання за темами",
@@ -300,6 +299,9 @@
     }
   },
   "TopicTestStart": {
+    "tabsAria": "Режими тестування",
+    "tabTopics": "Тести за темами",
+    "tabInteractive": "Інтерактивні формати",
     "title": "Тест за обраною темою",
     "helloStart": "Привіт,",
     "formTitle": "Нове тренування",
