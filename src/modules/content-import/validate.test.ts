@@ -71,9 +71,9 @@ test("validateThemesDataset rejects an invalid theme code", () => {
   assert.ok(
     result.errors.some((error) =>
       error.includes(
-        "code must contain only uppercase Latin letters, numbers, and hyphens",
-      ),
-    ),
+        "code must contain only uppercase Latin letters, numbers, and hyphens"
+      )
+    )
   );
 });
 
@@ -96,9 +96,7 @@ test("validateThemesDataset rejects duplicate theme codes", () => {
   ]);
 
   assert.ok(
-    result.errors.some((error) =>
-      error.includes("duplicate code ALG-07-EQ"),
-    ),
+    result.errors.some((error) => error.includes("duplicate code ALG-07-EQ"))
   );
 });
 
@@ -114,7 +112,7 @@ test("validateThemesDataset rejects unknown and missing fields", () => {
   assert.equal(result.records.length, 0);
   assert.ok(result.errors.some((e) => e.includes("unknown field(s): extra")));
   assert.ok(
-    result.errors.some((e) => e.includes("missing field(s): description")),
+    result.errors.some((e) => e.includes("missing field(s): description"))
   );
 });
 
@@ -135,9 +133,7 @@ test("validateThemesDataset rejects an oversized name", () => {
     }),
   ]);
   assert.ok(
-    result.errors.some((e) =>
-      e.includes("name must be at most 100 characters"),
-    ),
+    result.errors.some((e) => e.includes("name must be at most 100 characters"))
   );
 });
 
@@ -172,7 +168,7 @@ test("validateThemesDataset rejects a negative ord", () => {
     }),
   ]);
   assert.ok(
-    result.errors.some((e) => e.includes("ord must be a non-negative integer")),
+    result.errors.some((e) => e.includes("ord must be a non-negative integer"))
   );
 });
 
@@ -186,7 +182,7 @@ test("validateThemesDataset rejects id = 0 (primary IDs must be positive)", () =
     }),
   ]);
   assert.ok(
-    result.errors.some((e) => e.includes("id must be a positive integer")),
+    result.errors.some((e) => e.includes("id must be a positive integer"))
   );
 });
 
@@ -200,7 +196,7 @@ test("validateThemesDataset rejects a negative id", () => {
     }),
   ]);
   assert.ok(
-    result.errors.some((e) => e.includes("id must be a positive integer")),
+    result.errors.some((e) => e.includes("id must be a positive integer"))
   );
 });
 
@@ -215,8 +211,8 @@ test("validateThemesDataset rejects an id one past the MySQL INT upper bound", (
   ]);
   assert.ok(
     result.errors.some((e) =>
-      e.includes("id must be between -2147483648 and 2147483647"),
-    ),
+      e.includes("id must be between -2147483648 and 2147483647")
+    )
   );
 });
 
@@ -226,8 +222,8 @@ test("validateThemeConnectionsDataset rejects a zero vertex_start (foreign refer
   ]);
   assert.ok(
     result.errors.some((e) =>
-      e.includes("vertex_start must be a positive integer"),
-    ),
+      e.includes("vertex_start must be a positive integer")
+    )
   );
 });
 
@@ -272,8 +268,8 @@ test("validateQuizTasksDataset rejects right_answer_n outside 1..4", () => {
   ]);
   assert.ok(
     result.errors.some((e) =>
-      e.includes("right_answer_n must be between 1 and 4"),
-    ),
+      e.includes("right_answer_n must be between 1 and 4")
+    )
   );
 });
 
@@ -282,7 +278,7 @@ test("validateQuizTasksDataset rejects a non-integer right_answer_n", () => {
     row("quizTasks row 2", validQuizTaskRaw({ right_answer_n: "two" })),
   ]);
   assert.ok(
-    result.errors.some((e) => e.includes("right_answer_n must be an integer")),
+    result.errors.some((e) => e.includes("right_answer_n must be an integer"))
   );
 });
 
@@ -291,9 +287,7 @@ test("validateQuizTasksDataset rejects a negative theme_id (foreign reference mu
     row("quizTasks row 2", validQuizTaskRaw({ theme_id: "-1" })),
   ]);
   assert.ok(
-    result.errors.some((e) =>
-      e.includes("theme_id must be a positive integer"),
-    ),
+    result.errors.some((e) => e.includes("theme_id must be a positive integer"))
   );
 });
 
@@ -303,21 +297,27 @@ test("validateQuizTasksDataset rejects an oversized answer", () => {
   ]);
   assert.ok(
     result.errors.some((e) =>
-      e.includes("answer_1 must be at most 255 characters"),
-    ),
+      e.includes("answer_1 must be at most 255 characters")
+    )
   );
 });
 
-test("validateQuizTasksDataset rejects difficulty outside 1..3", () => {
+test("validateQuizTasksDataset accepts difficulty above 3", () => {
   const result = validateQuizTasksDataset([
     row("quizTasks row 2", validQuizTaskRaw({ difficulty: "4" })),
   ]);
 
-  assert.ok(
-    result.errors.some((error) =>
-      error.includes("difficulty must be between 1 and 3"),
-    ),
-  );
+  assert.deepEqual(result.errors, []);
+  assert.equal(result.records[0].difficulty, 4);
+});
+
+test("validateQuizTasksDataset accepts high difficulty values", () => {
+  const result = validateQuizTasksDataset([
+    row("quizTasks row 2", validQuizTaskRaw({ difficulty: "1000" })),
+  ]);
+
+  assert.deepEqual(result.errors, []);
+  assert.equal(result.records[0].difficulty, 1000);
 });
 
 test("validateProblemsDataset allows an empty workbook dataset", () => {

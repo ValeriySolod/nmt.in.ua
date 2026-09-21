@@ -6,7 +6,6 @@ import {
   MAX_LEN_VARCHAR_100,
   MAX_RIGHT_ANSWER,
   MIN_RIGHT_ANSWER,
-  MAX_DIFFICULTY,
   MIN_DIFFICULTY,
   QUIZ_TASKS_COLUMNS,
   THEMES_COLUMNS,
@@ -67,7 +66,7 @@ function checkKeys(
   requiredColumns: readonly string[],
   rowLabel: string,
   errors: string[],
-  allowedColumns: readonly string[] = requiredColumns,
+  allowedColumns: readonly string[] = requiredColumns
 ): boolean {
   const allowed = new Set<string>(allowedColumns);
   const present = Object.keys(raw);
@@ -94,7 +93,7 @@ function validateThemeRow(row: RawRow): {
       THEMES_REQUIRED_COLUMNS,
       row.rowLabel,
       errors,
-      THEMES_COLUMNS,
+      THEMES_COLUMNS
     )
   ) {
     return { errors };
@@ -135,7 +134,7 @@ function validateThemeRow(row: RawRow): {
 
   if (code && !THEME_CODE_PATTERN.test(code)) {
     errors.push(
-      `${row.rowLabel}: code must contain only uppercase Latin letters, numbers, and hyphens`,
+      `${row.rowLabel}: code must contain only uppercase Latin letters, numbers, and hyphens`
     );
   }
 
@@ -224,18 +223,15 @@ function validateQuizTaskRow(row: RawRow): {
     rightAnswerN.value! > MAX_RIGHT_ANSWER
   ) {
     errors.push(
-      `${row.rowLabel}: right_answer_n must be between ${MIN_RIGHT_ANSWER} and ${MAX_RIGHT_ANSWER}`,
+      `${row.rowLabel}: right_answer_n must be between ${MIN_RIGHT_ANSWER} and ${MAX_RIGHT_ANSWER}`
     );
   }
 
   if (difficulty.error) {
     errors.push(`${row.rowLabel}: difficulty ${difficulty.error}`);
-  } else if (
-    difficulty.value! < MIN_DIFFICULTY ||
-    difficulty.value! > MAX_DIFFICULTY
-  ) {
+  } else if (difficulty.value! < MIN_DIFFICULTY) {
     errors.push(
-      `${row.rowLabel}: difficulty must be between ${MIN_DIFFICULTY} and ${MAX_DIFFICULTY}`,
+      `${row.rowLabel}: difficulty must be at least ${MIN_DIFFICULTY}`
     );
   }
 
@@ -297,18 +293,15 @@ function validateProblemRow(row: RawRow): {
     rightAnswerN.value! > MAX_RIGHT_ANSWER
   ) {
     errors.push(
-      `${row.rowLabel}: right_answer_n must be between ${MIN_RIGHT_ANSWER} and ${MAX_RIGHT_ANSWER}`,
+      `${row.rowLabel}: right_answer_n must be between ${MIN_RIGHT_ANSWER} and ${MAX_RIGHT_ANSWER}`
     );
   }
 
   if (difficulty.error) {
     errors.push(`${row.rowLabel}: difficulty ${difficulty.error}`);
-  } else if (
-    difficulty.value! < MIN_DIFFICULTY ||
-    difficulty.value! > MAX_DIFFICULTY
-  ) {
+  } else if (difficulty.value! < MIN_DIFFICULTY) {
     errors.push(
-      `${row.rowLabel}: difficulty must be between ${MIN_DIFFICULTY} and ${MAX_DIFFICULTY}`,
+      `${row.rowLabel}: difficulty must be at least ${MIN_DIFFICULTY}`
     );
   }
 
@@ -331,7 +324,6 @@ function validateProblemRow(row: RawRow): {
   };
 }
 
-
 function findDuplicateIds(ids: number[], datasetLabel: string): string[] {
   const counts = new Map<number, number>();
   for (const id of ids) counts.set(id, (counts.get(id) ?? 0) + 1);
@@ -343,10 +335,7 @@ function findDuplicateIds(ids: number[], datasetLabel: string): string[] {
   return errors;
 }
 
-function findDuplicateCodes(
-  codes: string[],
-  datasetLabel: string,
-): string[] {
+function findDuplicateCodes(codes: string[], datasetLabel: string): string[] {
   const counts = new Map<string, number>();
 
   for (const code of codes) {
@@ -358,7 +347,7 @@ function findDuplicateCodes(
   for (const [code, count] of counts) {
     if (count > 1) {
       errors.push(
-        `${datasetLabel}: duplicate code ${code} (${count} occurrences)`,
+        `${datasetLabel}: duplicate code ${code} (${count} occurrences)`
       );
     }
   }
@@ -368,7 +357,7 @@ function findDuplicateCodes(
 
 export function validateThemesDataset(
   rows: RawRow[],
-  datasetLabel = "themes",
+  datasetLabel = "themes"
 ): { records: ThemeRecord[]; errors: string[] } {
   if (rows.length === 0)
     return { records: [], errors: [`${datasetLabel}: dataset is empty`] };
@@ -383,16 +372,21 @@ export function validateThemesDataset(
   errors.push(
     ...findDuplicateIds(
       records.map((r) => r.id),
-      datasetLabel,
-    ),
+      datasetLabel
+    )
   );
-  errors.push(...findDuplicateCodes(records.map((r) => r.code), datasetLabel));
+  errors.push(
+    ...findDuplicateCodes(
+      records.map((r) => r.code),
+      datasetLabel
+    )
+  );
   return { records, errors };
 }
 
 export function validateThemeConnectionsDataset(
   rows: RawRow[],
-  datasetLabel = "themeConnections",
+  datasetLabel = "themeConnections"
 ): { records: ThemeConnectionRecord[]; errors: string[] } {
   if (rows.length === 0)
     return { records: [], errors: [`${datasetLabel}: dataset is empty`] };
@@ -407,15 +401,15 @@ export function validateThemeConnectionsDataset(
   errors.push(
     ...findDuplicateIds(
       records.map((r) => r.id),
-      datasetLabel,
-    ),
+      datasetLabel
+    )
   );
   return { records, errors };
 }
 
 export function validateQuizTasksDataset(
   rows: RawRow[],
-  datasetLabel = "quizTasks",
+  datasetLabel = "quizTasks"
 ): { records: QuizTaskRecord[]; errors: string[] } {
   if (rows.length === 0)
     return { records: [], errors: [`${datasetLabel}: dataset is empty`] };
@@ -430,15 +424,15 @@ export function validateQuizTasksDataset(
   errors.push(
     ...findDuplicateIds(
       records.map((r) => r.id),
-      datasetLabel,
-    ),
+      datasetLabel
+    )
   );
   return { records, errors };
 }
 
 export function validateProblemsDataset(
   rows: RawRow[],
-  datasetLabel = "problems",
+  datasetLabel = "problems"
 ): { records: ProblemRecord[]; errors: string[] } {
   if (rows.length === 0) return { records: [], errors: [] };
 
@@ -452,8 +446,8 @@ export function validateProblemsDataset(
   errors.push(
     ...findDuplicateIds(
       records.map((r) => r.id),
-      datasetLabel,
-    ),
+      datasetLabel
+    )
   );
   return { records, errors };
 }

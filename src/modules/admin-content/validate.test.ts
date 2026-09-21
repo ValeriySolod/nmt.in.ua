@@ -2,11 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { AdminContentError } from "./types";
-import {
-  parseAdminQuizTaskInput,
-  parseTaskId,
-  parseThemeId,
-} from "./validate";
+import { parseAdminQuizTaskInput, parseTaskId, parseThemeId } from "./validate";
 
 test("parseAdminQuizTaskInput accepts a valid payload", () => {
   const input = parseAdminQuizTaskInput({
@@ -36,23 +32,20 @@ test("parseAdminQuizTaskInput accepts a valid payload", () => {
   });
 });
 
-test("parseAdminQuizTaskInput rejects out-of-range difficulty", () => {
-  assert.throws(
-    () =>
-      parseAdminQuizTaskInput({
-        name: "A",
-        taskText: "B",
-        themeId: 1,
-        answer1: "1",
-        answer2: "2",
-        answer3: "3",
-        answer4: "4",
-        rightAnswerN: 1,
-        difficulty: 10,
-      }),
-    (error: unknown) =>
-      error instanceof AdminContentError && error.code === "invalid_input",
-  );
+test("parseAdminQuizTaskInput accepts difficulty above 3", () => {
+  const input = parseAdminQuizTaskInput({
+    name: "A",
+    taskText: "B",
+    themeId: 1,
+    answer1: "1",
+    answer2: "2",
+    answer3: "3",
+    answer4: "4",
+    rightAnswerN: 1,
+    difficulty: 10,
+  });
+
+  assert.equal(input.difficulty, 10);
 });
 
 test("parseThemeId and parseTaskId require positive ints", () => {
