@@ -126,7 +126,10 @@ alwaysApply: true
 - `AccountCabinet` — особистий кабінет: фото профілю, пароль, останні результати, заглушки (досягнення / час), вихід.
 - `TeacherProfileEditor` — візитка викладача на `/account` (slug, headline, bio, city, subjects, contact URL, is_public, копія лінка). Адмін редактор не бачить.
 - `TeacherPublicCard` — публічна картка `/t/{slug}` у `DiagnosticShell` (без кабінетного chrome).
-- `TeacherStudentsPanel` — `/students` для teacher/admin: додати учня за логіном, список, відв’язати. Учні пункт меню не бачать.
+- `TeacherStudentsPanel` — `/students` для teacher/admin: додати учня за логіном, список, відв’язати, призначити одну групу. Клік по імені → `/students/[id]`.
+- `StudentGroupsPanel` — групи (створити / перейменувати / видалити) і інвайти: особистий код+URL та код групи. `InviteShare` копіює код і лінк.
+- `TeacherStudentDetail` — статистика учня: ті самі таблиці тем і сесій, заголовок h2 під h1 сторінки.
+- `JoinInviteForm` — `/join` і `/join/[code]`: учень приймає код.
 - `TeacherAssignWorkspace` — `/assign`: призначити тест за темою кільком учням (зараз / дата-час), список призначень і статуси.
 - `TeacherStudentResultsPicker` / `TeacherClassResults` — `/results` для teacher/admin: «усі учні» або один учень; агрегат по темах; клік по темі → список учнів від гіршого середнього.
 - `TeacherClassSessions` — `/sessions` для teacher/admin: ті самі «усі / один»; картки на base, детальна таблиця з 768 (вірно/час/%/статус); сортування + фільтри статусу/теми/ким; без старту й скасування.
@@ -142,7 +145,7 @@ alwaysApply: true
 `src/components/consultations/` — заявки на консультацію:
 
 - `ConsultationsStudentPanel` — форма «Запитати консультацію» + стан відкритого запиту.
-- `ConsultationsInbox` — черга для викладача/адміна: картки на base, таблиця з 768.
+- `ConsultationsInbox` — черга для викладача/адміна: картки на base, таблиця з 768. «Приєднати» — `<details>`: особисто або в наявну групу.
 
 Брейкпоінти кабінету ті самі: сайдбар з 768. Не використовувати 1280.
 
@@ -544,3 +547,12 @@ npm run lint && npm test && npm run build
 - Модуль `teacherLearningSessions`; перегляд одного учня — `LearningSessionsTable` readOnly + extended.
 - Сортування ▲▼ і Excel-фільтр по заголовку колонки (однаково для всіх і одного учня); логін під ім’ям.
 - Перевірити: `demo-teacher` → `/sessions` → all → фільтри → учень.
+
+### 2026-09-21 — групи учнів, інвайти, «Приєднати»
+
+- `/students`: панелі груп і особистого інвайту (`StudentGroupsPanel`, `InviteShare`) над списком. Одна група на учня — селект + «Зберегти групу». Ім’я веде на `/students/[id]`.
+- `/students/[id]`: `TopicResultsTable` і `TeacherClassSessions` з `headingLevel="h2"` (h1 лишається в `PageFrame`). Поруч лінки на `/results?student=` і `/sessions?student=`.
+- `/join` і `/join/[code]`: скляна форма коду. Гість іде на логін; код у шляху, не в query.
+- Інбокс консультацій: «Приєднати» у картці й у таблиці з 768.
+- Учень на `/account` бачить лінк «Ввести код».
+- Перевірити: 375 / 768 / 1240 / 1440 / 1920; `demo-teacher` групи й коди; `demo-student` `/join/КОД`; другий груповий код замінює групу; «Приєднати» на `/consultations`.

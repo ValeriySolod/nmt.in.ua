@@ -73,6 +73,8 @@ function mapLinkedStudent(row: {
       row.created_at instanceof Date
         ? row.created_at
         : new Date(row.created_at),
+    groupId: null,
+    groupName: null,
   };
 }
 
@@ -178,6 +180,8 @@ export async function linkStudentByLogin(
             login: user.login,
             displayName: user.display_name.trim(),
             createdAt: new Date(),
+            groupId: null,
+            groupName: null,
           };
 
       return { created: true, student: created };

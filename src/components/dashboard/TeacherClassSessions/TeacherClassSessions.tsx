@@ -386,6 +386,7 @@ type TeacherClassSessionsProps = {
   title?: string;
   lead?: string;
   empty?: string;
+  headingLevel?: "h1" | "h2";
 };
 
 export function TeacherClassSessions({
@@ -394,6 +395,7 @@ export function TeacherClassSessions({
   title,
   lead,
   empty,
+  headingLevel = "h1",
 }: TeacherClassSessionsProps) {
   const t = useTranslations("TeacherStudentSessions");
   const isDesktop = useMinWidth(768);
@@ -501,12 +503,14 @@ export function TeacherClassSessions({
     );
   }
 
+  const TitleTag = headingLevel === "h2" ? "h2" : "h1";
+
   return (
     <section className={css.root} aria-labelledby="class-sessions-title">
       <header className={css.intro}>
-        <h1 id="class-sessions-title" className={css.title}>
+        <TitleTag id="class-sessions-title" className={css.title}>
           {title ?? t("allTitle")}
-        </h1>
+        </TitleTag>
         <p className={css.lead}>{lead ?? t("allLead")}</p>
       </header>
 

@@ -44,6 +44,8 @@ test("addTeacherStudentAction uses the session user id, not the form", async () 
         login: "demo-student",
         displayName: "Олена Коваленко",
         createdAt: new Date("2026-09-11T10:00:00.000Z"),
+        groupId: null,
+        groupName: null,
       },
     };
   }) as typeof linkStudentByLogin;
@@ -81,6 +83,8 @@ test("addTeacherStudentAction allows admin the same as teacher", async () => {
         login: "demo-student",
         displayName: "Олена Коваленко",
         createdAt: new Date(),
+        groupId: null,
+        groupName: null,
       },
     };
   }) as typeof linkStudentByLogin;
@@ -107,6 +111,8 @@ test("addTeacherStudentAction forbids a student from managing the list", async (
         login: "other",
         displayName: "Other",
         createdAt: new Date(),
+        groupId: null,
+        groupName: null,
       },
     };
   }) as typeof linkStudentByLogin;

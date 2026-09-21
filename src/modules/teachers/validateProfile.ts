@@ -40,6 +40,7 @@ export const RESERVED_TEACHER_SLUGS = new Set([
   "avatar",
   "import",
   "students",
+  "join",
   "teacher",
   "teachers",
   "profile",

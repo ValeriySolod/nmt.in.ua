@@ -18,6 +18,8 @@ type TopicResultsTableProps = {
   lead?: string;
   /** Only themes that already have attempts (teacher overview). */
   hideEmptyThemes?: boolean;
+  /** Nested under another page heading. */
+  headingLevel?: "h1" | "h2";
 };
 
 function metricClass(percent: number | null): string {
@@ -39,18 +41,20 @@ export async function TopicResultsTable({
   title,
   lead,
   hideEmptyThemes = false,
+  headingLevel = "h1",
 }: TopicResultsTableProps) {
   const t = await getTranslations("TopicResultsTable");
   const visible = hideEmptyThemes
     ? rows.filter((row) => row.attemptsCount > 0)
     : rows;
+  const TitleTag = headingLevel === "h2" ? "h2" : "h1";
 
   return (
     <section className={css.topicResults} aria-labelledby="topic-results-title">
       <header className={css.intro}>
-        <h1 id="topic-results-title" className={css.title}>
+        <TitleTag id="topic-results-title" className={css.title}>
           {title ?? t("title")}
-        </h1>
+        </TitleTag>
 
         <p className={css.lead}>{lead ?? t("lead")}</p>
       </header>

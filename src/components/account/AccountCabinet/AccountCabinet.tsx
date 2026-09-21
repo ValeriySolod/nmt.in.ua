@@ -2,6 +2,7 @@
 
 import clsx from "clsx";
 import { useActionState } from "react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import type { AuthUser } from "@/modules/auth/client";
 import {
@@ -57,6 +58,18 @@ export function AccountCabinet({
       </section>
 
       <AccountPhotoPanel user={user} demoLocked={demoLocked} />
+
+      {user.role === "student" ? (
+        <section className={css.panel} aria-labelledby="account-join-title">
+          <h2 id="account-join-title" className={css.panelTitle}>
+            {t("joinInviteTitle")}
+          </h2>
+          <p className={css.panelLead}>{t("joinInviteLead")}</p>
+          <Link className={css.joinLink} href="/join">
+            {t("joinInviteCta")}
+          </Link>
+        </section>
+      ) : null}
 
       {teacherProfile ? (
         <TeacherProfileEditor
