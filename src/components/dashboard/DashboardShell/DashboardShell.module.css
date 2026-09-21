@@ -71,6 +71,7 @@
   width: min(100%, var(--container-max));
   margin-inline: auto;
   padding: var(--space-md) var(--container-pad) var(--space-xl);
+  margin-top: var(--header-h);
 }
 
 .sidebarSlot {
