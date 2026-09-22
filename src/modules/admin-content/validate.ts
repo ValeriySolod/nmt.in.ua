@@ -1,5 +1,4 @@
 import {
-  MAX_DIFFICULTY,
   MAX_LEN_COMMENTS,
   MAX_LEN_TEXT,
   MAX_LEN_VARCHAR_100,
@@ -15,11 +14,7 @@ import {
 } from "./types";
 import { wrapMathForStorage, wrapRichTextForStorage } from "./mathField";
 
-function trimRequired(
-  value: unknown,
-  maxLen: number,
-  field: string,
-): string {
+function trimRequired(value: unknown, maxLen: number, field: string): string {
   if (typeof value !== "string") {
     throw new AdminContentError(`Invalid ${field}.`, "invalid_input");
   }
@@ -57,11 +52,11 @@ function readIntField(value: unknown, field: string): number {
 
 /** Validates and normalizes a quiz-task form payload for create/update. */
 export function parseAdminQuizTaskInput(
-  raw: Record<string, unknown>,
+  raw: Record<string, unknown>
 ): AdminQuizTaskInput {
   const name = trimRequired(raw.name, MAX_LEN_VARCHAR_100, "name");
   const taskText = wrapRichTextForStorage(
-    trimRequired(raw.taskText, MAX_LEN_TEXT, "taskText"),
+    trimRequired(raw.taskText, MAX_LEN_TEXT, "taskText")
   );
   if (taskText.length > MAX_LEN_TEXT) {
     throw new AdminContentError("Invalid taskText.", "invalid_input");
@@ -72,16 +67,16 @@ export function parseAdminQuizTaskInput(
   }
 
   const answer1 = wrapMathForStorage(
-    trimRequired(raw.answer1, MAX_LEN_VARCHAR_255, "answer1"),
+    trimRequired(raw.answer1, MAX_LEN_VARCHAR_255, "answer1")
   );
   const answer2 = wrapMathForStorage(
-    trimRequired(raw.answer2, MAX_LEN_VARCHAR_255, "answer2"),
+    trimRequired(raw.answer2, MAX_LEN_VARCHAR_255, "answer2")
   );
   const answer3 = wrapMathForStorage(
-    trimRequired(raw.answer3, MAX_LEN_VARCHAR_255, "answer3"),
+    trimRequired(raw.answer3, MAX_LEN_VARCHAR_255, "answer3")
   );
   const answer4 = wrapMathForStorage(
-    trimRequired(raw.answer4, MAX_LEN_VARCHAR_255, "answer4"),
+    trimRequired(raw.answer4, MAX_LEN_VARCHAR_255, "answer4")
   );
 
   for (const [label, value] of [
@@ -101,12 +96,12 @@ export function parseAdminQuizTaskInput(
   }
 
   const difficulty = readIntField(raw.difficulty, "difficulty");
-  if (difficulty < MIN_DIFFICULTY || difficulty > MAX_DIFFICULTY) {
+  if (difficulty < MIN_DIFFICULTY) {
     throw new AdminContentError("Invalid difficulty.", "invalid_input");
   }
 
   const comments = wrapRichTextForStorage(
-    trimOptional(raw.comments, MAX_LEN_COMMENTS),
+    trimOptional(raw.comments, MAX_LEN_COMMENTS)
   );
   if (comments.length > MAX_LEN_COMMENTS) {
     throw new AdminContentError("Invalid comments.", "invalid_input");

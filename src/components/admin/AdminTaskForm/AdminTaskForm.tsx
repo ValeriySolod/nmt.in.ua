@@ -14,10 +14,7 @@ import type {
   AdminThemeOption,
 } from "@/modules/admin-content/types";
 import { toAdminInput } from "@/modules/admin-content/mathField";
-import {
-  MAX_DIFFICULTY,
-  MIN_DIFFICULTY,
-} from "@/modules/content-import/schema";
+import { MIN_DIFFICULTY } from "@/modules/content-import/schema";
 import { Select } from "@/components/ui/Select";
 import css from "./AdminTaskForm.module.css";
 
@@ -90,12 +87,12 @@ export function AdminTaskForm({
   const t = useTranslations("AdminContent");
   const router = useRouter();
   const [form, setForm] = useState<FormValues>(() =>
-    task ? valuesFromTask(task) : emptyValues(themeId),
+    task ? valuesFromTask(task) : emptyValues(themeId)
   );
 
   const [saveState, saveAction, savePending] = useActionState(
     saveQuizTaskAction,
-    SAVE_INITIAL,
+    SAVE_INITIAL
   );
 
   useEffect(() => {
@@ -140,7 +137,11 @@ export function AdminTaskForm({
             <input type="hidden" name="taskId" value={task.id} />
           ) : null}
 
-          <div className={css.formTable} role="group" aria-label={t("formAria")}>
+          <div
+            className={css.formTable}
+            role="group"
+            aria-label={t("formAria")}
+          >
             <div className={css.formHead} aria-hidden>
               <span>{t("colElement")}</span>
               <span>{t("colValue")}</span>
@@ -165,9 +166,7 @@ export function AdminTaskForm({
                 className={clsx(css.input, css.textarea)}
                 name="taskText"
                 value={form.taskText}
-                onChange={(e) =>
-                  setForm({ ...form, taskText: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, taskText: e.target.value })}
                 required
                 rows={4}
                 disabled={savePending}
@@ -204,9 +203,7 @@ export function AdminTaskForm({
                   value: String(n),
                   label: `${n}.`,
                 }))}
-                onChange={(next) =>
-                  setForm({ ...form, rightAnswerN: next })
-                }
+                onChange={(next) => setForm({ ...form, rightAnswerN: next })}
               />
             </label>
 
@@ -217,7 +214,7 @@ export function AdminTaskForm({
                 name="difficulty"
                 type="number"
                 min={MIN_DIFFICULTY}
-                max={MAX_DIFFICULTY}
+                step={1}
                 value={form.difficulty}
                 onChange={(e) =>
                   setForm({ ...form, difficulty: e.target.value })
@@ -248,9 +245,7 @@ export function AdminTaskForm({
                 className={clsx(css.input, css.textarea)}
                 name="comments"
                 value={form.comments}
-                onChange={(e) =>
-                  setForm({ ...form, comments: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, comments: e.target.value })}
                 rows={3}
                 disabled={savePending}
               />
@@ -258,7 +253,11 @@ export function AdminTaskForm({
           </div>
 
           <div className={css.formActions}>
-            <button type="submit" className={css.saveBtn} disabled={savePending}>
+            <button
+              type="submit"
+              className={css.saveBtn}
+              disabled={savePending}
+            >
               {savePending ? t("saving") : t("save")}
             </button>
             <Link href={listHref} className={css.cancelBtn}>
