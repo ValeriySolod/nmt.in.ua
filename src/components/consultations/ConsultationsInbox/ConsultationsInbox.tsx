@@ -7,6 +7,7 @@ import {
   updateConsultationRequestStatusAction,
   type UpdateConsultationActionState,
 } from "@/modules/consultations/actions";
+import { AttachStudentForm } from "./AttachStudentForm";
 import {
   isOpenConsultationStatus,
   type ConsultationRequestView,
@@ -18,6 +19,7 @@ const INITIAL: UpdateConsultationActionState = { status: "idle" };
 
 type ConsultationsInboxProps = {
   rows: ConsultationRequestView[];
+  groups: Array<{ id: number; name: string }>;
 };
 
 function formatWhen(iso: string, locale: string): string {
@@ -67,6 +69,21 @@ function RequestActions({ row }: { row: ConsultationRequestView }) {
           {t(`errors.${state.code}`)}
         </span>
       ) : null}
+    </div>
+  );
+}
+
+function RequestTools({
+  row,
+  groups,
+}: {
+  row: ConsultationRequestView;
+  groups: Array<{ id: number; name: string }>;
+}) {
+  return (
+    <div className={css.tools}>
+      <RequestActions row={row} />
+      <AttachStudentForm requestId={row.id} groups={groups} />
     </div>
   );
 }
@@ -129,7 +146,7 @@ function RequestFields({
   );
 }
 
-export function ConsultationsInbox({ rows }: ConsultationsInboxProps) {
+export function ConsultationsInbox({ rows, groups }: ConsultationsInboxProps) {
   const t = useTranslations("Consultations");
   const locale = useLocale();
 
@@ -152,7 +169,7 @@ export function ConsultationsInbox({ rows }: ConsultationsInboxProps) {
             {rows.map((row) => (
               <li key={row.id} className={css.card}>
                 <RequestFields row={row} locale={locale} />
-                <RequestActions row={row} />
+                <RequestTools row={row} groups={groups} />
               </li>
             ))}
           </ul>
@@ -185,7 +202,7 @@ export function ConsultationsInbox({ rows }: ConsultationsInboxProps) {
                     </td>
                     <td>{formatWhen(row.createdAt, locale)}</td>
                     <td>
-                      <RequestActions row={row} />
+                      <RequestTools row={row} groups={groups} />
                     </td>
                   </tr>
                 ))}

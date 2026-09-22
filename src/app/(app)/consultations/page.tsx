@@ -11,6 +11,7 @@ import {
 } from "@/modules/consultations/getConsultationRequests";
 import { toConsultationRequestView } from "@/modules/consultations/types";
 import { listPublicTeachersForCarousel } from "@/modules/teachers";
+import { getStudentGroups } from "@/modules/teacher-students/groups";
 import { getTranslations } from "next-intl/server";
 
 const item = getNavItem("/consultations");
@@ -32,15 +33,24 @@ export default async function ConsultationsPage() {
 
   if (reviewer) {
     let rows: Awaited<ReturnType<typeof getConsultationRequests>> = [];
+    let groups: Awaited<ReturnType<typeof getStudentGroups>> = [];
     try {
       rows = await getConsultationRequests();
     } catch (error) {
       console.error("consultations: getConsultationRequests failed", error);
     }
+    try {
+      groups = await getStudentGroups(user.id);
+    } catch (error) {
+      console.error("consultations: getStudentGroups failed", error);
+    }
 
     return (
       <PageFrame kicker={t("kicker")} title={t("title")} lead={t("teacherLead")}>
-        <ConsultationsInbox rows={rows.map(toConsultationRequestView)} />
+        <ConsultationsInbox
+          rows={rows.map(toConsultationRequestView)}
+          groups={groups.map((group) => ({ id: group.id, name: group.name }))}
+        />
       </PageFrame>
     );
   }
