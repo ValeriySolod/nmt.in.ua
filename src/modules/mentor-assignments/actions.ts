@@ -32,6 +32,10 @@ function readStudentIds(formData: FormData): number[] {
     .filter((id) => Number.isInteger(id) && id > 0);
 }
 
+function readDifficulty(formData: FormData): number {
+  return Number(formData.get("difficulty"));
+}
+
 function readScheduleMode(formData: FormData): "now" | "datetime" {
   const raw = String(formData.get("scheduleMode") ?? "now");
   return raw === "datetime" ? "datetime" : "now";
@@ -41,7 +45,7 @@ function readLocalDateTimeUnix(formData: FormData, key: string): number | null {
   const local = String(formData.get(key) ?? "").trim();
   if (!local) return null;
   const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(
-    local,
+    local
   );
   if (match) {
     const year = Number(match[1]);
@@ -61,7 +65,7 @@ function readLocalDateTimeUnix(formData: FormData, key: string): number | null {
 
 export async function createMentorAssignmentAction(
   _prev: MentorAssignmentActionState,
-  formData: FormData,
+  formData: FormData
 ): Promise<MentorAssignmentActionState> {
   try {
     const user = await requireRole(["teacher", "admin"]);
@@ -69,6 +73,7 @@ export async function createMentorAssignmentAction(
     const detail = await createMentorAssignment({
       teacherUserId: user.id,
       themeId,
+      difficulty: readDifficulty(formData),
       studentIds: readStudentIds(formData),
       scheduleMode: readScheduleMode(formData),
       availableAtUnix: readLocalDateTimeUnix(formData, "availableAtLocal"),
@@ -84,7 +89,7 @@ export async function createMentorAssignmentAction(
 
 export async function cancelMentorAssignmentAction(
   _prev: MentorAssignmentActionState,
-  formData: FormData,
+  formData: FormData
 ): Promise<MentorAssignmentActionState> {
   try {
     const user = await requireRole(["teacher", "admin"]);
@@ -100,7 +105,7 @@ export async function cancelMentorAssignmentAction(
 
 export async function updateMentorAssignmentMembersAction(
   _prev: MentorAssignmentActionState,
-  formData: FormData,
+  formData: FormData
 ): Promise<MentorAssignmentActionState> {
   try {
     const user = await requireRole(["teacher", "admin"]);

@@ -18,6 +18,7 @@ export type LearningSessionRow = {
   id: number;
   rowNumber: number;
   themeId: number;
+  difficulty: number | null;
   themeName: string;
   tasksNumber: number;
   rightNumber: number;
@@ -42,6 +43,7 @@ export type LearningSessionRow = {
 export type TaskSessionRecord = {
   id: number;
   theme_id: number;
+  difficulty: number | null;
   theme_name: string;
   tasks_number: number;
   right_number: number;
@@ -56,7 +58,7 @@ export type TaskSessionRecord = {
 
 export function sessionPercent(
   tasksNumber: number,
-  rightNumber: number,
+  rightNumber: number
 ): number | null {
   if (tasksNumber <= 0) return null;
   return (rightNumber / tasksNumber) * 100;
@@ -64,7 +66,7 @@ export function sessionPercent(
 
 export function sessionTimePerTask(
   tasksNumber: number,
-  timeSec: number,
+  timeSec: number
 ): number | null {
   if (tasksNumber <= 0 || timeSec <= 0) return null;
   return timeSec / tasksNumber;
@@ -83,7 +85,7 @@ export function resolveSessionDisplayStatus(
     TaskSessionRecord,
     "session_status" | "tasks_number" | "right_number" | "time" | "expire_time"
   >,
-  nowSec: number = nowUnixSec(),
+  nowSec: number = nowUnixSec()
 ): SessionDisplayStatus {
   if (
     session.session_status === SESSION_STATUS_COMPLETED ||
@@ -165,7 +167,7 @@ function asUnixSec(value: unknown): number | null {
 
 export function buildLearningSessionRows(
   sessions: TaskSessionRecord[],
-  nowSec: number = nowUnixSec(),
+  nowSec: number = nowUnixSec()
 ): LearningSessionRow[] {
   return sessions.map((session, index) => {
     const status = resolveSessionDisplayStatus(session, nowSec);
@@ -181,6 +183,7 @@ export function buildLearningSessionRows(
       id: session.id,
       rowNumber: index + 1,
       themeId: session.theme_id,
+      difficulty: session.difficulty,
       themeName: session.theme_name.trim(),
       tasksNumber: session.tasks_number,
       rightNumber: session.right_number,

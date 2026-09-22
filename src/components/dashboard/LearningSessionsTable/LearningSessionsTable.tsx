@@ -47,7 +47,7 @@ function SessionActions({ row }: { row: LearningSessionRow }) {
 
   const [state, formAction, pending] = useActionState(
     cancelLearningSessionAction,
-    CANCEL_INITIAL,
+    CANCEL_INITIAL
   );
 
   if (row.status === "completed") {
@@ -59,7 +59,10 @@ function SessionActions({ row }: { row: LearningSessionRow }) {
   return (
     <div className={css.actions}>
       {row.status === "expired" ? null : waiting ? (
-        <span className={css.scheduledBadge} title={row.availableAtLabel ?? undefined}>
+        <span
+          className={css.scheduledBadge}
+          title={row.availableAtLabel ?? undefined}
+        >
           {t("opensAt", { date: row.availableAtLabel ?? "—" })}
         </span>
       ) : (
@@ -132,7 +135,7 @@ export function LearningSessionsTable({
                       ...queryParams,
                       extended: showExtendedInfo ? null : "1",
                     }),
-                    { scroll: false },
+                    { scroll: false }
                   )
                 }
               >
@@ -165,6 +168,9 @@ export function LearningSessionsTable({
                 </th>
                 <th scope="col" className={css.colTheme}>
                   {t("theme")}
+                </th>
+                <th scope="col" className={css.colDifficulty}>
+                  {t("difficulty")}
                 </th>
                 {showExtendedInfo ? (
                   <>
@@ -212,6 +218,7 @@ export function LearningSessionsTable({
                 <tr key={row.id}>
                   <td className={css.colIndex}>{row.rowNumber}</td>
                   <td className={css.colTheme}>{row.themeName}</td>
+                  <td className={css.colDifficulty}>{row.difficulty ?? "—"}</td>
                   {showExtendedInfo ? (
                     <>
                       <td className={css.colNarrow}>{row.tasksNumber}</td>

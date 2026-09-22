@@ -12,10 +12,7 @@ export const THEMES_REQUIRED_COLUMNS = [
   "ord",
 ] as const;
 
-export const THEMES_COLUMNS = [
-  ...THEMES_REQUIRED_COLUMNS,
-  "code",
-] as const;
+export const THEMES_COLUMNS = [...THEMES_REQUIRED_COLUMNS, "code"] as const;
 
 export const MAX_LEN_THEME_CODE = 32;
 export const THEME_CODE_PATTERN = /^[A-Z0-9]+(?:-[A-Z0-9]+)*$/;
@@ -69,7 +66,7 @@ export const MIN_RIGHT_ANSWER = 1;
 export const MAX_RIGHT_ANSWER = 4;
 
 export const MIN_DIFFICULTY = 1;
-export const MAX_DIFFICULTY = 3;
+// export const MAX_DIFFICULTY = 3;
 
 /**
  * Signed MySQL `INT` bounds. Every `int` column in the verified schema

@@ -22,6 +22,7 @@ const SQL_SELECT_SESSION = `
     ts.session_status,
     ts.expire_time,
     ma.available_at
+    ma.difficulty
   FROM task_sessions ts
   LEFT JOIN mentor_assignment_members mam ON mam.session_id = ts.id
   LEFT JOIN mentor_assignments ma ON ma.id = mam.assignment_id
@@ -35,7 +36,7 @@ const SQL_COUNT_MAPPINGS = `
   WHERE session_id = ?
 `;
 
-const SQL_SELECT_TASK_IDS = `SELECT id FROM quiz_tasks WHERE theme_id = ?`;
+const SQL_SELECT_TASK_IDS = `SELECT id FROM quiz_tasks WHERE theme_id = ? AND difficulty = ?`;
 
 const SQL_INSERT_MAPPING_PREFIX =
   "INSERT INTO tasks2session (task_type, task_id, session_id, user_id, status) VALUES ";
@@ -70,7 +71,7 @@ export class StartPlannedSessionError extends Error {
   constructor(
     message: string,
     public readonly code: StartPlannedSessionErrorCode,
-    public readonly availableAt?: number,
+    public readonly availableAt?: number
   ) {
     super(message);
     this.name = "StartPlannedSessionError";
@@ -90,6 +91,7 @@ type SessionRow = {
   session_status: number;
   expire_time: number;
   available_at: number | null;
+  difficulty: number;
 };
 
 type CountRow = {
@@ -101,19 +103,19 @@ function isPositiveInt(value: unknown): value is number {
 }
 
 export function validateStartPlannedSessionInput(
-  input: unknown,
+  input: unknown
 ): StartPlannedSessionInput {
   if (typeof input !== "object" || input === null) {
     throw new StartPlannedSessionError(
       "Request payload must be an object.",
-      "invalid_input",
+      "invalid_input"
     );
   }
   const { userId, sessionId } = input as Record<string, unknown>;
   if (!isPositiveInt(userId) || !isPositiveInt(sessionId)) {
     throw new StartPlannedSessionError(
       "userId and sessionId must be positive integers.",
-      "invalid_input",
+      "invalid_input"
     );
   }
   return { userId, sessionId };
@@ -130,12 +132,14 @@ async function loadDefaultConnection(): Promise<SqlConnection> {
  */
 export async function startPlannedSession(
   rawInput: unknown,
-  deps: StartPlannedSessionDeps = { getConnection: loadDefaultConnection },
+  deps: StartPlannedSessionDeps = { getConnection: loadDefaultConnection }
 ): Promise<StartPlannedSessionResult> {
   const input = validateStartPlannedSessionInput(rawInput);
 
-  await (deps.ensureSchema ??
-    (() => ensureMentorAssignmentsSchema(deps.getConnection)))();
+  await (
+    deps.ensureSchema ??
+    (() => ensureMentorAssignmentsSchema(deps.getConnection))
+  )();
 
   try {
     const connection = await deps.getConnection();
@@ -152,7 +156,7 @@ export async function startPlannedSession(
         await connection.rollback();
         throw new StartPlannedSessionError(
           "Session was not found for this user.",
-          "not_found",
+          "not_found"
         );
       }
 
@@ -170,7 +174,7 @@ export async function startPlannedSession(
         await connection.rollback();
         throw new StartPlannedSessionError(
           "This planned session's 24h lifetime has expired.",
-          "session_expired",
+          "session_expired"
         );
       }
 
@@ -185,7 +189,7 @@ export async function startPlannedSession(
         throw new StartPlannedSessionError(
           "This planned session is not available yet.",
           "not_yet_available",
-          availableAt,
+          availableAt
         );
       }
 
@@ -207,16 +211,17 @@ export async function startPlannedSession(
         await connection.rollback();
         throw new StartPlannedSessionError(
           "Only planned sessions can be started this way.",
-          "not_planned",
+          "not_planned"
         );
       }
 
       const pool = await connection.query<{ id: number }>(SQL_SELECT_TASK_IDS, [
         session.theme_id,
+        session.difficulty,
       ]);
       const taskIds = sampleRandomIds(
         pool.map((row) => row.id),
-        TOPIC_TEST_TASK_COUNT,
+        TOPIC_TEST_TASK_COUNT
       );
       const taskCount = taskIds.length;
 
@@ -224,7 +229,7 @@ export async function startPlannedSession(
         await connection.rollback();
         throw new StartPlannedSessionError(
           "No tasks available for the session theme.",
-          "insufficient_tasks",
+          "insufficient_tasks"
         );
       }
 
@@ -238,14 +243,14 @@ export async function startPlannedSession(
       ]);
       const mapping = await connection.execute(
         SQL_INSERT_MAPPING_PREFIX + placeholders,
-        mappingParams,
+        mappingParams
       );
 
       if (mapping.affectedRows !== taskCount) {
         await connection.rollback();
         throw new StartPlannedSessionError(
           "Failed to link all tasks to the planned session.",
-          "db_error",
+          "db_error"
         );
       }
 
@@ -258,7 +263,7 @@ export async function startPlannedSession(
         await connection.rollback();
         throw new StartPlannedSessionError(
           "Failed to activate the planned session.",
-          "db_error",
+          "db_error"
         );
       }
 
@@ -281,6 +286,9 @@ export async function startPlannedSession(
       throw error;
     }
     console.error("startPlannedSession: unexpected database error", error);
-    throw new StartPlannedSessionError("Database operation failed.", "db_error");
+    throw new StartPlannedSessionError(
+      "Database operation failed.",
+      "db_error"
+    );
   }
 }
