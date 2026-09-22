@@ -5,6 +5,10 @@ import { absoluteSiteUrl } from "@/lib/siteOrigin";
 import { requireUser } from "@/modules/auth/getCurrentUser";
 import { canManageStudents } from "@/modules/auth/types";
 import { inviteJoinPath } from "./codes";
+import {
+  createStudentForTeacher,
+  parseOptionalGroupId,
+} from "./createStudentAccount";
 import { createStudentGroup, deleteStudentGroup, renameStudentGroup } from "./groups";
 import { createStudentInvite, redeemStudentInvite } from "./invites";
 import { placeStudentInGroup } from "./membership";
@@ -21,6 +25,16 @@ export type ManageActionErrorCode =
   | "invite_invalid"
   | "invite_expired"
   | "invite_revoked"
+  | "required_fields"
+  | "invalid_login"
+  | "invalid_display_name"
+  | "invalid_email"
+  | "password_too_short"
+  | "password_too_long"
+  | "password_mismatch"
+  | "login_taken"
+  | "email_taken"
+  | "reserved_login"
   | "generic";
 
 export type GroupActionState =
@@ -35,6 +49,19 @@ export type InviteActionState =
       code: string;
       url: string;
       expiresAt: string;
+    }
+  | { status: "error"; code: ManageActionErrorCode };
+
+export type CreateStudentActionState =
+  | { status: "idle" }
+  | {
+      status: "success";
+      login: string;
+      email: string;
+      /** Shown once in the form response. Never written to logs. */
+      password: string;
+      displayName: string;
+      groupName: string | null;
     }
   | { status: "error"; code: ManageActionErrorCode };
 
@@ -62,6 +89,16 @@ function mapError(error: TeacherStudentsError): ManageActionErrorCode {
     case "invite_invalid":
     case "invite_expired":
     case "invite_revoked":
+    case "required_fields":
+    case "invalid_login":
+    case "invalid_display_name":
+    case "invalid_email":
+    case "password_too_short":
+    case "password_too_long":
+    case "password_mismatch":
+    case "login_taken":
+    case "email_taken":
+    case "reserved_login":
       return error.code;
     default:
       return "generic";
@@ -238,6 +275,49 @@ export async function createStudentInviteAction(
       return { status: "error", code: mapError(error) };
     }
     console.error("createStudentInviteAction: unexpected error", error);
+    return { status: "error", code: "generic" };
+  }
+}
+
+export async function createStudentAccountAction(
+  _prev: CreateStudentActionState,
+  formData: FormData,
+  deps: {
+    requireUser: typeof requireUser;
+    createStudentForTeacher: typeof createStudentForTeacher;
+    revalidatePath: Revalidate;
+  } = { requireUser, createStudentForTeacher, revalidatePath },
+): Promise<CreateStudentActionState> {
+  const user = await deps.requireUser();
+  if (!canManageStudents(user.role)) {
+    return { status: "error", code: "forbidden" };
+  }
+
+  const password = String(formData.get("password") ?? "");
+  try {
+    const created = await deps.createStudentForTeacher({
+      teacherUserId: user.id,
+      login: String(formData.get("login") ?? ""),
+      email: String(formData.get("email") ?? ""),
+      password,
+      passwordConfirm: String(formData.get("passwordConfirm") ?? ""),
+      groupId: parseOptionalGroupId(formData.get("groupId")),
+    });
+    revalidateRoster(deps.revalidatePath);
+    deps.revalidatePath(`/students/${created.studentUserId}`);
+    return {
+      status: "success",
+      login: created.login,
+      email: created.email,
+      displayName: created.displayName,
+      groupName: created.groupName,
+      password,
+    };
+  } catch (error) {
+    if (error instanceof TeacherStudentsError) {
+      return { status: "error", code: mapError(error) };
+    }
+    console.error("createStudentAccountAction: unexpected error", error);
     return { status: "error", code: "generic" };
   }
 }

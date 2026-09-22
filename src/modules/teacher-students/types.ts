@@ -21,6 +21,16 @@ export type TeacherStudentsErrorCode =
   | "invite_invalid"
   | "invite_expired"
   | "invite_revoked"
+  | "required_fields"
+  | "invalid_login"
+  | "invalid_display_name"
+  | "invalid_email"
+  | "password_too_short"
+  | "password_too_long"
+  | "password_mismatch"
+  | "login_taken"
+  | "email_taken"
+  | "reserved_login"
   | "db_error";
 
 export class TeacherStudentsError extends Error {

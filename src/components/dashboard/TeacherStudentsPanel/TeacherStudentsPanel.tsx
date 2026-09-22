@@ -1,11 +1,16 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import clsx from "clsx";
 import { Select } from "@/components/ui/Select";
-import { LOGIN_MAX_LEN } from "@/modules/auth/validateRegistration";
+import {
+  EMAIL_MAX_LEN,
+  LOGIN_MAX_LEN,
+  PASSWORD_MAX_LEN,
+  PASSWORD_MIN_LEN,
+} from "@/modules/auth/validateRegistration";
 import {
   addTeacherStudentAction,
   unlinkTeacherStudentAction,
@@ -14,11 +19,14 @@ import {
 } from "@/modules/teacher-students/actions";
 import {
   assignStudentGroupAction,
+  createStudentAccountAction,
+  type CreateStudentActionState,
   type GroupActionState,
 } from "@/modules/teacher-students/manageActions";
 import css from "./TeacherStudentsPanel.module.css";
 
 const ADD_INITIAL: AddTeacherStudentActionState = { status: "idle" };
+const CREATE_INITIAL: CreateStudentActionState = { status: "idle" };
 const UNLINK_INITIAL: UnlinkTeacherStudentActionState = { status: "idle" };
 const ASSIGN_INITIAL: GroupActionState = { status: "idle" };
 
@@ -49,6 +57,13 @@ export function TeacherStudentsPanel({
     addTeacherStudentAction,
     ADD_INITIAL,
   );
+  const [createState, createAction, createPending] = useActionState(
+    createStudentAccountAction,
+    CREATE_INITIAL,
+  );
+  const [copiedLogin, setCopiedLogin] = useState<string | null>(null);
+  const credentialsCopied =
+    createState.status === "success" && copiedLogin === createState.login;
   const [unlinkState, unlinkAction, unlinkPending] = useActionState(
     unlinkTeacherStudentAction,
     UNLINK_INITIAL,
@@ -65,8 +80,174 @@ export function TeacherStudentsPanel({
     })),
   ];
 
+  async function copyCredentials() {
+    if (createState.status !== "success") return;
+    const lines = [
+      `${t("loginNew")}: ${createState.login}`,
+      `${t("email")}: ${createState.email}`,
+      `${t("password")}: ${createState.password}`,
+    ];
+    if (createState.groupName) {
+      lines.push(`${t("groupOptional")}: ${createState.groupName}`);
+    }
+    try {
+      await navigator.clipboard.writeText(lines.join("\n"));
+      setCopiedLogin(createState.login);
+    } catch {
+      setCopiedLogin(null);
+    }
+  }
+
   return (
     <div className={css.layout}>
+      <section
+        className={css.panel}
+        aria-labelledby="teacher-students-create-title"
+      >
+        <div>
+          <h2 id="teacher-students-create-title" className={css.panelTitle}>
+            {t("createTitle")}
+          </h2>
+          <p className={css.panelLead}>{t("createLead")}</p>
+        </div>
+
+        <form
+          key={
+            createState.status === "success" ? createState.login : "create-draft"
+          }
+          action={createAction}
+          className={css.form}
+        >
+          <div className={css.fields}>
+            <label className={css.field}>
+              <span className={css.label}>{t("loginNew")}</span>
+              <input
+                className={css.input}
+                type="text"
+                name="login"
+                autoComplete="off"
+                spellCheck={false}
+                required
+                maxLength={LOGIN_MAX_LEN}
+                placeholder={t("loginNewPlaceholder")}
+                disabled={createPending}
+              />
+            </label>
+            <label className={css.field}>
+              <span className={css.label}>{t("email")}</span>
+              <input
+                className={css.input}
+                type="email"
+                name="email"
+                autoComplete="off"
+                spellCheck={false}
+                required
+                maxLength={EMAIL_MAX_LEN}
+                placeholder={t("emailPlaceholder")}
+                disabled={createPending}
+              />
+            </label>
+            <label className={css.field}>
+              <span className={css.label}>{t("password")}</span>
+              <input
+                className={css.input}
+                type="password"
+                name="password"
+                autoComplete="new-password"
+                required
+                minLength={PASSWORD_MIN_LEN}
+                maxLength={PASSWORD_MAX_LEN}
+                disabled={createPending}
+              />
+            </label>
+            <label className={css.field}>
+              <span className={css.label}>{t("passwordConfirm")}</span>
+              <input
+                className={css.input}
+                type="password"
+                name="passwordConfirm"
+                autoComplete="new-password"
+                required
+                minLength={PASSWORD_MIN_LEN}
+                maxLength={PASSWORD_MAX_LEN}
+                disabled={createPending}
+              />
+            </label>
+            {groups.length > 0 ? (
+              <div className={clsx(css.field, css.span)}>
+                <span className={css.label} id="create-student-group-label">
+                  {t("groupOptional")}
+                </span>
+                <Select
+                  name="groupId"
+                  variant="field"
+                  defaultValue=""
+                  options={groupOptions}
+                  aria-labelledby="create-student-group-label"
+                  disabled={createPending}
+                />
+              </div>
+            ) : null}
+          </div>
+          <span className={css.hint}>
+            {t("loginNewHint")} {t("passwordHint", { min: PASSWORD_MIN_LEN })}
+          </span>
+          <button type="submit" className={css.submit} disabled={createPending}>
+            {createPending ? t("creating") : t("create")}
+          </button>
+        </form>
+
+        {createState.status === "success" ? (
+          <div className={css.credentials} role="status">
+            <p className={clsx(css.alert, css.alertSuccess)}>
+              {t("created", { name: createState.displayName })}
+            </p>
+            <p className={css.hint}>{t("credentialsOnce")}</p>
+            <label className={css.field}>
+              <span className={css.label}>{t("loginNew")}</span>
+              <input
+                className={css.input}
+                readOnly
+                value={createState.login}
+                spellCheck={false}
+              />
+            </label>
+            <label className={css.field}>
+              <span className={css.label}>{t("email")}</span>
+              <input
+                className={css.input}
+                readOnly
+                value={createState.email}
+                spellCheck={false}
+              />
+            </label>
+            <label className={css.field}>
+              <span className={css.label}>{t("password")}</span>
+              <input
+                className={css.input}
+                readOnly
+                value={createState.password}
+                spellCheck={false}
+                autoComplete="off"
+              />
+            </label>
+            <button
+              type="button"
+              className={css.unlink}
+              onClick={() => void copyCredentials()}
+            >
+              {credentialsCopied ? t("copied") : t("copyCredentials")}
+            </button>
+          </div>
+        ) : null}
+
+        {createState.status === "error" ? (
+          <p className={clsx(css.alert, css.alertError)} role="alert">
+            {t(`errors.${createState.code}`)}
+          </p>
+        ) : null}
+      </section>
+
       <section className={css.panel} aria-labelledby="teacher-students-add-title">
         <div>
           <h2 id="teacher-students-add-title" className={css.panelTitle}>
