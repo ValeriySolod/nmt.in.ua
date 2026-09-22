@@ -1,10 +1,7 @@
 import type { SqlConnection } from "@/lib/db/mysql";
 import { ensureMentorAssignmentsSchema } from "@/modules/mentor-assignments/schema";
 import { nowUnixSec } from "@/modules/testing/sessionElapsed";
-import {
-  buildLearningSessionRows,
-  type LearningSessionRow,
-} from "./types";
+import { buildLearningSessionRows, type LearningSessionRow } from "./types";
 
 /** Default page size for `/sessions` — avoids unbounded history growth. */
 export const LEARNING_SESSIONS_PAGE_SIZE = 50;
@@ -26,7 +23,7 @@ async function loadDefaultConnection(): Promise<SqlConnection> {
 }
 
 export function resolveLearningSessionsLimit(
-  limit: number | undefined,
+  limit: number | undefined
 ): number {
   const raw = limit ?? LEARNING_SESSIONS_PAGE_SIZE;
   if (!Number.isInteger(raw) || raw <= 0) return LEARNING_SESSIONS_PAGE_SIZE;
@@ -36,11 +33,13 @@ export function resolveLearningSessionsLimit(
 export async function getLearningSessions(
   userId: number,
   deps: GetLearningSessionsDeps = { getConnection: loadDefaultConnection },
-  options: GetLearningSessionsOptions = {},
+  options: GetLearningSessionsOptions = {}
 ): Promise<LearningSessionRow[]> {
   const limit = resolveLearningSessionsLimit(options.limit);
-  await (deps.ensureSchema ??
-    (() => ensureMentorAssignmentsSchema(deps.getConnection)))();
+  await (
+    deps.ensureSchema ??
+    (() => ensureMentorAssignmentsSchema(deps.getConnection))
+  )();
 
   const sql = `
   SELECT
@@ -55,6 +54,7 @@ export async function getLearningSessions(
     ts.start_time,
     ts.expire_time,
     ma.available_at,
+    ma.difficulty,
     ma.due_at
   FROM task_sessions ts
   INNER JOIN themes t ON t.id = ts.theme_id
@@ -81,6 +81,7 @@ export async function getLearningSessions(
       expire_time: number;
       available_at: number | null;
       due_at: number | null;
+      difficulty: number | null;
     }>(sql, [userId]);
 
     const nowSec = deps.nowSec ?? nowUnixSec;

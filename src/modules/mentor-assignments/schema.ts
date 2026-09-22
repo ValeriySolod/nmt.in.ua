@@ -6,6 +6,7 @@ export const SQL_CREATE_MENTOR_ASSIGNMENTS = `
     id INT UNSIGNED NOT NULL AUTO_INCREMENT,
     teacher_user_id INT NOT NULL,
     theme_id INT NOT NULL,
+    difficulty INT UNSIGNED NOT NULL DEFAULT 1,
     tasks_number INT UNSIGNED NOT NULL DEFAULT 10,
     available_at INT UNSIGNED NOT NULL,
     due_at INT UNSIGNED NOT NULL,
@@ -50,9 +51,7 @@ async function loadDefaultConnection(): Promise<SqlConnection> {
 
 let schemaReady: Promise<void> | undefined;
 
-async function columnNames(
-  connection: SqlConnection,
-): Promise<Set<string>> {
+async function columnNames(connection: SqlConnection): Promise<Set<string>> {
   const rows = await connection.query<{
     COLUMN_NAME?: string;
     column_name?: string;
@@ -60,16 +59,16 @@ async function columnNames(
     `SELECT COLUMN_NAME AS COLUMN_NAME
      FROM information_schema.COLUMNS
      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'mentor_assignments'`,
-    [],
+    []
   );
   return new Set(
-    rows.map((row) => String(row.COLUMN_NAME ?? row.column_name ?? "")),
+    rows.map((row) => String(row.COLUMN_NAME ?? row.column_name ?? ""))
   );
 }
 
 /** Add available_at when the table was created before that column existed. */
 export async function migrateMentorAssignmentsAvailableAt(
-  connection: SqlConnection,
+  connection: SqlConnection
 ): Promise<void> {
   const columns = await columnNames(connection);
   if (columns.size === 0 || columns.has("available_at")) return;
@@ -77,23 +76,37 @@ export async function migrateMentorAssignmentsAvailableAt(
   await connection.execute(
     `ALTER TABLE mentor_assignments
      ADD COLUMN available_at INT UNSIGNED NOT NULL DEFAULT 0 AFTER tasks_number`,
-    [],
+    []
   );
   await connection.execute(
     `UPDATE mentor_assignments
      SET available_at = created_at
      WHERE available_at = 0`,
-    [],
+    []
+  );
+}
+
+export async function migrateMentorAssignmentsDifficulty(
+  connection: SqlConnection
+): Promise<void> {
+  const columns = await columnNames(connection);
+  if (columns.size === 0 || columns.has("difficulty")) return;
+
+  await connection.execute(
+    `ALTER TABLE mentor_assignments
+     ADD COLUMN difficulty INT UNSIGNED NOT NULL DEFAULT 1 AFTER theme_id`,
+    []
   );
 }
 
 async function runMentorAssignmentsSchemaMigration(
-  getConnection: () => Promise<SqlConnection>,
+  getConnection: () => Promise<SqlConnection>
 ): Promise<void> {
   const connection = await getConnection();
   try {
     await connection.execute(SQL_CREATE_MENTOR_ASSIGNMENTS, []);
     await migrateMentorAssignmentsAvailableAt(connection);
+    await migrateMentorAssignmentsDifficulty(connection);
     await connection.execute(SQL_CREATE_MENTOR_ASSIGNMENT_MEMBERS, []);
   } finally {
     connection.release();
@@ -102,14 +115,14 @@ async function runMentorAssignmentsSchemaMigration(
 
 /** Creates assignment tables once per process if missing. */
 export async function ensureMentorAssignmentsSchema(
-  getConnection: () => Promise<SqlConnection> = loadDefaultConnection,
+  getConnection: () => Promise<SqlConnection> = loadDefaultConnection
 ): Promise<void> {
   if (!schemaReady) {
     schemaReady = runMentorAssignmentsSchemaMigration(getConnection).catch(
       (error) => {
         schemaReady = undefined;
         throw error;
-      },
+      }
     );
   }
   await schemaReady;

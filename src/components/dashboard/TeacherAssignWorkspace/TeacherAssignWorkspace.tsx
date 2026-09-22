@@ -69,13 +69,13 @@ export function TeacherAssignWorkspace({
 
   const [scheduleMode, setScheduleMode] = useState<"now" | "datetime">("now");
   const [selectedIds, setSelectedIds] = useState<Set<number>>(
-    () => new Set(students.map((s) => s.studentUserId)),
+    () => new Set(students.map((s) => s.studentUserId))
   );
   const [pickedId, setPickedId] = useState<number | null>(null);
   const [editing, setEditing] = useState(false);
   const [editIds, setEditIds] = useState<Set<number>>(new Set());
   const [sortBy, setSortBy] = useState<"newest" | "opens" | "due" | "theme">(
-    "newest",
+    "newest"
   );
   const [filterThemeId, setFilterThemeId] = useState<string>("all");
   const [filterProgress, setFilterProgress] = useState<
@@ -84,16 +84,16 @@ export function TeacherAssignWorkspace({
 
   const [createState, createAction, createPending] = useActionState(
     createMentorAssignmentAction,
-    IDLE,
+    IDLE
   );
   const [cancelState, cancelAction, cancelPending] = useActionState(
     cancelMentorAssignmentAction,
-    IDLE,
+    IDLE
   );
   const [updateState, updateAction, updatePending] = useActionState(
     async (
       prev: MentorAssignmentActionState,
-      formData: FormData,
+      formData: FormData
     ): Promise<MentorAssignmentActionState> => {
       const result = await updateMentorAssignmentMembersAction(prev, formData);
       if (result.status === "success") {
@@ -101,11 +101,13 @@ export function TeacherAssignWorkspace({
       }
       return result;
     },
-    IDLE,
+    IDLE
   );
 
   const preferredId =
-    createState.status === "success" ? (createState.assignmentId ?? null) : null;
+    createState.status === "success"
+      ? (createState.assignmentId ?? null)
+      : null;
 
   const filteredAssignments = useMemo(() => {
     let rows = [...assignments];
@@ -117,12 +119,11 @@ export function TeacherAssignWorkspace({
       rows = rows.filter((row) => row.overdueCount > 0);
     } else if (filterProgress === "pending") {
       rows = rows.filter(
-        (row) => row.completedCount + row.overdueCount < row.memberCount,
+        (row) => row.completedCount + row.overdueCount < row.memberCount
       );
     } else if (filterProgress === "done") {
       rows = rows.filter(
-        (row) =>
-          row.memberCount > 0 && row.completedCount === row.memberCount,
+        (row) => row.memberCount > 0 && row.completedCount === row.memberCount
       );
     }
     rows.sort((a, b) => {
@@ -144,7 +145,8 @@ export function TeacherAssignWorkspace({
   }, [assignments, filterThemeId, filterProgress, sortBy, dateLocale]);
 
   const activeId = useMemo(() => {
-    const candidate = pickedId ?? preferredId ?? filteredAssignments[0]?.id ?? null;
+    const candidate =
+      pickedId ?? preferredId ?? filteredAssignments[0]?.id ?? null;
     if (candidate == null) return null;
     if (!filteredAssignments.some((row) => row.id === candidate)) {
       return filteredAssignments[0]?.id ?? null;
@@ -190,7 +192,10 @@ export function TeacherAssignWorkspace({
 
   return (
     <div className={css.layout}>
-      <section className={css.panel} aria-labelledby="teacher-assign-form-title">
+      <section
+        className={css.panel}
+        aria-labelledby="teacher-assign-form-title"
+      >
         <h2 id="teacher-assign-form-title" className={css.panelTitle}>
           {t("formTitle")}
         </h2>
@@ -211,6 +216,20 @@ export function TeacherAssignWorkspace({
                   value: String(theme.id),
                   label: theme.name,
                 }))}
+              />
+            </label>
+
+            <label className={css.field}>
+              <span className={css.label}>{t("difficulty")}</span>
+              <input
+                className={css.input}
+                type="number"
+                name="difficulty"
+                min="1"
+                step="1"
+                defaultValue="1"
+                required
+                disabled={createPending}
               />
             </label>
 
@@ -280,7 +299,7 @@ export function TeacherAssignWorkspace({
                           onChange={(event) =>
                             toggleStudent(
                               student.studentUserId,
-                              event.target.checked,
+                              event.target.checked
                             )
                           }
                           disabled={createPending}
@@ -367,7 +386,7 @@ export function TeacherAssignWorkspace({
                   value={filterProgress}
                   onChange={(value) =>
                     setFilterProgress(
-                      value as "all" | "pending" | "overdue" | "done",
+                      value as "all" | "pending" | "overdue" | "done"
                     )
                   }
                   options={[
@@ -392,7 +411,7 @@ export function TeacherAssignWorkspace({
                         type="button"
                         className={clsx(
                           css.assignItem,
-                          active && css.assignActive,
+                          active && css.assignActive
                         )}
                         onClick={() => openAssignment(row.id)}
                         aria-expanded={active}
@@ -511,7 +530,7 @@ export function TeacherAssignWorkspace({
                       const completed = activeDetail.members.some(
                         (m) =>
                           m.studentUserId === student.studentUserId &&
-                          m.progress === "completed",
+                          m.progress === "completed"
                       );
                       const checked =
                         editIds.has(student.studentUserId) || completed;
@@ -527,7 +546,7 @@ export function TeacherAssignWorkspace({
                               onChange={(event) =>
                                 toggleEditStudent(
                                   student.studentUserId,
-                                  event.target.checked,
+                                  event.target.checked
                                 )
                               }
                             />

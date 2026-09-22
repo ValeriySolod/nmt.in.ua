@@ -7,9 +7,7 @@ import {
 import { TOPIC_TEST_TASK_COUNT } from "@/modules/testing/startTopicTest";
 import { nowUnixSec } from "@/modules/testing/sessionElapsed";
 import { resolveAssignmentSchedule } from "./dueAt";
-import {
-  ensureTeacherStudentsSchema,
-} from "@/modules/teacher-students/schema";
+import { ensureTeacherStudentsSchema } from "@/modules/teacher-students/schema";
 import {
   ensureMentorAssignmentsSchema,
   loadMentorAssignmentsConnection,
@@ -35,6 +33,7 @@ type AssignmentRow = {
   id: number;
   teacher_user_id: number;
   theme_id: number;
+  difficulty: number;
   theme_name: string;
   tasks_number: number;
   available_at: number;
@@ -59,8 +58,16 @@ const SQL_THEME = `SELECT id, name FROM themes WHERE id = ? LIMIT 1`;
 
 const SQL_INSERT_ASSIGNMENT = `
   INSERT INTO mentor_assignments (
-    teacher_user_id, theme_id, tasks_number, available_at, due_at, schedule_mode, status, created_at
-  ) VALUES (?, ?, ?, ?, ?, ?, 'active', ?)
+    teacher_user_id,
+    theme_id,
+    difficulty,
+    tasks_number,
+    available_at,
+    due_at,
+    schedule_mode,
+    status,
+    created_at
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?)
 `;
 
 const SQL_INSERT_MEMBER = `
@@ -80,6 +87,7 @@ const SQL_LIST_ASSIGNMENTS = `
     a.id,
     a.teacher_user_id,
     a.theme_id,
+    a.difficulty,
     t.name AS theme_name,
     a.tasks_number,
     a.available_at,
@@ -99,6 +107,7 @@ const SQL_GET_ASSIGNMENT = `
     a.id,
     a.teacher_user_id,
     a.theme_id,
+    a.difficulty,
     t.name AS theme_name,
     a.tasks_number,
     a.available_at,
@@ -136,12 +145,12 @@ function uniquePositiveInts(values: number[]): number[] {
 async function assertStudentsLinked(
   connection: SqlConnection,
   teacherUserId: number,
-  studentIds: number[],
+  studentIds: number[]
 ): Promise<void> {
   if (studentIds.length === 0) {
     throw new MentorAssignmentsError(
       "Select at least one student.",
-      "no_students",
+      "no_students"
     );
   }
 
@@ -153,13 +162,13 @@ async function assertStudentsLinked(
       WHERE teacher_user_id = ?
         AND student_user_id IN (${studentIds.map(() => "?").join(",")})
     `,
-    [teacherUserId, ...studentIds],
+    [teacherUserId, ...studentIds]
   );
 
   if (linked.length !== studentIds.length) {
     throw new MentorAssignmentsError(
       "One or more students are not linked to this teacher.",
-      "students_not_linked",
+      "students_not_linked"
     );
   }
 }
@@ -169,7 +178,7 @@ async function insertMemberSession(
   studentUserId: number,
   themeId: number,
   tasksNumber: number,
-  expireTime: number,
+  expireTime: number
 ): Promise<number> {
   const inserted = await connection.execute(SQL_INSERT_SESSION, [
     studentUserId,
@@ -182,7 +191,7 @@ async function insertMemberSession(
   if (inserted.insertId <= 0) {
     throw new MentorAssignmentsError(
       "Failed to create mentor session.",
-      "db_error",
+      "db_error"
     );
   }
   return inserted.insertId;
@@ -191,7 +200,7 @@ async function insertMemberSession(
 async function deleteSessionIfCancelable(
   connection: SqlConnection,
   sessionId: number | null,
-  studentUserId: number,
+  studentUserId: number
 ): Promise<void> {
   if (sessionId == null || sessionId <= 0) return;
 
@@ -203,7 +212,7 @@ async function deleteSessionIfCancelable(
   }>(
     `SELECT session_status, tasks_number, right_number, time
      FROM task_sessions WHERE id = ? AND user_id = ? LIMIT 1`,
-    [sessionId, studentUserId],
+    [sessionId, studentUserId]
   );
   const session = rows[0];
   if (!session) return;
@@ -220,14 +229,14 @@ async function deleteSessionIfCancelable(
   ]);
   await connection.execute(
     "DELETE FROM task_sessions WHERE id = ? AND user_id = ?",
-    [sessionId, studentUserId],
+    [sessionId, studentUserId]
   );
 }
 
 function mapMembers(
   rows: MemberRow[],
   dueAt: number,
-  nowSec: number,
+  nowSec: number
 ): MentorAssignmentMember[] {
   return rows.map((row) => {
     const session =
@@ -251,11 +260,12 @@ function mapMembers(
 
 function summarize(
   row: AssignmentRow,
-  members: MentorAssignmentMember[],
+  members: MentorAssignmentMember[]
 ): MentorAssignmentSummary {
   return {
     id: row.id,
     themeId: row.theme_id,
+    difficulty: row.difficulty,
     themeName: row.theme_name.trim(),
     tasksNumber: row.tasks_number,
     availableAt: row.available_at,
@@ -272,6 +282,7 @@ function summarize(
 export type CreateMentorAssignmentInput = {
   teacherUserId: number;
   themeId: number;
+  difficulty: number;
   studentIds: number[];
   scheduleMode: AssignmentScheduleMode;
   /** Unix seconds — when the test opens (datetime mode). */
@@ -283,18 +294,25 @@ export type CreateMentorAssignmentInput = {
 
 export async function createMentorAssignment(
   input: CreateMentorAssignmentInput,
-  deps: Deps = { getConnection: loadMentorAssignmentsConnection },
+  deps: Deps = { getConnection: loadMentorAssignmentsConnection }
 ): Promise<MentorAssignmentDetail> {
   if (!isPositiveInt(input.teacherUserId) || !isPositiveInt(input.themeId)) {
     throw new MentorAssignmentsError(
       "teacherUserId and themeId must be positive integers.",
-      "invalid_input",
+      "invalid_input"
     );
   }
   if (input.scheduleMode !== "now" && input.scheduleMode !== "datetime") {
     throw new MentorAssignmentsError(
       "scheduleMode must be now or datetime.",
-      "invalid_input",
+      "invalid_input"
+    );
+  }
+
+  if (!isPositiveInt(input.difficulty)) {
+    throw new MentorAssignmentsError(
+      "difficulty must be a positive integer.",
+      "invalid_input"
     );
   }
 
@@ -315,7 +333,7 @@ export async function createMentorAssignment(
 
     const themes = await connection.query<{ id: number; name: string }>(
       SQL_THEME,
-      [input.themeId],
+      [input.themeId]
     );
     if (!themes[0]) {
       await connection.rollback();
@@ -328,13 +346,14 @@ export async function createMentorAssignment(
       input.scheduleMode,
       input.availableAtUnix ?? null,
       input.dueAtUnix ?? null,
-      nowSec(),
+      nowSec()
     );
     const createdAt = nowSec();
 
     const inserted = await connection.execute(SQL_INSERT_ASSIGNMENT, [
       input.teacherUserId,
       input.themeId,
+      input.difficulty,
       tasksNumber,
       schedule.availableAt,
       schedule.dueAt,
@@ -345,7 +364,7 @@ export async function createMentorAssignment(
       await connection.rollback();
       throw new MentorAssignmentsError(
         "Failed to create assignment.",
-        "db_error",
+        "db_error"
       );
     }
     assignmentId = inserted.insertId;
@@ -356,7 +375,7 @@ export async function createMentorAssignment(
         studentId,
         input.themeId,
         tasksNumber,
-        schedule.dueAt,
+        schedule.dueAt
       );
       await connection.execute(SQL_INSERT_MEMBER, [
         assignmentId,
@@ -370,10 +389,7 @@ export async function createMentorAssignment(
     await connection.rollback().catch(() => undefined);
     if (error instanceof MentorAssignmentsError) throw error;
     console.error("createMentorAssignment: unexpected error", error);
-    throw new MentorAssignmentsError(
-      "Database operation failed.",
-      "db_error",
-    );
+    throw new MentorAssignmentsError("Database operation failed.", "db_error");
   } finally {
     connection.release();
   }
@@ -383,12 +399,12 @@ export async function createMentorAssignment(
 
 export async function listMentorAssignments(
   teacherUserId: number,
-  deps: Deps = { getConnection: loadMentorAssignmentsConnection },
+  deps: Deps = { getConnection: loadMentorAssignmentsConnection }
 ): Promise<MentorAssignmentSummary[]> {
   if (!isPositiveInt(teacherUserId)) {
     throw new MentorAssignmentsError(
       "teacherUserId must be a positive integer.",
-      "invalid_input",
+      "invalid_input"
     );
   }
 
@@ -405,7 +421,7 @@ export async function listMentorAssignments(
       const members = mapMembers(
         await connection.query<MemberRow>(SQL_LIST_MEMBERS, [row.id]),
         row.due_at,
-        nowSec,
+        nowSec
       );
       summaries.push(summarize(row, members));
     }
@@ -418,12 +434,12 @@ export async function listMentorAssignments(
 export async function getMentorAssignmentDetail(
   assignmentId: number,
   teacherUserId: number,
-  deps: Deps = { getConnection: loadMentorAssignmentsConnection },
+  deps: Deps = { getConnection: loadMentorAssignmentsConnection }
 ): Promise<MentorAssignmentDetail> {
   if (!isPositiveInt(assignmentId) || !isPositiveInt(teacherUserId)) {
     throw new MentorAssignmentsError(
       "assignmentId and teacherUserId must be positive integers.",
-      "invalid_input",
+      "invalid_input"
     );
   }
 
@@ -446,7 +462,7 @@ export async function getMentorAssignmentDetail(
     const members = mapMembers(
       await connection.query<MemberRow>(SQL_LIST_MEMBERS, [assignmentId]),
       row.due_at,
-      nowSec,
+      nowSec
     );
     return { ...summarize(row, members), members };
   } finally {
@@ -457,12 +473,12 @@ export async function getMentorAssignmentDetail(
 export async function cancelMentorAssignment(
   assignmentId: number,
   teacherUserId: number,
-  deps: Deps = { getConnection: loadMentorAssignmentsConnection },
+  deps: Deps = { getConnection: loadMentorAssignmentsConnection }
 ): Promise<void> {
   if (!isPositiveInt(assignmentId) || !isPositiveInt(teacherUserId)) {
     throw new MentorAssignmentsError(
       "assignmentId and teacherUserId must be positive integers.",
-      "invalid_input",
+      "invalid_input"
     );
   }
 
@@ -488,7 +504,7 @@ export async function cancelMentorAssignment(
       await connection.rollback();
       throw new MentorAssignmentsError(
         "Assignment already cancelled.",
-        "cancelled",
+        "cancelled"
       );
     }
 
@@ -499,23 +515,20 @@ export async function cancelMentorAssignment(
       await deleteSessionIfCancelable(
         connection,
         member.session_id,
-        member.student_user_id,
+        member.student_user_id
       );
     }
 
     await connection.execute(
       `UPDATE mentor_assignments SET status = 'cancelled' WHERE id = ?`,
-      [assignmentId],
+      [assignmentId]
     );
     await connection.commit();
   } catch (error) {
     await connection.rollback().catch(() => undefined);
     if (error instanceof MentorAssignmentsError) throw error;
     console.error("cancelMentorAssignment: unexpected error", error);
-    throw new MentorAssignmentsError(
-      "Database operation failed.",
-      "db_error",
-    );
+    throw new MentorAssignmentsError("Database operation failed.", "db_error");
   } finally {
     connection.release();
   }
@@ -532,7 +545,7 @@ export type UpdateAssignmentMembersInput = {
  */
 export async function updateMentorAssignmentMembers(
   input: UpdateAssignmentMembersInput,
-  deps: Deps = { getConnection: loadMentorAssignmentsConnection },
+  deps: Deps = { getConnection: loadMentorAssignmentsConnection }
 ): Promise<MentorAssignmentDetail> {
   if (
     !isPositiveInt(input.assignmentId) ||
@@ -540,7 +553,7 @@ export async function updateMentorAssignmentMembers(
   ) {
     throw new MentorAssignmentsError(
       "assignmentId and teacherUserId must be positive integers.",
-      "invalid_input",
+      "invalid_input"
     );
   }
 
@@ -570,34 +583,34 @@ export async function updateMentorAssignmentMembers(
       await connection.rollback();
       throw new MentorAssignmentsError(
         "Cannot edit a cancelled assignment.",
-        "cancelled",
+        "cancelled"
       );
     }
 
     const current = mapMembers(
       await connection.query<MemberRow>(SQL_LIST_MEMBERS, [input.assignmentId]),
       row.due_at,
-      nowSec(),
+      nowSec()
     );
 
     const completedIds = new Set(
       current
         .filter((m) => m.progress === "completed")
-        .map((m) => m.studentUserId),
+        .map((m) => m.studentUserId)
     );
     const finalIds = uniquePositiveInts([...wanted, ...completedIds]);
     if (finalIds.length === 0) {
       await connection.rollback();
       throw new MentorAssignmentsError(
         "Select at least one student.",
-        "no_students",
+        "no_students"
       );
     }
 
     await assertStudentsLinked(connection, input.teacherUserId, finalIds);
 
     const currentById = new Map(
-      current.map((m) => [m.studentUserId, m] as const),
+      current.map((m) => [m.studentUserId, m] as const)
     );
 
     for (const member of current) {
@@ -606,12 +619,12 @@ export async function updateMentorAssignmentMembers(
       await deleteSessionIfCancelable(
         connection,
         member.sessionId,
-        member.studentUserId,
+        member.studentUserId
       );
       await connection.execute(
         `DELETE FROM mentor_assignment_members
          WHERE assignment_id = ? AND student_user_id = ?`,
-        [input.assignmentId, member.studentUserId],
+        [input.assignmentId, member.studentUserId]
       );
     }
 
@@ -622,7 +635,7 @@ export async function updateMentorAssignmentMembers(
         studentId,
         row.theme_id,
         row.tasks_number,
-        row.due_at,
+        row.due_at
       );
       await connection.execute(SQL_INSERT_MEMBER, [
         input.assignmentId,
@@ -636,10 +649,7 @@ export async function updateMentorAssignmentMembers(
     await connection.rollback().catch(() => undefined);
     if (error instanceof MentorAssignmentsError) throw error;
     console.error("updateMentorAssignmentMembers: unexpected error", error);
-    throw new MentorAssignmentsError(
-      "Database operation failed.",
-      "db_error",
-    );
+    throw new MentorAssignmentsError("Database operation failed.", "db_error");
   } finally {
     connection.release();
   }
@@ -647,6 +657,6 @@ export async function updateMentorAssignmentMembers(
   return getMentorAssignmentDetail(
     input.assignmentId,
     input.teacherUserId,
-    deps,
+    deps
   );
 }
