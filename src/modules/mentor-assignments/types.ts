@@ -8,6 +8,7 @@ export type MemberProgressStatus = "completed" | "overdue" | "pending";
 export type MentorAssignmentSummary = {
   id: number;
   themeId: number;
+  difficulty: number;
   themeName: string;
   tasksNumber: number;
   availableAt: number;
@@ -45,7 +46,7 @@ export type MentorAssignmentsErrorCode =
 export class MentorAssignmentsError extends Error {
   constructor(
     message: string,
-    public readonly code: MentorAssignmentsErrorCode,
+    public readonly code: MentorAssignmentsErrorCode
   ) {
     super(message);
     this.name = "MentorAssignmentsError";
@@ -64,7 +65,7 @@ export function resolveMemberProgress(
     time: number;
   } | null,
   dueAt: number,
-  nowSec: number,
+  nowSec: number
 ): MemberProgressStatus {
   if (
     session &&

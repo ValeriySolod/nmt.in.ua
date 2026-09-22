@@ -24,7 +24,7 @@ test("resolveSessionDisplayStatus maps planned/unfinished vs. completed", () => 
       time: 0,
       expire_time: FAR_FUTURE,
     }),
-    "planned",
+    "planned"
   );
   assert.equal(
     resolveSessionDisplayStatus({
@@ -34,7 +34,7 @@ test("resolveSessionDisplayStatus maps planned/unfinished vs. completed", () => 
       time: 50,
       expire_time: FAR_FUTURE,
     }),
-    "completed",
+    "completed"
   );
   assert.equal(
     resolveSessionDisplayStatus({
@@ -44,7 +44,7 @@ test("resolveSessionDisplayStatus maps planned/unfinished vs. completed", () => 
       time: 50,
       expire_time: FAR_FUTURE,
     }),
-    "completed",
+    "completed"
   );
   assert.equal(
     resolveSessionDisplayStatus({
@@ -54,7 +54,7 @@ test("resolveSessionDisplayStatus maps planned/unfinished vs. completed", () => 
       time: 0,
       expire_time: FAR_FUTURE,
     }),
-    "planned",
+    "planned"
   );
   assert.equal(
     resolveSessionDisplayStatus({
@@ -64,7 +64,7 @@ test("resolveSessionDisplayStatus maps planned/unfinished vs. completed", () => 
       time: 30,
       expire_time: FAR_FUTURE,
     }),
-    "planned",
+    "planned"
   );
 });
 
@@ -78,9 +78,9 @@ test("resolveSessionDisplayStatus reads expired instead of planned once the dead
         time: 0,
         expire_time: NOW - 1,
       },
-      NOW,
+      NOW
     ),
-    "expired",
+    "expired"
   );
 });
 
@@ -94,9 +94,9 @@ test("resolveSessionDisplayStatus keeps a completed session completed past its d
         time: 50,
         expire_time: NOW - 1,
       },
-      NOW,
+      NOW
     ),
-    "completed",
+    "completed"
   );
 });
 
@@ -113,6 +113,7 @@ test("buildLearningSessionRows formats an unfinished session as planned", () => 
       session_type: 1,
       start_time: 0,
       expire_time: FAR_FUTURE,
+      difficulty: null,
     },
   ]);
 
@@ -138,6 +139,7 @@ test("buildLearningSessionRows formats a completed session with percent and elap
       session_type: 1,
       start_time: 1000,
       expire_time: FAR_FUTURE,
+      difficulty: null,
     },
   ]);
 
@@ -165,6 +167,7 @@ test("buildLearningSessionRows labels mentor planned session", () => {
       session_type: SESSION_TYPE_MENTOR,
       start_time: 0,
       expire_time: FAR_FUTURE,
+      difficulty: null,
     },
   ]);
 
@@ -188,9 +191,10 @@ test("buildLearningSessionRows blocks start before available_at", () => {
         start_time: 0,
         expire_time: availableAt + 86_400,
         available_at: availableAt,
+        difficulty: null,
       },
     ],
-    NOW,
+    NOW
   );
 
   assert.equal(rows[0]?.status, "planned");
