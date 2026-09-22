@@ -14,6 +14,14 @@ export type { UnlinkStudentInput } from "./unlinkStudent";
 export { getTeacherStudents } from "./getTeacherStudents";
 export { isTeacherStudentLinked } from "./isTeacherStudentLinked";
 export {
+  createStudentForTeacher,
+  parseOptionalGroupId,
+} from "./createStudentAccount";
+export type {
+  CreateStudentForTeacherInput,
+  CreatedStudentAccount,
+} from "./createStudentAccount";
+export {
   addTeacherStudentAction,
   unlinkTeacherStudentAction,
 } from "./actions";

@@ -117,7 +117,7 @@ npm run reset-demo-student
 | Облікові записи | таблиця `app_users` (+ `email` / `email_verified_at`); токени — `auth_tokens` |
 | Middleware | редірект на `/login`; публічні `/`, `/welcome`, `/login`, `/register`, `/verify-email`, `/forgot-password`, `/reset-password`, `/diagnostic`, `/t/{slug}` і статика; `/settings`/`/profiles`/`/feedback` — admin; `/students` — teacher/admin |
 | Mentor UI | `/sessions` — панель призначення для teacher/admin |
-| Мої учні | `/students` — додати за логіном / відв’язати (teacher/admin) |
+| Мої учні | `/students` — створити обліковий запис, логін, групи, інвайти; `/join/[code]` приймає учень; статистика `/students/[id]` |
 | Публічна візитка | `/account` (лише teacher) редагує картку; `/t/{slug}` якщо `is_public` |
 
 `userId` у Server Actions береться з сесії (`requireUserId()`), не з FormData.
@@ -227,7 +227,7 @@ src/modules/content-import/     модуль 2 — CSV/JSON → БД
 src/modules/testing/              модуль 3 — сесії, відповіді, finish
 src/modules/recommendations/      модуль 4 — stats, rules, graph, persist
 src/modules/sessions/             список сесій, createMentorSession
-src/modules/teacher-students/     «Мої учні»: link/unlink за логіном
+src/modules/teacher-students/     «Мої учні»: лінк, групи, інвайти (SQL 017 + 034)
 src/modules/admin/                auth для admin API
 src/middleware.ts                 rate limit + auth + probe paths
 server.js                         hardened запуск на хостингу
@@ -394,7 +394,8 @@ import {
 | `/session/[id]` | TopicTrainer | 3 |
 | `/results` | Таблиця + рекомендації | 3, 4 |
 | `/sessions` | Історія + planned (auto/mentor) + mentor assign | 3, 4, 5 |
-| `/students` | Мої учні (teacher/admin): додати за логіном | teacher-students |
+| `/students` | Мої учні (teacher/admin): створити обліковий запис, логін, групи, інвайти, статистика `/students/[id]` | teacher-students |
+| `/join`, `/join/[code]` | Учень приймає інвайт викладача або групи | teacher-students |
 | `/settings` | Імпорт контенту (admin) | 2, 5 |
 | `/simulator` | Симулятор НМТ | 3 |
 | `/problems` | Друкований тест по темі | 6.6 |
