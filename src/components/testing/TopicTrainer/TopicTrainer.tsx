@@ -40,6 +40,7 @@ import {
 } from "@/modules/testing/answerCardState";
 import type { PracticeResultInsight, RecommendedAction } from "@/modules/recommendations";
 import type { DiagnosticTopicInsight } from "@/modules/diagnostic/diagnosticThemeBreakdown";
+import type { DiagnosticAnswerReviewItem } from "@/modules/diagnostic/getDiagnosticAnswerReview";
 import { TopicTrainerSummary } from "@/components/testing/TopicTrainerSummary";
 import { DiagnosticResultSummary } from "@/components/diagnostic/DiagnosticResultSummary";
 import { SessionExpiredNotice } from "@/components/testing/SessionExpiredNotice";
@@ -83,6 +84,7 @@ type TopicTrainerProps = {
    * mirroring how Ultimate fetches its mistake review after finish. Not part
    * of `TopicTrainerActionOverrides` — no other mode has an equivalent. */
   diagnosticThemeBreakdownAction?: (sessionId: number) => Promise<DiagnosticTopicInsight>;
+  diagnosticAnswerReviewAction?: (sessionId: number) => Promise<DiagnosticAnswerReviewItem[]>;
   /** Index of the task to open first (e.g. the pending one when an adaptive
    * diagnostic page is reloaded). Defaults to the first task. */
   initialIndex?: number;
@@ -134,6 +136,7 @@ export function TopicTrainer({
   isGuest = false,
   actions,
   diagnosticThemeBreakdownAction,
+  diagnosticAnswerReviewAction,
   initialIndex = 0,
   progressTotal,
   onContinue,
@@ -180,6 +183,7 @@ export function TopicTrainer({
   const [topicInsight, setTopicInsight] = useState<DiagnosticTopicInsight | null>(
     null,
   );
+  const [answerReview, setAnswerReview] = useState<DiagnosticAnswerReviewItem[] | null>(null);
   const [timedOut, setTimedOut] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const finishingRef = useRef(false);
@@ -256,6 +260,23 @@ export function TopicTrainer({
     };
   }, [mode, summary, diagnosticThemeBreakdownAction]);
 
+  useEffect(() => {
+    if (mode !== "diagnostic" || !summary || !diagnosticAnswerReviewAction) {
+      return;
+    }
+    let cancelled = false;
+    void diagnosticAnswerReviewAction(summary.sessionId)
+      .then((review) => {
+        if (!cancelled) setAnswerReview(review);
+      })
+      .catch(() => {
+        if (!cancelled) setAnswerReview([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [mode, summary, diagnosticAnswerReviewAction]);
+
   const currentTask = taskList[currentIndex];
   const presentation = currentTask ? resolveTaskPresentation(currentTask) : null;
   const total = taskList.length;
@@ -288,6 +309,7 @@ export function TopicTrainer({
         <DiagnosticResultSummary
           summary={summary}
           topicInsight={topicInsight}
+          answerReview={answerReview}
           isGuest={isGuest}
         />
       );

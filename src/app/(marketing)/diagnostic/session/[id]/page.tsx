@@ -8,6 +8,7 @@ import {
   checkDiagnosticAnswerAction,
   finishDiagnosticSessionAction,
   getDiagnosticThemeBreakdownAction,
+  getDiagnosticAnswerReviewAction,
   markDiagnosticSessionStartedAction,
 } from "@/modules/diagnostic/actions";
 import {
@@ -90,6 +91,7 @@ export default async function DiagnosticSessionPage({
           markSessionStarted: markDiagnosticSessionStartedAction,
         }}
         diagnosticThemeBreakdownAction={getDiagnosticThemeBreakdownAction}
+        diagnosticAnswerReviewAction={getDiagnosticAnswerReviewAction}
       />
     </DiagnosticShell>
   );
