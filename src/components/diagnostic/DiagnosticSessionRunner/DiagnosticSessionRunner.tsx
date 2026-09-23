@@ -8,6 +8,7 @@ import {
   checkDiagnosticAnswerAction,
   finishDiagnosticSessionAction,
   getDiagnosticThemeBreakdownAction,
+  getDiagnosticAnswerReviewAction,
   markDiagnosticSessionStartedAction,
 } from "@/modules/diagnostic/actions";
 import type { SessionTask } from "@/modules/testing/types";
@@ -70,6 +71,7 @@ export function DiagnosticSessionRunner({
       isGuest={isGuest}
       actions={DIAGNOSTIC_ACTIONS}
       diagnosticThemeBreakdownAction={getDiagnosticThemeBreakdownAction}
+      diagnosticAnswerReviewAction={getDiagnosticAnswerReviewAction}
       initialIndex={initialIndex}
       progressTotal={progressTotal}
       onContinue={continueAfterLast ? handleContinue : undefined}

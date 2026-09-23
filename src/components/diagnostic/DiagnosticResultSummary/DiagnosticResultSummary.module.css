@@ -127,6 +127,7 @@
 
 .topicCard {
   display: grid;
+  grid-template-rows: minmax(0, 1fr) auto auto;
   gap: var(--space-xs);
   padding: var(--space-md);
   border: 1px solid var(--line-soft);
@@ -144,6 +145,7 @@
   font-family: var(--font-display);
   font-size: var(--fs-h4);
   font-weight: 700;
+  text-align: center;
 }
 
 .topicScore {
@@ -151,6 +153,7 @@
   color: var(--subtle);
   font-size: var(--fs-small);
   font-weight: 600;
+  text-align: center;
 }
 
 .topicBar {
@@ -172,6 +175,70 @@
   display: block;
   height: 100%;
   border-radius: var(--radius-pill);
+}
+
+.answerReview {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.answerReviewList {
+  display: grid;
+  gap: var(--space-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.answerReviewCard {
+  display: grid;
+  gap: var(--space-sm);
+  min-width: 0;
+  padding: var(--space-md);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  background: rgb(253 251 244 / 78%);
+  box-shadow: var(--shadow-sm);
+}
+
+.answerReviewMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  color: var(--subtle);
+  font-size: var(--fs-small);
+  font-weight: 700;
+}
+
+.answerReviewOutcome[data-correct="true"] {
+  color: var(--green-dark);
+}
+
+.answerReviewOutcome[data-correct="false"] {
+  color: #a13532;
+}
+
+.answerReviewName {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-h4);
+  font-weight: 700;
+}
+
+.answerReviewAnswer,
+.answerReviewExplanation {
+  display: grid;
+  gap: var(--space-xs);
+  padding: var(--space-sm);
+  border-radius: var(--radius-md);
+  background: var(--grad-mint);
+  line-height: 1.5;
+}
+
+.answerReviewExplanation {
+  background: rgb(94 76 40 / 7%);
 }
 
 .registerPanel {

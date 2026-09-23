@@ -249,8 +249,24 @@ user_self_scores (
 ### Done (`feat/adaptive-diagnostic`, 2026-09-23) — adaptive diagnostic without self-assessment
 
 Supersedes both the fixed “3 tasks × themes” flow and the later per-topic
-self-assessment attempt. Result screen (`DiagnosticResultSummary`, theme
-breakdown, registration CTA) stays.
+self-assessment attempt. The result screen (`DiagnosticResultSummary`, theme
+breakdown, registration CTA) uses the existing data flow.
+
+**23.09 — result analysis correction:** diagnostic topic cards use a 75% threshold:
+themes below it appear only among up to three growth priorities, and themes at
+or above it appear only among up to three strong topics. Empty groups are hidden,
+so a 0/2 result cannot be presented as a strength and a 10/10 result has no
+growth-priority section. A completed 10/10 attempt shows a distinct success
+message; guests are invited to register to save the result and continue with
+longer topic tests. The message describes this as a short diagnostic, not proof
+of complete mastery. The existing guest-progress claim flow is unchanged.
+The completed diagnostic also has an owner-scoped answer review: each task shows
+its correct option, whether the attempt was correct, and the content explanation
+when present. The review is unavailable until the session is completed; no
+answer key is returned by the in-progress task API. The selected wrong option
+is not shown because diagnostic answers currently persist only their status,
+not the option number. Correct answers come from the current `quiz_tasks` bank,
+so the review reflects later content edits rather than a per-attempt snapshot.
 
 - **No self-score on `/diagnostic`.** Start creates the session and links the
   first difficulty-1 task immediately (`startDiagnosticTest`).

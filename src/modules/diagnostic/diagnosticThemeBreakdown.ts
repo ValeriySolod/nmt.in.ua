@@ -116,13 +116,17 @@ function byPercentThenOrd(direction: 1 | -1) {
 
 export const PRIORITY_TOPICS_LIMIT = 3;
 export const STRONG_TOPICS_LIMIT = 3;
+export const STRONG_TOPIC_MIN_PERCENT = 75;
 
 /** Weakest themes first — "study these next" per the result screen copy. */
 export function selectPriorityTopics(
   stats: DiagnosticThemeStat[],
   limit: number = PRIORITY_TOPICS_LIMIT,
 ): DiagnosticThemeStat[] {
-  return [...stats].sort(byPercentThenOrd(1)).slice(0, limit);
+  return stats
+    .filter((stat) => stat.total > 0 && stat.percent < STRONG_TOPIC_MIN_PERCENT)
+    .sort(byPercentThenOrd(1))
+    .slice(0, limit);
 }
 
 /** Strongest themes first — "already going well". */
@@ -130,7 +134,10 @@ export function selectStrongTopics(
   stats: DiagnosticThemeStat[],
   limit: number = STRONG_TOPICS_LIMIT,
 ): DiagnosticThemeStat[] {
-  return [...stats].sort(byPercentThenOrd(-1)).slice(0, limit);
+  return stats
+    .filter((stat) => stat.total > 0 && stat.percent >= STRONG_TOPIC_MIN_PERCENT)
+    .sort(byPercentThenOrd(-1))
+    .slice(0, limit);
 }
 
 export function toDiagnosticTopicInsight(

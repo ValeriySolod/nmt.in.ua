@@ -19,7 +19,7 @@ import {
   markDiagnosticSessionStarted,
   MarkDiagnosticSessionStartedError,
 } from "./markDiagnosticSessionStarted";
-import { resolveOwnerForWrite } from "./sessionOwner";
+import { resolveOwnerForRead, resolveOwnerForWrite } from "./sessionOwner";
 import {
   startDiagnosticTest,
   StartDiagnosticTestError,
@@ -33,6 +33,10 @@ import {
   toDiagnosticTopicInsight,
   type DiagnosticTopicInsight,
 } from "./diagnosticThemeBreakdown";
+import {
+  getDiagnosticAnswerReview,
+  type DiagnosticAnswerReviewItem,
+} from "./getDiagnosticAnswerReview";
 
 export type StartDiagnosticActionErrorCode =
   | "insufficientTasks"
@@ -207,6 +211,19 @@ export async function getDiagnosticThemeBreakdownAction(
   } catch (error) {
     console.error("getDiagnosticThemeBreakdownAction: unexpected error", error);
     return { strongest: [], priority: [] };
+  }
+}
+
+export async function getDiagnosticAnswerReviewAction(
+  sessionId: number,
+): Promise<DiagnosticAnswerReviewItem[]> {
+  try {
+    const owner = await resolveOwnerForRead();
+    if (!owner) return [];
+    return await getDiagnosticAnswerReview(sessionId, owner);
+  } catch (error) {
+    console.error("getDiagnosticAnswerReviewAction: unexpected error", error);
+    return [];
   }
 }
 
