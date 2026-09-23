@@ -90,7 +90,7 @@ export function DashboardShell({
   const isTasksPage =
     pathname === "/tasks" ||
     pathname.startsWith("/tasks/") ||
-    (user.role === "admin" && pathname === "/");
+    (user?.role === "admin" && pathname === "/");
 
   const sidebarOpen = useSyncExternalStore(
     subscribeSidebar,
