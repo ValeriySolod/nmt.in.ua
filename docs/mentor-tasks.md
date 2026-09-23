@@ -246,6 +246,39 @@ user_self_scores (
 **DB/схема:** без змін — усе виведено з наявних `tasks2session` / `quiz_tasks`
 / `themes` і з наявного поля `task_text`.
 
+### Done (`feat/adaptive-diagnostic-topic-assessment`, 2026-09-23) — adaptive diagnostic with per-topic self-assessment
+
+Supersedes the "3 tasks per theme, up to 10 themes, one overall self-score"
+flow above. The result screen (`DiagnosticResultSummary`, theme breakdown,
+registration CTA) is unchanged.
+
+- **No overall self-score.** `/diagnostic` only starts the attempt
+  (`startDiagnosticTest` creates the `task_sessions` row, no tasks linked).
+- **Per-topic self-assessment.** Before each topic the session page shows
+  `DiagnosticTopicIntro`: "Topic X of N", the theme name, its concepts
+  (`themes.description`, comma-separated) and a 1–10 score.
+  `startDiagnosticTopic` stores it as an ordinary `pre_topic` row in
+  `user_self_scores` (validated with `validateRecordSelfScoreInput`) and links
+  the topic's first task in the same transaction.
+- **Exactly 10 tasks** (`DIAGNOSTIC_TOTAL_QUESTIONS`) across exactly 5 randomly
+  selected eligible topics (`DIAGNOSTIC_MAX_THEMES`, at least 3 tasks each),
+  spread evenly (2 per topic); a topic whose bank runs out hands its share to
+  later topics.
+- **Adaptive difficulty** (existing `quiz_tasks.difficulty` 1–3): a topic
+  starts at the level mapped from its self-score (1–4 → 1, 5–7 → 2,
+  8–10 → 3); after a correct answer the next task in the topic is one level
+  harder, after a mistake one level easier, clamped to 1–3; nearest available
+  level if the exact one is used up; never a task already used in the session.
+  Pure rules: `adaptiveDifficulty.ts`, `diagnosticProgress.ts`.
+- **Next task** is linked by `advanceDiagnosticSession` when the student
+  presses "Next" — the session row is locked (`FOR UPDATE`) and a task is only
+  added while none is pending, so retries/double clicks never add a second one
+  or an 11th. No plan is persisted: topic order, current topic and next
+  difficulty are all derived from the session's `tasks2session` rows.
+
+**DB/schema:** no changes. The five-topic random plan is derived stably from
+the session id so it survives reloads without a separate plan table.
+
 ---
 
 ## Таска 6.5 — Наповнення банку завдань

@@ -1,26 +1,24 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { SqlConnection } from "@/lib/db/mysql";
+import { DIAGNOSTIC_TOTAL_QUESTIONS } from "./diagnosticProgress";
 import {
   DIAGNOSTIC_MAX_THEMES,
   DIAGNOSTIC_TASKS_PER_THEME,
   StartDiagnosticTestError,
+  selectDiagnosticThemeIds,
   startDiagnosticTest,
 } from "./startDiagnosticTest";
 
 type Call = { sql: string; params: unknown[] };
+const ELIGIBLE_THEME_IDS = [1, 2, 3, 4, 5, 6, 7];
 
 /**
- * `eligibleThemeIds` stands in for the themes the `HAVING COUNT(*) >= 3`
- * query would return (already capped/ordered) — the mock does not
- * re-implement the SQL's own filtering, it just returns what the "real"
- * query is asserted to have been asked for.
+ * `eligibleThemeIds` stands in for the themes the `HAVING COUNT(*) >= N`
+ * query would return (in stable curriculum order) — the mock does not
+ * re-implement the SQL's own filtering.
  */
-function makeConnection(options: {
-  eligibleThemeIds: number[];
-  tasksPerTheme?: Map<number, number[]>;
-  failMapping?: boolean;
-}) {
+function makeConnection(options: { eligibleThemeIds: number[] }) {
   const calls: Call[] = [];
   let rolledBack = false;
   let committed = false;
@@ -36,40 +34,12 @@ function makeConnection(options: {
           theme_id: id,
         })) as unknown as T[];
       }
-      if (sql.includes("FROM quiz_tasks") && sql.includes("theme_id IN")) {
-        const rows: { id: number; theme_id: number }[] = [];
-        for (const themeId of options.eligibleThemeIds) {
-          const ids =
-            options.tasksPerTheme?.get(themeId) ??
-            Array.from(
-              { length: DIAGNOSTIC_TASKS_PER_THEME },
-              (_, i) => themeId * 1000 + i,
-            );
-          for (const id of ids) {
-            rows.push({ id, theme_id: themeId });
-          }
-        }
-        return rows as unknown as T[];
-      }
       return [] as T[];
     },
     execute: async (sql: string, params: unknown[] = []) => {
       calls.push({ sql, params });
-      if (sql.includes("CREATE TABLE")) {
-        return { insertId: 0, affectedRows: 0 };
-      }
-      if (sql.includes("INSERT INTO user_self_scores")) {
-        return { insertId: 1, affectedRows: 1 };
-      }
       if (sql.includes("INSERT INTO task_sessions")) {
         return { insertId: nextSessionId, affectedRows: 1 };
-      }
-      if (sql.includes("INSERT INTO tasks2session")) {
-        const rowCount = params.length / 6;
-        return {
-          insertId: 0,
-          affectedRows: options.failMapping ? rowCount - 1 : rowCount,
-        };
       }
       return { insertId: 0, affectedRows: 0 };
     },
@@ -94,9 +64,9 @@ function makeConnection(options: {
 }
 
 test("uses session_type = 5", async () => {
-  const mock = makeConnection({ eligibleThemeIds: [1, 2] });
+  const mock = makeConnection({ eligibleThemeIds: ELIGIBLE_THEME_IDS });
   await startDiagnosticTest(
-    { owner: { userId: 7, guestToken: null }, selfScore: 5 },
+    { owner: { userId: 7, guestToken: null } },
     { getConnection: async () => mock.connection },
   );
 
@@ -108,11 +78,11 @@ test("uses session_type = 5", async () => {
 });
 
 test("sets expire_time to exactly now + 86400 from the injected clock", async () => {
-  const mock = makeConnection({ eligibleThemeIds: [1, 2] });
+  const mock = makeConnection({ eligibleThemeIds: ELIGIBLE_THEME_IDS });
   const now = 1_700_000_000;
 
   await startDiagnosticTest(
-    { owner: { userId: 7, guestToken: null }, selfScore: 5 },
+    { owner: { userId: 7, guestToken: null } },
     { getConnection: async () => mock.connection, nowSec: () => now },
   );
 
@@ -122,91 +92,70 @@ test("sets expire_time to exactly now + 86400 from the injected clock", async ()
   assert.equal(sessionInsert!.params.at(-1), now + 86400);
 });
 
-test("selects exactly 3 tasks per eligible theme", async () => {
-  const mock = makeConnection({ eligibleThemeIds: [1, 2, 3] });
+test("plans 10 tasks across exactly five session-stable random themes and links none up front", async () => {
+  const mock = makeConnection({ eligibleThemeIds: ELIGIBLE_THEME_IDS });
   const result = await startDiagnosticTest(
-    { owner: { userId: 7, guestToken: null }, selfScore: 5 },
+    { owner: { userId: 7, guestToken: null } },
     { getConnection: async () => mock.connection },
   );
 
-  assert.equal(result.taskIds.length, 3 * DIAGNOSTIC_TASKS_PER_THEME);
-  assert.deepEqual(result.themeIds, [1, 2, 3]);
-
-  const taskSelects = mock.calls.filter(
-    (c) => c.sql.includes("FROM quiz_tasks") && c.sql.includes("theme_id IN"),
-  );
-  assert.equal(taskSelects.length, 1);
-  assert.doesNotMatch(taskSelects[0]!.sql, /ORDER BY RAND/);
-  assert.deepEqual(taskSelects[0]!.params, [1, 2, 3]);
-});
-
-test("caps at DIAGNOSTIC_MAX_THEMES themes and DIAGNOSTIC_MAX_THEMES*3 tasks", async () => {
-  const eligibleThemeIds = Array.from({ length: DIAGNOSTIC_MAX_THEMES }, (_, i) => i + 1);
-  const mock = makeConnection({ eligibleThemeIds });
-
-  const eligibleQuery = mock.connection.query;
-  let sawLimitClause = false;
-  const wrapped: SqlConnection = {
-    ...mock.connection,
-    query: async (sql, params) => {
-      if (sql.includes("FROM themes")) {
-        sawLimitClause = new RegExp(`LIMIT ${DIAGNOSTIC_MAX_THEMES}\\b`).test(sql);
-      }
-      return eligibleQuery(sql, params);
-    },
-  };
-
-  const result = await startDiagnosticTest(
-    { owner: { userId: 7, guestToken: null }, selfScore: 5 },
-    { getConnection: async () => wrapped },
-  );
-
-  assert.ok(sawLimitClause, "eligible-themes query must cap with LIMIT");
+  assert.equal(DIAGNOSTIC_TOTAL_QUESTIONS, 10);
   assert.equal(result.themeIds.length, DIAGNOSTIC_MAX_THEMES);
-  assert.equal(result.taskIds.length, DIAGNOSTIC_MAX_THEMES * DIAGNOSTIC_TASKS_PER_THEME);
+  assert.equal(new Set(result.themeIds).size, DIAGNOSTIC_MAX_THEMES);
+  assert.deepEqual(
+    result.themeIds,
+    selectDiagnosticThemeIds(ELIGIBLE_THEME_IDS, result.sessionId),
+  );
+  const sessionInsert = mock.calls.find((c) =>
+    c.sql.includes("INSERT INTO task_sessions"),
+  );
+  // columns: user_id, guest_token, session_type, tasks_number, ...
+  assert.equal(sessionInsert!.params[3], DIAGNOSTIC_TOTAL_QUESTIONS);
+  assert.ok(
+    !mock.calls.some((c) => c.sql.includes("INSERT INTO tasks2session")),
+    "tasks are linked adaptively later, never at start",
+  );
 });
 
-test("themes with fewer than 3 tasks are excluded by the HAVING clause", async () => {
-  // The mock stands in for the DB filter: only themes the (already-filtered)
-  // eligible-themes query returns are ever asked for tasks.
-  const mock = makeConnection({ eligibleThemeIds: [2] });
-  const result = await startDiagnosticTest(
+test("no longer records an overall self-assessment", async () => {
+  const mock = makeConnection({ eligibleThemeIds: ELIGIBLE_THEME_IDS });
+  await startDiagnosticTest(
     { owner: { userId: 7, guestToken: null }, selfScore: 5 },
     { getConnection: async () => mock.connection },
   );
-  assert.deepEqual(result.themeIds, [2]);
+  assert.ok(
+    !mock.calls.some((c) => c.sql.includes("user_self_scores")),
+    "self-assessment is per topic now (startDiagnosticTopic)",
+  );
+});
+
+test("loads eligible themes from MySQL and requires at least three quiz tasks per theme", async () => {
+  const mock = makeConnection({ eligibleThemeIds: ELIGIBLE_THEME_IDS });
+  await startDiagnosticTest(
+    { owner: { userId: 7, guestToken: null } },
+    { getConnection: async () => mock.connection },
+  );
 
   const eligibleThemesQuery = mock.calls.find((c) => c.sql.includes("FROM themes"));
-  assert.match(eligibleThemesQuery!.sql, /HAVING COUNT\(q\.id\) >= 3/);
+  assert.doesNotMatch(eligibleThemesQuery!.sql, /LIMIT\s+5\b/);
+  assert.match(
+    eligibleThemesQuery!.sql,
+    new RegExp(`HAVING COUNT\\(q\\.id\\) >= ${DIAGNOSTIC_TASKS_PER_THEME}\\b`),
+  );
+  assert.ok(DIAGNOSTIC_MAX_THEMES * DIAGNOSTIC_TASKS_PER_THEME >= DIAGNOSTIC_TOTAL_QUESTIONS);
 });
 
-test("rejects an invalid self-score before touching the database", async () => {
-  let called = false;
-  await assert.rejects(
-    () =>
-      startDiagnosticTest(
-        { owner: { userId: 7, guestToken: null }, selfScore: 11 },
-        {
-          getConnection: async () => {
-            called = true;
-            throw new Error("should not be called");
-          },
-        },
-      ),
-    (error: unknown) => {
-      assert.ok(error instanceof StartDiagnosticTestError);
-      assert.equal((error as StartDiagnosticTestError).code, "invalid_input");
-      return true;
-    },
-  );
-  assert.equal(called, false);
+test("theme selection is stable for one session and varies across sessions", () => {
+  const first = selectDiagnosticThemeIds(ELIGIBLE_THEME_IDS, 500);
+  assert.deepEqual(first, selectDiagnosticThemeIds(ELIGIBLE_THEME_IDS, 500));
+  assert.notDeepEqual(first, selectDiagnosticThemeIds(ELIGIBLE_THEME_IDS, 501));
 });
 
 test("rejects an ambiguous owner before touching the database", async () => {
   await assert.rejects(
     () =>
       startDiagnosticTest(
-        { owner: { userId: 7, guestToken: "guest-a" }, selfScore: 5 },
+        { owner: { userId: 7, guestToken: "guest-a" } },
         { getConnection: async () => { throw new Error("should not be called"); } },
       ),
     (error: unknown) =>
@@ -214,12 +163,12 @@ test("rejects an ambiguous owner before touching the database", async () => {
   );
 });
 
-test("rolls back and reports insufficient_tasks when no theme is eligible", async () => {
-  const mock = makeConnection({ eligibleThemeIds: [] });
+test("rolls back and reports insufficient_tasks when fewer than five themes are eligible", async () => {
+  const mock = makeConnection({ eligibleThemeIds: [1, 2, 3, 4] });
   await assert.rejects(
     () =>
       startDiagnosticTest(
-        { owner: { userId: 7, guestToken: null }, selfScore: 5 },
+        { owner: { userId: 7, guestToken: null } },
         { getConnection: async () => mock.connection },
       ),
     (error: unknown) => {
@@ -232,33 +181,16 @@ test("rolls back and reports insufficient_tasks when no theme is eligible", asyn
   assert.ok(mock.isRolledBack());
   assert.ok(!mock.isCommitted());
   assert.ok(mock.isReleased());
-  const selfScoreInsert = mock.calls.find((c) =>
-    c.sql.includes("INSERT INTO user_self_scores"),
+  assert.ok(
+    !mock.calls.some((c) => c.sql.includes("INSERT INTO task_sessions")),
+    "no orphan session row on failure",
   );
-  assert.equal(selfScoreInsert, undefined, "no orphan self-score row on failure");
-});
-
-test("rolls back the whole transaction when the mapping insert fails partially", async () => {
-  const mock = makeConnection({ eligibleThemeIds: [1], failMapping: true });
-  await assert.rejects(
-    () =>
-      startDiagnosticTest(
-        { owner: { userId: 7, guestToken: null }, selfScore: 5 },
-        { getConnection: async () => mock.connection },
-      ),
-    (error: unknown) =>
-      error instanceof StartDiagnosticTestError && error.code === "db_error",
-  );
-
-  assert.ok(mock.isRolledBack());
-  assert.ok(!mock.isCommitted());
-  assert.ok(mock.isReleased());
 });
 
 test("commits and releases the connection on success", async () => {
-  const mock = makeConnection({ eligibleThemeIds: [1, 2] });
+  const mock = makeConnection({ eligibleThemeIds: ELIGIBLE_THEME_IDS });
   await startDiagnosticTest(
-    { owner: { userId: 7, guestToken: null }, selfScore: 8 },
+    { owner: { userId: 7, guestToken: null } },
     { getConnection: async () => mock.connection },
   );
   assert.ok(mock.isCommitted());
@@ -266,33 +198,15 @@ test("commits and releases the connection on success", async () => {
   assert.ok(mock.isReleased());
 });
 
-test("writes the self-score row with the owner and score, theme_id NULL, source diagnostic_overall", async () => {
-  const mock = makeConnection({ eligibleThemeIds: [1] });
+test("writes the task_sessions row for a guest owner", async () => {
+  const mock = makeConnection({ eligibleThemeIds: ELIGIBLE_THEME_IDS });
   await startDiagnosticTest(
-    { owner: { userId: null, guestToken: "guest-a" }, selfScore: 9 },
-    { getConnection: async () => mock.connection },
-  );
-
-  const insert = mock.calls.find((c) => c.sql.includes("INSERT INTO user_self_scores"));
-  assert.ok(insert);
-  assert.match(insert!.sql, /diagnostic_overall/);
-  assert.deepEqual(insert!.params, [null, "guest-a", 9]);
-});
-
-test("writes task_sessions and tasks2session rows for a guest owner", async () => {
-  const mock = makeConnection({ eligibleThemeIds: [1] });
-  await startDiagnosticTest(
-    { owner: { userId: null, guestToken: "guest-a" }, selfScore: 5 },
+    { owner: { userId: null, guestToken: "guest-a" } },
     { getConnection: async () => mock.connection },
   );
 
   const sessionInsert = mock.calls.find((c) => c.sql.includes("INSERT INTO task_sessions"));
   assert.deepEqual(sessionInsert!.params.slice(0, 2), [null, "guest-a"]);
-
-  const mappingInsert = mock.calls.find((c) => c.sql.includes("INSERT INTO tasks2session"));
-  // columns: task_type, task_id, session_id, user_id, guest_token, status
-  assert.equal(mappingInsert!.params[3], null);
-  assert.equal(mappingInsert!.params[4], "guest-a");
 });
 
 test("a guest owner can start a fresh diagnostic even though their previous attempt is already past its 24h deadline", async () => {
@@ -300,18 +214,18 @@ test("a guest owner can start a fresh diagnostic even though their previous atte
   // an expired (or still-valid) previous attempt must never block a new one.
   // Two independent calls for the same guest, with the clock advanced well
   // past the first session's deadline, both have to succeed on their own.
-  const firstMock = makeConnection({ eligibleThemeIds: [1] });
+  const firstMock = makeConnection({ eligibleThemeIds: ELIGIBLE_THEME_IDS });
   const firstNow = 1_700_000_000;
   const first = await startDiagnosticTest(
-    { owner: { userId: null, guestToken: "guest-expired" }, selfScore: 5 },
+    { owner: { userId: null, guestToken: "guest-expired" } },
     { getConnection: async () => firstMock.connection, nowSec: () => firstNow },
   );
   assert.ok(first.sessionId);
 
-  const secondMock = makeConnection({ eligibleThemeIds: [1] });
+  const secondMock = makeConnection({ eligibleThemeIds: ELIGIBLE_THEME_IDS });
   const secondNow = firstNow + 2 * 24 * 60 * 60; // well past the first session's 24h deadline
   const second = await startDiagnosticTest(
-    { owner: { userId: null, guestToken: "guest-expired" }, selfScore: 7 },
+    { owner: { userId: null, guestToken: "guest-expired" } },
     { getConnection: async () => secondMock.connection, nowSec: () => secondNow },
   );
   assert.ok(second.sessionId);
@@ -319,17 +233,17 @@ test("a guest owner can start a fresh diagnostic even though their previous atte
 });
 
 test("an authenticated user can start a fresh diagnostic even though their previous attempt is already past its 24h deadline", async () => {
-  const firstMock = makeConnection({ eligibleThemeIds: [1] });
+  const firstMock = makeConnection({ eligibleThemeIds: ELIGIBLE_THEME_IDS });
   const firstNow = 1_700_000_000;
   await startDiagnosticTest(
-    { owner: { userId: 7, guestToken: null }, selfScore: 5 },
+    { owner: { userId: 7, guestToken: null } },
     { getConnection: async () => firstMock.connection, nowSec: () => firstNow },
   );
 
-  const secondMock = makeConnection({ eligibleThemeIds: [1] });
+  const secondMock = makeConnection({ eligibleThemeIds: ELIGIBLE_THEME_IDS });
   const secondNow = firstNow + 2 * 24 * 60 * 60;
   const second = await startDiagnosticTest(
-    { owner: { userId: 7, guestToken: null }, selfScore: 7 },
+    { owner: { userId: 7, guestToken: null } },
     { getConnection: async () => secondMock.connection, nowSec: () => secondNow },
   );
   assert.ok(second.sessionId);
@@ -337,9 +251,9 @@ test("an authenticated user can start a fresh diagnostic even though their previ
 });
 
 test("guest and authenticated owners are isolated: each call only ever writes its own identifiers", async () => {
-  const guestMock = makeConnection({ eligibleThemeIds: [1] });
+  const guestMock = makeConnection({ eligibleThemeIds: ELIGIBLE_THEME_IDS });
   await startDiagnosticTest(
-    { owner: { userId: null, guestToken: "guest-isolated" }, selfScore: 5 },
+    { owner: { userId: null, guestToken: "guest-isolated" } },
     { getConnection: async () => guestMock.connection },
   );
   const guestSessionInsert = guestMock.calls.find((c) =>
@@ -347,9 +261,9 @@ test("guest and authenticated owners are isolated: each call only ever writes it
   );
   assert.deepEqual(guestSessionInsert!.params.slice(0, 2), [null, "guest-isolated"]);
 
-  const userMock = makeConnection({ eligibleThemeIds: [1] });
+  const userMock = makeConnection({ eligibleThemeIds: ELIGIBLE_THEME_IDS });
   await startDiagnosticTest(
-    { owner: { userId: 42, guestToken: null }, selfScore: 5 },
+    { owner: { userId: 42, guestToken: null } },
     { getConnection: async () => userMock.connection },
   );
   const userSessionInsert = userMock.calls.find((c) =>
@@ -363,7 +277,7 @@ test("guest and authenticated owners are isolated: each call only ever writes it
 });
 
 test("prevents a duplicate submission while a request is already pending for the same owner", async () => {
-  const mock = makeConnection({ eligibleThemeIds: [1] });
+  const mock = makeConnection({ eligibleThemeIds: ELIGIBLE_THEME_IDS });
 
   let releaseFirst: () => void = () => {};
   const gate = new Promise<void>((resolve) => {
@@ -377,14 +291,14 @@ test("prevents a duplicate submission while a request is already pending for the
   };
 
   const first = startDiagnosticTest(
-    { owner: { userId: 42, guestToken: null }, selfScore: 5 },
+    { owner: { userId: 42, guestToken: null } },
     { getConnection: async () => slowConnection },
   );
 
   await assert.rejects(
     () =>
       startDiagnosticTest(
-        { owner: { userId: 42, guestToken: null }, selfScore: 5 },
+        { owner: { userId: 42, guestToken: null } },
         { getConnection: async () => mock.connection },
       ),
     (error: unknown) =>

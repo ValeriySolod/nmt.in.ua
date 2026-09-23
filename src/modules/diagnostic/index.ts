@@ -21,6 +21,43 @@ export type {
   StartDiagnosticTestErrorCode,
 } from "./startDiagnosticTest";
 
+export {
+  DIAGNOSTIC_TOTAL_QUESTIONS,
+  resolveDiagnosticNextStep,
+  topicQuestionQuota,
+} from "./diagnosticProgress";
+export type {
+  DiagnosticNextStep,
+  DiagnosticProgressMapping,
+} from "./diagnosticProgress";
+
+export {
+  clampDifficulty,
+  initialDifficultyForSelfScore,
+  nextDiagnosticDifficulty,
+  selectAdaptiveTask,
+} from "./adaptiveDifficulty";
+
+export {
+  startDiagnosticTopic,
+  StartDiagnosticTopicError,
+} from "./startDiagnosticTopic";
+export type {
+  StartDiagnosticTopicInput,
+  StartDiagnosticTopicResult,
+} from "./startDiagnosticTopic";
+
+export {
+  advanceDiagnosticSession,
+  AdvanceDiagnosticSessionError,
+} from "./advanceDiagnosticSession";
+
+export { getDiagnosticNextStep } from "./getDiagnosticNextStep";
+export type {
+  DiagnosticNextStepView,
+  DiagnosticTopicIntroView,
+} from "./getDiagnosticNextStep";
+
 export { hasEligibleDiagnosticContent } from "./hasEligibleDiagnosticContent";
 
 export {
@@ -69,9 +106,15 @@ export type { ClaimGuestProgressResult } from "./claimGuestProgress";
 
 export {
   startDiagnosticAction,
+  startDiagnosticTopicAction,
+  advanceDiagnosticAction,
   checkDiagnosticAnswerAction,
   finishDiagnosticSessionAction,
   markDiagnosticSessionStartedAction,
   getDiagnosticThemeBreakdownAction,
 } from "./actions";
-export type { StartDiagnosticActionState } from "./actions";
+export type {
+  StartDiagnosticActionState,
+  StartDiagnosticTopicActionState,
+  AdvanceDiagnosticActionState,
+} from "./actions";

@@ -83,6 +83,18 @@ type TopicTrainerProps = {
    * mirroring how Ultimate fetches its mistake review after finish. Not part
    * of `TopicTrainerActionOverrides` — no other mode has an equivalent. */
   diagnosticThemeBreakdownAction?: (sessionId: number) => Promise<DiagnosticTopicInsight>;
+  /** Index of the task to open first (e.g. the pending one when an adaptive
+   * diagnostic page is reloaded). Defaults to the first task. */
+  initialIndex?: number;
+  /** Overrides the "N" in "task M / N" when the list is still growing
+   * (adaptive diagnostic links tasks one at a time). */
+  progressTotal?: number;
+  /** Adaptive diagnostic only: once the last listed task is answered, the
+   * primary action becomes "Next" and calls this instead of offering
+   * "Finish". `"finish"` means nothing more will be linked, so the trainer
+   * finishes as usual; `"continue"` means the page is re-reading the
+   * server state and will remount the trainer. */
+  onContinue?: () => Promise<"continue" | "finish" | "error">;
 };
 
 /** Practice mode's second-attempt state travels alongside the plain
@@ -122,6 +134,9 @@ export function TopicTrainer({
   isGuest = false,
   actions,
   diagnosticThemeBreakdownAction,
+  initialIndex = 0,
+  progressTotal,
+  onContinue,
 }: TopicTrainerProps) {
   const isUltimate = mode === "ultimate";
   const isPractice = isPracticeMode(mode);
@@ -134,7 +149,9 @@ export function TopicTrainer({
     }),
     [actions?.checkAnswer, actions?.finishTrainerSession, actions?.markSessionStarted],
   );
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(() =>
+    Math.min(Math.max(initialIndex, 0), Math.max(tasks.length - 1, 0)),
+  );
   const [taskList, setTaskList] = useState<SessionTask[]>(tasks);
   const [selectedByMappingId, setSelectedByMappingId] = useState<
     Record<number, SessionTaskAnswer["number"]>
@@ -149,6 +166,7 @@ export function TopicTrainer({
   const [similarTaskLoading, setSimilarTaskLoading] = useState(false);
   const [pendingMappingId, setPendingMappingId] = useState<number | null>(null);
   const [isFinishing, setIsFinishing] = useState(false);
+  const [isContinuing, setIsContinuing] = useState(false);
   const [summary, setSummary] = useState<TrainerSessionSummary | null>(
     initialSummary,
   );
@@ -492,6 +510,24 @@ export function TopicTrainer({
     setInsight(result.insight);
   }
 
+  async function handleContinue() {
+    if (!onContinue || isContinuing || isFinishing || isPending) return;
+    setErrorMessage(null);
+    setIsContinuing(true);
+
+    const next = await onContinue();
+    if (next === "finish") {
+      setIsContinuing(false);
+      await handleFinish();
+      return;
+    }
+    if (next === "error") {
+      setIsContinuing(false);
+      setErrorMessage(t("errors.continue"));
+    }
+    // "continue": stay disabled until the refreshed page remounts us.
+  }
+
   async function handleAbortUltimate() {
     if (!window.confirm(t("confirmAbortUltimate"))) {
       return;
@@ -546,7 +582,10 @@ export function TopicTrainer({
             {isUltimate ? t("remaining") : t("time")}: {timerLabel}
           </p>
           <p className={css.progress} aria-live="polite">
-            {t("taskProgress", { current: currentIndex + 1, total })}
+            {t("taskProgress", {
+              current: currentIndex + 1,
+              total: progressTotal ?? total,
+            })}
           </p>
         </div>
       </header>
@@ -714,7 +753,21 @@ export function TopicTrainer({
               </button>
             ) : null}
 
-            {allAnswered ? (
+            {onContinue && isLast ? (
+              <button
+                type="button"
+                className={css.next}
+                onClick={handleContinue}
+                disabled={
+                  checkResult === undefined ||
+                  isPending ||
+                  isContinuing ||
+                  isFinishing
+                }
+              >
+                {isFinishing ? t("finishing") : t("next")}
+              </button>
+            ) : allAnswered ? (
               <button
                 type="button"
                 className={css.next}

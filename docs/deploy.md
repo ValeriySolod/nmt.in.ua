@@ -59,9 +59,14 @@ bash scripts/rollback-hosting.sh --yes
 
 Прод MySQL уже має контент (`themes` + `quiz_tasks`) — діагностика перевикористовує його
 автоматично через звичайний `getConnection()` (`src/lib/db/mysql.ts`), нічого сідити чи
-дублювати в репо не треба. Поріг доступності — `HAVING COUNT(q.id) >= 3` на тему
-(`DIAGNOSTIC_TASKS_PER_THEME`, `src/modules/diagnostic/startDiagnosticTest.ts`); прод має
-~36 завдань на тему, отже всі теми проходять цей поріг без змін коду.
+дублювати в репо не треба. Eligibility threshold (adaptive diagnostic, 2026-09-23):
+`HAVING COUNT(q.id) >= 3` per theme (`src/modules/diagnostic/startDiagnosticTest.ts`).
+The attempt asks 10 questions across 5 selected topics, two distinct tasks per topic.
+Production has ~36 tasks per theme (12 per
+difficulty level 1–3), so every theme passes without code changes. No new migration is
+needed — the adaptive flow reuses `task_sessions`, `tasks2session`, `quiz_tasks.difficulty`
+and `user_self_scores` as they are. Each session deterministically samples five eligible
+themes from the MySQL-backed catalog so the random plan remains stable across requests.
 
 Перед першим релізом із діагностикою прогнати один раз (`SHOW CREATE TABLE` спочатку —
 див. коментар у файлі):

@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { isValidSelfScore } from "@/modules/self-score/types";
 import type {
   CheckAnswerActionInput,
   CheckAnswerActionState,
@@ -26,13 +25,21 @@ import {
   StartDiagnosticTestError,
 } from "./startDiagnosticTest";
 import {
+  startDiagnosticTopic,
+  StartDiagnosticTopicError,
+} from "./startDiagnosticTopic";
+import {
+  advanceDiagnosticSession,
+  AdvanceDiagnosticSessionError,
+} from "./advanceDiagnosticSession";
+import {
   getDiagnosticThemeBreakdown,
   toDiagnosticTopicInsight,
   type DiagnosticTopicInsight,
 } from "./diagnosticThemeBreakdown";
+import { diagnosticKnowledgeLevelToScore } from "./diagnosticKnowledgeLevel";
 
 export type StartDiagnosticActionErrorCode =
-  | "invalidSelfScore"
   | "insufficientTasks"
   | "alreadyInProgress"
   | "generic";
@@ -46,26 +53,19 @@ const INITIAL_STATE: StartDiagnosticActionState = { status: "idle" };
 
 /**
  * One round trip: resolves the caller's identity (authenticated user, or a
- * signed guest cookie minted here if absent), then starts the diagnostic
- * test — which records the general self-assessment and creates the session
- * atomically. Combining these in one action avoids ever minting the guest
+ * signed guest cookie minted here if absent), then creates the diagnostic
+ * session. Combining these in one action avoids ever minting the guest
  * cookie mid-flow under one identity and creating the session under
- * another.
+ * another. There is no overall self-assessment any more — each topic asks
+ * for its own before its tasks (`startDiagnosticTopicAction`).
  */
 export async function startDiagnosticAction(
   _prevState: StartDiagnosticActionState = INITIAL_STATE,
-  formData: FormData,
+  _formData?: FormData,
 ): Promise<StartDiagnosticActionState> {
-  const rawScore = Number(formData.get("selfScore"));
-  const selfScore = isValidSelfScore(rawScore) ? rawScore : null;
-
-  if (selfScore === null) {
-    return { status: "error", code: "invalidSelfScore" };
-  }
-
   try {
     const owner = await resolveOwnerForWrite();
-    const result = await startDiagnosticTest({ owner, selfScore });
+    const result = await startDiagnosticTest({ owner });
     return {
       status: "success",
       sessionId: result.sessionId,
@@ -78,13 +78,105 @@ export async function startDiagnosticAction(
           return { status: "error", code: "insufficientTasks" };
         case "already_in_progress":
           return { status: "error", code: "alreadyInProgress" };
-        case "invalid_input":
-          return { status: "error", code: "invalidSelfScore" };
         default:
           return { status: "error", code: "generic" };
       }
     }
     console.error("startDiagnosticAction: unexpected error", error);
+    return { status: "error", code: "generic" };
+  }
+}
+
+export type StartDiagnosticTopicActionErrorCode =
+  | "invalidSelfScore"
+  | "stale"
+  | "sessionExpired"
+  | "generic";
+
+export type StartDiagnosticTopicActionState =
+  | { status: "idle" }
+  | { status: "error"; code: StartDiagnosticTopicActionErrorCode }
+  | { status: "success" };
+
+function readPositiveInt(formData: FormData, name: string): number | null {
+  const value = Number(formData.get(name));
+  return Number.isInteger(value) && value > 0 ? value : null;
+}
+
+/**
+ * Records the student's three-level knowledge choice for the topic shown on
+ * screen. The choice maps to the existing internal difficulty bands before
+ * `startDiagnosticTopic`; ownership always comes from the server-resolved
+ * identity, never from the form.
+ */
+export async function startDiagnosticTopicAction(
+  _prevState: StartDiagnosticTopicActionState,
+  formData: FormData,
+): Promise<StartDiagnosticTopicActionState> {
+  const selfScore = diagnosticKnowledgeLevelToScore(
+    formData.get("knowledgeLevel"),
+  );
+  if (selfScore === null) {
+    return { status: "error", code: "invalidSelfScore" };
+  }
+  const sessionId = readPositiveInt(formData, "sessionId");
+  const themeId = readPositiveInt(formData, "themeId");
+  if (sessionId === null || themeId === null) {
+    return { status: "error", code: "generic" };
+  }
+
+  try {
+    const owner = await resolveOwnerForWrite();
+    await startDiagnosticTopic({ owner, sessionId, themeId, selfScore });
+    return { status: "success" };
+  } catch (error) {
+    if (error instanceof StartDiagnosticTopicError) {
+      switch (error.code) {
+        case "invalid_input":
+          return { status: "error", code: "invalidSelfScore" };
+        case "step_mismatch":
+        case "session_completed":
+          return { status: "error", code: "stale" };
+        case "session_expired":
+          return { status: "error", code: "sessionExpired" };
+        default:
+          return { status: "error", code: "generic" };
+      }
+    }
+    console.error("startDiagnosticTopicAction: unexpected error", error);
+    return { status: "error", code: "generic" };
+  }
+}
+
+export type AdvanceDiagnosticActionState =
+  | { status: "success"; next: "task" | "topic" | "complete" }
+  | { status: "error"; code: "notFound" | "sessionExpired" | "generic" };
+
+/** Links the next adaptive task after the latest one was answered, or
+ * reports that a topic screen / finishing comes next. */
+export async function advanceDiagnosticAction(input: {
+  sessionId: number;
+}): Promise<AdvanceDiagnosticActionState> {
+  try {
+    const owner = await resolveOwnerForWrite();
+    const result = await advanceDiagnosticSession({
+      owner,
+      sessionId: input.sessionId,
+    });
+    return { status: "success", next: result.next };
+  } catch (error) {
+    if (error instanceof AdvanceDiagnosticSessionError) {
+      switch (error.code) {
+        case "invalid_input":
+        case "not_found":
+          return { status: "error", code: "notFound" };
+        case "session_expired":
+          return { status: "error", code: "sessionExpired" };
+        default:
+          return { status: "error", code: "generic" };
+      }
+    }
+    console.error("advanceDiagnosticAction: unexpected error", error);
     return { status: "error", code: "generic" };
   }
 }

@@ -3,20 +3,17 @@
 import { useTranslations } from "next-intl";
 import { PageFrame, PagePanel } from "@/components/dashboard/PageFrame";
 import { DiagnosticInfoPanel } from "@/components/diagnostic/DiagnosticInfoPanel";
-import { SelfScorePicker } from "@/components/ui/SelfScorePicker";
 import { SITE_NAME } from "@/constants/seo";
 import shellCss from "@/components/diagnostic/DiagnosticShell/DiagnosticShell.module.css";
 import introCss from "@/components/diagnostic/DiagnosticIntro/DiagnosticIntro.module.css";
 import previewCss from "./DiagnosticDestinationPreview.module.css";
 
-const NOOP = () => {};
-
 /**
  * Decorative, non-interactive stand-in for `/diagnostic`'s intro screen,
  * shown underneath the turning homepage sheet in `DiagnosticPageTurnLink`
  * during the page-turn transition. Reuses the real shell/intro CSS modules
- * and a few presentational components (PageFrame, DiagnosticInfoPanel,
- * SelfScorePicker) so it stays visually in sync with the real page without
+ * and a few presentational components (PageFrame, DiagnosticInfoPanel) so
+ * it stays visually in sync with the real page without
  * duplicating its copy or markup — but it never renders the real
  * `DiagnosticShell`/`DiagnosticIntro` (both wire up server data or the
  * `startDiagnosticAction` form) so no DB read or diagnostic action ever
@@ -67,15 +64,6 @@ export function DiagnosticDestinationPreview() {
         <PageFrame kicker={t("kicker")} title={t("title")} lead={t("lead")}>
           <PagePanel className={previewCss.panelPreview}>
             <div className={introCss.form}>
-              <div className={introCss.field}>
-                <span className={introCss.label}>{t("selfScoreLabel")}</span>
-                <SelfScorePicker
-                  value={null}
-                  onChange={NOOP}
-                  ariaLabel={t("selfScoreAria")}
-                  disabled
-                />
-              </div>
               <button
                 type="button"
                 className={introCss.start}

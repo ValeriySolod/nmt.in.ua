@@ -1,9 +1,8 @@
 import type { SqlConnection } from "@/lib/db/mysql";
-import { sampleRandomIds } from "@/lib/sampleRandomIds";
-import { ensureSelfScoreSchema } from "@/modules/self-score/schema";
-import { isValidSelfScore } from "@/modules/self-score/types";
 import { nowUnixSec } from "@/modules/testing/sessionElapsed";
 import { computeSessionDeadline } from "@/modules/testing/sessionExpiry";
+import { DIAGNOSTIC_TOTAL_QUESTIONS } from "./diagnosticProgress";
+import { ensureDiagnosticSelfScoreSchema } from "./diagnosticSelfScores";
 import { isValidOwner, ownerKey, type SessionOwner } from "./sessionOwner";
 
 /** `task_sessions.session_type` for a diagnostic attempt (1 user/2 auto/3
@@ -13,17 +12,16 @@ const SESSION_STATUS_CREATED = 2;
 const SESSION_START_TIME = 0;
 const SESSION_INITIAL_RIGHT_NUMBER = 0;
 const SESSION_INITIAL_TIME = 0;
-const TASK_TYPE_TOPIC = 1;
-const TASK_STATUS_UNANSWERED = 0;
 
-/** A diagnostic attempt samples this many tasks from every eligible theme,
- * capped at this many themes (curriculum order — see docs for the
- * unresolved mentor decision on the >10-eligible-themes policy). */
+/** A diagnostic attempt covers exactly five randomly selected eligible
+ * topics and asks exactly two distinct tasks in each. */
+export const DIAGNOSTIC_MAX_THEMES = 5;
 export const DIAGNOSTIC_TASKS_PER_THEME = 3;
-export const DIAGNOSTIC_MAX_THEMES = 10;
 
-/** Exported so `hasEligibleDiagnosticContent` checks the exact same eligibility
- * definition a real attempt would use, instead of re-deriving it and risking drift. */
+/** Exported so the availability check and adaptive flow use the exact same
+ * database-backed eligibility definition. The ordered full set is sampled
+ * deterministically from the session id so the random five-topic plan can be
+ * reconstructed without adding a new persistence table. */
 export const SQL_ELIGIBLE_THEMES = `
   SELECT t.id AS theme_id
   FROM themes t
@@ -31,38 +29,44 @@ export const SQL_ELIGIBLE_THEMES = `
   GROUP BY t.id, t.ord
   HAVING COUNT(q.id) >= ${DIAGNOSTIC_TASKS_PER_THEME}
   ORDER BY t.ord ASC, t.id ASC
-  LIMIT ${DIAGNOSTIC_MAX_THEMES}
 `;
 
-const SQL_SELECT_TASK_IDS_FOR_THEMES = `
-  SELECT id, theme_id
-  FROM quiz_tasks
-  WHERE theme_id IN
-`;
+export function selectDiagnosticThemeIds(
+  eligibleThemeIds: readonly number[],
+  sessionId: number,
+): number[] {
+  const shuffled = [...eligibleThemeIds];
+  if (shuffled.length <= DIAGNOSTIC_MAX_THEMES) {
+    return shuffled;
+  }
 
-const SQL_INSERT_SELF_SCORE = `
-  INSERT INTO user_self_scores (user_id, guest_token, theme_id, score, source)
-  VALUES (?, ?, NULL, ?, 'diagnostic_overall')
-`;
+  let state = sessionId >>> 0;
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    state = (Math.imul(state, 1_664_525) + 1_013_904_223) >>> 0;
+    const swapIndex = state % (index + 1);
+    [shuffled[index], shuffled[swapIndex]] = [
+      shuffled[swapIndex]!,
+      shuffled[index]!,
+    ];
+  }
+  return shuffled.slice(0, DIAGNOSTIC_MAX_THEMES);
+}
 
+/** `tasks_number` starts at the planned total; `finishDiagnosticSession`
+ * overwrites it with the number of tasks actually linked. */
 const SQL_INSERT_SESSION = `
   INSERT INTO task_sessions
     (user_id, guest_token, session_type, theme_id, tasks_number, right_number, time, session_status, start_time, expire_time)
   VALUES (?, ?, ?, NULL, ?, ?, ?, ?, ?, ?)
 `;
 
-const SQL_INSERT_MAPPING_PREFIX =
-  "INSERT INTO tasks2session (task_type, task_id, session_id, user_id, guest_token, status) VALUES ";
-
 export type StartDiagnosticTestInput = {
   owner: SessionOwner;
-  selfScore: number;
 };
 
 export type StartDiagnosticTestResult = {
   sessionId: number;
   themeIds: number[];
-  taskIds: number[];
 };
 
 export type StartDiagnosticTestErrorCode =
@@ -95,20 +99,14 @@ export function validateStartDiagnosticTestInput(
       "invalid_input",
     );
   }
-  const { owner, selfScore } = input as Record<string, unknown>;
+  const { owner } = input as Record<string, unknown>;
   if (!isValidOwner(owner)) {
     throw new StartDiagnosticTestError(
       "owner must be exactly one of userId or guestToken.",
       "invalid_input",
     );
   }
-  if (!isValidSelfScore(selfScore)) {
-    throw new StartDiagnosticTestError(
-      "selfScore must be an integer 1-10.",
-      "invalid_input",
-    );
-  }
-  return { owner: owner as SessionOwner, selfScore };
+  return { owner: owner as SessionOwner };
 }
 
 /** Guards against duplicate concurrent diagnostic starts from the same owner. */
@@ -120,13 +118,13 @@ async function loadDefaultConnection(): Promise<SqlConnection> {
 }
 
 /**
- * Starts a diagnostic test: records the general self-assessment, then
- * selects up to DIAGNOSTIC_TASKS_PER_THEME tasks from every theme that has
- * at least that many (capped at DIAGNOSTIC_MAX_THEMES themes, curriculum
- * order), and creates one `task_sessions` row (session_type=5, theme_id
- * NULL — a diagnostic attempt spans many themes) with matching
- * `tasks2session` rows. All inside a single transaction so a failed start
- * never leaves an orphaned self-score row.
+ * Starts an adaptive diagnostic test: checks that at least five themes are
+ * eligible, then creates one `task_sessions` row (session_type=5, theme_id
+ * NULL — a diagnostic attempt spans many themes) with no tasks linked yet.
+ * Tasks are linked one at a time as the attempt progresses — the first task
+ * of each topic by `startDiagnosticTopic` (together with that topic's
+ * self-score), every later one by `advanceDiagnosticSession` — so their
+ * difficulty can adapt to the student's answers.
  */
 export async function startDiagnosticTest(
   rawInput: unknown,
@@ -145,8 +143,7 @@ export async function startDiagnosticTest(
   pendingOwnerKeys.add(key);
 
   try {
-    await ensureSelfScoreSchema(deps.getConnection);
-
+    await ensureDiagnosticSelfScoreSchema(deps.getConnection);
     const connection = await deps.getConnection();
     try {
       await connection.beginTransaction();
@@ -154,48 +151,12 @@ export async function startDiagnosticTest(
       const themeRows = await connection.query<{ theme_id: number }>(
         SQL_ELIGIBLE_THEMES,
       );
-      const themeIds = themeRows.map((row) => row.theme_id);
+      const eligibleThemeIds = themeRows.map((row) => row.theme_id);
 
-      if (themeIds.length === 0) {
+      if (eligibleThemeIds.length < DIAGNOSTIC_MAX_THEMES) {
         await connection.rollback();
         throw new StartDiagnosticTestError(
-          "No eligible themes are available for a diagnostic test.",
-          "insufficient_tasks",
-        );
-      }
-
-      await connection.execute(SQL_INSERT_SELF_SCORE, [
-        input.owner.userId,
-        input.owner.guestToken,
-        input.selfScore,
-      ]);
-
-      const placeholders = themeIds.map(() => "?").join(", ");
-      const pool = await connection.query<{ id: number; theme_id: number }>(
-        `${SQL_SELECT_TASK_IDS_FOR_THEMES} (${placeholders})`,
-        themeIds,
-      );
-
-      const idsByTheme = new Map<number, number[]>();
-      for (const row of pool) {
-        const list = idsByTheme.get(row.theme_id) ?? [];
-        list.push(row.id);
-        idsByTheme.set(row.theme_id, list);
-      }
-
-      const taskIds: number[] = [];
-      for (const themeId of themeIds) {
-        const sampled = sampleRandomIds(
-          idsByTheme.get(themeId) ?? [],
-          DIAGNOSTIC_TASKS_PER_THEME,
-        );
-        for (const id of sampled) taskIds.push(id);
-      }
-
-      if (taskIds.length === 0) {
-        await connection.rollback();
-        throw new StartDiagnosticTestError(
-          "No tasks available for any eligible theme.",
+          "Fewer than five themes have enough tasks for a diagnostic test.",
           "insufficient_tasks",
         );
       }
@@ -204,44 +165,23 @@ export async function startDiagnosticTest(
         input.owner.userId,
         input.owner.guestToken,
         SESSION_TYPE_DIAGNOSTIC,
-        taskIds.length,
+        DIAGNOSTIC_TOTAL_QUESTIONS,
         SESSION_INITIAL_RIGHT_NUMBER,
         SESSION_INITIAL_TIME,
         SESSION_STATUS_CREATED,
         SESSION_START_TIME,
         computeSessionDeadline(nowSec()),
       ]);
-
-      const mappingPlaceholders = taskIds
-        .map(() => "(?, ?, ?, ?, ?, ?)")
-        .join(", ");
-      const mappingParams = taskIds.flatMap((taskId) => [
-        TASK_TYPE_TOPIC,
-        taskId,
+      const themeIds = selectDiagnosticThemeIds(
+        eligibleThemeIds,
         session.insertId,
-        input.owner.userId,
-        input.owner.guestToken,
-        TASK_STATUS_UNANSWERED,
-      ]);
-      const mapping = await connection.execute(
-        SQL_INSERT_MAPPING_PREFIX + mappingPlaceholders,
-        mappingParams,
       );
-
-      if (mapping.affectedRows !== taskIds.length) {
-        await connection.rollback();
-        throw new StartDiagnosticTestError(
-          "Failed to link all tasks to the new diagnostic session.",
-          "db_error",
-        );
-      }
 
       await connection.commit();
 
       return {
         sessionId: session.insertId,
         themeIds,
-        taskIds,
       };
     } catch (error) {
       if (!(error instanceof StartDiagnosticTestError)) {
