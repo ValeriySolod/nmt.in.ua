@@ -2,24 +2,16 @@ import type { SqlConnection } from "@/lib/db/mysql";
 import { SESSION_STATUS_COMPLETED } from "@/modules/sessions/types";
 import { isSessionExpired } from "@/modules/testing/sessionExpiry";
 import { TASK_STATUS_UNANSWERED } from "@/modules/testing/types";
-import { selectAdaptiveTask, type DifficultyCandidate } from "./adaptiveDifficulty";
-import { loadDiagnosticSelfScores } from "./diagnosticSelfScores";
+import {
+  selectDiagnosticTask,
+  type DifficultyCandidate,
+} from "./adaptiveDifficulty";
 import {
   resolveDiagnosticNextStep,
   type DiagnosticNextStep,
   type DiagnosticProgressMapping,
 } from "./diagnosticProgress";
 import { ownerClause, ownerParams, type SessionOwner } from "./sessionOwner";
-import {
-  SQL_ELIGIBLE_THEMES,
-  selectDiagnosticThemeIds,
-} from "./startDiagnosticTest";
-
-/**
- * SQL shared by the adaptive diagnostic flow (`startDiagnosticTopic`,
- * `advanceDiagnosticSession`, `getDiagnosticNextStep`). Every statement is
- * owner-scoped exactly like the rest of `src/modules/diagnostic/*`.
- */
 
 const SESSION_TYPE_DIAGNOSTIC = 5;
 const TASK_TYPE_TOPIC = 1;
@@ -40,8 +32,10 @@ const SQL_PROGRESS_MAPPINGS = `
   ORDER BY t2s.id ASC
 `;
 
-const SQL_THEME_CANDIDATES = `
-  SELECT id, difficulty FROM quiz_tasks WHERE theme_id = ?
+/** Whole bank — theme filter happens in `selectDiagnosticTask`. */
+const SQL_BANK_CANDIDATES = `
+  SELECT id, theme_id AS themeId, difficulty
+  FROM quiz_tasks
 `;
 
 const SQL_INSERT_MAPPING = `
@@ -64,9 +58,6 @@ type ProgressMappingRow = {
 
 export type LockedSessionState = "active" | "completed" | "expired";
 
-/** Row-locks the owner's diagnostic session for the rest of the
- * transaction, serializing concurrent topic starts / advances on it.
- * `null` when it does not exist for this owner. */
 export async function lockDiagnosticSession(
   connection: SqlConnection,
   sessionId: number,
@@ -102,73 +93,47 @@ export async function loadProgressMappings(
   }));
 }
 
-export async function loadPlannedThemeIds(
+export async function loadBankCandidates(
   connection: SqlConnection,
-  sessionId: number,
-): Promise<number[]> {
-  const rows = await connection.query<{ theme_id: number }>(SQL_ELIGIBLE_THEMES);
-  return selectDiagnosticThemeIds(
-    rows.map((row) => row.theme_id),
-    sessionId,
-  );
-}
-
-export async function loadThemeCandidates(
-  connection: SqlConnection,
-  themeId: number,
 ): Promise<DifficultyCandidate[]> {
-  return connection.query<DifficultyCandidate>(SQL_THEME_CANDIDATES, [themeId]);
+  return connection.query<DifficultyCandidate>(SQL_BANK_CANDIDATES);
 }
 
 export type ResolvedDiagnosticStep = {
   step: DiagnosticNextStep;
-  /** The adaptively picked task for a `nextTask` step, else `null`. */
   nextTaskId: number | null;
 };
 
 /**
- * `resolveDiagnosticNextStep` checked against the real task bank: when the
- * current topic has no unused task left at any difficulty, that topic is
- * treated as finished early and the step is resolved again. Every caller
- * (page read, topic start, advance) goes through this, so they all agree on
- * what the session is waiting for.
+ * Resolve the pure next step against the live task bank. When no unused
+ * task with a different theme exists, the attempt completes early.
  */
 export async function resolveStepAgainstBank(
   connection: SqlConnection,
   mappings: readonly DiagnosticProgressMapping[],
-  plannedThemeIds: readonly number[],
-  sessionId: number,
 ): Promise<ResolvedDiagnosticStep> {
-  const usedTaskIds = mappings.map((mapping) => mapping.taskId);
-  const exhaustedThemeIds = new Set<number>();
-  const selfScores = await loadDiagnosticSelfScores(connection, sessionId);
-
-  // Bounded: each pass either returns or marks one more theme exhausted.
-  for (;;) {
-    const step = resolveDiagnosticNextStep({
-      mappings,
-      plannedThemeIds,
-      selfScores,
-      exhaustedThemeIds,
-    });
-    if (step.kind !== "nextTask") {
-      return { step, nextTaskId: null };
-    }
-    const candidates = await loadThemeCandidates(connection, step.themeId);
-    const taskId = selectAdaptiveTask(
-      candidates,
-      usedTaskIds,
-      step.targetDifficulty,
-      step.direction,
-    );
-    if (taskId !== null) {
-      return { step, nextTaskId: taskId };
-    }
-    exhaustedThemeIds.add(step.themeId);
+  const step = resolveDiagnosticNextStep({ mappings });
+  if (step.kind !== "nextTask") {
+    return { step, nextTaskId: null };
   }
+
+  const candidates = await loadBankCandidates(connection);
+  const taskId = selectDiagnosticTask(
+    candidates,
+    mappings.map((mapping) => mapping.taskId),
+    {
+      targetDifficulty: step.targetDifficulty,
+      fallbackDifficulty: step.fallbackDifficulty,
+      excludeThemeId: step.excludeThemeId,
+    },
+  );
+
+  if (taskId === null) {
+    return { step: { kind: "complete" }, nextTaskId: null };
+  }
+  return { step, nextTaskId: taskId };
 }
 
-/** Links one task to the session as unanswered; returns the new mapping id. */
 export async function insertDiagnosticMapping(
   connection: SqlConnection,
   sessionId: number,

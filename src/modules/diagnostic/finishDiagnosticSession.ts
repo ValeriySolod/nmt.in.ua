@@ -2,15 +2,12 @@ import type { SqlConnection } from "@/lib/db/mysql";
 import { SESSION_STATUS_COMPLETED, sessionPercent } from "@/modules/sessions/types";
 import { nowUnixSec, resolveSessionElapsedSec } from "@/modules/testing/sessionElapsed";
 import { isSessionExpired } from "@/modules/testing/sessionExpiry";
-import { ensureDiagnosticSelfScoreSchema } from "./diagnosticSelfScores";
 import {
   TASK_STATUS_CORRECT,
-  TASK_STATUS_INCORRECT,
   TASK_STATUS_UNANSWERED,
   type TrainerSessionSummary,
 } from "@/modules/testing/types";
 import {
-  loadPlannedThemeIds,
   loadProgressMappings,
   resolveStepAgainstBank,
 } from "./diagnosticFlowStore";
@@ -148,7 +145,6 @@ export async function finishDiagnosticSession(
   const owner = ownerParams(input.owner);
 
   try {
-    await ensureDiagnosticSelfScoreSchema(deps.getConnection);
     const connection = await deps.getConnection();
     try {
       await connection.beginTransaction();
@@ -201,12 +197,8 @@ export async function finishDiagnosticSession(
         );
       }
 
-      // Legacy attempts were created with their whole fixed task set, so
-      // `tasks_number` already equals the linked count. An adaptive attempt
-      // is created with `tasks_number` = DIAGNOSTIC_TOTAL_QUESTIONS and links
-      // tasks one at a time: while fewer are linked, it may only finish once
-      // the flow itself can supply nothing more (e.g. the eligible task bank
-      // is exhausted) — never merely because every linked task is answered.
+      // Adaptive attempts start with tasks_number = DIAGNOSTIC_TOTAL_QUESTIONS
+      // and may finish early (3 wrongs at level 1, or bank exhausted).
       if (mappings.length < session.tasks_number) {
         const progress = await loadProgressMappings(
           connection,
@@ -214,16 +206,7 @@ export async function finishDiagnosticSession(
           input.owner,
           { forUpdate: false },
         );
-        const plannedThemeIds = await loadPlannedThemeIds(
-          connection,
-          input.sessionId,
-        );
-        const { step } = await resolveStepAgainstBank(
-          connection,
-          progress,
-          plannedThemeIds,
-          input.sessionId,
-        );
+        const { step } = await resolveStepAgainstBank(connection, progress);
         if (step.kind !== "complete") {
           await connection.rollback();
           throw new FinishDiagnosticSessionError(

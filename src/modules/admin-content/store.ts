@@ -1,9 +1,11 @@
 import type { SqlConnection } from "@/lib/db/mysql";
 import {
   AdminContentError,
+  ADMIN_TASKS_PAGE_SIZE,
   type AdminQuizTask,
   type AdminQuizTaskInput,
   type AdminQuizTaskListItem,
+  type AdminQuizTaskListPage,
   type AdminThemeOption,
 } from "./types";
 
@@ -18,10 +20,26 @@ const SQL_ADMIN_THEMES = `
 const SQL_THEME_EXISTS = `SELECT id FROM themes WHERE id = ? LIMIT 1`;
 
 const SQL_LIST_BY_THEME = `
-  SELECT id, name, difficulty
+  SELECT id, name, task_text, difficulty
   FROM quiz_tasks
   WHERE theme_id = ?
   ORDER BY id ASC
+`;
+
+const SQL_COUNT_BY_THEME = `
+  SELECT COUNT(*) AS total
+  FROM quiz_tasks
+  WHERE theme_id = ?
+`;
+
+const SQL_NEIGHBOR_IDS = `
+  SELECT
+    (SELECT id FROM quiz_tasks
+     WHERE theme_id = ? AND id < ?
+     ORDER BY id DESC LIMIT 1) AS prev_id,
+    (SELECT id FROM quiz_tasks
+     WHERE theme_id = ? AND id > ?
+     ORDER BY id ASC LIMIT 1) AS next_id
 `;
 
 const SQL_GET_BY_ID = `
@@ -69,6 +87,7 @@ type ThemeRow = {
 type ListRow = {
   id: number;
   name: string;
+  task_text: string;
   difficulty: number;
 };
 
@@ -131,20 +150,57 @@ export async function getAdminThemes(
   }
 }
 
+function mapListItem(row: ListRow): AdminQuizTaskListItem {
+  const taskText = row.task_text;
+  const fromText = taskText.replace(/\$+/g, " ").replace(/\s+/g, " ").trim();
+  const label = (fromText || row.name.trim() || `#${row.id}`).slice(0, 160);
+  return {
+    id: row.id,
+    label,
+    taskText,
+    difficulty: row.difficulty,
+  };
+}
+
 export async function getQuizTasksByTheme(
   themeId: number,
+  options: { page?: number; pageSize?: number } = {},
   deps: { getConnection: () => Promise<SqlConnection> } = {
     getConnection: loadDefaultConnection,
   },
-): Promise<AdminQuizTaskListItem[]> {
+): Promise<AdminQuizTaskListPage> {
+  const pageSize = Math.max(
+    1,
+    Math.floor(options.pageSize ?? ADMIN_TASKS_PAGE_SIZE),
+  );
+  const requestedPage = Math.max(1, Math.floor(options.page ?? 1));
   const connection = await deps.getConnection();
   try {
-    const rows = await connection.query<ListRow>(SQL_LIST_BY_THEME, [themeId]);
-    return rows.map((row) => ({
-      id: row.id,
-      name: row.name.trim(),
-      difficulty: row.difficulty,
-    }));
+    const countRows = await connection.query<{ total: number | string }>(
+      SQL_COUNT_BY_THEME,
+      [themeId],
+    );
+    const total = Number(countRows[0]?.total ?? 0);
+    const totalPages = total === 0 ? 1 : Math.ceil(total / pageSize);
+    const page = Math.min(requestedPage, totalPages);
+    const offset = (page - 1) * pageSize;
+
+    const rows =
+      total === 0
+        ? []
+        : await connection.query<ListRow>(
+            // MySQL prepared statements reject `LIMIT ?` — inline validated ints.
+            `${SQL_LIST_BY_THEME} LIMIT ${pageSize} OFFSET ${offset}`,
+            [themeId],
+          );
+
+    return {
+      items: rows.map(mapListItem),
+      total,
+      page,
+      pageSize,
+      totalPages,
+    };
   } finally {
     connection.release();
   }
@@ -174,15 +230,20 @@ export async function getNeighborTaskIds(
     getConnection: loadDefaultConnection,
   },
 ): Promise<{ prevId: number | null; nextId: number | null }> {
-  const tasks = await getQuizTasksByTheme(themeId, deps);
-  const index = tasks.findIndex((task) => task.id === taskId);
-  if (index < 0) {
-    return { prevId: null, nextId: null };
+  const connection = await deps.getConnection();
+  try {
+    const rows = await connection.query<{
+      prev_id: number | null;
+      next_id: number | null;
+    }>(SQL_NEIGHBOR_IDS, [themeId, taskId, themeId, taskId]);
+    const row = rows[0];
+    return {
+      prevId: row?.prev_id ?? null,
+      nextId: row?.next_id ?? null,
+    };
+  } finally {
+    connection.release();
   }
-  return {
-    prevId: tasks[index - 1]?.id ?? null,
-    nextId: tasks[index + 1]?.id ?? null,
-  };
 }
 
 async function assertThemeExists(

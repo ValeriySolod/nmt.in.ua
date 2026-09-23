@@ -1,10 +1,11 @@
 import type { SqlConnection } from "@/lib/db/mysql";
 import { ensureFeedbackSchema, loadFeedbackConnection } from "./schema";
 import {
-  FEEDBACK_LIST_LIMIT,
+  FEEDBACK_PAGE_SIZE,
   isFeedbackScore,
   isFeedbackSource,
   type SiteFeedback,
+  type SiteFeedbackPage,
 } from "./types";
 
 type GetFeedbackListDeps = {
@@ -24,6 +25,8 @@ type FeedbackRow = {
   login: string | null;
 };
 
+type TotalRow = { total: number | string };
+
 const SQL_LIST = `
   SELECT
     f.id,
@@ -38,8 +41,16 @@ const SQL_LIST = `
     u.login
   FROM site_feedback f
   LEFT JOIN app_users u ON u.id = f.user_id
+  WHERE f.score BETWEEN 1 AND 10
+    AND f.source IN ('footer', 'post_test')
   ORDER BY f.id DESC
-  LIMIT ${FEEDBACK_LIST_LIMIT}
+`;
+
+const SQL_COUNT = `
+  SELECT COUNT(*) AS total
+  FROM site_feedback
+  WHERE score BETWEEN 1 AND 10
+    AND source IN ('footer', 'post_test')
 `;
 
 function toDate(value: Date | string): Date {
@@ -64,17 +75,48 @@ function mapRow(row: FeedbackRow): SiteFeedback | null {
   };
 }
 
+export type GetFeedbackListOptions = {
+  page?: number;
+  pageSize?: number;
+};
+
 /** Newest site feedback for the admin `/feedback` page. Not for students. */
 export async function getFeedbackList(
+  options: GetFeedbackListOptions = {},
   deps: GetFeedbackListDeps = { getConnection: loadFeedbackConnection },
-): Promise<SiteFeedback[]> {
+): Promise<SiteFeedbackPage> {
+  const pageSize = Math.max(
+    1,
+    Math.floor(options.pageSize ?? FEEDBACK_PAGE_SIZE),
+  );
+  const requestedPage = Math.max(1, Math.floor(options.page ?? 1));
+
   await ensureFeedbackSchema(deps.getConnection);
   const connection = await deps.getConnection();
   try {
-    const rows = await connection.query<FeedbackRow>(SQL_LIST);
-    return rows
-      .map(mapRow)
-      .filter((row): row is SiteFeedback => row !== null);
+    const countRows = await connection.query<TotalRow>(SQL_COUNT);
+    const total = Number(countRows[0]?.total ?? 0);
+    const totalPages = total === 0 ? 1 : Math.ceil(total / pageSize);
+    const page = Math.min(requestedPage, totalPages);
+    const offset = (page - 1) * pageSize;
+
+    const rows =
+      total === 0
+        ? []
+        : await connection.query<FeedbackRow>(
+            // MySQL prepared statements reject `LIMIT ?` — inline validated ints.
+            `${SQL_LIST} LIMIT ${pageSize} OFFSET ${offset}`,
+          );
+
+    return {
+      items: rows
+        .map(mapRow)
+        .filter((row): row is SiteFeedback => row !== null),
+      total,
+      page,
+      pageSize,
+      totalPages,
+    };
   } finally {
     connection.release();
   }

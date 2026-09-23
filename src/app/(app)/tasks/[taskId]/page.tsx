@@ -23,8 +23,13 @@ export async function generateMetadata({ params }: EditTaskPageProps) {
       ? await getQuizTaskById(taskId)
       : null;
 
+  const titleLabel = task
+    ? task.taskText.replace(/\$+/g, " ").replace(/\s+/g, " ").trim().slice(0, 80) ||
+      task.name
+    : "";
+
   return createPageMetadata({
-    title: task ? t("editTitleNamed", { name: task.name }) : t("editTitle"),
+    title: task ? t("editTitleNamed", { name: titleLabel }) : t("editTitle"),
     description: t("editLead"),
     path: `/tasks/${raw}`,
   });

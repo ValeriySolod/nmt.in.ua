@@ -10,15 +10,18 @@ import { pickClientMessages } from "@/i18n/clientMessages";
 import {
   getAdminThemes,
   getQuizTasksByTheme,
+  ADMIN_TASKS_PAGE_SIZE,
 } from "@/modules/admin-content";
 import { canImportContent, type AuthUser } from "@/modules/auth/types";
 import { getAvailableTopicThemes } from "@/modules/testing/getAvailableTopicThemes";
+import { countStage2CatalogTasks } from "@/modules/stage2/rounds";
 
 type CabinetHomeProps = {
   locale: string;
   user: AuthUser;
   displayName: string;
   initialThemeId?: number;
+  initialPage?: number;
   needsCookieUpgrade: boolean;
 };
 
@@ -28,6 +31,7 @@ export async function CabinetHome({
   user,
   displayName,
   initialThemeId,
+  initialPage = 1,
   needsCookieUpgrade,
 }: CabinetHomeProps) {
   if (user.role === "teacher") {
@@ -43,7 +47,15 @@ export async function CabinetHome({
       initialThemeId && themes.some((theme) => theme.id === initialThemeId)
         ? initialThemeId
         : themes[0]?.id;
-    const initialTasks = themeId ? await getQuizTasksByTheme(themeId) : [];
+    const taskPage = themeId
+      ? await getQuizTasksByTheme(themeId, { page: initialPage })
+      : {
+          items: [],
+          total: 0,
+          page: 1,
+          pageSize: ADMIN_TASKS_PAGE_SIZE,
+          totalPages: 1,
+        };
 
     return (
       <NextIntlClientProvider locale={locale} messages={messages}>
@@ -57,7 +69,7 @@ export async function CabinetHome({
             <AdminContentEditor
               themes={themes}
               initialThemeId={themeId}
-              initialTasks={initialTasks}
+              taskPage={taskPage}
             />
           </PageFrame>
         </DashboardShell>
@@ -66,6 +78,7 @@ export async function CabinetHome({
   }
 
   const themes = await getAvailableTopicThemes();
+  const interactiveAvailable = (await countStage2CatalogTasks()) > 0;
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
@@ -75,6 +88,7 @@ export async function CabinetHome({
           themes={themes}
           initialThemeId={initialThemeId}
           displayName={displayName}
+          interactiveAvailable={interactiveAvailable}
         />
       </DashboardShell>
     </NextIntlClientProvider>

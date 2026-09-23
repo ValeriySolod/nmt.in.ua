@@ -27,4 +27,8 @@ test("isDemoLoginEnabled is off in production unless ALLOW_DEMO_LOGIN=1", () => 
     true,
   );
   assert.equal(isDemoLoginEnabled({ NODE_ENV: "development" }), true);
+  assert.equal(
+    isDemoLoginEnabled({ NODE_ENV: "production", ALLOW_DEMO_LOGIN: "0" }),
+    false,
+  );
 });

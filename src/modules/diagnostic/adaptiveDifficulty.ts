@@ -1,94 +1,113 @@
 import { pickRandomId } from "@/lib/sampleRandomIds";
-import {
-  MAX_TASK_DIFFICULTY,
-  MIN_TASK_DIFFICULTY,
-} from "@/modules/testing/practiceAdaptive";
-import { SELF_SCORE_MAX, SELF_SCORE_MIN } from "@/modules/self-score/types";
 
 /**
- * Adaptive difficulty for the diagnostic test. Pure rules only — the
- * DB-backed selection lives in `advanceDiagnosticSession.ts` and
- * `startDiagnosticTopic.ts`. Reuses the verified `quiz_tasks.difficulty`
- * bounds (1-3) from `practiceAdaptive.ts` instead of inventing new levels.
+ * Adaptive difficulty for the introductory diagnostic. Difficulty has no
+ * upper ceiling in product rules — the bank decides what levels exist.
+ * Pure helpers only; DB selection lives in `diagnosticFlowStore.ts`.
  */
 
-export type DifficultyCandidate = { id: number; difficulty: number };
+export const MIN_DIAGNOSTIC_DIFFICULTY = 1;
 
-/** Clamps any value into the verified difficulty range. A legacy row with a
- * missing/out-of-range difficulty is treated as the nearest valid level
- * rather than being excluded, so it never shrinks the candidate pool. */
-export function clampDifficulty(value: unknown): number {
+export type DifficultyCandidate = {
+  id: number;
+  themeId: number;
+  difficulty: number;
+};
+
+/** Treat missing / non-positive difficulty as level 1. Never invents an upper bound. */
+export function normalizeDifficulty(value: unknown): number {
   if (typeof value !== "number" || !Number.isFinite(value)) {
-    return MIN_TASK_DIFFICULTY;
+    return MIN_DIAGNOSTIC_DIFFICULTY;
   }
-  return Math.min(
-    MAX_TASK_DIFFICULTY,
-    Math.max(MIN_TASK_DIFFICULTY, Math.round(value)),
-  );
+  return Math.max(MIN_DIAGNOSTIC_DIFFICULTY, Math.round(value));
 }
 
-/**
- * Starting difficulty for a topic from the student's 1-10 self-score for it:
- * the self-score scale is split into equal bands, one per difficulty level
- * (with levels 1-3: 1-4 → 1, 5-7 → 2, 8-10 → 3).
- */
-export function initialDifficultyForSelfScore(selfScore: number): number {
-  const levels = MAX_TASK_DIFFICULTY - MIN_TASK_DIFFICULTY + 1;
-  const span = SELF_SCORE_MAX - SELF_SCORE_MIN + 1;
-  const clampedScore = Math.min(
-    SELF_SCORE_MAX,
-    Math.max(SELF_SCORE_MIN, Math.round(selfScore)),
-  );
-  const band = Math.floor(((clampedScore - SELF_SCORE_MIN) * levels) / span);
-  return clampDifficulty(MIN_TASK_DIFFICULTY + band);
-}
-
-/** One level harder after a correct answer, one level easier after an
- * incorrect one — never outside the verified bounds. */
+/** Correct → +1 level; incorrect → −1, never below 1. */
 export function nextDiagnosticDifficulty(
   currentDifficulty: number,
   correct: boolean,
 ): number {
-  return clampDifficulty(clampDifficulty(currentDifficulty) + (correct ? 1 : -1));
+  const current = normalizeDifficulty(currentDifficulty);
+  return correct ? current + 1 : Math.max(MIN_DIAGNOSTIC_DIFFICULTY, current - 1);
 }
 
+export type SelectDiagnosticTaskOptions = {
+  targetDifficulty: number;
+  /** After a climb, if the bank has no task at the higher level, retry here. */
+  fallbackDifficulty?: number | null;
+  excludeThemeId: number | null;
+};
+
 /**
- * Picks an unused task as close as possible to `targetDifficulty`. Exact
- * matches win; otherwise the nearest available level is used, and a tie
- * (e.g. target 2 with only 1 and 3 left) is broken toward `direction` — up
- * after a correct answer, down after an incorrect one or on a topic's first
- * pick. Never returns a task id from `usedTaskIds`; returns `null` only when
- * every candidate is already used.
+ * Random unused task at `targetDifficulty` with theme ≠ `excludeThemeId`.
+ * If none, tries `fallbackDifficulty` (stay after a successful climb).
+ * If still none, nearest available level among other themes. Returns null
+ * when no unused task with a different theme exists.
  */
+export function selectDiagnosticTask(
+  candidates: readonly DifficultyCandidate[],
+  usedTaskIds: Iterable<number>,
+  options: SelectDiagnosticTaskOptions,
+  pick: (ids: readonly number[]) => number | null = pickRandomId,
+): number | null {
+  const used = new Set(usedTaskIds);
+  const available = candidates.filter((candidate) => !used.has(candidate.id));
+  if (available.length === 0) return null;
+
+  const themed =
+    options.excludeThemeId == null
+      ? available
+      : available.filter((candidate) => candidate.themeId !== options.excludeThemeId);
+  if (themed.length === 0) return null;
+
+  const atLevel = (level: number) =>
+    themed.filter(
+      (candidate) => normalizeDifficulty(candidate.difficulty) === level,
+    );
+
+  const target = normalizeDifficulty(options.targetDifficulty);
+  let pool = atLevel(target);
+
+  if (pool.length === 0 && options.fallbackDifficulty != null) {
+    pool = atLevel(normalizeDifficulty(options.fallbackDifficulty));
+    // Climb with nowhere to stay: do not invent a lower “nearest” level.
+    if (pool.length === 0) return null;
+  }
+
+  if (pool.length === 0) {
+    let bestDistance = Infinity;
+    let bestLevel = target;
+    for (const candidate of themed) {
+      const level = normalizeDifficulty(candidate.difficulty);
+      const distance = Math.abs(level - target);
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        bestLevel = level;
+      }
+    }
+    pool = atLevel(bestLevel);
+  }
+
+  return pick(pool.map((candidate) => candidate.id));
+}
+
+/** @deprecated Prefer `selectDiagnosticTask` — kept for a soft transition. */
 export function selectAdaptiveTask(
   candidates: readonly DifficultyCandidate[],
   usedTaskIds: Iterable<number>,
   targetDifficulty: number,
-  direction: "up" | "down" = "down",
+  _direction: "up" | "down" = "down",
   pick: (ids: readonly number[]) => number | null = pickRandomId,
 ): number | null {
-  const used = new Set(usedTaskIds);
-  const pool = candidates.filter((candidate) => !used.has(candidate.id));
-  if (pool.length === 0) return null;
-
-  const target = clampDifficulty(targetDifficulty);
-  let bestDistance = Infinity;
-  let bestLevel = target;
-  for (const candidate of pool) {
-    const level = clampDifficulty(candidate.difficulty);
-    const distance = Math.abs(level - target);
-    const breaksTie =
-      distance === bestDistance &&
-      (direction === "up" ? level > bestLevel : level < bestLevel);
-    if (distance < bestDistance || breaksTie) {
-      bestDistance = distance;
-      bestLevel = level;
-    }
-  }
-
-  return pick(
-    pool
-      .filter((candidate) => clampDifficulty(candidate.difficulty) === bestLevel)
-      .map((candidate) => candidate.id),
+  return selectDiagnosticTask(
+    candidates,
+    usedTaskIds,
+    { targetDifficulty, excludeThemeId: null },
+    pick,
   );
+}
+
+/** @deprecated Diagnostic no longer clamps to 1–3; alias of normalizeDifficulty. */
+export function clampDifficulty(value: unknown): number {
+  return normalizeDifficulty(value);
 }

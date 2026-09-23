@@ -5,8 +5,8 @@ import {
   type SaveThemeSelfScoreInput,
 } from "./actions";
 
-test("saveThemeSelfScoreAction rejects a score outside 1-5", async () => {
-  for (const score of [0, 6, 10] as const) {
+test("saveThemeSelfScoreAction rejects a score outside 1-10", async () => {
+  for (const score of [0, 11, -1] as const) {
     const result = await saveThemeSelfScoreAction(
       { themeId: 3, score },
       {
@@ -19,6 +19,18 @@ test("saveThemeSelfScoreAction rejects a score outside 1-5", async () => {
     );
     assert.deepEqual(result, { status: "error", code: "invalid_input" });
   }
+});
+
+test("saveThemeSelfScoreAction accepts scores across 1-10", async () => {
+  const result = await saveThemeSelfScoreAction(
+    { themeId: 3, score: 10 },
+    {
+      requireUserId: async () => 1,
+      recordSelfScore: async () => ({ id: 1 }),
+      revalidatePath: () => {},
+    },
+  );
+  assert.deepEqual(result, { status: "success", score: 10 });
 });
 
 test("saveThemeSelfScoreAction rejects a non-positive themeId", async () => {

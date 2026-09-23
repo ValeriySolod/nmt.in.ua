@@ -1,10 +1,12 @@
+import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
 import { PagePanel } from "@/components/dashboard/PageFrame";
-import type { SiteFeedback } from "@/modules/feedback/types";
+import { queryHref } from "@/lib/queryHref";
+import type { SiteFeedbackPage } from "@/modules/feedback/types";
 import css from "./FeedbackAdminList.module.css";
 
 type FeedbackAdminListProps = {
-  rows: SiteFeedback[];
+  page: SiteFeedbackPage;
 };
 
 function formatWhen(date: Date, locale: string): string {
@@ -14,11 +16,19 @@ function formatWhen(date: Date, locale: string): string {
   }).format(date);
 }
 
-export async function FeedbackAdminList({ rows }: FeedbackAdminListProps) {
+function feedbackHref(page: number): string {
+  return queryHref("/feedback", {
+    page: page > 1 ? String(page) : null,
+  });
+}
+
+export async function FeedbackAdminList({ page }: FeedbackAdminListProps) {
   const t = await getTranslations("FeedbackAdmin");
   const locale = await getLocale();
+  const { items, page: current, totalPages, total } = page;
+  const showPager = totalPages > 1;
 
-  if (rows.length === 0) {
+  if (items.length === 0) {
     return <p className={css.empty}>{t("empty")}</p>;
   }
 
@@ -38,7 +48,7 @@ export async function FeedbackAdminList({ rows }: FeedbackAdminListProps) {
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
+            {items.map((row) => (
               <tr key={row.id}>
                 <td>{formatWhen(row.createdAt, locale)}</td>
                 <td>{row.score}</td>
@@ -57,6 +67,32 @@ export async function FeedbackAdminList({ rows }: FeedbackAdminListProps) {
           </tbody>
         </table>
       </div>
+
+      {showPager ? (
+        <nav className={css.pager} aria-label={t("pagerAria")}>
+          {current > 1 ? (
+            <Link href={feedbackHref(current - 1)} className={css.pagerBtn}>
+              ← {t("prevPage")}
+            </Link>
+          ) : (
+            <span className={`${css.pagerBtn} ${css.pagerBtnDisabled}`}>
+              ← {t("prevPage")}
+            </span>
+          )}
+          <p className={css.pagerStatus}>
+            {t("pageStatus", { page: current, totalPages, total })}
+          </p>
+          {current < totalPages ? (
+            <Link href={feedbackHref(current + 1)} className={css.pagerBtn}>
+              {t("nextPage")} →
+            </Link>
+          ) : (
+            <span className={`${css.pagerBtn} ${css.pagerBtnDisabled}`}>
+              {t("nextPage")} →
+            </span>
+          )}
+        </nav>
+      ) : null}
     </PagePanel>
   );
 }

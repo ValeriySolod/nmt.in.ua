@@ -50,17 +50,31 @@ function readIntField(value: unknown, field: string): number {
   return numeric;
 }
 
+/** Builds the DB `name` column from the task statement (no separate title field). */
+export function deriveTaskName(taskText: string): string {
+  const plain = taskText.replace(/\$+/g, " ").replace(/\s+/g, " ").trim();
+  if (!plain) {
+    throw new AdminContentError("Invalid taskText.", "invalid_input");
+  }
+  return plain.slice(0, MAX_LEN_VARCHAR_100);
+}
+
 /** Validates and normalizes a quiz-task form payload for create/update. */
 export function parseAdminQuizTaskInput(
   raw: Record<string, unknown>
 ): AdminQuizTaskInput {
-  const name = trimRequired(raw.name, MAX_LEN_VARCHAR_100, "name");
-  const taskText = wrapRichTextForStorage(
-    trimRequired(raw.taskText, MAX_LEN_TEXT, "taskText")
-  );
+  const taskTextRaw = trimRequired(raw.taskText, MAX_LEN_TEXT, "taskText");
+  const taskText = wrapRichTextForStorage(taskTextRaw);
   if (taskText.length > MAX_LEN_TEXT) {
     throw new AdminContentError("Invalid taskText.", "invalid_input");
   }
+
+  // Optional legacy `name` from imports; UI no longer collects it.
+  const name =
+    typeof raw.name === "string" && raw.name.trim()
+      ? trimRequired(raw.name, MAX_LEN_VARCHAR_100, "name")
+      : deriveTaskName(taskTextRaw);
+
   const themeId = readIntField(raw.themeId, "themeId");
   if (!isPositiveInt(themeId)) {
     throw new AdminContentError("Invalid themeId.", "invalid_input");

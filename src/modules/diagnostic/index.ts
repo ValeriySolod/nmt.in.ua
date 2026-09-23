@@ -12,8 +12,8 @@ export {
   startDiagnosticTest,
   validateStartDiagnosticTestInput,
   StartDiagnosticTestError,
-  DIAGNOSTIC_TASKS_PER_THEME,
-  DIAGNOSTIC_MAX_THEMES,
+  DIAGNOSTIC_MIN_THEMES,
+  isDiagnosticBankEligible,
 } from "./startDiagnosticTest";
 export type {
   StartDiagnosticTestInput,
@@ -23,8 +23,9 @@ export type {
 
 export {
   DIAGNOSTIC_TOTAL_QUESTIONS,
+  DIAGNOSTIC_FAIL_STREAK_AT_LEVEL_1,
   resolveDiagnosticNextStep,
-  topicQuestionQuota,
+  consecutiveWrongAtDifficulty1,
 } from "./diagnosticProgress";
 export type {
   DiagnosticNextStep,
@@ -32,20 +33,13 @@ export type {
 } from "./diagnosticProgress";
 
 export {
+  normalizeDifficulty,
   clampDifficulty,
-  initialDifficultyForSelfScore,
   nextDiagnosticDifficulty,
+  selectDiagnosticTask,
   selectAdaptiveTask,
+  MIN_DIAGNOSTIC_DIFFICULTY,
 } from "./adaptiveDifficulty";
-
-export {
-  startDiagnosticTopic,
-  StartDiagnosticTopicError,
-} from "./startDiagnosticTopic";
-export type {
-  StartDiagnosticTopicInput,
-  StartDiagnosticTopicResult,
-} from "./startDiagnosticTopic";
 
 export {
   advanceDiagnosticSession,
@@ -53,10 +47,7 @@ export {
 } from "./advanceDiagnosticSession";
 
 export { getDiagnosticNextStep } from "./getDiagnosticNextStep";
-export type {
-  DiagnosticNextStepView,
-  DiagnosticTopicIntroView,
-} from "./getDiagnosticNextStep";
+export type { DiagnosticNextStepView } from "./getDiagnosticNextStep";
 
 export { hasEligibleDiagnosticContent } from "./hasEligibleDiagnosticContent";
 
@@ -106,7 +97,6 @@ export type { ClaimGuestProgressResult } from "./claimGuestProgress";
 
 export {
   startDiagnosticAction,
-  startDiagnosticTopicAction,
   advanceDiagnosticAction,
   checkDiagnosticAnswerAction,
   finishDiagnosticSessionAction,
@@ -115,6 +105,5 @@ export {
 } from "./actions";
 export type {
   StartDiagnosticActionState,
-  StartDiagnosticTopicActionState,
   AdvanceDiagnosticActionState,
 } from "./actions";

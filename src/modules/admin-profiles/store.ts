@@ -3,13 +3,23 @@ import { isDemoAccountLogin } from "@/modules/auth/demoLogin";
 import { isUserOnline } from "@/modules/auth/presence";
 import type { UserRole } from "@/modules/auth/types";
 import { ensureAuthSchema } from "@/modules/auth/users";
-import { AdminProfilesError, type AdminProfile } from "./types";
+import { AdminProfilesError, ADMIN_PROFILES_PAGE_SIZE, type AdminProfile, type AdminProfilesPage, type AdminProfilesRoleCounts } from "./types";
 
 const SQL_LIST_PROFILES = `
   SELECT id, login, display_name, email, email_verified_at, role, is_banned,
          last_login_at, last_seen_at, created_at
   FROM app_users
-  ORDER BY role ASC, display_name ASC, id ASC
+`;
+
+const SQL_COUNT_PROFILES = `
+  SELECT COUNT(*) AS total
+  FROM app_users
+`;
+
+const SQL_ROLE_COUNTS = `
+  SELECT role, COUNT(*) AS count
+  FROM app_users
+  GROUP BY role
 `;
 
 const SQL_FIND_TARGET = `
@@ -44,6 +54,27 @@ type ProfileRow = {
 };
 
 type CountRow = { count: number };
+type TotalRow = { total: number | string };
+type RoleCountRow = { role: UserRole; count: number | string };
+
+const EMPTY_ROLE_COUNTS: AdminProfilesRoleCounts = {
+  all: 0,
+  student: 0,
+  teacher: 0,
+  admin: 0,
+};
+
+function mapRoleCounts(rows: RoleCountRow[]): AdminProfilesRoleCounts {
+  const counts = { ...EMPTY_ROLE_COUNTS };
+  for (const row of rows) {
+    const n = Number(row.count);
+    if (row.role === "student" || row.role === "teacher" || row.role === "admin") {
+      counts[row.role] = n;
+    }
+    counts.all += n;
+  }
+  return counts;
+}
 
 async function loadDefaultConnection(): Promise<SqlConnection> {
   const { getConnection } = await import("@/lib/db/mysql");
@@ -83,16 +114,63 @@ function mapProfile(row: ProfileRow, nowMs = Date.now()): AdminProfile {
   };
 }
 
+export type GetAdminProfilesOptions = {
+  page?: number;
+  pageSize?: number;
+  role?: "all" | UserRole;
+};
+
 export async function getAdminProfiles(
+  options: GetAdminProfilesOptions = {},
   deps: { getConnection: () => Promise<SqlConnection> } = {
     getConnection: loadDefaultConnection,
   },
-): Promise<AdminProfile[]> {
+): Promise<AdminProfilesPage> {
   await ensureAuthSchema(deps);
+  const pageSize = Math.max(
+    1,
+    Math.floor(options.pageSize ?? ADMIN_PROFILES_PAGE_SIZE),
+  );
+  const requestedPage = Math.max(1, Math.floor(options.page ?? 1));
+  const roleFilter = options.role ?? "all";
   const connection = await deps.getConnection();
   try {
-    const rows = await connection.query<ProfileRow>(SQL_LIST_PROFILES, []);
-    return rows.map(mapProfile);
+    const roleCounts = mapRoleCounts(
+      await connection.query<RoleCountRow>(SQL_ROLE_COUNTS, []),
+    );
+
+    const where =
+      roleFilter === "all" ? "" : " WHERE role = ?";
+    const countParams = roleFilter === "all" ? [] : [roleFilter];
+    const countRows = await connection.query<TotalRow>(
+      `${SQL_COUNT_PROFILES}${where}`,
+      countParams,
+    );
+    const total = Number(countRows[0]?.total ?? 0);
+    const totalPages = total === 0 ? 1 : Math.ceil(total / pageSize);
+    const page = Math.min(requestedPage, totalPages);
+    const offset = (page - 1) * pageSize;
+
+    const listParams = roleFilter === "all" ? [] : [roleFilter];
+    const rows =
+      total === 0
+        ? []
+        : await connection.query<ProfileRow>(
+            // MySQL prepared statements reject `LIMIT ?` — inline validated ints.
+            `${SQL_LIST_PROFILES}${where}
+  ORDER BY role ASC, display_name ASC, id ASC
+  LIMIT ${pageSize} OFFSET ${offset}`,
+            listParams,
+          );
+
+    return {
+      items: rows.map(mapProfile),
+      total,
+      page,
+      pageSize,
+      totalPages,
+      roleCounts,
+    };
   } finally {
     connection.release();
   }

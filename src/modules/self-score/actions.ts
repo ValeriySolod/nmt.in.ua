@@ -28,7 +28,7 @@ type SaveThemeSelfScoreDeps = {
 };
 
 const RESULTS_SELF_SCORE_MIN = 1;
-const RESULTS_SELF_SCORE_MAX = 5;
+const RESULTS_SELF_SCORE_MAX = 10;
 
 function isPositiveInt(value: unknown): value is number {
   return typeof value === "number" && Number.isInteger(value) && value > 0;
@@ -44,7 +44,7 @@ function isResultsSelfScore(value: unknown): value is number {
 }
 
 /**
- * Appends a per-theme self-score from `/results` (scale 1–5). History is
+ * Appends a per-theme self-score from `/results` (scale 1–10). History is
  * append-only — the results table shows the latest `pre_topic` (else diagnostic).
  */
 export async function saveThemeSelfScoreAction(

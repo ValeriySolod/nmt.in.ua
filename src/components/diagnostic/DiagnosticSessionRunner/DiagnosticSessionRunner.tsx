@@ -35,9 +35,8 @@ type DiagnosticSessionRunnerProps = {
  * In-progress adaptive diagnostic attempt. The trainer itself is the shared
  * `TopicTrainer` in diagnostic mode; this wrapper only adds the "what comes
  * next" step: after the latest task is answered it asks the server to link
- * the next adaptive task, then re-reads the page (next task or next topic's
- * self-assessment). Keyed by the latest mapping so a newly linked task
- * remounts the trainer on it.
+ * the next adaptive task, then re-reads the page. Keyed by the latest mapping
+ * so a newly linked task remounts the trainer on it.
  */
 export function DiagnosticSessionRunner({
   sessionId,

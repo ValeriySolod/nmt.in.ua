@@ -2,8 +2,8 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-lg);
-  max-width: 52rem;
-  margin-inline: auto;
+  width: 100%;
+  max-width: none;
 }
 
 .panel {
@@ -200,10 +200,53 @@
   padding-inline-start: 4px;
 }
 
-.taskName {
+.taskPreview {
   display: block;
+  max-width: 48rem;
   overflow-wrap: break-word;
   font-weight: 600;
+  line-height: 1.45;
+}
+
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--space-md);
+}
+
+.pagerStatus {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--fs-small);
+  text-align: center;
+  flex: 1 1 8rem;
+}
+
+.pagerBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-pill);
+  background: rgb(253 251 244 / 78%);
+  color: var(--green-dark);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.pagerBtn:hover {
+  border-color: rgb(31 143 69 / 45%);
+}
+
+.pagerBtnDisabled {
+  opacity: 0.45;
+  pointer-events: none;
 }
 
 .diffBadge {

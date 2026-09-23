@@ -8,8 +8,20 @@ export type AdminThemeOption = {
 
 export type AdminQuizTaskListItem = {
   id: number;
-  name: string;
+  /** Plain label for aria/confirm — derived from task text. */
+  label: string;
+  taskText: string;
   difficulty: number;
+};
+
+export const ADMIN_TASKS_PAGE_SIZE = 10;
+
+export type AdminQuizTaskListPage = {
+  items: AdminQuizTaskListItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 };
 
 export type AdminQuizTask = {

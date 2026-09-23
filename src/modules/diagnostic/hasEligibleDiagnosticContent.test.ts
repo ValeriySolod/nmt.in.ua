@@ -3,16 +3,12 @@ import test from "node:test";
 import type { SqlConnection } from "@/lib/db/mysql";
 import { hasEligibleDiagnosticContent } from "./hasEligibleDiagnosticContent";
 
-function makeConnection(eligibleThemeIds: number[]) {
+function makeConnection(taskCount: number, themeCount: number) {
   let released = false;
   const connection: SqlConnection = {
     beginTransaction: async () => {},
-    query: async <T,>(sql: string) => {
-      if (sql.includes("FROM themes")) {
-        return eligibleThemeIds.map((id) => ({ theme_id: id })) as unknown as T[];
-      }
-      return [] as T[];
-    },
+    query: async <T,>() =>
+      [{ task_count: taskCount, theme_count: themeCount }] as unknown as T[],
     execute: async () => ({ insertId: 0, affectedRows: 0 }),
     commit: async () => {},
     rollback: async () => {},
@@ -23,22 +19,30 @@ function makeConnection(eligibleThemeIds: number[]) {
   return { connection, isReleased: () => released };
 }
 
-test("returns true when at least five themes are eligible", async () => {
-  const mock = makeConnection([1, 2, 3, 4, 5]);
+test("returns true when the bank has ≥10 tasks across ≥2 themes", async () => {
+  const mock = makeConnection(12, 3);
   const result = await hasEligibleDiagnosticContent({
     getConnection: async () => mock.connection,
   });
   assert.equal(result, true);
-  assert.ok(mock.isReleased(), "connection must be released");
+  assert.ok(mock.isReleased());
 });
 
-test("returns false when fewer than five themes are eligible", async () => {
-  const mock = makeConnection([1, 2, 3, 4]);
+test("returns false when there are fewer than 10 tasks", async () => {
+  const mock = makeConnection(9, 4);
   const result = await hasEligibleDiagnosticContent({
     getConnection: async () => mock.connection,
   });
   assert.equal(result, false);
-  assert.ok(mock.isReleased(), "connection must be released");
+  assert.ok(mock.isReleased());
+});
+
+test("returns false when there is only one theme", async () => {
+  const mock = makeConnection(20, 1);
+  const result = await hasEligibleDiagnosticContent({
+    getConnection: async () => mock.connection,
+  });
+  assert.equal(result, false);
 });
 
 test("releases the connection and propagates the error on a DB failure", async () => {
@@ -60,5 +64,5 @@ test("releases the connection and propagates the error on a DB failure", async (
     () => hasEligibleDiagnosticContent({ getConnection: async () => connection }),
     /connection lost/,
   );
-  assert.ok(released, "connection must still be released on error");
+  assert.ok(released);
 });
