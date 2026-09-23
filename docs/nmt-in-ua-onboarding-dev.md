@@ -221,7 +221,7 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 | `site_feedback` | відгук про сайт (6.2) | `user_id`/`session_id` nullable, `score` 1–10, `message` (обов’язкове якщо score < 5), `email`, `source` footer/post_test |
 | `consultation_requests` | заявки на консультацію | `student_id`, `note`, `status` pending/acknowledged/closed, `handled_by`; один відкритий запит на учня. SQL `019_consultation_requests.sql` + lazy schema |
 
-| `user_self_scores` | Самооцінка (6.3–6.4), **історія, ніколи не перезаписується** | `user_id`/`guest_token` (рівно один із двох), `theme_id` nullable (NULL = загальна оцінка), `score` 1–10, `source` `diagnostic_overall`/`pre_topic`, `created_at` |
+| `user_self_scores` | Самооцінка (6.3–6.4), **історія, ніколи не перезаписується** | `user_id`/`guest_token` (рівно один із двох), `theme_id` nullable (NULL = загальна оцінка), `score` 1–10, `source` `diagnostic_overall`/`pre_topic`, `created_at`. Since 2026-09-23 the diagnostic writes one `pre_topic` row per topic (before that topic's tasks); `diagnostic_overall` is no longer written and only remains in history / as the `/results` fallback |
 | `teacher_students` | Список «Мої учні» | `teacher_user_id` + `student_user_id` (unique pair, FK на `app_users`). Ліниво: `ensureTeacherStudentsSchema`. DDL: `scripts/sql/017_teacher_students.sql` |
 | `student_groups` / `student_group_members` / `student_invites` | Групи й інвайти викладача | Група належить викладачу. Членство: PK `(teacher_user_id, student_user_id)` — одна група на викладача; перехід = DELETE + INSERT. Інвайт `personal` (без групи) або `group`; код багаторазовий 14 днів, новий код ставить `revoked_at`. DDL: `scripts/sql/034_student_groups_invites.sql`. Той самий lazy create в `ensureTeacherStudentsSchema` |
 | `mentor_assignments` / `mentor_assignment_members` | Групове ДЗ викладача | Тема + `due_at` + члени з `session_id`. Ліниво: `ensureMentorAssignmentsSchema`. DDL: `scripts/sql/033_mentor_assignments.sql` |
@@ -279,7 +279,7 @@ Cookie `nmt_guest` **ніколи** не перевіряється в `src/prox
 | Симулятор НМТ | `/simulator` | варіант (офіційний), 60 хв | `session_type = 4`, банк `nmt_quiz_tasks` |
 | Авто-сесія | з’являється на `/sessions` | як тест | Створює recommend після фінішу |
 | Ментор-сесія | викладач на `/assign` | як тест | `session_type = 3`, Старт / ×; групове призначення з дедлайном |
-| Діагностика (гість/учень) | `/diagnostic` (публічний) | до 3 завдань з кожної теми з ≥3 завданнями, макс. 10 тем (30 завдань) | `session_type = 5`, `theme_id = NULL`, одна сесія на всю спробу; перед стартом — загальна самооцінка 1–10 |
+| Діагностика (гість/учень) | `/diagnostic` (публічний) | exactly 10 answered tasks across 5 randomly selected topics (themes with ≥3 tasks; 2 per topic) | `session_type = 5`, `theme_id = NULL`, one session per attempt; before each topic — a 1–10 self-assessment for that topic; adaptive difficulty (see `src/modules/diagnostic/diagnosticProgress.ts`) |
 
 **Практика vs Діагностика (11.09.2026).** `src/modules/testing/sessionMode.ts` дає
 `resolveSessionMode(TrainerMode): "diagnostic" | "practice" | "exam"` — єдине місце,
@@ -433,7 +433,7 @@ Ultimate/НМТ/діагностика лишились без змін. Зар�
 
 ## 11. З чого почати новому dev (вільні задачі)
 
-Повний розклад хвилі 6 — [`docs/mentor-tasks.md`](./mentor-tasks.md). Не чіпайте робочий topic-test без узгодження. Відкрите: **6.5** (банк), політика діагностики при >10 eligible темах.
+Повний розклад хвилі 6 — [`docs/mentor-tasks.md`](./mentor-tasks.md). Не чіпайте робочий topic-test без узгодження. Відкрите: **6.5** (банк).
 
 | Задача | Де копати | Складність | Нотатка |
 | --- | --- | --- | --- |
@@ -441,7 +441,7 @@ Ultimate/НМТ/діагностика лишились без змін. Зар�
 | 6.5 Банк 30–40 / тему | `content-import`, `docs/content-review/` | Контент | Спочатку розширити `varchar(50)` у відповідях |
 | 6.8 Варіанти НМТ | `startNmtSimulator`, `/simulator`, `nmt_variants*` | Середня | ✅ 09.09 |
 | 6.6 Задачник | `src/app/problems`, таблиця `problems` | Середня | ✅ 08.09 (UI з JSON-каталогу, без MySQL на read) |
-| 6.3–6.4 Діагностика | `/diagnostic` | Велика | ✅; відкрито: політика тем при >10 eligible |
+| 6.3–6.4 Діагностика | `/diagnostic` | Велика | ✅; 23.09: adaptive, 10 tasks across 5 random eligible topics, per-topic self-assessment |
 | 6.2 Відгук | `src/modules/feedback` | Мала | ✅ |
 | Консультації | `/consultations` | Мала | ✅ 17.09: карусель публічних викладачів + рейтинг + персональна заявка; черга викладачів без змін |
 | Мої учні | `src/modules/teacher-students`, `/students`, `/join` | Середня | ✅ 21.09: групи, інвайти 14 днів, статистика учня, «Приєднати» з консультації. 22.09: викладач створює обліковий запис учня (8.3). SQL `034` |
