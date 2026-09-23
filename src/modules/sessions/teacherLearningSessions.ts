@@ -1,10 +1,7 @@
 import type { SqlConnection } from "@/lib/db/mysql";
 import { ensureMentorAssignmentsSchema } from "@/modules/mentor-assignments/schema";
 import { nowUnixSec } from "@/modules/testing/sessionElapsed";
-import {
-  LEARNING_SESSIONS_PAGE_SIZE,
-  resolveLearningSessionsLimit,
-} from "./getLearningSessions";
+import { resolveLearningSessionsLimit } from "./getLearningSessions";
 import {
   buildLearningSessionRows,
   type LearningSessionRow,

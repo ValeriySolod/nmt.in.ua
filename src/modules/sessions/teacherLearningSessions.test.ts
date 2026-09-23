@@ -6,7 +6,7 @@ import {
   getTeacherLearningSessions,
   type TeacherLearningSessionRow,
 } from "./teacherLearningSessions";
-import { SESSION_STATUS_COMPLETED, SESSION_STATUS_CREATED } from "./types";
+import { SESSION_STATUS_COMPLETED } from "./types";
 
 type SqlRow = {
   id: number;
