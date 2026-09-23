@@ -23,8 +23,8 @@ function makeConnection(eligibleThemeIds: number[]) {
   return { connection, isReleased: () => released };
 }
 
-test("returns true when at least one theme is eligible", async () => {
-  const mock = makeConnection([3]);
+test("returns true when at least five themes are eligible", async () => {
+  const mock = makeConnection([1, 2, 3, 4, 5]);
   const result = await hasEligibleDiagnosticContent({
     getConnection: async () => mock.connection,
   });
@@ -32,8 +32,8 @@ test("returns true when at least one theme is eligible", async () => {
   assert.ok(mock.isReleased(), "connection must be released");
 });
 
-test("returns false when the catalog has no eligible theme (empty, not an error)", async () => {
-  const mock = makeConnection([]);
+test("returns false when fewer than five themes are eligible", async () => {
+  const mock = makeConnection([1, 2, 3, 4]);
   const result = await hasEligibleDiagnosticContent({
     getConnection: async () => mock.connection,
   });

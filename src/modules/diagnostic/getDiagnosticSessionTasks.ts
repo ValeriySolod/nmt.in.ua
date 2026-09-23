@@ -122,9 +122,9 @@ async function loadDefaultConnection(): Promise<SqlConnection> {
 
 /**
  * Owner-aware analog of `src/modules/testing/getSessionTasks.ts` for
- * diagnostic (session_type=5) sessions. A diagnostic attempt is always
- * created with its tasks already attached (unlike planned auto/mentor
- * sessions), so there is no "planned without tasks" branch here.
+ * diagnostic (session_type=5) sessions. Tasks come back in the order they
+ * were linked; an active adaptive attempt may have none linked yet (see
+ * `getDiagnosticNextStep` for what the page shows next).
  */
 export async function getDiagnosticSessionTasks(
   sessionId: unknown,
@@ -169,7 +169,13 @@ export async function getDiagnosticSessionTasks(
         validSessionId,
       ]);
 
-      if (rows.length === 0) {
+      // An adaptive attempt links its tasks one at a time, so an active
+      // session legitimately has none before its first topic starts. A
+      // completed session without tasks is still treated as missing.
+      if (
+        rows.length === 0 &&
+        header.session_status === SESSION_STATUS_COMPLETED
+      ) {
         throw new GetDiagnosticSessionTasksError(
           "Session not found or has no linked tasks.",
           "session_not_found",

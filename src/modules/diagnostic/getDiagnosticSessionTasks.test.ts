@@ -148,3 +148,45 @@ test("rejects a non-positive sessionId", async () => {
       error.code === "invalid_input",
   );
 });
+
+test("an active adaptive session with no tasks linked yet loads with an empty list", async () => {
+  const connection = makeConnection({
+    header: {
+      id: 5,
+      tasks_number: 10,
+      right_number: 0,
+      time: 0,
+      session_status: SESSION_STATUS_CREATED,
+      expire_time: 9_999_999_999,
+    },
+    tasks: [],
+  });
+  const result = await getDiagnosticSessionTasks(5, { userId: null, guestToken: "guest-a" }, {
+    getConnection: async () => connection,
+  });
+  assert.deepEqual(result.tasks, []);
+  assert.equal(result.summary, null);
+});
+
+test("a completed session without tasks is still treated as missing", async () => {
+  const connection = makeConnection({
+    header: {
+      id: 5,
+      tasks_number: 0,
+      right_number: 0,
+      time: 0,
+      session_status: SESSION_STATUS_COMPLETED,
+      expire_time: 9_999_999_999,
+    },
+    tasks: [],
+  });
+  await assert.rejects(
+    () =>
+      getDiagnosticSessionTasks(5, { userId: 1, guestToken: null }, {
+        getConnection: async () => connection,
+      }),
+    (error: unknown) =>
+      error instanceof GetDiagnosticSessionTasksError &&
+      error.code === "session_not_found",
+  );
+});

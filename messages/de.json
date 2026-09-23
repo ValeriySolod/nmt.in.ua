@@ -492,7 +492,8 @@
         "retryPending": "Nutze zuerst den zweiten Versuch.",
         "sessionExpired": "Die 24-Stunden-Gültigkeit dieser Sitzung ist abgelaufen.",
         "generic": "Es konnte keine Aufgabe gefunden werden. Bitte versuche es erneut."
-      }
+      },
+      "continue": "Es konnte nicht zur nächsten Aufgabe gewechselt werden. Bitte versuche es erneut."
     }
   },
   "SessionExpiredNotice": {
@@ -742,16 +743,13 @@
   },
   "Diagnostic": {
     "kicker": "Einstufungstest",
-    "title": "Wie schätzt du deine Mathekenntnisse ein?",
-    "lead": "Wähle eine Bewertung von 1 bis 10 und mache anschließend einen kurzen Test zu allen Themen, um dein tatsächliches Niveau zu sehen.",
-    "selfScoreLabel": "Allgemeine Selbsteinschätzung",
-    "selfScoreAria": "Allgemeine Selbsteinschätzung der Mathekenntnisse, 1 bis 10",
+    "title": "Finde dein tatsächliches Niveau in Mathe heraus",
+    "lead": "10 Aufgaben zu mehreren Themen. Schätze vor jedem Thema kurz ein, wie gut du es kannst — die Schwierigkeit der Aufgaben passt sich deinen Antworten an.",
     "start": "Einstufungstest starten",
     "loading": "Test wird vorbereitet…",
     "redirecting": "Test wird geöffnet…",
     "unavailable": "Themen und Aufgaben werden noch vorbereitet. Der Test wird bald verfügbar sein.",
     "errors": {
-      "invalidSelfScore": "Wähle eine Bewertung von 1 bis 10, um fortzufahren.",
       "insufficientTasks": "Für den Einstufungstest gibt es derzeit nicht genügend Aufgaben. Bitte versuche es später erneut.",
       "alreadyInProgress": "Eine Anfrage wird bereits ausgeführt. Bitte warte.",
       "generic": "Der Einstufungstest konnte nicht gestartet werden. Bitte versuche es erneut."
@@ -759,10 +757,52 @@
     "info": {
       "title": "Das bringt dir der Einstufungstest",
       "items": {
-        "tasks": "30 Aufgaben zu verschiedenen Themen",
-        "duration": "etwa 10–15 Minuten",
+        "tasks": "10 Aufgaben zu mehreren Themen",
+        "duration": "etwa 5–10 Minuten",
         "insight": "zeigt deine Stärken und Schwächen",
         "recommendations": "nach dem Test persönliche Empfehlungen"
+      }
+    },
+    "topic": {
+      "progress": "Thema {current} von {total}",
+      "conceptsTitle": "Das umfasst dieses Thema",
+      "question": "Wie gut kennst du dieses Thema?",
+      "questionHint": "Sieh dir das Beispiel an und wähle die Antwort, die dein Wissen am besten beschreibt.",
+      "exampleLabel": "Beispielaufgabe",
+      "knowledgeChoicesAria": "Selbsteinschätzung zum Thema „{theme}“",
+      "choices": {
+        "know": "Ich kenne es",
+        "partial": "Ich kenne es teilweise",
+        "unknown": "Ich kenne es nicht"
+      },
+      "next": "Nächstes Thema",
+      "start": "Test starten",
+      "loading": "Selbsteinschätzung wird gespeichert…",
+      "howItWorks": {
+        "title": "So funktioniert dieser Test",
+        "items": {
+          "adaptive": {
+            "title": "10 adaptive Aufgaben",
+            "text": "Die Schwierigkeit passt sich deinen Antworten an."
+          },
+          "accuracy": {
+            "title": "Ein genaueres Ergebnis",
+            "text": "Der Test hilft, deinen tatsächlichen Wissensstand in diesem Thema zu bestimmen."
+          },
+          "difficulty": {
+            "title": "Das passende Niveau",
+            "text": "Du bekommst Aufgaben auf deinem Niveau, von den Grundlagen bis zu schwierigeren Aufgaben."
+          },
+          "next": {
+            "title": "Danach folgen weitere Themen",
+            "text": "Nach diesem Thema wechselst du zum nächsten."
+          }
+        }
+      },
+      "errors": {
+        "invalidSelfScore": "Wähle eine der drei Optionen.",
+        "sessionExpired": "Die 24-Stunden-Gültigkeit dieser Sitzung ist abgelaufen.",
+        "generic": "Das Thema konnte nicht gestartet werden. Bitte versuche es erneut."
       }
     }
   },

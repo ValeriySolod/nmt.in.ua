@@ -492,7 +492,8 @@
         "retryPending": "Use the second attempt first.",
         "sessionExpired": "This session's 24-hour lifetime has expired.",
         "generic": "Could not find a task. Please try again."
-      }
+      },
+      "continue": "Could not move on to the next task. Please try again."
     }
   },
   "SessionExpiredNotice": {
@@ -742,16 +743,13 @@
   },
   "Diagnostic": {
     "kicker": "Diagnostic test",
-    "title": "How do you rate your math knowledge?",
-    "lead": "Pick a score from 1 to 10, then take a short test across all topics to see your real level.",
-    "selfScoreLabel": "Overall self-assessment",
-    "selfScoreAria": "Overall self-assessment of math knowledge, 1 to 10",
+    "title": "Find out your real level in math",
+    "lead": "10 tasks across several topics. Before each topic, briefly rate how well you know it — task difficulty adapts to your answers.",
     "start": "Start the diagnostic test",
     "loading": "Preparing the test…",
     "redirecting": "Opening the test…",
     "unavailable": "Topics and tasks are still being prepared. Testing will be available soon.",
     "errors": {
-      "invalidSelfScore": "Pick a score from 1 to 10 to continue.",
       "insufficientTasks": "There aren't enough tasks for a diagnostic test yet. Please try again later.",
       "alreadyInProgress": "A request is already in progress. Please wait.",
       "generic": "Could not start the diagnostic test. Please try again."
@@ -759,10 +757,52 @@
     "info": {
       "title": "What the diagnostic test gives you",
       "items": {
-        "tasks": "30 tasks across different topics",
-        "duration": "about 10–15 minutes",
+        "tasks": "10 tasks across several topics",
+        "duration": "about 5–10 minutes",
         "insight": "shows your strengths and weaknesses",
         "recommendations": "personal recommendations once you finish"
+      }
+    },
+    "topic": {
+      "progress": "Topic {current} of {total}",
+      "conceptsTitle": "What this topic covers",
+      "question": "How well do you know this topic?",
+      "questionHint": "Look at the example and choose the option that best describes your knowledge.",
+      "exampleLabel": "Example task",
+      "knowledgeChoicesAria": "Self-assessment of the topic “{theme}”",
+      "choices": {
+        "know": "I know it",
+        "partial": "I partly know it",
+        "unknown": "I don't know it"
+      },
+      "next": "Next topic",
+      "start": "Start the test",
+      "loading": "Saving self-assessment…",
+      "howItWorks": {
+        "title": "How this test works",
+        "items": {
+          "adaptive": {
+            "title": "10 adaptive tasks",
+            "text": "Difficulty adjusts to your answers."
+          },
+          "accuracy": {
+            "title": "A more accurate result",
+            "text": "The test helps determine your actual knowledge level in this topic."
+          },
+          "difficulty": {
+            "title": "The right level",
+            "text": "You get tasks matched to your level, from foundational to more advanced."
+          },
+          "next": {
+            "title": "Other topics come next",
+            "text": "After completing this topic, you move on to the next one."
+          }
+        }
+      },
+      "errors": {
+        "invalidSelfScore": "Choose one of the three options.",
+        "sessionExpired": "This session's 24-hour lifetime has expired.",
+        "generic": "Could not start this topic. Please try again."
       }
     }
   },
