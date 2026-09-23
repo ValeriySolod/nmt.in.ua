@@ -76,6 +76,11 @@ export async function loginAction(
     return { status: "error", code: "requiredFields" };
   }
 
+  // Same gate as one-click demo: password form must not unlock demo-* on prod.
+  if (isDemoAccountLogin(login) && !isDemoLoginEnabled()) {
+    return { status: "error", code: "invalidCredentials" };
+  }
+
   if (password.length > PASSWORD_MAX_LEN) {
     return { status: "error", code: "invalidCredentials" };
   }

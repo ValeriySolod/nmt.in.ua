@@ -46,7 +46,7 @@ export async function generateMetadata() {
 }
 
 type HomePageProps = {
-  searchParams: Promise<{ theme?: string | string[] }>;
+  searchParams: Promise<{ theme?: string | string[]; page?: string | string[] }>;
 };
 
 function readThemeParam(
@@ -56,6 +56,12 @@ function readThemeParam(
     return raw[0];
   }
   return raw;
+}
+
+function readPageParam(raw: string | string[] | undefined): number {
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  const page = Number(value);
+  return Number.isInteger(page) && page > 0 ? page : 1;
 }
 
 export default async function HomePage({ searchParams }: HomePageProps) {
@@ -73,6 +79,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   const params = await searchParams;
   const initialThemeId = parseThemeQueryParam(readThemeParam(params.theme));
+  const initialPage = readPageParam(params.page);
   const needsCookieUpgrade = await sessionCookieNeedsUpgrade();
 
   const { CabinetHome } = await import("./_home/CabinetHome");
@@ -84,6 +91,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         displayName={user.displayName}
         user={user}
         initialThemeId={initialThemeId}
+        initialPage={initialPage}
         needsCookieUpgrade={needsCookieUpgrade}
       />
     </Suspense>

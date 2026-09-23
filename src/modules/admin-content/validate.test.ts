@@ -2,11 +2,15 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { AdminContentError } from "./types";
-import { parseAdminQuizTaskInput, parseTaskId, parseThemeId } from "./validate";
+import {
+  deriveTaskName,
+  parseAdminQuizTaskInput,
+  parseTaskId,
+  parseThemeId,
+} from "./validate";
 
-test("parseAdminQuizTaskInput accepts a valid payload", () => {
+test("parseAdminQuizTaskInput derives name from task text when omitted", () => {
   const input = parseAdminQuizTaskInput({
-    name: " Додавання ",
     taskText: "10+10=",
     themeId: "2",
     answer1: "10",
@@ -19,7 +23,7 @@ test("parseAdminQuizTaskInput accepts a valid payload", () => {
   } as Record<string, unknown>);
 
   assert.deepEqual(input, {
-    name: "Додавання",
+    name: "10+10=",
     taskText: "$10+10=$",
     themeId: 2,
     answer1: "$10$",
@@ -32,9 +36,24 @@ test("parseAdminQuizTaskInput accepts a valid payload", () => {
   });
 });
 
+test("parseAdminQuizTaskInput keeps an explicit name from imports", () => {
+  const input = parseAdminQuizTaskInput({
+    name: " Додавання ",
+    taskText: "10+10=",
+    themeId: "2",
+    answer1: "10",
+    answer2: "20",
+    answer3: "30",
+    answer4: "0",
+    rightAnswerN: "2",
+    difficulty: "3",
+  } as Record<string, unknown>);
+
+  assert.equal(input.name, "Додавання");
+});
+
 test("parseAdminQuizTaskInput accepts difficulty above 3", () => {
   const input = parseAdminQuizTaskInput({
-    name: "A",
     taskText: "B",
     themeId: 1,
     answer1: "1",
@@ -46,6 +65,12 @@ test("parseAdminQuizTaskInput accepts difficulty above 3", () => {
   });
 
   assert.equal(input.difficulty, 10);
+  assert.equal(input.name, "B");
+});
+
+test("deriveTaskName strips math dollars and truncates", () => {
+  assert.equal(deriveTaskName("$a+b$ = ?"), "a+b = ?");
+  assert.equal(deriveTaskName("x".repeat(120)).length, 100);
 });
 
 test("parseThemeId and parseTaskId require positive ints", () => {

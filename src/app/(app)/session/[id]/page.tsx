@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { TopicTrainer } from "@/components/testing/TopicTrainer";
 import { NmtTrainer } from "@/components/testing/NmtTrainer";
 import { SessionExpiredNotice } from "@/components/testing/SessionExpiredNotice";
+import { SessionInsufficientTasksNotice } from "@/components/testing/SessionInsufficientTasksNotice";
 import { SessionScheduledNotice } from "@/components/testing/SessionScheduledNotice";
 import { createPageMetadata } from "@/constants/seo";
 import {
@@ -69,7 +70,12 @@ async function loadSession(
 async function activatePlannedSession(
   sessionId: number,
   userId: number,
-): Promise<"expired" | { notYet: true; availableAt: number } | void> {
+): Promise<
+  | "expired"
+  | "insufficient_tasks"
+  | { notYet: true; availableAt: number }
+  | void
+> {
   try {
     await startPlannedSession({ sessionId, userId });
   } catch (error) {
@@ -84,7 +90,7 @@ async function activatePlannedSession(
         return { notYet: true, availableAt: error.availableAt };
       }
       if (error.code === "insufficient_tasks") {
-        throw error;
+        return "insufficient_tasks";
       }
     }
     throw error;
@@ -123,6 +129,9 @@ export default async function SessionPage({
     const activation = await activatePlannedSession(sessionId, userId);
     if (activation === "expired") {
       return <SessionExpiredNotice />;
+    }
+    if (activation === "insufficient_tasks") {
+      return <SessionInsufficientTasksNotice />;
     }
     if (activation && typeof activation === "object" && activation.notYet) {
       return <SessionScheduledNotice availableAt={activation.availableAt} />;

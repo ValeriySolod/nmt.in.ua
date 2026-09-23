@@ -50,7 +50,6 @@ export type LoadQuizTaskActionState =
 
 function readFormFields(formData: FormData): Record<string, unknown> {
   return {
-    name: formData.get("name"),
     taskText: formData.get("taskText"),
     themeId: formData.get("themeId"),
     answer1: formData.get("answer1"),

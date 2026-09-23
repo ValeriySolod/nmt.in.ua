@@ -17,6 +17,7 @@ function makeSession(
   status = SESSION_STATUS_PLANNED,
   expireTime = 9_999_999_999,
   availableAt: number | null = null,
+  difficulty: number | null = 1,
 ) {
   return {
     id: 12,
@@ -25,6 +26,7 @@ function makeSession(
     session_status: status,
     expire_time: expireTime,
     available_at: availableAt,
+    difficulty,
   };
 }
 
@@ -34,10 +36,12 @@ function makeConnection(options: {
   tasks?: Array<{ id: number }>;
 }) {
   const executeCalls: Array<{ sql: string; params: unknown[] }> = [];
+  const queryCalls: Array<{ sql: string; params: unknown[] }> = [];
 
   const connection: SqlConnection = {
     beginTransaction: async () => {},
-    query: async (sql) => {
+    query: async (sql, params: unknown[] = []) => {
+      queryCalls.push({ sql, params });
       if (sql.includes("FROM task_sessions")) {
         return (options.session ? [options.session] : []) as never[];
       }
@@ -64,7 +68,7 @@ function makeConnection(options: {
     release: () => {},
   };
 
-  return { connection, executeCalls };
+  return { connection, executeCalls, queryCalls };
 }
 
 test("validateStartPlannedSessionInput rejects invalid payload", () => {
@@ -77,7 +81,7 @@ test("validateStartPlannedSessionInput rejects invalid payload", () => {
 });
 
 test("startPlannedSession inserts mappings and activates planned session", async () => {
-  const { connection, executeCalls } = makeConnection({
+  const { connection, executeCalls, queryCalls } = makeConnection({
     session: makeSession(),
     tasks: [{ id: 10 }, { id: 11 }],
   });
@@ -91,6 +95,21 @@ test("startPlannedSession inserts mappings and activates planned session", async
   assert.equal(result.themeId, 4);
   assert.deepEqual([...result.taskIds].sort((a, b) => a - b), [10, 11]);
 
+  const sessionSelect = queryCalls.find((call) =>
+    call.sql.includes("FROM task_sessions"),
+  );
+  assert.ok(sessionSelect);
+  assert.match(
+    sessionSelect!.sql,
+    /ma\.available_at\s*,\s*ma\.difficulty/,
+    "SELECT must separate available_at and difficulty with a comma",
+  );
+
+  const taskSelect = queryCalls.find((call) =>
+    call.sql.includes("FROM quiz_tasks"),
+  );
+  assert.deepEqual(taskSelect?.params, [4, 1]);
+
   const mappingInsert = executeCalls.find((call) =>
     call.sql.includes("INSERT INTO tasks2session"),
   );
@@ -100,6 +119,25 @@ test("startPlannedSession inserts mappings and activates planned session", async
     call.sql.includes("UPDATE task_sessions"),
   );
   assert.deepEqual(update?.params, [2, SESSION_STATUS_CREATED, 12]);
+});
+
+test("startPlannedSession without mentor difficulty picks any theme tasks", async () => {
+  const { connection, queryCalls } = makeConnection({
+    session: makeSession(SESSION_STATUS_PLANNED, 9_999_999_999, null, null),
+    tasks: [{ id: 10 }, { id: 11 }],
+  });
+
+  await startPlannedSession(
+    { userId: 1, sessionId: 12 },
+    { getConnection: async () => connection, ensureSchema: async () => {} },
+  );
+
+  const taskSelect = queryCalls.find((call) =>
+    call.sql.includes("FROM quiz_tasks"),
+  );
+  assert.ok(taskSelect);
+  assert.equal(taskSelect!.sql.includes("difficulty"), false);
+  assert.deepEqual(taskSelect!.params, [4]);
 });
 
 test("startPlannedSession is idempotent when mappings already exist", async () => {

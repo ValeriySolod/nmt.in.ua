@@ -21,7 +21,6 @@ import css from "./AdminTaskForm.module.css";
 const SAVE_INITIAL: SaveQuizTaskActionState = { status: "idle" };
 
 type FormValues = {
-  name: string;
   taskText: string;
   themeId: string;
   answer1: string;
@@ -39,7 +38,6 @@ function formatThemeLabel(index: number, theme: AdminThemeOption): string {
 
 function valuesFromTask(task: AdminQuizTask): FormValues {
   return {
-    name: task.name,
     taskText: toAdminInput(task.taskText),
     themeId: String(task.themeId),
     answer1: toAdminInput(task.answer1),
@@ -54,7 +52,6 @@ function valuesFromTask(task: AdminQuizTask): FormValues {
 
 function emptyValues(themeId: number): FormValues {
   return {
-    name: "",
     taskText: "",
     themeId: String(themeId),
     answer1: "",
@@ -87,12 +84,12 @@ export function AdminTaskForm({
   const t = useTranslations("AdminContent");
   const router = useRouter();
   const [form, setForm] = useState<FormValues>(() =>
-    task ? valuesFromTask(task) : emptyValues(themeId)
+    task ? valuesFromTask(task) : emptyValues(themeId),
   );
 
   const [saveState, saveAction, savePending] = useActionState(
     saveQuizTaskAction,
-    SAVE_INITIAL
+    SAVE_INITIAL,
   );
 
   useEffect(() => {
@@ -112,7 +109,7 @@ export function AdminTaskForm({
       : backHref;
 
   return (
-    <div className={css.layout}>
+    <div className={css.shell}>
       <div className={css.navRow}>
         <Link href={listHref} className={css.backLink}>
           ← {t("back")}
@@ -124,60 +121,31 @@ export function AdminTaskForm({
         ) : null}
       </div>
 
-      <section className={css.panel} aria-labelledby="admin-form-title">
-        <h2 id="admin-form-title" className={css.panelTitle}>
-          {mode === "edit" ? t("editTitle") : t("createTitle")}
-        </h2>
-        <p className={css.panelLead}>
-          {mode === "edit" ? t("editLead") : t("createLead")}
-        </p>
-
+      <section className={css.panel} aria-label={t("formAria")}>
         <form action={saveAction} className={css.form}>
           {mode === "edit" && task ? (
             <input type="hidden" name="taskId" value={task.id} />
           ) : null}
 
-          <div
-            className={css.formTable}
-            role="group"
-            aria-label={t("formAria")}
-          >
-            <div className={css.formHead} aria-hidden>
-              <span>{t("colElement")}</span>
-              <span>{t("colValue")}</span>
-            </div>
+          <label className={css.field}>
+            <span className={css.label}>{t("taskText")}</span>
+            <textarea
+              className={css.taskArea}
+              name="taskText"
+              value={form.taskText}
+              onChange={(e) => setForm({ ...form, taskText: e.target.value })}
+              required
+              rows={6}
+              disabled={savePending}
+            />
+          </label>
 
-            <label className={css.formRow}>
-              <span className={css.formLabel}>{t("name")}</span>
-              <input
-                className={css.input}
-                name="name"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                required
-                maxLength={100}
-                disabled={savePending}
-              />
-            </label>
-
-            <label className={css.formRow}>
-              <span className={css.formLabel}>{t("taskText")}</span>
-              <textarea
-                className={clsx(css.input, css.textarea)}
-                name="taskText"
-                value={form.taskText}
-                onChange={(e) => setForm({ ...form, taskText: e.target.value })}
-                required
-                rows={4}
-                disabled={savePending}
-              />
-            </label>
-
+          <div className={css.answers}>
             {([1, 2, 3, 4] as const).map((n) => {
               const key = `answer${n}` as const;
               return (
-                <label key={key} className={css.formRow}>
-                  <span className={css.formLabel}>{t("answer", { n })}</span>
+                <label key={key} className={css.field}>
+                  <span className={css.label}>{t("answer", { n })}</span>
                   <input
                     className={css.input}
                     name={key}
@@ -192,23 +160,25 @@ export function AdminTaskForm({
                 </label>
               );
             })}
+          </div>
 
-            <label className={css.formRow}>
-              <span className={css.formLabel}>{t("rightAnswer")}</span>
+          <div className={css.meta}>
+            <label className={css.field}>
+              <span className={css.label}>{t("rightAnswer")}</span>
               <Select
                 name="rightAnswerN"
                 value={form.rightAnswerN}
                 disabled={savePending}
                 options={[1, 2, 3, 4].map((n) => ({
                   value: String(n),
-                  label: `${n}.`,
+                  label: t("answer", { n }),
                 }))}
                 onChange={(next) => setForm({ ...form, rightAnswerN: next })}
               />
             </label>
 
-            <label className={css.formRow}>
-              <span className={css.formLabel}>{t("difficulty")}</span>
+            <label className={css.field}>
+              <span className={css.label}>{t("difficulty")}</span>
               <input
                 className={clsx(css.input, css.diffInput)}
                 name="difficulty"
@@ -224,8 +194,8 @@ export function AdminTaskForm({
               />
             </label>
 
-            <label className={css.formRow}>
-              <span className={css.formLabel}>{t("theme")}</span>
+            <label className={css.field}>
+              <span className={css.label}>{t("theme")}</span>
               <Select
                 name="themeId"
                 value={form.themeId}
@@ -238,19 +208,19 @@ export function AdminTaskForm({
                 onChange={(next) => setForm({ ...form, themeId: next })}
               />
             </label>
-
-            <label className={css.formRow}>
-              <span className={css.formLabel}>{t("comments")}</span>
-              <textarea
-                className={clsx(css.input, css.textarea)}
-                name="comments"
-                value={form.comments}
-                onChange={(e) => setForm({ ...form, comments: e.target.value })}
-                rows={3}
-                disabled={savePending}
-              />
-            </label>
           </div>
+
+          <label className={css.field}>
+            <span className={css.label}>{t("comments")}</span>
+            <textarea
+              className={css.hintArea}
+              name="comments"
+              value={form.comments}
+              onChange={(e) => setForm({ ...form, comments: e.target.value })}
+              rows={3}
+              disabled={savePending}
+            />
+          </label>
 
           <div className={css.formActions}>
             <button

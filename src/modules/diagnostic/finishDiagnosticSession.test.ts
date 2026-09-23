@@ -213,13 +213,12 @@ function makeAdaptiveConnection(options: {
           status: link.status,
         })) as unknown as T[];
       }
-      if (sql.includes("FROM themes t")) {
-        return options.plannedThemeIds.map((id) => ({ theme_id: id })) as unknown as T[];
-      }
-      if (sql.includes("FROM quiz_tasks WHERE theme_id")) {
-        return options.bank
-          .filter((task) => task.themeId === params[0])
-          .map((task) => ({ id: task.id, difficulty: task.difficulty })) as unknown as T[];
+      if (sql.includes("FROM quiz_tasks")) {
+        return options.bank.map((task) => ({
+          id: task.id,
+          themeId: task.themeId,
+          difficulty: task.difficulty,
+        })) as unknown as T[];
       }
       return [] as T[];
     },
@@ -350,9 +349,8 @@ test("adaptive: an expired attempt is still rejected as expired", async () => {
 });
 
 test("legacy fixed-set sessions (tasks_number == linked count) finish exactly as before", async () => {
-  // The legacy start linked its whole task set and stored that count, so the
-    // finish rule never consults the adaptive plan for it — even below the
-    // current target.
+  // Linked count already matches tasks_number, so finish never asks the
+  // adaptive bank whether more tasks could still be supplied.
   for (const count of [6, 30]) {
     const mock = makeAdaptiveConnection({
       session: adaptiveSession({ tasks_number: count }),
@@ -367,8 +365,8 @@ test("legacy fixed-set sessions (tasks_number == linked count) finish exactly as
     );
     assert.equal(summary.tasksNumber, count);
     assert.ok(
-      !mock.calls.some((c) => c.sql.includes("FROM themes t")),
-      "no adaptive-plan lookup for a legacy session",
+      !mock.calls.some((c) => c.sql.includes("FROM quiz_tasks")),
+      "no bank lookup for a legacy fixed-set session",
     );
   }
 });

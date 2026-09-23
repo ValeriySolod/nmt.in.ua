@@ -21,8 +21,7 @@ type DiagnosticIntroProps = {
   contentAvailable: boolean;
 };
 
-/** Step 1 of the public diagnostic flow: start the attempt. Self-assessment
- * happens per topic afterwards (`DiagnosticTopicIntro`). */
+/** Step 1 of the public diagnostic flow: start the adaptive intro test. */
 export function DiagnosticIntro({ contentAvailable }: DiagnosticIntroProps) {
   const t = useTranslations("Diagnostic");
   const router = useRouter();

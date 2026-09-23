@@ -502,6 +502,12 @@
     "body": "Every session has a fixed 24-hour lifetime from creation — it never extends while you work. Results you already have are saved and stay visible on Results and Sessions — start a new attempt if you'd like to continue.",
     "backToTopics": "Back to topics"
   },
+  "SessionInsufficientTasksNotice": {
+    "title": "No tasks for this test",
+    "lead": "The question bank has no tasks for the assigned topic or difficulty.",
+    "body": "Ask your teacher — they may need to change the difficulty or topic. Results from other sessions stay on Results and Sessions.",
+    "backToSessions": "Back to sessions"
+  },
   "TopicTrainerSummary": {
     "ultimateTitle": "Timed test summary",
     "title": "Test summary",
@@ -565,6 +571,7 @@
     "loadError": "Could not load the task.",
     "checking": "Checking…",
     "checkError": "Could not check the answer.",
+    "catalogEmpty": "Interactive formats are not seeded yet (migrations 028–031). Ask an administrator.",
     "check": "Check",
     "correct": "Correct",
     "incorrect": "Incorrect",
@@ -744,7 +751,7 @@
   "Diagnostic": {
     "kicker": "Diagnostic test",
     "title": "Find out your real level in math",
-    "lead": "10 tasks across several topics. Before each topic, briefly rate how well you know it — task difficulty adapts to your answers.",
+    "lead": "Up to 10 tasks from different topics. Difficulty adapts to your answers: correct → harder, wrong → easier. Each next task comes from a different topic than the previous one.",
     "start": "Start the diagnostic test",
     "loading": "Preparing the test…",
     "redirecting": "Opening the test…",
@@ -757,52 +764,10 @@
     "info": {
       "title": "What the diagnostic test gives you",
       "items": {
-        "tasks": "10 tasks across several topics",
+        "tasks": "up to 10 adaptive tasks from different topics",
         "duration": "about 5–10 minutes",
         "insight": "shows your strengths and weaknesses",
         "recommendations": "personal recommendations once you finish"
-      }
-    },
-    "topic": {
-      "progress": "Topic {current} of {total}",
-      "conceptsTitle": "What this topic covers",
-      "question": "How well do you know this topic?",
-      "questionHint": "Look at the example and choose the option that best describes your knowledge.",
-      "exampleLabel": "Example task",
-      "knowledgeChoicesAria": "Self-assessment of the topic “{theme}”",
-      "choices": {
-        "know": "I know it",
-        "partial": "I partly know it",
-        "unknown": "I don't know it"
-      },
-      "next": "Next topic",
-      "start": "Start the test",
-      "loading": "Saving self-assessment…",
-      "howItWorks": {
-        "title": "How this test works",
-        "items": {
-          "adaptive": {
-            "title": "10 adaptive tasks",
-            "text": "Difficulty adjusts to your answers."
-          },
-          "accuracy": {
-            "title": "A more accurate result",
-            "text": "The test helps determine your actual knowledge level in this topic."
-          },
-          "difficulty": {
-            "title": "The right level",
-            "text": "You get tasks matched to your level, from foundational to more advanced."
-          },
-          "next": {
-            "title": "Other topics come next",
-            "text": "After completing this topic, you move on to the next one."
-          }
-        }
-      },
-      "errors": {
-        "invalidSelfScore": "Choose one of the three options.",
-        "sessionExpired": "This session's 24-hour lifetime has expired.",
-        "generic": "Could not start this topic. Please try again."
       }
     }
   },
@@ -1029,7 +994,7 @@
     "kicker": "Sign up",
     "title": "Create a student account",
     "lead": "Register to take tests, save results, and get recommendations.",
-    "leadFromDiagnostic": "Register to save your diagnostic test result and self-assessment to your account.",
+    "leadFromDiagnostic": "Register to save your diagnostic test result to your account.",
     "displayName": "Display name",
     "login": "Login",
     "loginHint": "Latin letters, digits, dot, _ or - (at least 3 characters).",
@@ -1214,6 +1179,10 @@
     "title": "Site feedback",
     "lead": "Visible to admins only. Students cannot see other people’s reviews.",
     "empty": "No feedback yet.",
+    "pagerAria": "Feedback list pages",
+    "prevPage": "Previous",
+    "nextPage": "Next",
+    "pageStatus": "Page {page} of {totalPages} · {total} reviews",
     "date": "Date",
     "score": "Rating",
     "user": "User",
@@ -1403,7 +1372,11 @@
     "listLead": "Edit existing items or add new tests to the selected topic.",
     "create": "New task",
     "empty": "This topic has no tasks yet.",
-    "colDescription": "Description",
+    "pagerAria": "Task list pages",
+    "prevPage": "Previous",
+    "nextPage": "Next",
+    "pageStatus": "Page {page} of {totalPages} · {total} tasks",
+    "colDescription": "Task",
     "colDifficulty": "Difficulty",
     "colEdit": "Edit",
     "colDelete": "Delete",
@@ -1411,17 +1384,14 @@
     "deleteAria": "Delete \"{name}\"",
     "deleteConfirm": "Delete task \"{name}\"?",
     "createTitle": "New task",
-    "createLead": "Fill in the fields and save — the task will appear in the topic bank.",
+    "createLead": "Enter the question, answer choices, and save — the task will appear in the topic bank.",
     "editTitle": "Edit task",
     "editLead": "Change the fields and press Save.",
     "formAria": "Task fields",
-    "colElement": "Element",
-    "colValue": "Value",
-    "name": "Name",
-    "taskText": "Question",
+    "taskText": "Question text",
     "answer": "Answer {n}",
-    "rightAnswer": "Correct answer number",
-    "difficulty": "Difficulty level",
+    "rightAnswer": "Correct answer",
+    "difficulty": "Difficulty",
     "theme": "Topic",
     "comments": "Hint / comment",
     "save": "Save",
@@ -1450,6 +1420,10 @@
     "listLead": "Demo accounts are protected. You cannot ban or delete yourself.",
     "empty": "No users yet.",
     "emptyFilter": "No accounts with this role.",
+    "pagerAria": "Profile list pages",
+    "prevPage": "Previous",
+    "nextPage": "Next",
+    "pageStatus": "Page {page} of {totalPages} · {total} accounts",
     "you": "you",
     "online": "online",
     "offline": "offline",
@@ -1636,6 +1610,7 @@
     "errors": {
       "invalid_input": "Check the topic, students, and date.",
       "theme_not_found": "Topic not found.",
+      "insufficient_tasks": "This topic has no tasks at the selected difficulty.",
       "no_students": "Select at least one student.",
       "students_not_linked": "Student must be on your roster.",
       "not_found": "Assignment not found.",

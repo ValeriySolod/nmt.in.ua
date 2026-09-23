@@ -6,7 +6,7 @@ import css from "./DiagnosticInfoPanel.module.css";
 const ITEM_KEYS = ["tasks", "duration", "insight", "recommendations"] as const;
 
 /**
- * Compact "what you get" list under the self-score card on `/diagnostic`.
+ * Compact "what you get" list under the start form on `/diagnostic`.
  * Purely informational — no link or button here, so it never competes with
  * the panel's own "start" CTA above it.
  */

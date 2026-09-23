@@ -1,10 +1,16 @@
-export type { AdminProfile, AdminProfilesErrorCode } from "./types";
-export { AdminProfilesError } from "./types";
+export type {
+  AdminProfile,
+  AdminProfilesPage,
+  AdminProfilesRoleCounts,
+  AdminProfilesErrorCode,
+} from "./types";
+export { AdminProfilesError, ADMIN_PROFILES_PAGE_SIZE } from "./types";
 export {
   getAdminProfiles,
   setProfileBanned,
   deleteProfile,
 } from "./store";
+export type { GetAdminProfilesOptions } from "./store";
 export {
   setProfileBannedAction,
   deleteProfileAction,

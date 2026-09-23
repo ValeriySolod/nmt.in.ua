@@ -14,6 +14,24 @@ export type AdminProfile = {
   createdAt: string;
 };
 
+export const ADMIN_PROFILES_PAGE_SIZE = 10;
+
+export type AdminProfilesRoleCounts = {
+  all: number;
+  student: number;
+  teacher: number;
+  admin: number;
+};
+
+export type AdminProfilesPage = {
+  items: AdminProfile[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  roleCounts: AdminProfilesRoleCounts;
+};
+
 export type AdminProfilesErrorCode =
   | "invalid_input"
   | "not_found"

@@ -279,7 +279,7 @@ Cookie `nmt_guest` **ніколи** не перевіряється в `src/prox
 | Симулятор НМТ | `/simulator` | варіант (офіційний), 60 хв | `session_type = 4`, банк `nmt_quiz_tasks` |
 | Авто-сесія | з’являється на `/sessions` | як тест | Створює recommend після фінішу |
 | Ментор-сесія | викладач на `/assign` | як тест | `session_type = 3`, Старт / ×; групове призначення з дедлайном |
-| Діагностика (гість/учень) | `/diagnostic` (публічний) | exactly 10 answered tasks across 5 randomly selected topics (themes with ≥3 tasks; 2 per topic) | `session_type = 5`, `theme_id = NULL`, one session per attempt; before each topic — a 1–10 self-assessment for that topic; adaptive difficulty (see `src/modules/diagnostic/diagnosticProgress.ts`) |
+| Діагностика (гість/учень) | `/diagnostic` (публічний) | до 10 завдань; раніше при 3 помилках підряд на складності 1 або коли банк не дає іншу тему | `session_type = 5`, `theme_id = NULL`; без самооцінки; складність з відповідей (старт 1, +1/−1 без стелі банку); кожне завдання — інша тема, ніж попереднє (`diagnosticProgress.ts`, `adaptiveDifficulty.ts`) |
 
 **Практика vs Діагностика (11.09.2026).** `src/modules/testing/sessionMode.ts` дає
 `resolveSessionMode(TrainerMode): "diagnostic" | "practice" | "exam"` — єдине місце,
@@ -427,7 +427,8 @@ Ultimate/НМТ/діагностика лишились без змін. Зар�
 - Імпорт і admin API без ключа мають лишатися 401.
 - Не віддавай `right_answer_n` на клієнт до перевірки в **тесті / сесії**. Задачник `/problems` — генератор аркуша: ключ можна тримати в HTML і ховати CSS-ом (за замовчуванням сховано).
 - Не бери `userId` з форми. Тільки сесія.
-- На проді demo-login вимкнений. Не вмикай `ALLOW_DEMO_LOGIN=1` на публічному сайті.
+- На проді demo-login вимкнений (`isDemoLoginEnabled` / `ALLOW_DEMO_LOGIN`). Не вмикай `ALLOW_DEMO_LOGIN=1` на публічному сайті. **І форма `/login` з `demo-*` / `demo123` теж блокується**, коли demo вимкнено — не лише one-click.
+- Stage 2 (вкладка «Інтерактивні формати»): потрібні міграції `028`–`031` + seed. Без каталогу вкладка **ховається** (`countStage2CatalogTasks`). Локально: `mysql … < scripts/sql/028_stage2_task_formats.sql` і далі 029–031.
 - Статика з `public/` (webp, шрифти) не повинна потрапляти під auth-guard — інакше картинки лендінгу редіректнуть на `/login`.
 - **Сесія і `task_sessions` мають фіксований, не ковзний термін дії 24 години (11.09.2026).** `nmt_session` cookie: `setSessionCookie` (свіжий вхід/реєстрація/demo-login) завжди дає новий `exp`; `renewSessionCookie` (оновлення профіля — legacy-upgrade, аватар) **зберігає старий `exp`**, лише оновлює `maxAge` на залишок і ніколи не бере `exp` з клієнта. Не повертай `setSessionCookie` у профільні дії — це знову зробить сесію «вічною». `task_sessions.expire_time` аналогічно: ставиться раз при створенні (`computeSessionDeadline`), активація/старт планованої сесії його не чіпає. Деталі й міграція — `src/modules/testing/sessionExpiry.ts`, `scripts/sql/016_task_sessions_expire_time.sql`.
 
@@ -441,7 +442,7 @@ Ultimate/НМТ/діагностика лишились без змін. Зар�
 | 6.5 Банк 30–40 / тему | `content-import`, `docs/content-review/` | Контент | Спочатку розширити `varchar(50)` у відповідях |
 | 6.8 Варіанти НМТ | `startNmtSimulator`, `/simulator`, `nmt_variants*` | Середня | ✅ 09.09 |
 | 6.6 Задачник | `src/app/problems`, таблиця `problems` | Середня | ✅ 08.09 (UI з JSON-каталогу, без MySQL на read) |
-| 6.3–6.4 Діагностика | `/diagnostic` | Велика | ✅; 23.09: adaptive, 10 tasks across 5 random eligible topics, per-topic self-assessment |
+| 6.3–6.4 Діагностика | `/diagnostic` | Велика | ✅; 23.09: adaptive без самооцінки; до 10 задач; +1/−1 складність без стелі; 3 fail@1; тема ≠ попередня |
 | 6.2 Відгук | `src/modules/feedback` | Мала | ✅ |
 | Консультації | `/consultations` | Мала | ✅ 17.09: карусель публічних викладачів + рейтинг + персональна заявка; черга викладачів без змін |
 | Мої учні | `src/modules/teacher-students`, `/students`, `/join` | Середня | ✅ 21.09: групи, інвайти 14 днів, статистика учня, «Приєднати» з консультації. 22.09: викладач створює обліковий запис учня (8.3). SQL `034` |

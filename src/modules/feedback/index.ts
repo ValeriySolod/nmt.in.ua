@@ -2,9 +2,12 @@ export type {
   FeedbackScore,
   FeedbackSource,
   SiteFeedback,
+  SiteFeedbackPage,
 } from "./types";
 export {
   FEEDBACK_COMMENT_BELOW_SCORE,
+  FEEDBACK_PAGE_SIZE,
+  FEEDBACK_LIST_LIMIT,
   FEEDBACK_SCORE_MAX,
   FEEDBACK_SCORE_MIN,
   FEEDBACK_SOURCES,

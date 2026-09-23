@@ -1,8 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireRole, requireUserId } from "@/modules/auth/getCurrentUser";
-import { createMentorSession } from "./createMentorSession";
+import { requireUserId } from "@/modules/auth/getCurrentUser";
 import {
   cancelLearningSession,
   CancelLearningSessionError,
@@ -14,26 +13,14 @@ export type CancelLearningSessionErrorCode =
   | "invalidInput"
   | "generic";
 
-export type AssignMentorSessionErrorCode = "generic";
-
 export type CancelLearningSessionActionState =
   | { status: "idle" }
   | { status: "error"; code: CancelLearningSessionErrorCode }
   | { status: "success" };
 
-export type AssignMentorSessionActionState =
-  | { status: "idle" }
-  | { status: "error"; code: AssignMentorSessionErrorCode }
-  | { status: "success"; sessionId: number; created: boolean };
-
 type CancelDeps = {
   cancelLearningSession: typeof cancelLearningSession;
   requireUserId: typeof requireUserId;
-};
-
-type AssignDeps = {
-  createMentorSession: typeof createMentorSession;
-  requireRole: typeof requireRole;
 };
 
 export async function cancelLearningSessionAction(
@@ -70,32 +57,5 @@ export async function cancelLearningSessionAction(
 
     console.error("cancelLearningSessionAction: unexpected error", error);
     return { status: "error", code: "generic" };
-  }
-}
-
-export async function assignMentorSessionAction(
-  _prevState: AssignMentorSessionActionState,
-  formData: FormData,
-  deps: AssignDeps = { createMentorSession, requireRole },
-): Promise<AssignMentorSessionActionState> {
-  await deps.requireRole(["teacher", "admin"]);
-
-  const userId = Number(formData.get("userId"));
-  const themeId = Number(formData.get("themeId"));
-
-  try {
-    const result = await deps.createMentorSession({ userId, themeId });
-    revalidatePath("/sessions");
-    return {
-      status: "success",
-      sessionId: result.sessionId,
-      created: result.created,
-    };
-  } catch (error) {
-    console.error("assignMentorSessionAction: unexpected error", error);
-    return {
-      status: "error",
-      code: "generic",
-    };
   }
 }

@@ -137,6 +137,17 @@
   }
 }
 
+/* Admin tasks: body stays at --container-max (same as header). When the
+   sidebar closes, content keeps the open-sidebar width and centers. */
+@media (min-width: 768px) {
+  .stableContent.sidebarClosed .content {
+    flex: 0 0 auto;
+    width: calc(100% - var(--sidebar-w) - var(--space-lg));
+    max-width: calc(100% - var(--sidebar-w) - var(--space-lg));
+    margin-inline: auto;
+  }
+}
+
 @media (min-width: 1240px) {
   .materialsBody {
     width: 100%;
@@ -149,6 +160,11 @@
 
   .sidebarSlotOpen {
     margin-inline-end: var(--space-xl);
+  }
+
+  .stableContent.sidebarClosed .content {
+    width: calc(100% - var(--sidebar-w) - var(--space-xl));
+    max-width: calc(100% - var(--sidebar-w) - var(--space-xl));
   }
 }
 

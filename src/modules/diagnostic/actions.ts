@@ -25,10 +25,6 @@ import {
   StartDiagnosticTestError,
 } from "./startDiagnosticTest";
 import {
-  startDiagnosticTopic,
-  StartDiagnosticTopicError,
-} from "./startDiagnosticTopic";
-import {
   advanceDiagnosticSession,
   AdvanceDiagnosticSessionError,
 } from "./advanceDiagnosticSession";
@@ -37,7 +33,6 @@ import {
   toDiagnosticTopicInsight,
   type DiagnosticTopicInsight,
 } from "./diagnosticThemeBreakdown";
-import { diagnosticKnowledgeLevelToScore } from "./diagnosticKnowledgeLevel";
 
 export type StartDiagnosticActionErrorCode =
   | "insufficientTasks"
@@ -52,12 +47,8 @@ export type StartDiagnosticActionState =
 const INITIAL_STATE: StartDiagnosticActionState = { status: "idle" };
 
 /**
- * One round trip: resolves the caller's identity (authenticated user, or a
- * signed guest cookie minted here if absent), then creates the diagnostic
- * session. Combining these in one action avoids ever minting the guest
- * cookie mid-flow under one identity and creating the session under
- * another. There is no overall self-assessment any more — each topic asks
- * for its own before its tasks (`startDiagnosticTopicAction`).
+ * Resolves identity (user or minted guest cookie) and starts the adaptive
+ * intro test. No self-assessment — difficulty adapts from answers only.
  */
 export async function startDiagnosticAction(
   _prevState: StartDiagnosticActionState = INITIAL_STATE,
@@ -87,73 +78,10 @@ export async function startDiagnosticAction(
   }
 }
 
-export type StartDiagnosticTopicActionErrorCode =
-  | "invalidSelfScore"
-  | "stale"
-  | "sessionExpired"
-  | "generic";
-
-export type StartDiagnosticTopicActionState =
-  | { status: "idle" }
-  | { status: "error"; code: StartDiagnosticTopicActionErrorCode }
-  | { status: "success" };
-
-function readPositiveInt(formData: FormData, name: string): number | null {
-  const value = Number(formData.get(name));
-  return Number.isInteger(value) && value > 0 ? value : null;
-}
-
-/**
- * Records the student's three-level knowledge choice for the topic shown on
- * screen. The choice maps to the existing internal difficulty bands before
- * `startDiagnosticTopic`; ownership always comes from the server-resolved
- * identity, never from the form.
- */
-export async function startDiagnosticTopicAction(
-  _prevState: StartDiagnosticTopicActionState,
-  formData: FormData,
-): Promise<StartDiagnosticTopicActionState> {
-  const selfScore = diagnosticKnowledgeLevelToScore(
-    formData.get("knowledgeLevel"),
-  );
-  if (selfScore === null) {
-    return { status: "error", code: "invalidSelfScore" };
-  }
-  const sessionId = readPositiveInt(formData, "sessionId");
-  const themeId = readPositiveInt(formData, "themeId");
-  if (sessionId === null || themeId === null) {
-    return { status: "error", code: "generic" };
-  }
-
-  try {
-    const owner = await resolveOwnerForWrite();
-    await startDiagnosticTopic({ owner, sessionId, themeId, selfScore });
-    return { status: "success" };
-  } catch (error) {
-    if (error instanceof StartDiagnosticTopicError) {
-      switch (error.code) {
-        case "invalid_input":
-          return { status: "error", code: "invalidSelfScore" };
-        case "step_mismatch":
-        case "session_completed":
-          return { status: "error", code: "stale" };
-        case "session_expired":
-          return { status: "error", code: "sessionExpired" };
-        default:
-          return { status: "error", code: "generic" };
-      }
-    }
-    console.error("startDiagnosticTopicAction: unexpected error", error);
-    return { status: "error", code: "generic" };
-  }
-}
-
 export type AdvanceDiagnosticActionState =
-  | { status: "success"; next: "task" | "topic" | "complete" }
+  | { status: "success"; next: "task" | "complete" }
   | { status: "error"; code: "notFound" | "sessionExpired" | "generic" };
 
-/** Links the next adaptive task after the latest one was answered, or
- * reports that a topic screen / finishing comes next. */
 export async function advanceDiagnosticAction(input: {
   sessionId: number;
 }): Promise<AdvanceDiagnosticActionState> {
@@ -197,8 +125,6 @@ export async function checkDiagnosticAnswerAction(
       mappingId: input.mappingId,
       answerNumber: input.answerNumber,
     });
-    // Diagnostic is always single-attempt (no retry ladder — see AGENTS.md),
-    // so every check is trivially the row's first (and only) attempt.
     return { status: "success", correct: result.correct, firstAttempt: true };
   } catch (error) {
     if (error instanceof CheckDiagnosticAnswerError) {
@@ -238,11 +164,6 @@ export async function finishDiagnosticSessionAction(
       // No-op outside a Next.js request context (unit tests).
     }
 
-    // `insight` (went-well/needs-attention) is a Practice-only summary
-    // feature — `DiagnosticResultSummary` never reads it. Filled with a
-    // neutral, data-only shape purely to satisfy the shared
-    // `FinishTrainerSessionActionState` type; diagnostic keeps its own
-    // dedicated summary/breakdown (`toDiagnosticTopicInsight`) unchanged.
     return {
       status: "success",
       summary,
@@ -276,12 +197,6 @@ export async function finishDiagnosticSessionAction(
   }
 }
 
-/**
- * Fetched as a follow-up call after a successful finish — same shape as how
- * `getSessionMistakeReviewAction` enriches the Ultimate summary — rather than
- * folded into `FinishTrainerSessionActionState`, so the shared testing/type
- * surface used by standard and Ultimate sessions stays untouched.
- */
 export async function getDiagnosticThemeBreakdownAction(
   sessionId: number,
 ): Promise<DiagnosticTopicInsight> {

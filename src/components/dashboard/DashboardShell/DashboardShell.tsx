@@ -87,6 +87,10 @@ export function DashboardShell({
 
   const isMaterialsPage =
     pathname === "/materials" || pathname.startsWith("/materials/");
+  const isTasksPage =
+    pathname === "/tasks" ||
+    pathname.startsWith("/tasks/") ||
+    (user.role === "admin" && pathname === "/");
 
   const sidebarOpen = useSyncExternalStore(
     subscribeSidebar,
@@ -188,7 +192,14 @@ export function DashboardShell({
         ) : null}
       </div>
 
-      <div className={clsx(css.body, isMaterialsPage && css.materialsBody)}>
+      <div
+        className={clsx(
+          css.body,
+          isMaterialsPage && css.materialsBody,
+          isTasksPage && css.stableContent,
+          sidebarOpen ? css.sidebarOpen : css.sidebarClosed,
+        )}
+      >
         <div
           className={clsx(
             css.sidebarSlot,

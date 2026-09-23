@@ -44,6 +44,13 @@ const SQL_CATALOG = `
   UNION ALL SELECT 'matching', id FROM matching_tasks WHERE id BETWEEN 1 AND 4
   UNION ALL SELECT 'blank', id FROM blank_tasks WHERE id BETWEEN 1 AND 4
 `;
+
+const SQL_CATALOG_COUNT = `
+  SELECT COUNT(*) AS total FROM (
+    ${SQL_CATALOG}
+  ) catalog
+`;
+
 async function defaultConnection(): Promise<SqlConnection> {
   const { getConnection } = await import("@/lib/db/mysql");
   return getConnection();
@@ -53,6 +60,23 @@ function positive(value: number): boolean { return Number.isSafeInteger(value) &
 function validate(userId: number, roundId?: number): void {
   if (!positive(userId) || (roundId !== undefined && !positive(roundId))) {
     throw new RoundError("Invalid identifier.", "invalid_input");
+  }
+}
+
+/** How many Stage 2 seed tasks exist (0 if tables/migrations missing). */
+export async function countStage2CatalogTasks(
+  deps: RoundDeps = DEFAULT_DEPS,
+): Promise<number> {
+  const connection = await deps.getConnection();
+  try {
+    const rows = await connection.query<{ total: number | string }>(
+      SQL_CATALOG_COUNT,
+    );
+    return Number(rows[0]?.total ?? 0);
+  } catch {
+    return 0;
+  } finally {
+    connection.release();
   }
 }
 async function readRound(connection: SqlConnection, userId: number, roundId: number, lock = false): Promise<RoundRow> {

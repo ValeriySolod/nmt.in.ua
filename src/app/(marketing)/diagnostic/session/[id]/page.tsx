@@ -3,7 +3,6 @@ import { TopicTrainer } from "@/components/testing/TopicTrainer";
 import { SessionExpiredNotice } from "@/components/testing/SessionExpiredNotice";
 import { DiagnosticShell } from "@/components/diagnostic/DiagnosticShell";
 import { DiagnosticSessionRunner } from "@/components/diagnostic/DiagnosticSessionRunner";
-import { DiagnosticTopicIntro } from "@/components/diagnostic/DiagnosticTopicIntro";
 import { createPageMetadata } from "@/constants/seo";
 import {
   checkDiagnosticAnswerAction,
@@ -50,9 +49,6 @@ export default async function DiagnosticSessionPage({
     notFound();
   }
 
-  // Read-only: an authenticated student resolves to their own identity; a
-  // guest resolves to their existing signed nmt_guest cookie, if any. Never
-  // mints a new one here — a guest with no valid cookie has nothing to see.
   const owner = await resolveOwnerForRead();
   if (!owner) {
     notFound();
@@ -77,7 +73,6 @@ export default async function DiagnosticSessionPage({
     return renderInProgress(sessionId, owner, session);
   }
 
-  // Completed attempt: the result screen is rendered exactly as before.
   return (
     <DiagnosticShell mathDecor="geometry">
       <TopicTrainer
@@ -100,29 +95,16 @@ export default async function DiagnosticSessionPage({
   );
 }
 
-/**
- * Adaptive attempt still in progress: either the next topic's
- * self-assessment, or the tasks linked so far opened on the pending one.
- */
 async function renderInProgress(
   sessionId: number,
   owner: SessionOwner,
   session: Awaited<ReturnType<typeof getDiagnosticSessionTasks>>,
 ) {
-  const step = await getDiagnosticNextStep(sessionId, owner);
-
-  if (step.kind === "topicIntro") {
-    return (
-      <DiagnosticShell mathDecor="geometry">
-        <DiagnosticTopicIntro key={step.topic.themeId} sessionId={sessionId} topic={step.topic} />
-      </DiagnosticShell>
-    );
-  }
-
   if (session.tasks.length === 0) {
     notFound();
   }
 
+  const step = await getDiagnosticNextStep(sessionId, owner);
   const pendingIndex = session.tasks.findIndex(
     (task) => task.status === TASK_STATUS_UNANSWERED,
   );

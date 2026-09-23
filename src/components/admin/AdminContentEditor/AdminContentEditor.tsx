@@ -10,10 +10,12 @@ import {
   type DeleteQuizTaskActionState,
 } from "@/modules/admin-content/actions";
 import type {
-  AdminQuizTaskListItem,
+  AdminQuizTaskListPage,
   AdminThemeOption,
 } from "@/modules/admin-content/types";
+import { queryHref } from "@/lib/queryHref";
 import { Select } from "@/components/ui/Select";
+import { MathText } from "@/components/ui/MathText";
 import css from "./AdminContentEditor.module.css";
 
 const DELETE_INITIAL: DeleteQuizTaskActionState = { status: "idle" };
@@ -22,16 +24,23 @@ function formatThemeLabel(index: number, theme: AdminThemeOption): string {
   return `${index + 1}. ${theme.name}`;
 }
 
+function listHref(themeId: number | null, page: number): string {
+  return queryHref("/", {
+    theme: themeId != null ? String(themeId) : null,
+    page: page > 1 ? String(page) : null,
+  });
+}
+
 type AdminContentEditorProps = {
   themes: AdminThemeOption[];
   initialThemeId?: number;
-  initialTasks: AdminQuizTaskListItem[];
+  taskPage: AdminQuizTaskListPage;
 };
 
 export function AdminContentEditor({
   themes,
   initialThemeId,
-  initialTasks,
+  taskPage,
 }: AdminContentEditorProps) {
   const t = useTranslations("AdminContent");
   const router = useRouter();
@@ -56,12 +65,14 @@ export function AdminContentEditor({
   function onThemeChange(next: number) {
     setThemeId(next);
     startTransition(() => {
-      router.push(`/?theme=${next}`);
+      router.push(listHref(next, 1));
     });
   }
 
   const selectedTheme = themes.find((theme) => theme.id === themeId);
-  const tasks = initialTasks;
+  const tasks = taskPage.items;
+  const { page, totalPages, total } = taskPage;
+  const showPager = totalPages > 1;
 
   return (
     <div className={css.layout}>
@@ -117,69 +128,105 @@ export function AdminContentEditor({
         {tasks.length === 0 ? (
           <p className={css.empty}>{t("empty")}</p>
         ) : (
-          <div className={css.tableWrap}>
-            <table className={css.table}>
-              <thead>
-                <tr>
-                  <th scope="col">{t("colDescription")}</th>
-                  <th scope="col" className={css.colDifficulty}>
-                    {t("colDifficulty")}
-                  </th>
-                  <th scope="col" className={css.colAction}>
-                    {t("colEdit")}
-                  </th>
-                  <th scope="col" className={css.colAction}>
-                    {t("colDelete")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {tasks.map((task) => (
-                  <tr key={task.id}>
-                    <td>
-                      <span className={css.taskName}>{task.name}</span>
-                    </td>
-                    <td className={css.colDifficulty}>
-                      <span className={css.diffBadge}>{task.difficulty}</span>
-                    </td>
-                    <td className={css.colAction}>
-                      <Link
-                        href={`/tasks/${task.id}`}
-                        className={css.editBtn}
-                        aria-label={t("editAria", { name: task.name })}
-                      >
-                        <span aria-hidden>|</span>
-                      </Link>
-                    </td>
-                    <td className={css.colAction}>
-                      <form
-                        action={deleteAction}
-                        onSubmit={(event) => {
-                          if (
-                            !window.confirm(
-                              t("deleteConfirm", { name: task.name }),
-                            )
-                          ) {
-                            event.preventDefault();
-                          }
-                        }}
-                      >
-                        <input type="hidden" name="taskId" value={task.id} />
-                        <button
-                          type="submit"
-                          className={css.deleteBtn}
-                          aria-label={t("deleteAria", { name: task.name })}
-                          disabled={deletePending}
-                        >
-                          <span aria-hidden>×</span>
-                        </button>
-                      </form>
-                    </td>
+          <>
+            <div className={css.tableWrap}>
+              <table className={css.table}>
+                <thead>
+                  <tr>
+                    <th scope="col">{t("colDescription")}</th>
+                    <th scope="col" className={css.colDifficulty}>
+                      {t("colDifficulty")}
+                    </th>
+                    <th scope="col" className={css.colAction}>
+                      {t("colEdit")}
+                    </th>
+                    <th scope="col" className={css.colAction}>
+                      {t("colDelete")}
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {tasks.map((task) => (
+                    <tr key={task.id}>
+                      <td>
+                        <span className={css.taskPreview}>
+                          <MathText text={task.taskText} />
+                        </span>
+                      </td>
+                      <td className={css.colDifficulty}>
+                        <span className={css.diffBadge}>{task.difficulty}</span>
+                      </td>
+                      <td className={css.colAction}>
+                        <Link
+                          href={`/tasks/${task.id}`}
+                          className={css.editBtn}
+                          aria-label={t("editAria", { name: task.label })}
+                        >
+                          <span aria-hidden>|</span>
+                        </Link>
+                      </td>
+                      <td className={css.colAction}>
+                        <form
+                          action={deleteAction}
+                          onSubmit={(event) => {
+                            if (
+                              !window.confirm(
+                                t("deleteConfirm", { name: task.label }),
+                              )
+                            ) {
+                              event.preventDefault();
+                            }
+                          }}
+                        >
+                          <input type="hidden" name="taskId" value={task.id} />
+                          <button
+                            type="submit"
+                            className={css.deleteBtn}
+                            aria-label={t("deleteAria", { name: task.label })}
+                            disabled={deletePending}
+                          >
+                            <span aria-hidden>×</span>
+                          </button>
+                        </form>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {showPager ? (
+              <nav className={css.pager} aria-label={t("pagerAria")}>
+                {page > 1 ? (
+                  <Link
+                    href={listHref(themeId, page - 1)}
+                    className={css.pagerBtn}
+                  >
+                    ← {t("prevPage")}
+                  </Link>
+                ) : (
+                  <span className={clsx(css.pagerBtn, css.pagerBtnDisabled)}>
+                    ← {t("prevPage")}
+                  </span>
+                )}
+                <p className={css.pagerStatus}>
+                  {t("pageStatus", { page, totalPages, total })}
+                </p>
+                {page < totalPages ? (
+                  <Link
+                    href={listHref(themeId, page + 1)}
+                    className={css.pagerBtn}
+                  >
+                    {t("nextPage")} →
+                  </Link>
+                ) : (
+                  <span className={clsx(css.pagerBtn, css.pagerBtnDisabled)}>
+                    {t("nextPage")} →
+                  </span>
+                )}
+              </nav>
+            ) : null}
+          </>
         )}
 
         {deleteState.status === "error" ? (

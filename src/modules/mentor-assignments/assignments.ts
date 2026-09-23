@@ -56,6 +56,12 @@ type MemberRow = {
 
 const SQL_THEME = `SELECT id, name FROM themes WHERE id = ? LIMIT 1`;
 
+const SQL_COUNT_TASKS_AT_DIFFICULTY = `
+  SELECT COUNT(*) AS total
+  FROM quiz_tasks
+  WHERE theme_id = ? AND difficulty = ?
+`;
+
 const SQL_INSERT_ASSIGNMENT = `
   INSERT INTO mentor_assignments (
     teacher_user_id,
@@ -338,6 +344,18 @@ export async function createMentorAssignment(
     if (!themes[0]) {
       await connection.rollback();
       throw new MentorAssignmentsError("Theme not found.", "theme_not_found");
+    }
+
+    const taskCounts = await connection.query<{ total: number | string }>(
+      SQL_COUNT_TASKS_AT_DIFFICULTY,
+      [input.themeId, input.difficulty]
+    );
+    if (Number(taskCounts[0]?.total ?? 0) < 1) {
+      await connection.rollback();
+      throw new MentorAssignmentsError(
+        "No quiz tasks at this difficulty for the theme.",
+        "insufficient_tasks"
+      );
     }
 
     await assertStudentsLinked(connection, input.teacherUserId, studentIds);

@@ -502,6 +502,12 @@
     "body": "Jede Sitzung hat eine feste Gültigkeit von 24 Stunden ab der Erstellung — sie verlängert sich während der Bearbeitung nicht. Bereits erzielte Ergebnisse sind gespeichert und bleiben unter „Ergebnisse“ und „Sitzungen“ sichtbar — starte einen neuen Versuch, falls du weitermachen möchtest.",
     "backToTopics": "Zur Themenauswahl"
   },
+  "SessionInsufficientTasksNotice": {
+    "title": "Keine Aufgaben für diesen Test",
+    "lead": "Im Aufgabenpool gibt es keine Aufgaben für das zugewiesene Thema oder den Schwierigkeitsgrad.",
+    "body": "Bitte die Lehrkraft fragen — eventuell muss Schwierigkeit oder Thema geändert werden. Ergebnisse anderer Sitzungen bleiben unter „Ergebnisse“ und „Sitzungen“.",
+    "backToSessions": "Zu den Sitzungen"
+  },
   "TopicTrainerSummary": {
     "ultimateTitle": "Zusammenfassung des Zeittests",
     "title": "Testzusammenfassung",
@@ -565,6 +571,7 @@
     "loadError": "Die Aufgabe konnte nicht geladen werden.",
     "checking": "Wird geprüft…",
     "checkError": "Die Antwort konnte nicht überprüft werden.",
+    "catalogEmpty": "Interaktive Formate sind noch nicht in der Datenbank (Migrationen 028–031). Bitte Admin fragen.",
     "check": "Prüfen",
     "correct": "Richtig",
     "incorrect": "Falsch",
@@ -744,7 +751,7 @@
   "Diagnostic": {
     "kicker": "Einstufungstest",
     "title": "Finde dein tatsächliches Niveau in Mathe heraus",
-    "lead": "10 Aufgaben zu mehreren Themen. Schätze vor jedem Thema kurz ein, wie gut du es kannst — die Schwierigkeit der Aufgaben passt sich deinen Antworten an.",
+    "lead": "Bis zu 10 Aufgaben aus verschiedenen Themen. Die Schwierigkeit passt sich an: richtig → schwerer, falsch → leichter. Jede nächste Aufgabe kommt aus einem anderen Thema als die vorherige.",
     "start": "Einstufungstest starten",
     "loading": "Test wird vorbereitet…",
     "redirecting": "Test wird geöffnet…",
@@ -757,52 +764,10 @@
     "info": {
       "title": "Das bringt dir der Einstufungstest",
       "items": {
-        "tasks": "10 Aufgaben zu mehreren Themen",
+        "tasks": "bis zu 10 adaptive Aufgaben aus verschiedenen Themen",
         "duration": "etwa 5–10 Minuten",
         "insight": "zeigt deine Stärken und Schwächen",
         "recommendations": "nach dem Test persönliche Empfehlungen"
-      }
-    },
-    "topic": {
-      "progress": "Thema {current} von {total}",
-      "conceptsTitle": "Das umfasst dieses Thema",
-      "question": "Wie gut kennst du dieses Thema?",
-      "questionHint": "Sieh dir das Beispiel an und wähle die Antwort, die dein Wissen am besten beschreibt.",
-      "exampleLabel": "Beispielaufgabe",
-      "knowledgeChoicesAria": "Selbsteinschätzung zum Thema „{theme}“",
-      "choices": {
-        "know": "Ich kenne es",
-        "partial": "Ich kenne es teilweise",
-        "unknown": "Ich kenne es nicht"
-      },
-      "next": "Nächstes Thema",
-      "start": "Test starten",
-      "loading": "Selbsteinschätzung wird gespeichert…",
-      "howItWorks": {
-        "title": "So funktioniert dieser Test",
-        "items": {
-          "adaptive": {
-            "title": "10 adaptive Aufgaben",
-            "text": "Die Schwierigkeit passt sich deinen Antworten an."
-          },
-          "accuracy": {
-            "title": "Ein genaueres Ergebnis",
-            "text": "Der Test hilft, deinen tatsächlichen Wissensstand in diesem Thema zu bestimmen."
-          },
-          "difficulty": {
-            "title": "Das passende Niveau",
-            "text": "Du bekommst Aufgaben auf deinem Niveau, von den Grundlagen bis zu schwierigeren Aufgaben."
-          },
-          "next": {
-            "title": "Danach folgen weitere Themen",
-            "text": "Nach diesem Thema wechselst du zum nächsten."
-          }
-        }
-      },
-      "errors": {
-        "invalidSelfScore": "Wähle eine der drei Optionen.",
-        "sessionExpired": "Die 24-Stunden-Gültigkeit dieser Sitzung ist abgelaufen.",
-        "generic": "Das Thema konnte nicht gestartet werden. Bitte versuche es erneut."
       }
     }
   },
@@ -1029,7 +994,7 @@
     "kicker": "Registrierung",
     "title": "Schülerkonto erstellen",
     "lead": "Registriere dich, um Tests zu absolvieren, Ergebnisse zu speichern und Empfehlungen zu erhalten.",
-    "leadFromDiagnostic": "Registriere dich, um dein Einstufungstest-Ergebnis und deine Selbsteinschätzung in deinem Konto zu speichern.",
+    "leadFromDiagnostic": "Registriere dich, um dein Einstufungstest-Ergebnis in deinem Konto zu speichern.",
     "displayName": "Anzeigename",
     "login": "Login",
     "loginHint": "Lateinische Buchstaben, Ziffern, Punkt, _ oder - (mindestens 3 Zeichen).",
@@ -1214,6 +1179,10 @@
     "title": "Website-Feedback",
     "lead": "Nur für Admins sichtbar. Schüler sehen fremde Rückmeldungen nicht.",
     "empty": "Noch kein Feedback.",
+    "pagerAria": "Seiten der Feedback-Liste",
+    "prevPage": "Zurück",
+    "nextPage": "Weiter",
+    "pageStatus": "Seite {page} von {totalPages} · {total} Rückmeldungen",
     "date": "Datum",
     "score": "Bewertung",
     "user": "Nutzer",
@@ -1403,7 +1372,11 @@
     "listLead": "Vorhandene Einträge bearbeiten oder neue Tests hinzufügen.",
     "create": "Neue Aufgabe",
     "empty": "In diesem Thema gibt es noch keine Aufgaben.",
-    "colDescription": "Beschreibung",
+    "pagerAria": "Seiten der Aufgabenliste",
+    "prevPage": "Zurück",
+    "nextPage": "Weiter",
+    "pageStatus": "Seite {page} von {totalPages} · {total} Aufgaben",
+    "colDescription": "Aufgabe",
     "colDifficulty": "Schwierigkeit",
     "colEdit": "Ändern",
     "colDelete": "Löschen",
@@ -1411,17 +1384,14 @@
     "deleteAria": "„{name}“ löschen",
     "deleteConfirm": "Aufgabe „{name}“ löschen?",
     "createTitle": "Neue Aufgabe",
-    "createLead": "Felder ausfüllen und speichern — die Aufgabe erscheint in der Themenbank.",
+    "createLead": "Aufgabe, Antwortoptionen eintragen und speichern — die Aufgabe erscheint in der Themenbank.",
     "editTitle": "Aufgabe bearbeiten",
     "editLead": "Felder ändern und Speichern drücken.",
     "formAria": "Aufgabenfelder",
-    "colElement": "Element",
-    "colValue": "Wert",
-    "name": "Name",
-    "taskText": "Aufgabe",
+    "taskText": "Aufgabentext",
     "answer": "Antwort {n}",
-    "rightAnswer": "Nummer der richtigen Antwort",
-    "difficulty": "Schwierigkeitsgrad",
+    "rightAnswer": "Richtige Antwort",
+    "difficulty": "Schwierigkeit",
     "theme": "Thema",
     "comments": "Hinweis / Kommentar",
     "save": "Speichern",
@@ -1450,6 +1420,10 @@
     "listLead": "Demo-Konten sind geschützt. Eigenes Konto kann nicht gesperrt oder gelöscht werden.",
     "empty": "Noch keine Benutzer.",
     "emptyFilter": "Keine Konten mit dieser Rolle.",
+    "pagerAria": "Seiten der Profilliste",
+    "prevPage": "Zurück",
+    "nextPage": "Weiter",
+    "pageStatus": "Seite {page} von {totalPages} · {total} Konten",
     "you": "Sie",
     "online": "online",
     "offline": "offline",
@@ -1636,6 +1610,7 @@
     "errors": {
       "invalid_input": "Thema, Schüler und Datum prüfen.",
       "theme_not_found": "Thema nicht gefunden.",
+      "insufficient_tasks": "Für dieses Thema gibt es keine Aufgaben auf dem gewählten Niveau.",
       "no_students": "Mindestens einen Schüler wählen.",
       "students_not_linked": "Schüler muss in Ihrer Liste sein.",
       "not_found": "Zuweisung nicht gefunden.",

@@ -20,6 +20,7 @@ export function InteractiveFormatsShowcase({ embedded = false }: { embedded?: bo
   const [position, setPosition] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
+  const [emptyCatalog, setEmptyCatalog] = useState(false);
   const [revision, setRevision] = useState(0);
   useEffect(() => { let live = true; void listRoundsAction().then(result => {
     if (!live) return;
@@ -28,10 +29,14 @@ export function InteractiveFormatsShowcase({ embedded = false }: { embedded?: bo
 
   async function run(work: () => ReturnType<typeof getRoundAction>, reset = false) {
     if (busy) return;
-    setBusy(true); setError(false);
+    setBusy(true); setError(false); setEmptyCatalog(false);
     try {
       const result = await work();
-      if (result.status !== "success") { setError(true); return; }
+      if (result.status !== "success") {
+        if (result.code === "not_eligible") setEmptyCatalog(true);
+        else setError(true);
+        return;
+      }
       setRound(result.round);
       if (reset) setPosition(0);
       setRevision(value => value + 1);
@@ -68,6 +73,7 @@ export function InteractiveFormatsShowcase({ embedded = false }: { embedded?: bo
         }}
       />
     </label>
+    {emptyCatalog && <p role="alert">{t("catalogEmpty")}</p>}
     {error && <p role="alert">{t("checkError")}</p>}
     {round && <>
       <p role="status">{round.completed ? t("roundScore", { correct: round.firstCorrectCount ?? 0, total: round.tasks.length }) : t("roundActive")}</p>

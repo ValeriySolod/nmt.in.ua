@@ -1,9 +1,7 @@
 import type { SqlConnection } from "@/lib/db/mysql";
 import { nowUnixSec } from "@/modules/testing/sessionElapsed";
-import { ensureDiagnosticSelfScoreSchema } from "./diagnosticSelfScores";
 import {
   insertDiagnosticMapping,
-  loadPlannedThemeIds,
   loadProgressMappings,
   lockDiagnosticSession,
   resolveStepAgainstBank,
@@ -15,13 +13,8 @@ export type AdvanceDiagnosticSessionInput = {
   sessionId: number;
 };
 
-/**
- * - `task`: an unanswered task is linked (just added, or already pending).
- * - `topic`: the next topic's self-assessment must come first.
- * - `complete`: nothing more to ask; the attempt can be finished.
- */
 export type AdvanceDiagnosticSessionResult = {
-  next: "task" | "topic" | "complete";
+  next: "task" | "complete";
 };
 
 export type AdvanceDiagnosticSessionErrorCode =
@@ -74,13 +67,8 @@ async function loadDefaultConnection(): Promise<SqlConnection> {
 }
 
 /**
- * Moves an adaptive diagnostic attempt forward after the student answered
- * its latest task: within the current topic it links one more task, one
- * difficulty level harder after a correct answer or easier after an
- * incorrect one (see `resolveDiagnosticNextStep`). Idempotent — the session
- * row is locked and a new task is linked only while none is pending, so a
- * double click or a retried request never adds two tasks or exceeds
- * `DIAGNOSTIC_TOTAL_QUESTIONS`.
+ * After the latest task is answered, links the next adaptive task (or
+ * reports that the attempt is complete). Idempotent under a session lock.
  */
 export async function advanceDiagnosticSession(
   rawInput: unknown,
@@ -90,7 +78,6 @@ export async function advanceDiagnosticSession(
   const nowSec = deps.nowSec ?? nowUnixSec;
 
   try {
-    await ensureDiagnosticSelfScoreSchema(deps.getConnection);
     const connection = await deps.getConnection();
     try {
       await connection.beginTransaction();
@@ -124,26 +111,15 @@ export async function advanceDiagnosticSession(
         input.owner,
         { forUpdate: true },
       );
-      const plannedThemeIds = await loadPlannedThemeIds(
-        connection,
-        input.sessionId,
-      );
       const { step, nextTaskId } = await resolveStepAgainstBank(
         connection,
         mappings,
-        plannedThemeIds,
-        input.sessionId,
       );
 
       if (step.kind !== "nextTask" || nextTaskId === null) {
         await connection.commit();
         return {
-          next:
-            step.kind === "answer"
-              ? "task"
-              : step.kind === "topicIntro"
-                ? "topic"
-                : "complete",
+          next: step.kind === "answer" ? "task" : "complete",
         };
       }
 

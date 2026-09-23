@@ -36,6 +36,7 @@ export type MentorAssignmentDetail = MentorAssignmentSummary & {
 export type MentorAssignmentsErrorCode =
   | "invalid_input"
   | "theme_not_found"
+  | "insufficient_tasks"
   | "no_students"
   | "students_not_linked"
   | "not_found"

@@ -5,7 +5,7 @@ import { Select } from "@/components/ui/Select";
 import { saveThemeSelfScoreAction } from "@/modules/self-score/actions";
 import css from "./TopicResultsTable.module.css";
 
-const SCORES = [1, 2, 3, 4, 5] as const;
+const SCORES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const;
 
 export type ThemeSelfScoreCellLabels = {
   aria: string;
@@ -20,7 +20,7 @@ type ThemeSelfScoreCellProps = {
 
 function toSelectableScore(value: number | null): number | null {
   if (value == null) return null;
-  if (value >= 1 && value <= 5) return value;
+  if (value >= 1 && value <= 10) return value;
   return null;
 }
 
@@ -43,7 +43,7 @@ export function ThemeSelfScoreCell({
 
   function onChange(nextRaw: string) {
     const next = Number(nextRaw);
-    if (!Number.isInteger(next) || next < 1 || next > 5) return;
+    if (!Number.isInteger(next) || next < 1 || next > 10) return;
     if (next === score) return;
 
     const previous = score;

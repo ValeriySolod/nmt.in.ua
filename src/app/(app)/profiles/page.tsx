@@ -5,7 +5,11 @@ import { getNavItem } from "@/constants/navigation";
 import { createPageMetadata } from "@/constants/seo";
 import { requireRole } from "@/modules/auth/getCurrentUser";
 import { USER_ROLES, type UserRole } from "@/modules/auth/types";
-import { getAdminProfiles } from "@/modules/admin-profiles";
+import {
+  ADMIN_PROFILES_PAGE_SIZE,
+  getAdminProfiles,
+  type AdminProfilesPage,
+} from "@/modules/admin-profiles";
 import { readSearchParam } from "@/lib/queryHref";
 
 const item = getNavItem("/profiles");
@@ -21,7 +25,10 @@ export async function generateMetadata() {
 }
 
 type ProfilesPageProps = {
-  searchParams: Promise<{ role?: string | string[] }>;
+  searchParams: Promise<{
+    role?: string | string[];
+    page?: string | string[];
+  }>;
 };
 
 function parseRoleFilter(raw: string | undefined): "all" | UserRole {
@@ -31,15 +38,30 @@ function parseRoleFilter(raw: string | undefined): "all" | UserRole {
   return "all";
 }
 
+function parsePage(raw: string | undefined): number {
+  const page = Number(raw);
+  return Number.isInteger(page) && page > 0 ? page : 1;
+}
+
+const EMPTY_PAGE: AdminProfilesPage = {
+  items: [],
+  total: 0,
+  page: 1,
+  pageSize: ADMIN_PROFILES_PAGE_SIZE,
+  totalPages: 1,
+  roleCounts: { all: 0, student: 0, teacher: 0, admin: 0 },
+};
+
 export default async function ProfilesPage({ searchParams }: ProfilesPageProps) {
   const user = await requireRole(["admin"]);
   const t = await getTranslations("AdminProfiles");
   const params = await searchParams;
   const roleFilter = parseRoleFilter(readSearchParam(params.role));
+  const page = parsePage(readSearchParam(params.page));
 
-  let profiles: Awaited<ReturnType<typeof getAdminProfiles>> = [];
+  let profilesPage: AdminProfilesPage = EMPTY_PAGE;
   try {
-    profiles = await getAdminProfiles();
+    profilesPage = await getAdminProfiles({ page, role: roleFilter });
   } catch (error) {
     console.error("profiles: getAdminProfiles failed", error);
   }
@@ -47,7 +69,7 @@ export default async function ProfilesPage({ searchParams }: ProfilesPageProps) 
   return (
     <PageFrame kicker={t("kicker")} title={t("title")} lead={t("lead")}>
       <AdminProfilesPanel
-        profiles={profiles}
+        profilesPage={profilesPage}
         currentUserId={user.id}
         roleFilter={roleFilter}
       />

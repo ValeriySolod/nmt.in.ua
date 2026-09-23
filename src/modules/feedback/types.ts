@@ -34,7 +34,18 @@ export type SiteFeedback = {
 
 export const MESSAGE_MAX_LEN = 2000;
 export const EMAIL_MAX_LEN = 254;
-export const FEEDBACK_LIST_LIMIT = 100;
+/** Page size for admin `/feedback` list. */
+export const FEEDBACK_PAGE_SIZE = 10;
+/** @deprecated Prefer FEEDBACK_PAGE_SIZE — kept for soft transition. */
+export const FEEDBACK_LIST_LIMIT = FEEDBACK_PAGE_SIZE;
+
+export type SiteFeedbackPage = {
+  items: SiteFeedback[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+};
 
 export function isFeedbackSource(value: unknown): value is FeedbackSource {
   return value === "footer" || value === "post_test";

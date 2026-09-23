@@ -21,7 +21,7 @@ const SQL_SELECT_SESSION = `
     ts.theme_id,
     ts.session_status,
     ts.expire_time,
-    ma.available_at
+    ma.available_at,
     ma.difficulty
   FROM task_sessions ts
   LEFT JOIN mentor_assignment_members mam ON mam.session_id = ts.id
@@ -36,7 +36,8 @@ const SQL_COUNT_MAPPINGS = `
   WHERE session_id = ?
 `;
 
-const SQL_SELECT_TASK_IDS = `SELECT id FROM quiz_tasks WHERE theme_id = ? AND difficulty = ?`;
+const SQL_SELECT_TASK_IDS = `SELECT id FROM quiz_tasks WHERE theme_id = ?`;
+const SQL_SELECT_TASK_IDS_BY_DIFFICULTY = `${SQL_SELECT_TASK_IDS} AND difficulty = ?`;
 
 const SQL_INSERT_MAPPING_PREFIX =
   "INSERT INTO tasks2session (task_type, task_id, session_id, user_id, status) VALUES ";
@@ -91,7 +92,8 @@ type SessionRow = {
   session_status: number;
   expire_time: number;
   available_at: number | null;
-  difficulty: number;
+  /** From mentor assignment LEFT JOIN — null for auto-planned sessions. */
+  difficulty: number | null;
 };
 
 type CountRow = {
@@ -215,10 +217,21 @@ export async function startPlannedSession(
         );
       }
 
-      const pool = await connection.query<{ id: number }>(SQL_SELECT_TASK_IDS, [
-        session.theme_id,
-        session.difficulty,
-      ]);
+      const difficulty =
+        typeof session.difficulty === "number" &&
+        Number.isInteger(session.difficulty) &&
+        session.difficulty > 0
+          ? session.difficulty
+          : null;
+      const pool =
+        difficulty == null
+          ? await connection.query<{ id: number }>(SQL_SELECT_TASK_IDS, [
+              session.theme_id,
+            ])
+          : await connection.query<{ id: number }>(
+              SQL_SELECT_TASK_IDS_BY_DIFFICULTY,
+              [session.theme_id, difficulty],
+            );
       const taskIds = sampleRandomIds(
         pool.map((row) => row.id),
         TOPIC_TEST_TASK_COUNT

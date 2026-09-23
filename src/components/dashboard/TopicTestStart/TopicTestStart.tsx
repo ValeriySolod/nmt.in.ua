@@ -38,6 +38,8 @@ type TopicTestStartProps = {
   themes: AvailableTopicTheme[];
   initialThemeId?: number;
   displayName: string;
+  /** False when Stage 2 tables/seed (028–031) are missing — hide interactive tab. */
+  interactiveAvailable?: boolean;
 };
 
 /** “Тест за обраною темою” — тема + кількість завдань з банку. */
@@ -45,6 +47,7 @@ export function TopicTestStart({
   themes,
   initialThemeId,
   displayName,
+  interactiveAvailable = true,
 }: TopicTestStartProps) {
   const t = useTranslations("TopicTestStart");
   const router = useRouter();
@@ -60,10 +63,22 @@ export function TopicTestStart({
     }
   }, [state, router]);
 
+  const wantsInteractive =
+    searchParams.get("tab") === INTERACTIVE_TAB_PARAM;
   const activeTab =
-    searchParams.get("tab") === INTERACTIVE_TAB_PARAM ? "interactive" : "topics";
+    wantsInteractive && interactiveAvailable ? "interactive" : "topics";
+
+  useEffect(() => {
+    if (wantsInteractive && !interactiveAvailable) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("tab");
+      const query = params.toString();
+      router.replace(query ? `/?${query}` : "/", { scroll: false });
+    }
+  }, [wantsInteractive, interactiveAvailable, router, searchParams]);
 
   function selectTab(tab: "topics" | "interactive") {
+    if (tab === "interactive" && !interactiveAvailable) return;
     const params = new URLSearchParams(searchParams.toString());
     if (tab === "interactive") params.set("tab", INTERACTIVE_TAB_PARAM);
     else params.delete("tab");
@@ -122,17 +137,22 @@ export function TopicTestStart({
         >
           {t("tabTopics")}
         </button>
-        <button
-          type="button"
-          role="tab"
-          id="topic-tab-interactive"
-          aria-selected={activeTab === "interactive"}
-          aria-controls="topic-panel-interactive"
-          className={clsx(css.tab, activeTab === "interactive" && css.tabActive)}
-          onClick={() => selectTab("interactive")}
-        >
-          {t("tabInteractive")}
-        </button>
+        {interactiveAvailable ? (
+          <button
+            type="button"
+            role="tab"
+            id="topic-tab-interactive"
+            aria-selected={activeTab === "interactive"}
+            aria-controls="topic-panel-interactive"
+            className={clsx(
+              css.tab,
+              activeTab === "interactive" && css.tabActive,
+            )}
+            onClick={() => selectTab("interactive")}
+          >
+            {t("tabInteractive")}
+          </button>
+        ) : null}
       </div>
 
       {activeTab === "interactive" ? (

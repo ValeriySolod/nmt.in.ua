@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useMemo } from "react";
+import Link from "next/link";
+import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import clsx from "clsx";
@@ -12,7 +13,7 @@ import {
   setProfileBannedAction,
   type ProfileModerationActionState,
 } from "@/modules/admin-profiles/actions";
-import type { AdminProfile } from "@/modules/admin-profiles/types";
+import type { AdminProfilesPage } from "@/modules/admin-profiles/types";
 import css from "./AdminProfilesPanel.module.css";
 
 const BAN_INITIAL: ProfileModerationActionState = { status: "idle" };
@@ -21,7 +22,7 @@ const DELETE_INITIAL: ProfileModerationActionState = { status: "idle" };
 type RoleFilter = "all" | UserRole;
 
 type AdminProfilesPanelProps = {
-  profiles: AdminProfile[];
+  profilesPage: AdminProfilesPage;
   currentUserId: number;
   roleFilter?: RoleFilter;
 };
@@ -43,8 +44,15 @@ function formatDateTime(iso: string, locale: string): string {
   }).format(date);
 }
 
+function profilesHref(role: RoleFilter, page: number): string {
+  return queryHref("/profiles", {
+    role: role === "all" ? null : role,
+    page: page > 1 ? String(page) : null,
+  });
+}
+
 export function AdminProfilesPanel({
-  profiles,
+  profilesPage,
   currentUserId,
   roleFilter = "all",
 }: AdminProfilesPanelProps) {
@@ -61,17 +69,14 @@ export function AdminProfilesPanel({
 
   const pending = banPending || deletePending;
   const flash = banState.status !== "idle" ? banState : deleteState;
+  const { items, page, totalPages, total, roleCounts } = profilesPage;
+  const showPager = totalPages > 1;
 
   useEffect(() => {
     if (banState.status === "success" || deleteState.status === "success") {
       router.refresh();
     }
   }, [banState, deleteState, router]);
-
-  const filtered = useMemo(() => {
-    if (roleFilter === "all") return profiles;
-    return profiles.filter((profile) => profile.role === roleFilter);
-  }, [profiles, roleFilter]);
 
   const locale =
     typeof document !== "undefined"
@@ -101,186 +106,223 @@ export function AdminProfilesPanel({
             )}
             aria-pressed={roleFilter === "all"}
             onClick={() =>
-              router.replace(
-                queryHref("/profiles", { role: null }),
-                { scroll: false },
-              )
+              router.replace(profilesHref("all", 1), { scroll: false })
             }
           >
-            {t("filterAll", { count: profiles.length })}
+            {t("filterAll", { count: roleCounts.all })}
           </button>
-          {USER_ROLES.map((role) => {
-            const count = profiles.filter((p) => p.role === role).length;
-            return (
-              <button
-                key={role}
-                type="button"
-                className={clsx(
-                  css.filterChip,
-                  roleFilter === role && css.filterChipActive,
-                )}
-                aria-pressed={roleFilter === role}
-                onClick={() =>
-                  router.replace(
-                    queryHref("/profiles", { role }),
-                    { scroll: false },
-                  )
-                }
-              >
-                {t("filterRole", { role: roleLabel(role), count })}
-              </button>
-            );
-          })}
+          {USER_ROLES.map((role) => (
+            <button
+              key={role}
+              type="button"
+              className={clsx(
+                css.filterChip,
+                roleFilter === role && css.filterChipActive,
+              )}
+              aria-pressed={roleFilter === role}
+              onClick={() =>
+                router.replace(profilesHref(role, 1), { scroll: false })
+              }
+            >
+              {t("filterRole", {
+                role: roleLabel(role),
+                count: roleCounts[role],
+              })}
+            </button>
+          ))}
         </div>
 
-        {filtered.length === 0 ? (
-          <p className={css.empty}>{t("emptyFilter")}</p>
+        {items.length === 0 ? (
+          <p className={css.empty}>
+            {roleCounts.all === 0 ? t("empty") : t("emptyFilter")}
+          </p>
         ) : (
-          <ul className={css.list}>
-            {filtered.map((profile) => {
-              const isSelf = profile.id === currentUserId;
-              const isProtected = isDemoAccountLogin(profile.login);
-              const canModerate = !isSelf && !isProtected;
+          <>
+            <ul className={css.list}>
+              {items.map((profile) => {
+                const isSelf = profile.id === currentUserId;
+                const isProtected = isDemoAccountLogin(profile.login);
+                const canModerate = !isSelf && !isProtected;
 
-              return (
-                <li
-                  key={profile.id}
-                  className={clsx(css.item, profile.isBanned && css.itemBanned)}
-                >
-                  <div className={css.identity}>
-                    <p className={css.name}>
-                      {profile.displayName}
-                      <span
-                        className={clsx(
-                          css.presence,
-                          profile.isOnline ? css.presenceOnline : css.presenceOffline,
-                        )}
-                        title={
-                          profile.isOnline
-                            ? t("online")
-                            : t("offline")
-                        }
-                      >
-                        <span className={css.presenceDot} aria-hidden />
-                        {profile.isOnline ? t("online") : t("offline")}
-                      </span>
-                      {isSelf ? (
-                        <span className={css.you}>{t("you")}</span>
-                      ) : null}
-                      {profile.isBanned ? (
-                        <span className={css.banned}>{t("bannedBadge")}</span>
-                      ) : null}
-                      {isProtected ? (
-                        <span className={css.protected}>
-                          {t("protectedBadge")}
-                        </span>
-                      ) : null}
-                    </p>
-                    <p className={css.login}>@{profile.login}</p>
-                    <p className={css.meta}>
-                      {profile.email
-                        ? t("emailMeta", { email: profile.email })
-                        : t("emailMissing")}
-                      {" · "}
-                      {profile.emailVerified
-                        ? t("emailVerified")
-                        : t("emailUnverified")}
-                    </p>
-                    <p className={css.meta}>
-                      {t("roleMeta", { role: roleLabel(profile.role) })}
-                      {" · "}
-                      {t("lastLoginMeta", {
-                        date: profile.lastLoginAt
-                          ? formatDateTime(profile.lastLoginAt, locale)
-                          : t("never"),
-                      })}
-                    </p>
-                    <p className={css.meta}>
-                      {t("lastSeenMeta", {
-                        date: profile.lastSeenAt
-                          ? formatDateTime(profile.lastSeenAt, locale)
-                          : t("never"),
-                      })}
-                      {" · "}
-                      {t("createdMeta", {
-                        date: formatCreatedAt(profile.createdAt, locale),
-                      })}
-                    </p>
-                  </div>
-
-                  {canModerate ? (
-                    <div className={css.actions}>
-                      <form
-                        action={banAction}
-                        onSubmit={(event) => {
-                          const message = profile.isBanned
-                            ? t("unbanConfirm", { name: profile.displayName })
-                            : t("banConfirm", { name: profile.displayName });
-                          if (!window.confirm(message)) {
-                            event.preventDefault();
-                          }
-                        }}
-                      >
-                        <input
-                          type="hidden"
-                          name="userId"
-                          value={profile.id}
-                        />
-                        <input
-                          type="hidden"
-                          name="banned"
-                          value={profile.isBanned ? "0" : "1"}
-                        />
-                        <button
-                          type="submit"
+                return (
+                  <li
+                    key={profile.id}
+                    className={clsx(
+                      css.item,
+                      profile.isBanned && css.itemBanned,
+                    )}
+                  >
+                    <div className={css.identity}>
+                      <p className={css.name}>
+                        {profile.displayName}
+                        <span
                           className={clsx(
-                            css.actionBtn,
-                            profile.isBanned
-                              ? css.actionUnban
-                              : css.actionBan,
+                            css.presence,
+                            profile.isOnline
+                              ? css.presenceOnline
+                              : css.presenceOffline,
                           )}
-                          disabled={pending}
-                        >
-                          {profile.isBanned ? t("unban") : t("ban")}
-                        </button>
-                      </form>
-                      <form
-                        action={deleteAction}
-                        onSubmit={(event) => {
-                          if (
-                            !window.confirm(
-                              t("deleteConfirm", { name: profile.displayName }),
-                            )
-                          ) {
-                            event.preventDefault();
+                          title={
+                            profile.isOnline ? t("online") : t("offline")
                           }
-                        }}
-                      >
-                        <input
-                          type="hidden"
-                          name="userId"
-                          value={profile.id}
-                        />
-                        <button
-                          type="submit"
-                          className={clsx(css.actionBtn, css.actionDelete)}
-                          disabled={pending}
                         >
-                          {t("delete")}
-                        </button>
-                      </form>
+                          <span className={css.presenceDot} aria-hidden />
+                          {profile.isOnline ? t("online") : t("offline")}
+                        </span>
+                        {isSelf ? (
+                          <span className={css.you}>{t("you")}</span>
+                        ) : null}
+                        {profile.isBanned ? (
+                          <span className={css.banned}>{t("bannedBadge")}</span>
+                        ) : null}
+                        {isProtected ? (
+                          <span className={css.protected}>
+                            {t("protectedBadge")}
+                          </span>
+                        ) : null}
+                      </p>
+                      <p className={css.login}>@{profile.login}</p>
+                      <p className={css.meta}>
+                        {profile.email
+                          ? t("emailMeta", { email: profile.email })
+                          : t("emailMissing")}
+                        {" · "}
+                        {profile.emailVerified
+                          ? t("emailVerified")
+                          : t("emailUnverified")}
+                      </p>
+                      <p className={css.meta}>
+                        {t("roleMeta", { role: roleLabel(profile.role) })}
+                        {" · "}
+                        {t("lastLoginMeta", {
+                          date: profile.lastLoginAt
+                            ? formatDateTime(profile.lastLoginAt, locale)
+                            : t("never"),
+                        })}
+                      </p>
+                      <p className={css.meta}>
+                        {t("lastSeenMeta", {
+                          date: profile.lastSeenAt
+                            ? formatDateTime(profile.lastSeenAt, locale)
+                            : t("never"),
+                        })}
+                        {" · "}
+                        {t("createdMeta", {
+                          date: formatCreatedAt(profile.createdAt, locale),
+                        })}
+                      </p>
                     </div>
-                  ) : (
-                    <p className={css.lockedHint}>
-                      {isSelf
-                        ? t("selfLocked")
-                        : t("protectedLocked")}
-                    </p>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
+
+                    {canModerate ? (
+                      <div className={css.actions}>
+                        <form
+                          action={banAction}
+                          onSubmit={(event) => {
+                            const message = profile.isBanned
+                              ? t("unbanConfirm", {
+                                  name: profile.displayName,
+                                })
+                              : t("banConfirm", {
+                                  name: profile.displayName,
+                                });
+                            if (!window.confirm(message)) {
+                              event.preventDefault();
+                            }
+                          }}
+                        >
+                          <input
+                            type="hidden"
+                            name="userId"
+                            value={profile.id}
+                          />
+                          <input
+                            type="hidden"
+                            name="banned"
+                            value={profile.isBanned ? "0" : "1"}
+                          />
+                          <button
+                            type="submit"
+                            className={clsx(
+                              css.actionBtn,
+                              profile.isBanned
+                                ? css.actionUnban
+                                : css.actionBan,
+                            )}
+                            disabled={pending}
+                          >
+                            {profile.isBanned ? t("unban") : t("ban")}
+                          </button>
+                        </form>
+                        <form
+                          action={deleteAction}
+                          onSubmit={(event) => {
+                            if (
+                              !window.confirm(
+                                t("deleteConfirm", {
+                                  name: profile.displayName,
+                                }),
+                              )
+                            ) {
+                              event.preventDefault();
+                            }
+                          }}
+                        >
+                          <input
+                            type="hidden"
+                            name="userId"
+                            value={profile.id}
+                          />
+                          <button
+                            type="submit"
+                            className={clsx(css.actionBtn, css.actionDelete)}
+                            disabled={pending}
+                          >
+                            {t("delete")}
+                          </button>
+                        </form>
+                      </div>
+                    ) : (
+                      <p className={css.lockedHint}>
+                        {isSelf ? t("selfLocked") : t("protectedLocked")}
+                      </p>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+
+            {showPager ? (
+              <nav className={css.pager} aria-label={t("pagerAria")}>
+                {page > 1 ? (
+                  <Link
+                    href={profilesHref(roleFilter, page - 1)}
+                    className={css.pagerBtn}
+                  >
+                    ← {t("prevPage")}
+                  </Link>
+                ) : (
+                  <span className={clsx(css.pagerBtn, css.pagerBtnDisabled)}>
+                    ← {t("prevPage")}
+                  </span>
+                )}
+                <p className={css.pagerStatus}>
+                  {t("pageStatus", { page, totalPages, total })}
+                </p>
+                {page < totalPages ? (
+                  <Link
+                    href={profilesHref(roleFilter, page + 1)}
+                    className={css.pagerBtn}
+                  >
+                    {t("nextPage")} →
+                  </Link>
+                ) : (
+                  <span className={clsx(css.pagerBtn, css.pagerBtnDisabled)}>
+                    {t("nextPage")} →
+                  </span>
+                )}
+              </nav>
+            ) : null}
+          </>
         )}
 
         {flash.status === "success" ? (
