@@ -5,7 +5,7 @@ import { ensureAuthSchema } from "@/modules/auth/users";
 import type { UserRole } from "@/modules/auth/types";
 import { ensureTeacherProfileSchema } from "./schema";
 import { ensureTeacherRatingsSchema } from "./ratingsSchema";
-import type { PublicTeacherCard, TeacherCarouselItem } from "./types";
+import type { TeacherCarouselItem } from "./types";
 
 export type { TeacherCarouselItem };
 

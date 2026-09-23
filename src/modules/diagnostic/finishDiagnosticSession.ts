@@ -4,6 +4,7 @@ import { nowUnixSec, resolveSessionElapsedSec } from "@/modules/testing/sessionE
 import { isSessionExpired } from "@/modules/testing/sessionExpiry";
 import {
   TASK_STATUS_CORRECT,
+  TASK_STATUS_INCORRECT,
   TASK_STATUS_UNANSWERED,
   type TrainerSessionSummary,
 } from "@/modules/testing/types";
