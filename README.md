@@ -114,7 +114,7 @@ npm run reset-demo-student
 | --- | --- |
 | Вхід / вихід | `/login`, cookie `nmt_session`; логін блокується до verify email (демо exempt) |
 | Реєстрація | `/register?role=student\|teacher` — email обовʼязковий → `/register/check-email` → `/verify-email` |
-| Скидання пароля | `/forgot-password`, `/reset-password` (Resend або log без `RESEND_API_KEY`) |
+| Скидання пароля | `/forgot-password`, `/reset-password` (Brevo або log без `BREVO_API_KEY`) |
 | Реєстрація викладача (оплата) | UI на паузі; `/register/teacher` → `/register?role=teacher`. WayForPay код + `/success`/`/fail` лишаються |
 | Webhook оплати | `POST /api/payments/wayforpay/webhook` (публічний, перевірка HMAC_MD5) |
 | Ролі | `student`, `teacher`, `admin` |

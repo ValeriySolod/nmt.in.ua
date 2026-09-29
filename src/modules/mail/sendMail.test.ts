@@ -2,7 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { DEFAULT_SITE_URL } from "@/constants/seo";
-import { absoluteUrl, mailDeliveryMode, resolveMailSiteUrl } from "./sendMail";
+import {
+  absoluteUrl,
+  mailDeliveryMode,
+  parseMailFrom,
+  resolveMailSiteUrl,
+} from "./sendMail";
 
 test("resolveMailSiteUrl prefers SITE_URL and ignores NEXT_PUBLIC_SITE_URL", () => {
   assert.equal(
@@ -70,7 +75,19 @@ test("mailDeliveryMode logs locally and fails closed in production without a key
   assert.equal(mailDeliveryMode({ NODE_ENV: "development" }), "log");
   assert.equal(mailDeliveryMode({ NODE_ENV: "production" }), "unavailable");
   assert.equal(
-    mailDeliveryMode({ NODE_ENV: "production", RESEND_API_KEY: "re_test" }),
-    "resend",
+    mailDeliveryMode({ NODE_ENV: "production", BREVO_API_KEY: "xkeysib-test" }),
+    "brevo",
   );
+});
+
+test("parseMailFrom splits a display name from the address", () => {
+  assert.deepEqual(parseMailFrom("NMT.in.ua <noreply@nmt.in.ua>"), {
+    name: "NMT.in.ua",
+    email: "noreply@nmt.in.ua",
+  });
+  assert.deepEqual(parseMailFrom("noreply@nmt.in.ua"), {
+    name: "noreply@nmt.in.ua",
+    email: "noreply@nmt.in.ua",
+  });
+  assert.equal(parseMailFrom("not an email"), null);
 });

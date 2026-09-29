@@ -49,7 +49,7 @@ bash scripts/rollback-hosting.sh --yes
 
 Поки секрету немає — воркфлоу впаде **до** SSH, сайт не чіпає.
 
-Обовʼязкові змінні на прод: `DB_*`, `SESSION_SECRET`, `CONTENT_IMPORT_API_KEY`, `ADMIN_API_KEY`, `MAX_BODY_BYTES=8388608`, `SITE_URL=https://nmt.in.ua`, `MAIL_SITE_URL=https://nmt.in.ua`, `NEXT_PUBLIC_SITE_URL=https://nmt.in.ua`. Листи й 303 після verify/logout читають лише `SITE_URL` / `MAIL_SITE_URL` у рантаймі. Не брати origin з `request.url` — Node слухає `127.1.10.37`, і браузер інакше йде на localhost, хоча пошта вже підтверджена. `NEXT_PUBLIC_*` інлайниться на збірці. Для реальних листів ще `RESEND_API_KEY` (і бажано `MAIL_FROM` з перевіреного домену). Без ключа Next у production більше не робить вигляд, що лист пішов; деплой ключ сам не підставляє.
+Обовʼязкові змінні на прод: `DB_*`, `SESSION_SECRET`, `CONTENT_IMPORT_API_KEY`, `ADMIN_API_KEY`, `MAX_BODY_BYTES=8388608`, `SITE_URL=https://nmt.in.ua`, `MAIL_SITE_URL=https://nmt.in.ua`, `NEXT_PUBLIC_SITE_URL=https://nmt.in.ua`. Листи й 303 після verify/logout читають лише `SITE_URL` / `MAIL_SITE_URL` у рантаймі. Не брати origin з `request.url` — Node слухає `127.1.10.37`, і браузер інакше йде на localhost, хоча пошта вже підтверджена. `NEXT_PUBLIC_*` інлайниться на збірці. Для реальних листів ще `BREVO_API_KEY` (і бажано `MAIL_FROM` з домену, автентифікованого в Brevo; дефолт `noreply@nmt.in.ua`). Без ключа Next у production більше не робить вигляд, що лист пішов; деплой ключ сам не підставляє.
 
 Без `SESSION_SECRET` у production вхід і реєстрація падають (`createSessionToken`). Ключ не комітити і не світити в логах. Згенерувати один раз: `openssl rand -hex 32` — і записати в обидва `.env.production` (store + `www`).
 
@@ -138,7 +138,7 @@ proxy_set_header X-Forwarded-For $remote_addr;
 4. **Bash на хості без `/dev/fd`.** `<(ps …)` падає: `/dev/fd/62: No such file or directory`. Немає `ss`/`lsof`. Стоп — тільки `ps | awk` по `127.1.10.37` + `node server.js` / `npm run start`. Старт як у панелі.
 5. **glibc 2.28.** Свіжий `@next/swc` хоче 2.29. Беремо живі `node_modules` з поточного `www`, потім `npm install`.
 6. **Немає `SESSION_SECRET`.** Сайт 200, але логін / реєстрація ламаються. Деплой копіює store; якщо в store ключа не було — треба дописати вручну і перезапустити лише nmt Node.
-7. **PHP-шелли в `~/.system/tmp` (18.09.2026).** Це не nmt.in.ua: на тому ж UID живуть WordPress / Moodle. 16.09 ~22:47 у спільний PHP `upload_tmp_dir` потрапили копії Tiny File Manager і обфускований dropper (тягне payload з GitLab). Антивірус панелі заблокував **вихідні** з’єднання на весь акаунт — Resend і будь-який зовнішній API з Node теж падають. nmt не має `.php`. Після чистки в панелі треба **повторне сканування**, інакше обмеження не знімуться. Node/npm пишуть у `/home/levelhst/nmt.in.ua/tmp`, не в `.system/tmp`. Повний захист — окремий хостинг-акаунт для nmt, бо PHP і Node — один користувач.
+7. **PHP-шелли в `~/.system/tmp` (18.09.2026).** Це не nmt.in.ua: на тому ж UID живуть WordPress / Moodle. 16.09 ~22:47 у спільний PHP `upload_tmp_dir` потрапили копії Tiny File Manager і обфускований dropper (тягне payload з GitLab). Антивірус панелі заблокував **вихідні** з’єднання на весь акаунт — Brevo і будь-який зовнішній API з Node теж падають. nmt не має `.php`. Після чистки в панелі треба **повторне сканування**, інакше обмеження не знімуться. Node/npm пишуть у `/home/levelhst/nmt.in.ua/tmp`, не в `.system/tmp`. Повний захист — окремий хостинг-акаунт для nmt, бо PHP і Node — один користувач.
 
 ## Чого більше немає
 

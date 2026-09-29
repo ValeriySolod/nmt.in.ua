@@ -17,9 +17,7 @@ nmt.in.ua — тренажер підготовки до НМТ з матема�
 Живий сайт: <https://nmt.in.ua>  
 Репозиторій: <https://github.com/tony-kobs/nmt.in.ua>
 
-Стек: Next.js 16 (App Router), React 19, TypeScript, CSS Modules, MySQL, next-intl (uk / en / de). Auth-guard — `src/proxy.ts` (не класичний `middleware.ts`).
-
-Хостинг-акаунт `levelhst` спільний із WordPress/Moodle (science.kh.ua, it-ua.org тощо). Якщо антивірус панелі знайде PHP у `~/.system/tmp`, він ріже **вихідні** з’єднання всього акаунта — листи Resend і зовнішні API nmt теж. nmt сам PHP не виконує. Після чистки в панелі обов’язково повторне сканування.
+Хостинг-акаунт `levelhst` спільний із WordPress/Moodle (science.kh.ua, it-ua.org тощо). Якщо антивірус панелі знайде PHP у `~/.system/tmp`, він ріже **вихідні** з’єднання всього акаунта — листи Brevo і зовнішні API nmt теж. nmt сам PHP не виконує. Після чистки в панелі обов’язково повторне сканування.
 
 | Роль | Що може | Куди потрапляє з `/` |
 | --- | --- | --- |
@@ -60,9 +58,9 @@ npm run dev
 | `SESSION_SECRET` | Підпис cookie `nmt_session` і `nmt_guest` | На проді вхід небезпечний / зламаний |
 | `SITE_URL` | Origin у листах verify / reset (runtime) | Локально — `http://localhost:3000`. На проді без змінної або з localhost — `https://nmt.in.ua`. Не `NEXT_PUBLIC_*` |
 | `MAIL_SITE_URL` | Запасний origin для листів | Той самий, що `SITE_URL` |
-| `NEXT_PUBLIC_SITE_URL` | Canonical / WayForPay URL (інлайниться на `next build`) | SEO падає на `https://nmt.in.ua`. У листах не використовується |
-| `RESEND_API_KEY` | Листи verify / reset пароля | Локально без ключа — `[mail:log]` у консоль. На проді без ключа лист не йде |
-| `MAIL_FROM` | From для Resend (опційно) | Дефолт sandbox Resend |
+| `NEXT_PUBLIC_SITE_URL` | Canonical / WayForPay URL (інлайниться на `next build`) | SEO падає на `https://nmt.in.ua`. У листах не використовується. |
+| `BREVO_API_KEY` | Листи verify / reset пароля | Локально без ключа — `[mail:log]` у консоль. На проді без ключа лист не йде. |
+| `MAIL_FROM` | From для Brevo (опційно) | Дефолт `NMT.in.ua <noreply@nmt.in.ua>` |
 | `WAYFORPAY_MERCHANT_ACCOUNT` | Еквайринг WayForPay (UI зараз на паузі) | Без ключів checkout не підписується. Пісочниця: `test_merch_n1`. Лише `.env.local` / хостинг |
 | `WAYFORPAY_MERCHANT_SECRET_KEY` | SecretKey HMAC_MD5 (Purchase + serviceUrl) | Разом із account; ніколи в git |
 | `WAYFORPAY_MERCHANT_DOMAIN` | Домен мерчанта (опційно) | Hostname з `NEXT_PUBLIC_SITE_URL` |
@@ -173,11 +171,11 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 | `src/components/testing/` | TopicTrainer, NmtTrainer, підсумок, розбір помилок |
 | `src/components/practice/` | Дроби + картки Stage 2 (order / find_error / graph / matching / blank) |
 | `src/components/auth/` | AuthShell, форми входу / реєстрації / verify / reset |
-| `src/components/ui/` | Reveal, ModeTabs, MathText, Select, SkipLink |
-| `src/components/status/` | 404 / error / loading (`StatusScene`) |
-| `src/modules/auth/` | Користувачі, cookie, паролі, ролі, email verify/reset, аватар, presence |
-| `src/modules/mail/` | Resend / log-транзакційні листи |
-| `src/modules/payments/` | Реєстрація викладача, WayForPay (код живий, UI на паузі) |
+| `src/components/ui/` | Reveal, ModeTabs, MathText |
+| `src/components/practice/` | `FractionPracticeTrainer` — генерована практика дробів (11.09) |
+| `src/modules/auth/` | Користувачі, cookie, паролі, ролі, email verify/reset |
+| `src/modules/mail/` | Brevo / log-транзакційні листи |
+| `src/modules/payments/` | Реєстрація викладача, WayForPay Purchase, webhook |
 | `src/modules/content-import/` | CSV/JSON → БД |
 | `src/modules/admin-content/` | CRUD `quiz_tasks` з кабінету адміна |
 | `src/modules/admin-profiles/` | Список / бан / видалення акаунтів |
@@ -234,13 +232,13 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 
 | Таблиця | Навіщо | Важливі поля |
 | --- | --- | --- |
-| `app_users` | Наші акаунти | `login`, `email` / `email_verified_at` (022), `role`, `is_banned` (020), `last_login_at` / `last_seen_at` (021). Не плутати з legacy `users` |
-| `auth_tokens` | Verify / reset | `purpose` email_verify\|password_reset. SQL `023` + lazy schema |
-| `user_avatars` | Фото профілю | MEDIUMBLOB, ліміт 512 КБ. `015` |
-| `teacher_profiles` | Публічна візитка | `slug`, `is_public`. `018` |
-| `teacher_ratings` | Оцінки 1–5 | PK (викладач, учень). `032` |
-| `teacher_payments` | Pending реєстрація викладача | WayForPay `reference`. `014` |
-| `themes` | Теми тесту | `code` unique — розділ підручника `?topic=` |
+| `app_users` | Наші акаунти | `login`, `email` / `email_verified_at` (022; реєстрація + блок логіну до verify, демо exempt), `role`, `is_banned` (020), `last_login_at` / `last_seen_at` (021). Не плутати з legacy `users` |
+| `auth_tokens` | Verify / reset | `user_id`, `purpose` email_verify\|password_reset, `token_hash`, `expires_at`, `used_at`. SQL `023_auth_tokens.sql` + lazy `ensureAuthTokenSchema`. Листи через Brevo (`BREVO_API_KEY` / `MAIL_FROM`) або log у dev |
+| `user_avatars` | Фото профілю | `user_id`, `mime`, `bytes` MEDIUMBLOB. Лениво `CREATE` у `ensureAuthSchema` / `015_user_avatars.sql` |
+| `teacher_profiles` | Публічна візитка | `user_id`, `slug` unique, `headline`, `bio`, `city`, `subjects` (JSON), `contact_url`, `is_public`. `018_teacher_profiles.sql` + lazy `ensureTeacherProfileSchema` |
+| `teacher_ratings` | Оцінки учнів викладачам (1–5) | PK `(teacher_user_id, student_user_id)`, `score`. `032_teacher_ratings.sql` + lazy `ensureTeacherRatingsSchema` |
+| `teacher_payments` | Pending реєстрація викладача до оплати WayForPay | `reference`, hashed пароль, `status` pending/paid/failed, `provider`, `external_order_id`; `user_id` після Approved. SQL `014_teacher_payments.sql` |
+| `themes` | Теми тесту | `id`, `code` (unique, напр. `ALG-08-QUAD-EQ` — якір розділу підручника), `name`, `description`, `ord` |
 | `theme_connections` | Граф «наступна тема» | `vertex_start` → `vertex_finish` |
 | `quiz_tasks` | Банк MCQ тренажера / діагностики | `right_answer_n` (1–4) лише на сервері до перевірки |
 | `problems` | Банк задачника (друк) | Read UI з JSON-каталогу; таблиця для імпорту |
@@ -294,13 +292,12 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 
 | URL | Хто бачить | Стан |
 | --- | --- | --- |
-| `/`, `/welcome` | Усі. `/` залежить від ролі (див. §1); `/welcome` завжди лендінг | Готово |
-| `/login`, `/register` | Гість | Готово. `/register?role=student\|teacher`. Email → check-email → verify |
-| `/register/check-email`, `/verify-email` | Гість | Підтвердження email. Клік з листа → `GET /api/auth/verify-email` |
-| `/forgot-password`, `/reset-password` | Гість | Скидання пароля (лише verified) |
-| `/register/teacher` (+ `/success`, `/fail`) | Гість | UI оплати приховано → `/register?role=teacher`. WayForPay лишається для старих чеків |
-| `/diagnostic`, `/diagnostic/session/[id]` | Публічно | Готово |
-| `/t/{slug}` | Публічно | 404, якщо не `is_public` або не teacher |
+| `/`, `/welcome` | Усі. `/` — лендінг для гостя, кабінет для учня; `/welcome` завжди лендінг | Готово |
+| `/login`, `/register` | Гість | Готово. На `/register` вибір учень/викладач (`?role=`). Email → check-email → verify |
+| `/register/check-email`, `/verify-email` | Гість | Підтвердження email (Brevo / log). Після verify — сесія |
+| `/forgot-password`, `/reset-password` | Гість | Скидання пароля за email (лише verified акаунти) |
+| `/register/teacher` (+ `/success`, `/fail`) | Гість | UI оплати приховано: `/register/teacher` → `/register?role=teacher`. WayForPay success/fail лишаються для старих чеків |
+| `/diagnostic`, `/diagnostic/session/[id]` | Усі (публічно, як `/welcome`) — гість або увійдений учень | Готово |
 | `/session/[id]` | Власник сесії | Готово |
 | `/simulator` | Учень+ | Офіційні варіанти (`nmt_variants`) |
 | `/settings` | Лише admin | Імпорт |
@@ -381,22 +378,28 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 
 | Задача | Де копати | Складність | Нотатка |
 | --- | --- | --- | --- |
-| 6.5 Банк 30–40 / тему | `content-import`, `docs/content-review/`, адмін `/` | Контент | **Відкрито.** За потреби розширити `varchar` відповідей |
-| Порожні розділи підручника | `src/content/learningMaterials` | Контент | Лишаємо «Матеріал готується»; дописувати окремо |
-| Stage 2 на живій БД | `scripts/sql/026`–`031`, `src/modules/stage2` | Ops + QA | Код готовий; без міграцій вкладка схована. Не ганяти 026–031 на прод без узгодження |
-| 6.1 Підручник | `/materials/textbook` | — | ✅ |
-| 6.8 Варіанти НМТ | `/simulator` | — | ✅ |
-| 6.6 Задачник | `/problems` | — | ✅ |
-| 6.3–6.4 Діагностика | `/diagnostic` | — | ✅ 23.09: adaptive без самооцінки |
-| 6.2 Відгук | `/feedback` | — | ✅ |
-| 6.9 Інтерактивні формати | `/?tab=interactive` | — | ✅ у коді; блокер — SQL на базі |
-| Кабінет викладача | `/assign`, `/students`, `/results`, `/sessions` | — | ✅ групи, інвайти, створення учня, клас-результати |
-| Email verify + reset | `src/modules/auth`, `src/modules/mail` | — | ✅ |
-| Реєстрація викладача + WayForPay | `/register/teacher` | — | ⏸️ UI оплати приховано; безкоштовний teacher на `/register?role=teacher` |
+| 6.1 Підручник + `themes.code` | `src/content/learningMaterials`, `/materials/textbook` | Середня | ✅ 08–09.09: лише підручник; `/materials` і slug → редірект |
+| 6.5 Банк 30–40 / тему | `content-import`, `docs/content-review/` | Контент | Спочатку розширити `varchar(50)` у відповідях |
+| 6.8 Варіанти НМТ | `startNmtSimulator`, `/simulator`, `nmt_variants*` | Середня | ✅ 09.09 |
+| 6.6 Задачник | `src/app/problems`, таблиця `problems` | Середня | ✅ 08.09 (UI з JSON-каталогу, без MySQL на read) |
+| 6.3–6.4 Діагностика | `/diagnostic` | Велика | ✅; 23.09: adaptive без самооцінки; до 10 задач; +1/−1 складність без стелі; 3 fail@1; тема ≠ попередня |
+| 6.2 Відгук | `src/modules/feedback` | Мала | ✅ |
+| Консультації | `/consultations` | Мала | ✅ 17.09: карусель публічних викладачів + рейтинг + персональна заявка; черга викладачів без змін |
+| Мої учні | `src/modules/teacher-students`, `/students`, `/join` | Середня | ✅ 21.09: групи, інвайти 14 днів, статистика учня, «Приєднати» з консультації. 22.09: викладач створює обліковий запис учня (8.3). SQL `034` |
+| Призначити тест | `src/modules/mentor-assignments`, `/assign` | Середня | ✅ 17.09: мульти-учні, дедлайн, статуси зелений/рожевий, скасування й зміна списку |
+| Результати учнів | `/results`, `teacherStudentResults` | Мала | ✅ 17.09: «усі учні» у випадайці, worst-first; клік по темі → середні учнів |
+| Сесії учнів | `/sessions`, `teacherLearningSessions` | Мала | ✅ 17.09: усі / один учень; картки→таблиця; детальні бали без старту/скасування |
+| Публічна візитка викладача | `src/modules/teachers`, `/account`, `/t/{slug}` | Мала | ✅ 13.09; адмін без візитки з 16.09 |
+| Реєстрація викладача + WayForPay | `/register/teacher`, `src/modules/payments` | Середня | ⏸️ UI оплати приховано 16.09; безкоштовний teacher на `/register?role=teacher`. WayForPay код лишається |
+| Email verify + reset (Brevo) | `src/modules/auth`, `src/modules/mail`, `/verify-email` | Середня | ✅ 16.09: блок логіну до verify; forgot/reset; без ключа — log. 18.09: прод-листи з `SITE_URL` / `https://nmt.in.ua`, не localhost. Підтвердження через `GET /api/auth/verify-email` (cookie в RSC давала фейкову помилку). 29.09: відправка через Brevo (`BREVO_API_KEY`), не Resend. AV на спільному PHP tmp ріже outbound усього акаунта — після чистки пересканувати панель |
+| A11y + Select + 404/error | `SkipLink`, `Select`, `StatusScene`, Motion | Мала | ✅ 17.09: skip-link, кастомні списки, status-сторінки |
+| Перф (TTFB / бандл) | `(app)`/`(marketing)` layouts, `catalogCache`, `sampleRandomIds` | — | ✅ 10.09: без `ORDER BY RAND()`, кеш довідників, cookie-профіль |
 
-Поза першим релізом (не хапати «бо цікаво»): CRM, окремий блок ДЗ, вивантаження звітів, PDF, Google-логін, AI-перевірка, інші типи НМТ у topic-test, повноцінний PWA, графік «краще ніж 80%». Це версія 2 — питайте PM.
+Карта app router: `src/app/page.tsx` — `/` (гість легкий / учень → CabinetHome); `src/app/(marketing)/` — welcome / login / register / diagnostic / `t/[slug]`; `src/app/(app)/` — кабінет (`force-dynamic`). Root layout лише `html`/`body` + `globals.css`. Неіснуючий публічний шлях на кшталт `/welcome/немає` дає кастомний 404; випадковий `/foo` без сесії — редірект на `/login` (auth-guard).
 
-Локально групи: відкрий `/students` (lazy schema) або `mysql … < scripts/sql/034_student_groups_invites.sql`. `demo-teacher` створює групу й код; `demo-student` відкриває `/join/КОД`.
+Поза першим релізом (не хапати «бо цікаво»): CRM викладача, окремий блок ДЗ, PDF, Google-логін, AI-перевірка, типи завдань окрім вибору з 4 варіантів, повноцінний PWA. Іменовані групи й інвайти — MVP на `/students` (21.09), без CRM. Це версія 2 — питайте PM.
+
+Локально перевірити групи: `mysql … < scripts/sql/034_student_groups_invites.sql` (або відкрити `/students` — lazy `ensureTeacherStudentsSchema` створить таблиці). `demo-teacher` / `demo123`: створити групу, особистий і груповий код. `demo-student`: `/join/КОД` (гість спочатку потрапляє на логін, код у шляху зберігається). Другий груповий код замінює групу. На `/consultations` кнопка «Приєднати».
 
 ## 12. Як здати роботу
 
