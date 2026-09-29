@@ -477,7 +477,7 @@ npm run lint && npm test && npm run build
 
 - `app_users.email` + `email_verified_at` (`022` + lazy ALTER / unique); `auth_tokens` (`023`).
 - `/register` вимагає e-mail → лист → `/verify-email`; логін блокується до verify (демо exempt).
-- Forgot/reset: `/forgot-password`, `/reset-password`. Без `RESEND_API_KEY` — log у консоль.
+- Forgot/reset: `/forgot-password`, `/reset-password`. З 29.09 листи через Brevo (`BREVO_API_KEY`); без ключа — log у консоль.
 
 ### 2026-09-16 — реєстрація: учень / викладач без плати в UI
 
