@@ -4,7 +4,7 @@
 
 ## Як має бути
 
-Розробники: PR → `dev`. Lead перевіряє і мерджить. Реліз: `dev` → `main`.
+Розробники: PR → `dev` (один approve). Lead перевіряє і мерджить. Реліз: лише власник відкриває pull request `dev` → `main`. Гілки `main` і `dev` захищені від видалення і force-push. Інші гілки після merge видаляються самі.
 
 Merge / push у `main` запускає GitHub Actions: збірка на Ubuntu (нормальний glibc), далі хостинг лише міняє реліз. На ukraine.com.ua Next **не збираємо** — там glibc 2.28, `npm run build` падає.
 
