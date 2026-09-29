@@ -65,8 +65,11 @@ function readPageParam(raw: string | string[] | undefined): number {
 }
 
 export default async function HomePage({ searchParams }: HomePageProps) {
-  const user = await getCurrentUser();
-  const locale = await getLocale();
+  const [user, locale, params] = await Promise.all([
+    getCurrentUser(),
+    getLocale(),
+    searchParams,
+  ]);
 
   if (!user) {
     const messages = pickClientMessages(await getMessages(), "/");
@@ -77,12 +80,12 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     );
   }
 
-  const params = await searchParams;
   const initialThemeId = parseThemeQueryParam(readThemeParam(params.theme));
   const initialPage = readPageParam(params.page);
-  const needsCookieUpgrade = await sessionCookieNeedsUpgrade();
-
-  const { CabinetHome } = await import("./_home/CabinetHome");
+  const [{ CabinetHome }, needsCookieUpgrade] = await Promise.all([
+    import("./_home/CabinetHome"),
+    sessionCookieNeedsUpgrade(),
+  ]);
 
   return (
     <Suspense fallback={null}>

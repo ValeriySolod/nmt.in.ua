@@ -38,11 +38,13 @@ export async function CabinetHome({
     redirect("/assign");
   }
 
-  const messages = pickClientMessages(await getMessages(), "/home");
-
   if (canImportContent(user.role)) {
-    const t = await getTranslations("AdminContent");
-    const themes = await getAdminThemes();
+    const [rawMessages, t, themes] = await Promise.all([
+      getMessages(),
+      getTranslations("AdminContent"),
+      getAdminThemes(),
+    ]);
+    const messages = pickClientMessages(rawMessages, "/home");
     const themeId =
       initialThemeId && themes.some((theme) => theme.id === initialThemeId)
         ? initialThemeId
@@ -77,8 +79,13 @@ export async function CabinetHome({
     );
   }
 
-  const themes = await getAvailableTopicThemes();
-  const interactiveAvailable = (await countStage2CatalogTasks()) > 0;
+  const [rawMessages, themes, stage2Count] = await Promise.all([
+    getMessages(),
+    getAvailableTopicThemes(),
+    countStage2CatalogTasks(),
+  ]);
+  const messages = pickClientMessages(rawMessages, "/home");
+  const interactiveAvailable = stage2Count > 0;
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>

@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useSyncExternalStore, type ComponentType } from "react";
-import dynamic from "next/dynamic";
+import { useEffect, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import type { AuthUser } from "@/modules/auth/client";
+import { AppHeader } from "@/components/dashboard/AppHeader";
+import { AppSidebar } from "@/components/dashboard/AppSidebar";
 import { PresenceHeartbeat } from "@/components/dashboard/PresenceHeartbeat";
 import { SkipLink } from "@/components/ui/SkipLink";
 import { useTranslations } from "next-intl";
@@ -16,30 +17,6 @@ type DashboardShellProps = {
   children: React.ReactNode;
   user: AuthUser | null;
 };
-
-type AppHeaderProps = {
-  sidebarOpen: boolean;
-  onToggleSidebar: () => void;
-  user: AuthUser;
-};
-
-type AppSidebarProps = {
-  open: boolean;
-  role: AuthUser["role"];
-  onNavigate: () => void;
-};
-
-const AppHeader = dynamic(
-  () =>
-    import("@/components/dashboard/AppHeader").then((mod) => mod.AppHeader),
-  { ssr: true },
-) as ComponentType<AppHeaderProps>;
-
-const AppSidebar = dynamic(
-  () =>
-    import("@/components/dashboard/AppSidebar").then((mod) => mod.AppSidebar),
-  { ssr: true },
-) as ComponentType<AppSidebarProps>;
 
 const listeners = new Set<() => void>();
 
@@ -85,8 +62,6 @@ export function DashboardShell({
 
   const pathname = usePathname();
 
-  const isMaterialsPage =
-    pathname === "/materials" || pathname.startsWith("/materials/");
   const isTasksPage =
     pathname === "/tasks" ||
     pathname.startsWith("/tasks/") ||
@@ -195,7 +170,6 @@ export function DashboardShell({
       <div
         className={clsx(
           css.body,
-          isMaterialsPage && css.materialsBody,
           isTasksPage && css.stableContent,
           sidebarOpen ? css.sidebarOpen : css.sidebarClosed,
         )}

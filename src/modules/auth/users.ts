@@ -33,7 +33,7 @@ const SQL_FIND_BY_LOGIN = `
          UNIX_TIMESTAMP(a.updated_at) AS avatar_rev
   FROM ${AUTH_USERS_TABLE} u
   LEFT JOIN user_avatars a ON a.user_id = u.id
-  WHERE u.login = ?
+  WHERE LOWER(u.login) = ?
   LIMIT 1
 `;
 
@@ -284,7 +284,9 @@ export async function findUserByLogin(
   await ensureAuthSchema(deps);
   const connection = await deps.getConnection();
   try {
-    const rows = await connection.query<UserRow>(SQL_FIND_BY_LOGIN, [login.trim()]);
+    const rows = await connection.query<UserRow>(SQL_FIND_BY_LOGIN, [
+      login.trim().toLowerCase(),
+    ]);
     const row = rows[0];
     if (!row?.password_hash) return null;
     return { ...mapUser(row), passwordHash: row.password_hash };

@@ -1,4 +1,8 @@
-import { PASSWORD_MAX_LEN, PASSWORD_MIN_LEN } from "./validateRegistration";
+import {
+  changePasswordErrorCode,
+  changePasswordSchema,
+} from "@/validations/authValidation";
+import { validateSchema } from "@/validations/parse";
 
 export type ChangePasswordFieldError =
   | "requiredFields"
@@ -23,32 +27,10 @@ export function validateChangePasswordInput(
 ):
   | { ok: true; value: ValidatedChangePassword }
   | { ok: false; code: ChangePasswordFieldError } {
-  const currentPassword = input.currentPassword;
-  const newPassword = input.newPassword;
-  const newPasswordConfirm = input.newPasswordConfirm;
-
-  if (!currentPassword || !newPassword || !newPasswordConfirm) {
-    return { ok: false, code: "requiredFields" };
+  const parsed = validateSchema(changePasswordSchema, input);
+  if (!parsed.ok) {
+    return { ok: false, code: changePasswordErrorCode(parsed.detail) };
   }
-
-  if (newPassword.length < PASSWORD_MIN_LEN) {
-    return { ok: false, code: "passwordTooShort" };
-  }
-
-  if (
-    currentPassword.length > PASSWORD_MAX_LEN ||
-    newPassword.length > PASSWORD_MAX_LEN
-  ) {
-    return { ok: false, code: "passwordTooLong" };
-  }
-
-  if (newPassword !== newPasswordConfirm) {
-    return { ok: false, code: "passwordMismatch" };
-  }
-
-  if (currentPassword === newPassword) {
-    return { ok: false, code: "samePassword" };
-  }
-
-  return { ok: true, value: { currentPassword, newPassword } };
+  const { newPasswordConfirm: _confirm, ...value } = parsed.value;
+  return { ok: true, value };
 }
