@@ -1,4 +1,6 @@
 import type { SqlConnection } from "@/lib/db/mysql";
+import { createMentorSessionSchema } from "@/validations/mentorSessionValidation";
+import { validateSchema } from "@/validations/parse";
 import {
   SESSION_STATUS_PLANNED,
   SESSION_TYPE_MENTOR,
@@ -56,29 +58,23 @@ type CreateMentorSessionDeps = {
   nowSec?: () => number;
 };
 
-function isPositiveInt(value: unknown): value is number {
-  return typeof value === "number" && Number.isInteger(value) && value > 0;
-}
-
 export function validateCreateMentorSessionInput(
   input: unknown,
 ): CreateMentorSessionInput {
-  if (typeof input !== "object" || input === null) {
-    throw new CreateMentorSessionError(
-      "Request body must be a JSON object.",
-      "invalid_input",
-    );
+  const parsed = validateSchema(createMentorSessionSchema, input, {
+    abortEarly: true,
+    allowUnknown: false,
+    stripUnknown: false,
+    convert: false,
+  });
+  if (!parsed.ok) {
+    const message =
+      parsed.detail.type === "object.base"
+        ? "Request body must be a JSON object."
+        : "userId and themeId must be positive integers.";
+    throw new CreateMentorSessionError(message, "invalid_input");
   }
-
-  const { userId, themeId } = input as Record<string, unknown>;
-  if (!isPositiveInt(userId) || !isPositiveInt(themeId)) {
-    throw new CreateMentorSessionError(
-      "userId and themeId must be positive integers.",
-      "invalid_input",
-    );
-  }
-
-  return { userId, themeId };
+  return parsed.value;
 }
 
 async function loadDefaultConnection(): Promise<SqlConnection> {

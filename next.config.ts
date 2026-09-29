@@ -45,7 +45,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   serverExternalPackages: ["mysql2"],
   experimental: {
-    optimizePackageImports: ["clsx"],
+    optimizePackageImports: ["clsx", "motion"],
     serverActions: {
       bodySizeLimit: "2mb",
     },

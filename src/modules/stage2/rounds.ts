@@ -1,3 +1,4 @@
+import { cachedCatalogQuery } from "@/lib/cache/catalogCache";
 import type { SqlConnection } from "@/lib/db/mysql";
 import type { Stage2Format } from "./stage2Attempt";
 
@@ -63,20 +64,50 @@ function validate(userId: number, roundId?: number): void {
   }
 }
 
-/** How many Stage 2 seed tasks exist (0 if tables/migrations missing). */
-export async function countStage2CatalogTasks(
-  deps: RoundDeps = DEFAULT_DEPS,
-): Promise<number> {
+class Stage2CatalogEmpty extends Error {
+  constructor() {
+    super("Stage 2 catalog is empty");
+    this.name = "Stage2CatalogEmpty";
+  }
+}
+
+async function queryStage2CatalogCount(deps: RoundDeps): Promise<number> {
   const connection = await deps.getConnection();
   try {
     const rows = await connection.query<{ total: number | string }>(
       SQL_CATALOG_COUNT,
     );
-    return Number(rows[0]?.total ?? 0);
-  } catch {
-    return 0;
+    const total = Number(rows[0]?.total ?? 0);
+    return Number.isFinite(total) ? total : 0;
   } finally {
     connection.release();
+  }
+}
+
+async function loadCachedStage2CatalogCount(): Promise<number> {
+  const total = await queryStage2CatalogCount(DEFAULT_DEPS);
+  if (total <= 0) {
+    throw new Stage2CatalogEmpty();
+  }
+  return total;
+}
+
+/** How many Stage 2 seed tasks exist (0 if tables are missing or the bank is empty).
+ *  Only a positive count is cached. Zero is read again on the next request.
+ */
+export async function countStage2CatalogTasks(
+  deps: RoundDeps = DEFAULT_DEPS,
+): Promise<number> {
+  try {
+    if (deps !== DEFAULT_DEPS) {
+      return await queryStage2CatalogCount(deps);
+    }
+    return await cachedCatalogQuery(
+      "stage2-catalog-count",
+      loadCachedStage2CatalogCount,
+    );
+  } catch {
+    return 0;
   }
 }
 async function readRound(connection: SqlConnection, userId: number, roundId: number, lock = false): Promise<RoundRow> {

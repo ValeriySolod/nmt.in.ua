@@ -1,1 +1,0 @@
-export { SelfScorePicker } from "./SelfScorePicker";

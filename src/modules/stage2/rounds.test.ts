@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { SqlConnection } from "@/lib/db/mysql";
-import { getRound, finishRound, skipRoundTask, startRound, startMistakeRound, listRounds, toRoundSnapshot, RoundError, type RoundMode } from "./rounds";
+import { countStage2CatalogTasks, getRound, finishRound, skipRoundTask, startRound, startMistakeRound, listRounds, toRoundSnapshot, RoundError, type RoundMode } from "./rounds";
 import { withRound, getRoundContext } from "./roundContext";
 import { runStage2Attempt, peekStage2Attempt } from "./stage2Attempt";
 import { getStage2HintLevel } from "./hintLadder";
@@ -183,4 +183,28 @@ test("new round orders available catalog across formats and keeps all twenty tas
   assert.equal(insertedTasks.length, 20);
   assert.deepEqual(insertedTasks[0].params, [11, 1, "order", 1]);
   assert.deepEqual(insertedTasks[5].params, [11, 6, "order", 2]);
+});
+
+test("stage 2 catalog count returns the bank size and zero without caching an injected read", async () => {
+  let released = 0;
+  const depsFor = (total: number | "fail") => ({
+    getConnection: async () => ({
+      beginTransaction: async () => {},
+      query: async <T>() => {
+        if (total === "fail") throw new Error("missing table");
+        return [{ total }] as T[];
+      },
+      execute: async () => ({ insertId: 0, affectedRows: 0 }),
+      commit: async () => {},
+      rollback: async () => {},
+      release: () => {
+        released += 1;
+      },
+    }) as SqlConnection,
+  });
+
+  assert.equal(await countStage2CatalogTasks(depsFor(0)), 0);
+  assert.equal(await countStage2CatalogTasks(depsFor(4)), 4);
+  assert.equal(await countStage2CatalogTasks(depsFor("fail")), 0);
+  assert.equal(released, 3);
 });
