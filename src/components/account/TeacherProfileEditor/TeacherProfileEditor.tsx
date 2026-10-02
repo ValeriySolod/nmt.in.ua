@@ -11,7 +11,9 @@ import {
   TEACHER_PROFILE_BIO_MAX,
   TEACHER_PROFILE_CITY_MAX,
   TEACHER_PROFILE_CONTACT_URL_MAX,
+  TEACHER_PROFILE_EXPERIENCE_MAX,
   TEACHER_PROFILE_HEADLINE_MAX,
+  TEACHER_PROFILE_PUBLICATIONS_MAX,
   TEACHER_PROFILE_SLUG_MAX,
   teacherPublicPath,
   type TeacherProfile,
@@ -121,6 +123,32 @@ export function TeacherProfileEditor({
             rows={5}
             disabled={pending}
           />
+        </label>
+
+        <label className={css.field}>
+          <span className={css.label}>{t("experience")}</span>
+          <input
+            className={css.input}
+            type="text"
+            name="experience"
+            defaultValue={profile.experience}
+            maxLength={TEACHER_PROFILE_EXPERIENCE_MAX}
+            disabled={pending}
+          />
+          <span className={css.hint}>{t("experienceHint")}</span>
+        </label>
+
+        <label className={css.field}>
+          <span className={css.label}>{t("publications")}</span>
+          <textarea
+            className={css.textarea}
+            name="publications"
+            defaultValue={profile.publications}
+            maxLength={TEACHER_PROFILE_PUBLICATIONS_MAX}
+            rows={3}
+            disabled={pending}
+          />
+          <span className={css.hint}>{t("publicationsHint")}</span>
         </label>
 
         <div className={css.pair}>

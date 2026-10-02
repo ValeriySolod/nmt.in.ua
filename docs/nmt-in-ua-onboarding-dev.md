@@ -165,9 +165,9 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 | `src/app/(app)/practice/interactive/` | Редірект → `/?tab=interactive` |
 | `src/app/api/import/` і `api/admin/sessions/` | Machine-to-machine API з Bearer |
 | `src/app/api/payments/wayforpay/` | Webhook і return еквайрингу |
-| `src/components/welcome/` | Секції лендінгу + `landing.module.css` |
+| `src/components/welcome/` | Секції лендінгу + `landing.module.css`; `#teachers` — викладачі + пропозиція можливостей; `DevTeam` — команда + послуги (розробка/підтримка) |
 | `src/components/dashboard/` | Кабінет: header, sidebar, таблиці, старт тесту |
-| `src/components/account/` | `/account` + редактор візитки викладача |
+| `src/components/account/` | `/account` + редактор візитки викладача (досвід, наукові роботи) |
 | `src/components/admin/` | Редактор банку, форма завдання, профілі |
 | `src/components/teachers/` | Публічна картка `/t/{slug}` |
 | `src/components/testing/` | TopicTrainer, NmtTrainer, підсумок, розбір помилок |
@@ -191,7 +191,7 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 | `src/modules/results/` | Агрегати `/results` + `teacherStudentResults` |
 | `src/modules/mentor-assignments/` | Групове призначення тестів (`/assign`) |
 | `src/modules/teacher-students/` | Roster, групи, інвайти, створення учня |
-| `src/modules/teachers/` | Візитка + карусель/рейтинги на `/consultations` |
+| `src/modules/teachers/` | Візитка + карусель/рейтинги на `/consultations` + список для лендінгу |
 | `src/modules/consultations/` | Заявки учня + інбокс викладача |
 | `src/modules/self-score/` | Самооцінка 1–10 (історія, не overwrite) |
 | `src/modules/feedback/` | Відгук про сайт |

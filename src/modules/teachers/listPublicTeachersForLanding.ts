@@ -3,11 +3,11 @@ import "server-only";
 import type { SqlConnection } from "@/lib/db/mysql";
 import { ensureAuthSchema } from "@/modules/auth/users";
 import type { UserRole } from "@/modules/auth/types";
+import { ensureTeacherStudentsSchema } from "@/modules/teacher-students/schema";
 import { ensureTeacherProfileSchema } from "./schema";
-import { ensureTeacherRatingsSchema } from "./ratingsSchema";
-import type { TeacherCarouselItem } from "./types";
+import type { TeacherLandingCard } from "./types";
 
-export type { TeacherCarouselItem };
+export type { TeacherLandingCard };
 
 type ListRow = {
   user_id: number;
@@ -24,34 +24,26 @@ type ListRow = {
   login: string;
   role: UserRole;
   avatar_rev?: number | string | null;
-  avg_rating?: number | string | null;
-  rating_count?: number | string | null;
-  my_rating?: number | string | null;
+  student_count?: number | string | null;
 };
 
-const SQL_LIST_PUBLIC = `
+const SQL_LIST_LANDING = `
   SELECT p.user_id, p.slug, p.headline, p.bio, p.experience, p.publications,
          p.city, p.subjects, p.contact_url, p.is_public,
          u.display_name, u.login, u.role,
          UNIX_TIMESTAMP(a.updated_at) AS avatar_rev,
-         stats.avg_rating,
-         stats.rating_count,
-         mine.score AS my_rating
+         COALESCE(sc.student_count, 0) AS student_count
   FROM teacher_profiles p
   INNER JOIN app_users u ON u.id = p.user_id
   LEFT JOIN user_avatars a ON a.user_id = u.id
   LEFT JOIN (
-    SELECT teacher_user_id,
-           AVG(score) AS avg_rating,
-           COUNT(*) AS rating_count
-    FROM teacher_ratings
+    SELECT teacher_user_id, COUNT(*) AS student_count
+    FROM teacher_students
     GROUP BY teacher_user_id
-  ) stats ON stats.teacher_user_id = p.user_id
-  LEFT JOIN teacher_ratings mine
-    ON mine.teacher_user_id = p.user_id AND mine.student_user_id = ?
+  ) sc ON sc.teacher_user_id = p.user_id
   WHERE p.is_public = 1
     AND u.role IN ('teacher', 'admin')
-  ORDER BY stats.avg_rating IS NULL ASC, stats.avg_rating DESC, u.display_name ASC
+  ORDER BY u.display_name ASC
 `;
 
 type StoreDeps = {
@@ -81,15 +73,6 @@ function asPositiveInt(value: unknown): number | undefined {
   return numeric;
 }
 
-function asRating(value: unknown): number | null {
-  if (value == null || value === "") return null;
-  const numeric = typeof value === "bigint" ? Number(value) : Number(value);
-  if (!Number.isFinite(numeric)) return null;
-  const rounded = Math.round(numeric * 10) / 10;
-  if (rounded < 1 || rounded > 5) return null;
-  return rounded;
-}
-
 function asCount(value: unknown): number {
   if (value == null || value === "") return 0;
   const numeric = typeof value === "bigint" ? Number(value) : Number(value);
@@ -97,8 +80,8 @@ function asCount(value: unknown): number {
   return numeric;
 }
 
-function mapRow(row: ListRow): TeacherCarouselItem {
-  const card: TeacherCarouselItem = {
+function mapRow(row: ListRow): TeacherLandingCard {
+  const card: TeacherLandingCard = {
     userId: row.user_id,
     slug: row.slug,
     headline: row.headline?.trim() ?? "",
@@ -112,9 +95,7 @@ function mapRow(row: ListRow): TeacherCarouselItem {
     displayName: row.display_name.trim(),
     login: row.login,
     role: row.role,
-    avgRating: asRating(row.avg_rating),
-    ratingCount: asCount(row.rating_count),
-    myRating: asRating(row.my_rating),
+    studentCount: asCount(row.student_count),
   };
   const avatarRev = asPositiveInt(row.avatar_rev);
   if (avatarRev) card.avatarRev = avatarRev;
@@ -122,21 +103,18 @@ function mapRow(row: ListRow): TeacherCarouselItem {
 }
 
 /**
- * Public teacher cards for the consultations carousel, with aggregate and
- * optional per-student ratings.
+ * Public teacher cards for the welcome landing swiper, with linked student counts.
  */
-export async function listPublicTeachersForCarousel(
-  viewerUserId: number | null,
+export async function listPublicTeachersForLanding(
   deps: StoreDeps = { getConnection: loadDefaultConnection },
-): Promise<TeacherCarouselItem[]> {
+): Promise<TeacherLandingCard[]> {
   await ensureAuthSchema(deps);
   await ensureTeacherProfileSchema(deps.getConnection);
-  await ensureTeacherRatingsSchema(deps.getConnection);
+  await ensureTeacherStudentsSchema(deps.getConnection);
 
   const connection = await deps.getConnection();
   try {
-    const viewerId = viewerUserId && viewerUserId > 0 ? viewerUserId : 0;
-    const rows = await connection.query<ListRow>(SQL_LIST_PUBLIC, [viewerId]);
+    const rows = await connection.query<ListRow>(SQL_LIST_LANDING, []);
     return rows.map(mapRow);
   } finally {
     connection.release();

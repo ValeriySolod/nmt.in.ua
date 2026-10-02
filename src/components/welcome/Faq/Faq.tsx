@@ -1,8 +1,10 @@
+import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { JsonLd } from "@/components/seo";
 import { Reveal } from "@/components/ui/Reveal";
 import { PlusIcon } from "../icons";
-import css from "../landing.module.css";
+import landing from "../landing.module.css";
+import css from "./Faq.module.css";
 
 const FAQ_KEYS = ["price", "who", "mobile", "recommendations", "teacher"] as const;
 
@@ -20,29 +22,45 @@ export async function Faq() {
   };
 
   return (
-    <section id="faq" className={css.section} aria-labelledby="faq-title">
+    <section id="faq" className={landing.section} aria-labelledby="faq-title">
       <JsonLd data={faqJsonLd} />
-      <div className={css.container}>
-        <Reveal className={css.sectionHead}>
-          <p className={css.kicker}>{t("kicker")}</p>
-          <h2 id="faq-title" className={css.sectionTitle}>
-            {t("title")}
-          </h2>
-          <p className={css.sectionLead}>{t("lead")}</p>
-        </Reveal>
+      <div className={landing.container}>
+        <div className={css.split}>
+          <Reveal className={css.visual}>
+            <Image
+              className={css.photo}
+              src="/landing/faq-student.jpg"
+              alt={t("imageAlt")}
+              width={900}
+              height={1200}
+              sizes="(min-width: 1240px) 28rem, (min-width: 768px) 40vw, 85vw"
+              priority={false}
+            />
+          </Reveal>
 
-        <div className={css.faqList}>
-          {FAQ_KEYS.map((key, index) => (
-            <Reveal key={key} delay={index * 60}>
-              <details className={css.faqItem}>
-                <summary className={css.faqSummary}>
-                  {t(`items.${key}.q`)}
-                  <PlusIcon size={20} className={css.faqIcon} />
-                </summary>
-                <p className={css.faqAnswer}>{t(`items.${key}.a`)}</p>
-              </details>
+          <div className={css.content}>
+            <Reveal className={css.head}>
+              <p className={`${landing.kicker} ${css.kicker}`}>{t("kicker")}</p>
+              <h2 id="faq-title" className={landing.sectionTitle}>
+                {t("title")}
+              </h2>
+              <p className={landing.sectionLead}>{t("lead")}</p>
             </Reveal>
-          ))}
+
+            <div className={css.list}>
+              {FAQ_KEYS.map((key, index) => (
+                <Reveal key={key} delay={index * 60}>
+                  <details className={landing.faqItem}>
+                    <summary className={landing.faqSummary}>
+                      {t(`items.${key}.q`)}
+                      <PlusIcon size={20} className={landing.faqIcon} />
+                    </summary>
+                    <p className={landing.faqAnswer}>{t(`items.${key}.a`)}</p>
+                  </details>
+                </Reveal>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </section>

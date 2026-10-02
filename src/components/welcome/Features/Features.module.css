@@ -1,0 +1,607 @@
+.stage {
+  position: relative;
+  isolation: isolate;
+  margin-top: var(--space-xl);
+  min-height: 42rem;
+  padding-block: var(--space-xl);
+}
+
+.scatter {
+  position: absolute;
+  inset: -2% -1%;
+  z-index: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.stationery {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  overflow: visible;
+}
+
+/* --- background: few closed books ------------------------------------------- */
+
+.closedBook {
+  position: absolute;
+  z-index: 0;
+  display: block;
+  width: clamp(3rem, 8vw, 5.25rem);
+  height: clamp(3.75rem, 10vw, 6.5rem);
+  opacity: 0.88;
+  filter: drop-shadow(0 10px 16px rgb(58 44 18 / 14%));
+}
+
+.closedPages {
+  position: absolute;
+  inset: 0;
+  border-radius: 2px 6px 6px 2px;
+  background: linear-gradient(
+    90deg,
+    rgb(245 238 220 / 98%) 0%,
+    rgb(253 251 244) 18%,
+    rgb(253 251 244) 100%
+  );
+}
+
+.closedCover {
+  position: absolute;
+  inset: 0;
+  border-radius: 3px 7px 7px 3px;
+  background: linear-gradient(
+    145deg,
+    rgb(120 132 104 / 92%),
+    rgb(72 88 58 / 96%)
+  );
+  transform-origin: left center;
+  transform: perspective(420px) rotateY(-18deg);
+  box-shadow: inset -2px 0 0 rgb(58 44 18 / 12%);
+}
+
+.closedA {
+  top: 3%;
+  left: 3%;
+  transform: rotate(-28deg);
+}
+
+.closedB {
+  top: 10%;
+  right: 2%;
+  transform: rotate(22deg) scale(0.92);
+}
+
+.closedC {
+  bottom: 6%;
+  left: 4%;
+  transform: rotate(16deg) scale(0.95);
+}
+
+.closedD {
+  bottom: 4%;
+  right: 5%;
+  transform: rotate(-18deg);
+}
+
+/* --- stationery ------------------------------------------------------------- */
+
+.pencil,
+.pen,
+.ruler,
+.triangle,
+.compass {
+  position: absolute;
+  z-index: 5;
+  display: block;
+  filter: drop-shadow(0 6px 12px rgb(58 44 18 / 16%));
+}
+
+.pencil {
+  width: 0.48rem;
+  height: clamp(4.25rem, 10vw, 6.25rem);
+  border-radius: 2px;
+}
+
+/* Gap between top cards and student head */
+.pencilA {
+  top: 12%;
+  left: 42%;
+  background: linear-gradient(
+    180deg,
+    rgb(58 44 18 / 55%) 0 7%,
+    rgb(242 198 88) 7% 78%,
+    rgb(214 120 98) 78% 90%,
+    rgb(253 251 244) 90%
+  );
+  transform: rotate(-38deg);
+}
+
+/* Gap between bottom cards */
+.pencilB {
+  bottom: 18%;
+  left: 46%;
+  background: linear-gradient(
+    180deg,
+    rgb(58 44 18 / 50%) 0 7%,
+    rgb(120 150 110) 7% 76%,
+    rgb(214 120 98) 76% 90%,
+    rgb(253 251 244) 90%
+  );
+  transform: rotate(52deg);
+}
+
+.pen {
+  width: 0.42rem;
+  height: clamp(4rem, 9vw, 5.75rem);
+  border-radius: 3px;
+}
+
+/* Corridor left: between top-left & mid-left cards */
+.penA {
+  top: 28%;
+  left: 11%;
+  background: linear-gradient(
+    180deg,
+    rgb(31 100 70) 0 12%,
+    rgb(31 143 69 / 90%) 12% 82%,
+    rgb(40 40 40 / 85%) 82% 94%,
+    rgb(180 180 180) 94%
+  );
+  transform: rotate(22deg);
+}
+
+/* Corridor right: between top-right & mid-right cards */
+.penB {
+  top: 26%;
+  right: 10%;
+  background: linear-gradient(
+    180deg,
+    rgb(90 70 45) 0 10%,
+    rgb(150 118 62 / 88%) 10% 80%,
+    rgb(40 40 40 / 85%) 80% 93%,
+    rgb(200 200 200) 93%
+  );
+  transform: rotate(-48deg);
+}
+
+.ruler {
+  height: 0.78rem;
+  border-radius: 2px;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 9px,
+      rgb(94 76 40 / 35%) 9px 10px
+    ),
+    linear-gradient(180deg, rgb(253 251 244), rgb(235 225 200));
+  box-shadow: inset 0 0 0 1px rgb(94 76 40 / 22%);
+}
+
+/* Top center strip between slotA and slotB */
+.rulerA {
+  top: 1%;
+  left: 38%;
+  width: clamp(5.5rem, 13vw, 8.5rem);
+  transform: rotate(12deg);
+}
+
+.triangle {
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-color: transparent;
+  filter: drop-shadow(0 6px 10px rgb(58 44 18 / 12%));
+}
+
+/* Left gap between mid card and bottom card */
+.triangleA {
+  bottom: 22%;
+  left: 8%;
+  border-width: 0 0 clamp(3.5rem, 8.5vw, 5rem) clamp(4rem, 9.5vw, 5.75rem);
+  border-bottom-color: rgb(120 150 170 / 58%);
+  transform: rotate(-12deg);
+}
+
+.compass {
+  width: clamp(3rem, 6.5vw, 4.25rem);
+  height: clamp(3.5rem, 7.5vw, 5rem);
+}
+
+/* Right gap between mid card and bottom card */
+.compassA {
+  bottom: 20%;
+  right: 8%;
+  transform: rotate(14deg);
+}
+
+.compassLeg,
+.compassLegAlt {
+  position: absolute;
+  top: 18%;
+  left: 48%;
+  width: 0.18rem;
+  height: 78%;
+  border-radius: 2px;
+  background: linear-gradient(
+    180deg,
+    rgb(90 90 95),
+    rgb(160 160 165) 40%,
+    rgb(50 50 55)
+  );
+  transform-origin: top center;
+}
+
+.compassLeg {
+  transform: rotate(-18deg);
+}
+
+.compassLegAlt {
+  transform: rotate(22deg);
+}
+
+.compassKnob {
+  position: absolute;
+  top: 8%;
+  left: 50%;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 35% 30%,
+    rgb(220 220 225),
+    rgb(90 90 95)
+  );
+  transform: translateX(-50%);
+  box-shadow: 0 1px 2px rgb(58 44 18 / 25%);
+}
+
+/* --- student ----------------------------------------------------------------- */
+
+.studentWrap {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: 50%;
+  width: min(18rem, 62vw);
+  transform: translate(-50%, -48%);
+  pointer-events: none;
+}
+
+.student {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 20px 32px rgb(58 44 18 / 20%));
+}
+
+/* --- open feature cards ------------------------------------------------------ */
+
+.openBooks {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.openBook {
+  position: absolute;
+  width: min(13.5rem, 46vw);
+  pointer-events: auto;
+  filter: drop-shadow(0 14px 24px rgb(58 44 18 / 16%));
+}
+
+.spread {
+  position: relative;
+}
+
+.pageSheet {
+  display: block;
+  aspect-ratio: 1.05 / 1;
+  border-radius: var(--radius-lg);
+  background-color: var(--surface);
+  background-image:
+    linear-gradient(rgb(215 205 182 / 32%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(215 205 182 / 32%) 1px, transparent 1px);
+  background-size: 16px 16px;
+  box-shadow:
+    inset 0 0 0 1px rgb(94 76 40 / 14%),
+    0 2px 0 rgb(253 251 244 / 70%);
+}
+
+.openBookCopy {
+  position: absolute;
+  inset: 7% 6% 6%;
+  display: grid;
+  align-content: start;
+  gap: var(--space-sm);
+  overflow: hidden;
+  text-align: left;
+  pointer-events: none;
+}
+
+.bookTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.2rem, 3.6vw, 1.45rem);
+  font-weight: 700;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  color: var(--green-dark);
+}
+
+.bookText {
+  margin: 0;
+  color: var(--muted);
+  font-size: clamp(1rem, 3vw, 1.12rem);
+  line-height: 1.48;
+  text-wrap: pretty;
+}
+
+.slotA {
+  top: 2%;
+  left: 14%;
+  transform: rotate(-10deg);
+  z-index: 2;
+}
+
+.slotB {
+  top: 0;
+  right: 12%;
+  transform: rotate(9deg);
+  z-index: 2;
+}
+
+.slotC {
+  top: 40%;
+  left: -2%;
+  transform: rotate(7deg);
+  z-index: 4;
+}
+
+.slotD {
+  top: 38%;
+  right: -2%;
+  transform: rotate(-8deg);
+  z-index: 4;
+}
+
+.slotE {
+  bottom: 2%;
+  left: 16%;
+  transform: rotate(-4deg);
+  z-index: 2;
+}
+
+.slotF {
+  bottom: 0;
+  right: 14%;
+  transform: rotate(11deg);
+  z-index: 2;
+}
+
+@media (min-width: 768px) {
+  .stage {
+    min-height: 48rem;
+  }
+
+  .studentWrap {
+    width: min(24rem, 36vw);
+  }
+
+  .openBook {
+    width: min(16.5rem, 26vw);
+  }
+
+  .bookTitle {
+    font-size: clamp(1.3rem, 2vw, 1.5rem);
+  }
+
+  .bookText {
+    font-size: clamp(1.05rem, 1.5vw, 1.15rem);
+  }
+
+  .pencilA {
+    top: 12%;
+    left: 44%;
+  }
+
+  .pencilB {
+    bottom: 20%;
+    left: 48%;
+  }
+
+  .penA {
+    top: 30%;
+    left: 14%;
+  }
+
+  .penB {
+    top: 28%;
+    right: 12%;
+  }
+
+  .rulerA {
+    top: 2%;
+    left: 40%;
+  }
+
+  .triangleA {
+    bottom: 24%;
+    left: 12%;
+  }
+
+  .compassA {
+    bottom: 22%;
+    right: 12%;
+  }
+
+  .closedBook {
+    width: clamp(3.5rem, 7vw, 5.75rem);
+    height: clamp(4.25rem, 8.5vw, 7rem);
+  }
+
+  .slotA {
+    top: 4%;
+    left: 18%;
+  }
+
+  .slotB {
+    top: 2%;
+    right: 16%;
+  }
+
+  .slotC {
+    top: 42%;
+    left: 2%;
+  }
+
+  .slotD {
+    top: 40%;
+    right: 2%;
+  }
+
+  .slotE {
+    bottom: 4%;
+    left: 20%;
+  }
+
+  .slotF {
+    bottom: 2%;
+    right: 18%;
+  }
+}
+
+@media (min-width: 1240px) {
+  .stage {
+    min-height: 52rem;
+  }
+
+  .studentWrap {
+    width: min(26rem, 28vw);
+  }
+
+  .openBook {
+    width: 18.5rem;
+  }
+
+  .openBookCopy {
+    inset: 7% 7% 6%;
+    gap: var(--space-md);
+  }
+
+  .bookTitle {
+    font-size: var(--fs-h3);
+  }
+
+  .bookText {
+    font-size: var(--fs-lead);
+    line-height: 1.5;
+  }
+
+  .pencilA {
+    top: 12%;
+    left: 46%;
+  }
+
+  .rulerA {
+    left: 42%;
+  }
+
+  .pageSheet {
+    aspect-ratio: 1 / 1;
+  }
+
+  .slotC,
+  .slotD {
+    z-index: 1;
+  }
+}
+
+@media (max-width: 767px) {
+  .stage {
+    min-height: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+    padding-block: var(--space-md);
+  }
+
+  .scatter,
+  .stationery {
+    inset: 0;
+    opacity: 0.7;
+  }
+
+  .studentWrap {
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    width: min(16rem, 82vw);
+    margin-inline: auto;
+    order: 1;
+    z-index: 2;
+  }
+
+  .openBooks {
+    position: relative;
+    inset: auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-md);
+    order: 3;
+  }
+
+  .openBook {
+    position: relative;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    width: 100%;
+    max-width: 26rem;
+    margin-inline: auto;
+    transform: rotate(-0.5deg) !important;
+  }
+
+  .openBook:nth-child(even) {
+    transform: rotate(0.5deg) !important;
+  }
+
+  .bookTitle {
+    font-size: var(--fs-h3);
+  }
+
+  .bookText {
+    font-size: var(--fs-lead);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slotA,
+  .slotB,
+  .slotC,
+  .slotD,
+  .slotE,
+  .slotF,
+  .closedA,
+  .closedB,
+  .closedC,
+  .closedD,
+  .pencilA,
+  .pencilB,
+  .penA,
+  .penB,
+  .rulerA,
+  .triangleA,
+  .compassA {
+    transform: none;
+  }
+
+  .openBook:nth-child(even) {
+    transform: none !important;
+  }
+}
