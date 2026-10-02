@@ -43,9 +43,13 @@ import {
 import { revalidatePath } from "next/cache";
 import type { AuthUser } from "./types";
 import {
-  normalizeEmail,
-  PASSWORD_MAX_LEN,
-  PASSWORD_MIN_LEN,
+  loginUserSchema,
+  requestResetEmailSchema,
+  resetPasswordErrorCode,
+  resetPasswordSchema,
+} from "@/validations/authValidation";
+import { validateSchema } from "@/validations/parse";
+import {
   validateRegistrationInput,
   type RegistrationFieldError,
 } from "./validateRegistration";
@@ -68,20 +72,21 @@ export async function loginAction(
   _prev: LoginActionState,
   formData: FormData,
 ): Promise<LoginActionState> {
-  const login = String(formData.get("login") ?? "").trim();
-  const password = String(formData.get("password") ?? "");
-  const nextPath = safeInternalPath(formData.get("next"));
-
-  if (!login || !password) {
+  const parsed = validateSchema(loginUserSchema, {
+    login: String(formData.get("login") ?? ""),
+    password: String(formData.get("password") ?? ""),
+  });
+  if (!parsed.ok) {
+    if (parsed.detail.type === "string.max") {
+      return { status: "error", code: "invalidCredentials" };
+    }
     return { status: "error", code: "requiredFields" };
   }
+  const { login, password } = parsed.value;
+  const nextPath = safeInternalPath(formData.get("next"));
 
   // Same gate as one-click demo: password form must not unlock demo-* on prod.
   if (isDemoAccountLogin(login) && !isDemoLoginEnabled()) {
-    return { status: "error", code: "invalidCredentials" };
-  }
-
-  if (password.length > PASSWORD_MAX_LEN) {
     return { status: "error", code: "invalidCredentials" };
   }
 
@@ -321,8 +326,11 @@ export async function resendVerificationAction(
   _prev: ResendVerifyActionState,
   formData: FormData,
 ): Promise<ResendVerifyActionState> {
-  const email = normalizeEmail(String(formData.get("email") ?? ""));
-  if (!email) return { status: "error", code: "invalid_email" };
+  const parsed = validateSchema(requestResetEmailSchema, {
+    email: String(formData.get("email") ?? ""),
+  });
+  if (!parsed.ok) return { status: "error", code: "invalid_email" };
+  const { email } = parsed.value;
 
   const user = await findUserByEmail(email);
   if (!user || user.emailVerified || user.isBanned) {
@@ -397,8 +405,11 @@ export async function forgotPasswordAction(
   _prev: ForgotPasswordActionState,
   formData: FormData,
 ): Promise<ForgotPasswordActionState> {
-  const email = normalizeEmail(String(formData.get("email") ?? ""));
-  if (!email) return { status: "error", code: "invalid_email" };
+  const parsed = validateSchema(requestResetEmailSchema, {
+    email: String(formData.get("email") ?? ""),
+  });
+  if (!parsed.ok) return { status: "error", code: "invalid_email" };
+  const { email } = parsed.value;
 
   const user = await findUserByEmail(email);
   if (!user || user.isBanned || !user.emailVerified) {
@@ -447,20 +458,15 @@ export async function resetPasswordAction(
   _prev: ResetPasswordActionState,
   formData: FormData,
 ): Promise<ResetPasswordActionState> {
-  const token = String(formData.get("token") ?? "").trim();
-  const password = String(formData.get("password") ?? "");
-  const passwordConfirm = String(formData.get("passwordConfirm") ?? "");
-
-  if (!token) return { status: "error", code: "invalid_token" };
-  if (password.length < PASSWORD_MIN_LEN) {
-    return { status: "error", code: "passwordTooShort" };
+  const parsed = validateSchema(resetPasswordSchema, {
+    token: String(formData.get("token") ?? ""),
+    password: String(formData.get("password") ?? ""),
+    passwordConfirm: String(formData.get("passwordConfirm") ?? ""),
+  });
+  if (!parsed.ok) {
+    return { status: "error", code: resetPasswordErrorCode(parsed.detail) };
   }
-  if (password.length > PASSWORD_MAX_LEN) {
-    return { status: "error", code: "passwordTooLong" };
-  }
-  if (password !== passwordConfirm) {
-    return { status: "error", code: "passwordMismatch" };
-  }
+  const { token, password } = parsed.value;
 
   try {
     const consumed = await consumeAuthToken(token, "password_reset");

@@ -191,7 +191,8 @@
   display: none;
 }
 
-@container (min-width: 900px) {
+/* Content column crosses ~800px on the 1240 artboard, not on the 768 one. */
+@container (min-width: 800px) {
   .layout {
     /* Content left, TOC sticky on the right */
     grid-template-columns: minmax(0, 1fr) minmax(210px, 260px);

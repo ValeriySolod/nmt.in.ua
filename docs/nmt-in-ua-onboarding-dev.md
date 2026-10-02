@@ -328,6 +328,7 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 ## 7. Як додавати фічу (шаблон)
 
 - Логіка — нова функція в `src/modules/<модуль>/`. Експорт через `index.ts`.
+- Вхід з форми або JSON спочатку проходить Joi-схему в `src/validations/` (`validateSchema`). Невідомі поля відхиляються, у дію потрапляє вже нормалізоване значення. Коди помилок для UI лишаються в обгортці модуля. Так само, як celebrate + Joi на RelaxMap, тільки без Express.
 - Server Action — у `modules/.../actions.ts`. Перший рядок після валідації: `const userId = await requireUserId()` (або `requireSessionUserId()` для гарячого шляху).
 - Сторінка в `src/app/.../page.tsx` лише збирає дані і рендерить компонент.
 - UI — папка `Component/Component.tsx` + `Component.module.css`. Без Tailwind, без нових UI-бібліотек.

@@ -90,7 +90,8 @@ input[type="range"] {
 /* ---------------------------------------------------------------------------
    Design tokens.
    Breakpoints: 375 / 768 / 1240 / 1440 / 1920. Mobile-first, base = 320px.
-   Fluid values interpolate between 375 and 1440, then hold.
+   320–374 is fluid (column = viewport). From 375 the frame locks to the
+   active artboard and stays that width until the next breakpoint.
    --------------------------------------------------------------------------- */
 
 :root {
@@ -129,15 +130,16 @@ input[type="range"] {
   /* typography */
   --font: "Segoe UI", "Candara", "Gill Sans", "Trebuchet MS", sans-serif;
   --font-display: Georgia, "Times New Roman", "Liberation Serif", serif;
-  --fs-display: clamp(2.125rem, 1.556rem + 2.43vw, 3.75rem);
-  --fs-h1: clamp(1.75rem, 1.31rem + 1.878vw, 3rem);
-  --fs-h2: clamp(1.5rem, 1.148rem + 1.502vw, 2.5rem);
-  --fs-h3: clamp(1.1875rem, 1.077rem + 0.47vw, 1.5rem);
-  --fs-h4: clamp(1.0625rem, 0.996rem + 0.282vw, 1.25rem);
-  --fs-lead: clamp(1rem, 0.912rem + 0.376vw, 1.25rem);
-  --fs-body: clamp(0.9375rem, 0.893rem + 0.188vw, 1.0625rem);
-  --fs-small: clamp(0.8125rem, 0.79rem + 0.094vw, 0.875rem);
-  --fs-kicker: clamp(0.75rem, 0.728rem + 0.094vw, 0.8125rem);
+  /* sizes at the 375 artboard; later breakpoints replace them outright */
+  --fs-display: 2.125rem;
+  --fs-h1: 1.75rem;
+  --fs-h2: 1.5rem;
+  --fs-h3: 1.1875rem;
+  --fs-h4: 1.0625rem;
+  --fs-lead: 1rem;
+  --fs-body: 0.9375rem;
+  --fs-small: 0.8125rem;
+  --fs-kicker: 0.75rem;
 
   /* rhythm */
   --space-2xs: 4px;
@@ -147,10 +149,11 @@ input[type="range"] {
   --space-lg: 24px;
   --space-xl: 32px;
   --space-2xl: 48px;
-  --space-3xl: clamp(2.5rem, 1.796rem + 3.005vw, 4.5rem);
-  --section-y: clamp(2.75rem, 2.046rem + 3.005vw, 4.75rem);
-  --container-pad: clamp(1rem, 0.472rem + 2.254vw, 2.5rem);
-  --container-max: 1200px;
+  --space-3xl: 2.5rem;
+  --section-y: 2.75rem;
+  --container-pad: 1rem;
+  /* 320–374: the column is the viewport. */
+  --container-max: 100%;
   /* Одноколонкові екрани кабінету: не розтягуються, коли сайдбар згорнуто. */
   --content-narrow: 46rem;
 
@@ -192,16 +195,31 @@ input[type="range"] {
   --title: 22px;
 }
 
-/* 375 — mobile reference */
+/* 375 — mobile artboard. Holds until 768. */
 @media (min-width: 375px) {
   :root {
+    --container-max: 375px;
+    --container-pad: 1.25rem;
     --pad-x: 20px;
   }
 }
 
-/* 768 — tablet */
+/* 768 — tablet artboard. Holds until 1240. */
 @media (min-width: 768px) {
   :root {
+    --container-max: 768px;
+    --container-pad: 1.5rem;
+    --space-3xl: 3.25rem;
+    --section-y: 3.5rem;
+    --fs-display: 2.725rem;
+    --fs-h1: 2.2125rem;
+    --fs-h2: 1.875rem;
+    --fs-h3: 1.3125rem;
+    --fs-h4: 1.125rem;
+    --fs-lead: 1.09375rem;
+    --fs-body: 0.9875rem;
+    --fs-small: 0.8375rem;
+    --fs-kicker: 0.78125rem;
     --pad-x: 24px;
     --pad-y: 20px;
     --header-h: 72px;
@@ -210,9 +228,21 @@ input[type="range"] {
   }
 }
 
-/* 1240 — laptop */
+/* 1240 — laptop artboard. Holds until 1440. */
 @media (min-width: 1240px) {
   :root {
+    --container-max: 1240px;
+    --container-pad: 2rem;
+    --space-3xl: 4.125rem;
+    --section-y: 4.375rem;
+    --fs-display: 3.4375rem;
+    --fs-h1: 2.75rem;
+    --fs-h2: 2.3125rem;
+    --fs-h3: 1.4375rem;
+    --fs-h4: 1.1875rem;
+    --fs-lead: 1.1875rem;
+    --fs-body: 1.03125rem;
+    --fs-kicker: 0.8125rem;
     --pad-x: 32px;
     --sidebar-w: 260px;
     --aside-w: 220px;
@@ -220,10 +250,21 @@ input[type="range"] {
   }
 }
 
-/* 1440 — desktop reference */
+/* 1440 — desktop artboard. Holds until 1920. */
 @media (min-width: 1440px) {
   :root {
-    --container-max: 1280px;
+    --container-max: 1440px;
+    --container-pad: 2.5rem;
+    --space-3xl: 4.5rem;
+    --section-y: 4.75rem;
+    --fs-display: 3.75rem;
+    --fs-h1: 3rem;
+    --fs-h2: 2.5rem;
+    --fs-h3: 1.5rem;
+    --fs-h4: 1.25rem;
+    --fs-lead: 1.25rem;
+    --fs-body: 1.0625rem;
+    --fs-small: 0.875rem;
     --pad-x: 40px;
     --sidebar-w: 280px;
     --aside-w: 240px;
@@ -231,10 +272,11 @@ input[type="range"] {
   }
 }
 
-/* 1920 — wide desktop, fluid stops growing */
+/* 1920 — wide artboard. Does not grow past this. */
 @media (min-width: 1920px) {
   :root {
-    --container-max: 1400px;
+    --container-max: 1920px;
+    --container-pad: 3rem;
     --pad-x: 48px;
     --sidebar-w: 300px;
     --aside-w: 260px;
