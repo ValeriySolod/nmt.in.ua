@@ -4,6 +4,8 @@ export const TEACHER_PROFILE_SLUG_MIN = 3;
 export const TEACHER_PROFILE_SLUG_MAX = 48;
 export const TEACHER_PROFILE_HEADLINE_MAX = 160;
 export const TEACHER_PROFILE_BIO_MAX = 2000;
+export const TEACHER_PROFILE_EXPERIENCE_MAX = 160;
+export const TEACHER_PROFILE_PUBLICATIONS_MAX = 2000;
 export const TEACHER_PROFILE_CITY_MAX = 80;
 export const TEACHER_PROFILE_SUBJECTS_MAX = 8;
 export const TEACHER_PROFILE_SUBJECT_MAX = 40;
@@ -14,6 +16,8 @@ export type TeacherProfile = {
   slug: string;
   headline: string;
   bio: string;
+  experience: string;
+  publications: string;
   city: string;
   subjects: string[];
   contactUrl: string;
@@ -38,10 +42,17 @@ export type TeacherProfileInput = {
   slug: string;
   headline: string;
   bio: string;
+  experience: string;
+  publications: string;
   city: string;
   subjects: string;
   contactUrl: string;
   isPublic: boolean;
+};
+
+/** Public teacher card for the welcome landing swiper. */
+export type TeacherLandingCard = PublicTeacherCard & {
+  studentCount: number;
 };
 
 export type TeacherProfileFieldError =
@@ -51,6 +62,8 @@ export type TeacherProfileFieldError =
   | "slugTaken"
   | "headlineTooLong"
   | "bioTooLong"
+  | "experienceTooLong"
+  | "publicationsTooLong"
   | "cityTooLong"
   | "invalidSubjects"
   | "invalidContactUrl"
@@ -71,6 +84,8 @@ export function emptyTeacherProfile(userId: number): TeacherProfile {
     slug: "",
     headline: "",
     bio: "",
+    experience: "",
+    publications: "",
     city: "",
     subjects: [],
     contactUrl: "",
