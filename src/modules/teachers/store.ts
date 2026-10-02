@@ -17,6 +17,8 @@ type TeacherProfileRow = {
   slug: string;
   headline: string | null;
   bio: string | null;
+  experience: string | null;
+  publications: string | null;
   city: string | null;
   subjects: string | null;
   contact_url: string | null;
@@ -33,14 +35,14 @@ type PublicTeacherRow = TeacherProfileRow & {
 type SlugOwnerRow = { user_id: number };
 
 const SQL_GET_OWN = `
-  SELECT user_id, slug, headline, bio, city, subjects, contact_url, is_public
+  SELECT user_id, slug, headline, bio, experience, publications, city, subjects, contact_url, is_public
   FROM teacher_profiles
   WHERE user_id = ?
   LIMIT 1
 `;
 
 const SQL_GET_PUBLIC = `
-  SELECT p.user_id, p.slug, p.headline, p.bio, p.city, p.subjects, p.contact_url, p.is_public,
+  SELECT p.user_id, p.slug, p.headline, p.bio, p.experience, p.publications, p.city, p.subjects, p.contact_url, p.is_public,
          u.display_name, u.login, u.role,
          UNIX_TIMESTAMP(a.updated_at) AS avatar_rev
   FROM teacher_profiles p
@@ -61,12 +63,14 @@ const SQL_SLUG_OWNER = `
 
 const SQL_UPSERT = `
   INSERT INTO teacher_profiles
-    (user_id, slug, headline, bio, city, subjects, contact_url, is_public)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    (user_id, slug, headline, bio, experience, publications, city, subjects, contact_url, is_public)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   ON DUPLICATE KEY UPDATE
     slug = VALUES(slug),
     headline = VALUES(headline),
     bio = VALUES(bio),
+    experience = VALUES(experience),
+    publications = VALUES(publications),
     city = VALUES(city),
     subjects = VALUES(subjects),
     contact_url = VALUES(contact_url),
@@ -113,6 +117,8 @@ function mapProfile(row: TeacherProfileRow): TeacherProfile {
     slug: row.slug,
     headline: row.headline?.trim() ?? "",
     bio: row.bio?.trim() ?? "",
+    experience: row.experience?.trim() ?? "",
+    publications: row.publications?.trim() ?? "",
     city: row.city?.trim() ?? "",
     subjects: parseSubjectsJson(row.subjects),
     contactUrl: row.contact_url?.trim() ?? "",
@@ -120,9 +126,7 @@ function mapProfile(row: TeacherProfileRow): TeacherProfile {
   };
 }
 
-async function withSchema(
-  deps: StoreDeps,
-): Promise<void> {
+async function withSchema(deps: StoreDeps): Promise<void> {
   await ensureAuthSchema(deps);
   await ensureTeacherProfileSchema(deps.getConnection);
 }
@@ -198,6 +202,8 @@ export async function saveTeacherProfile(
         value.slug,
         value.headline || null,
         value.bio || null,
+        value.experience || null,
+        value.publications || null,
         value.city || null,
         value.subjects.length > 0 ? JSON.stringify(value.subjects) : null,
         value.contactUrl || null,
@@ -219,6 +225,8 @@ export async function saveTeacherProfile(
       slug: value.slug,
       headline: value.headline,
       bio: value.bio,
+      experience: value.experience,
+      publications: value.publications,
       city: value.city,
       subjects: value.subjects,
       contactUrl: value.contactUrl,

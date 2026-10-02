@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS teacher_profiles (
   slug VARCHAR(48) NOT NULL,
   headline VARCHAR(160) NULL,
   bio TEXT NULL,
+  experience VARCHAR(160) NULL,
+  publications TEXT NULL,
   city VARCHAR(80) NULL,
   subjects VARCHAR(512) NULL,
   contact_url VARCHAR(500) NULL,
