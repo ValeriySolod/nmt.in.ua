@@ -56,6 +56,16 @@ const displayNameSchema = Joi.string()
   })
   .required();
 
+/** True for a trimmed address our registration schema would accept. */
+export function isValidEmailAddress(raw: string): boolean {
+  const value = raw.trim().toLowerCase();
+  return (
+    value.length > 0 &&
+    value.length <= EMAIL_MAX_LEN &&
+    EMAIL_PATTERN.test(value)
+  );
+}
+
 const emailSchema = Joi.string()
   .trim()
   .lowercase()

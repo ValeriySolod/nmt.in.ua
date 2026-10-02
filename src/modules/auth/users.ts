@@ -16,6 +16,7 @@ const SQL_CREATE_USERS = `
     display_name VARCHAR(100) NOT NULL,
     email VARCHAR(255) NULL,
     email_verified_at TIMESTAMP NULL DEFAULT NULL,
+    email_verify_required TINYINT(1) NOT NULL DEFAULT 0,
     role ENUM('student', 'teacher', 'admin') NOT NULL,
     is_banned TINYINT(1) NOT NULL DEFAULT 0,
     last_login_at TIMESTAMP NULL DEFAULT NULL,
@@ -29,7 +30,7 @@ const SQL_CREATE_USERS = `
 
 const SQL_FIND_BY_LOGIN = `
   SELECT u.id, u.login, u.password_hash, u.display_name, u.role, u.is_banned,
-         u.email, u.email_verified_at,
+         u.email, u.email_verified_at, u.email_verify_required,
          UNIX_TIMESTAMP(a.updated_at) AS avatar_rev
   FROM ${AUTH_USERS_TABLE} u
   LEFT JOIN user_avatars a ON a.user_id = u.id
@@ -39,7 +40,7 @@ const SQL_FIND_BY_LOGIN = `
 
 const SQL_FIND_BY_ID = `
   SELECT u.id, u.login, u.display_name, u.role, u.is_banned,
-         u.email, u.email_verified_at,
+         u.email, u.email_verified_at, u.email_verify_required,
          UNIX_TIMESTAMP(a.updated_at) AS avatar_rev
   FROM ${AUTH_USERS_TABLE} u
   LEFT JOIN user_avatars a ON a.user_id = u.id
@@ -49,7 +50,7 @@ const SQL_FIND_BY_ID = `
 
 const SQL_FIND_BY_EMAIL = `
   SELECT u.id, u.login, u.password_hash, u.display_name, u.role, u.is_banned,
-         u.email, u.email_verified_at,
+         u.email, u.email_verified_at, u.email_verify_required,
          UNIX_TIMESTAMP(a.updated_at) AS avatar_rev
   FROM ${AUTH_USERS_TABLE} u
   LEFT JOIN user_avatars a ON a.user_id = u.id
@@ -78,6 +79,7 @@ type UserRow = {
   is_banned?: number | boolean | null;
   email?: string | null;
   email_verified_at?: Date | string | null;
+  email_verify_required?: number | boolean | null;
   avatar_rev?: number | string | null;
 };
 
@@ -115,6 +117,9 @@ function mapUser(row: UserRow): AuthUser {
     if (!Number.isNaN(verified.getTime())) {
       user.emailVerified = true;
     }
+  }
+  if (isTruthyFlag(row.email_verify_required)) {
+    user.emailVerifyRequired = true;
   }
   const avatarRev = mapAvatarRev(row.avatar_rev);
   if (avatarRev) {
@@ -204,6 +209,11 @@ async function runAuthSchemaMigration(
       connection,
       "email_verified_at",
       "email_verified_at TIMESTAMP NULL DEFAULT NULL AFTER email",
+    );
+    await ensureUserColumn(
+      connection,
+      "email_verify_required",
+      "email_verify_required TINYINT(1) NOT NULL DEFAULT 0 AFTER email_verified_at",
     );
     await ensureEmailUniqueIndex(connection);
     await connection.execute(SQL_CREATE_USER_AVATARS, []);
@@ -358,8 +368,8 @@ export async function markEmailVerified(
 
 const SQL_INSERT_USER = `
   INSERT INTO ${AUTH_USERS_TABLE}
-    (login, password_hash, display_name, role, email, email_verified_at)
-  VALUES (?, ?, ?, ?, ?, NULL)
+    (login, password_hash, display_name, role, email, email_verified_at, email_verify_required)
+  VALUES (?, ?, ?, ?, ?, NULL, ?)
 `;
 
 export type CreateUserInput = {
@@ -424,18 +434,21 @@ export async function insertUserOnConnection(
       typeof input.email === "string" && input.email.trim()
         ? input.email.trim().toLowerCase()
         : null;
+    const emailVerifyRequired = email ? 1 : 0;
     const result = await connection.execute(SQL_INSERT_USER, [
       input.login,
       input.passwordHash,
       input.displayName,
       input.role,
       email,
+      emailVerifyRequired,
     ]);
     return {
       id: result.insertId,
       login: input.login,
       displayName: input.displayName,
       role: input.role,
+      ...(email ? { email, emailVerifyRequired: true } : {}),
     };
   } catch (error) {
     mapDupOrThrow(error);

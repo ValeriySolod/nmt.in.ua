@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useEffect, useRef, type ReactNode } from "react";
+import { useActionState, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import clsx from "clsx";
 import {
@@ -9,6 +9,7 @@ import {
   type RegisterActionState,
 } from "@/modules/auth/actions";
 import {
+  isValidEmailAddress,
   PASSWORD_MAX_LEN,
   PASSWORD_MIN_LEN,
 } from "@/modules/auth/validateRegistration";
@@ -51,6 +52,24 @@ export function RegisterForm({
   const isTeacher = role === "teacher";
   const formRef = useRef<HTMLFormElement>(null);
   const alertRef = useRef<HTMLParagraphElement>(null);
+  const [emailInvalid, setEmailInvalid] = useState(false);
+
+  function onSubmit(event: FormEvent<HTMLFormElement>) {
+    const email = String(new FormData(event.currentTarget).get("email") ?? "");
+    if (!isValidEmailAddress(email)) {
+      event.preventDefault();
+      setEmailInvalid(true);
+      focusNamedControl(formRef.current, "email");
+      return;
+    }
+    setEmailInvalid(false);
+  }
+
+  function onEmailInvalid(event: FormEvent<HTMLInputElement>) {
+    if (event.currentTarget.validity.valueMissing) return;
+    event.preventDefault();
+    setEmailInvalid(true);
+  }
 
   useEffect(() => {
     if (state.status !== "error") return;
@@ -77,7 +96,7 @@ export function RegisterForm({
         </p>
       </header>
 
-      <form ref={formRef} className={css.form} action={formAction}>
+      <form ref={formRef} className={css.form} action={formAction} onSubmit={onSubmit}>
         <input type="hidden" name="next" value={nextPath} />
         <input type="hidden" name="from" value={from ?? ""} />
         <input type="hidden" name="role" value={role} />
@@ -116,13 +135,17 @@ export function RegisterForm({
           <span className={css.label}>{t("email")}</span>
           <input
             className={css.input}
-            type="email"
+            type="text"
+            inputMode="email"
             name="email"
             autoComplete="email"
             spellCheck={false}
             required
             maxLength={255}
             disabled={pending}
+            aria-invalid={emailInvalid || undefined}
+            onInvalid={onEmailInvalid}
+            onChange={() => setEmailInvalid(false)}
           />
           <span className={css.hint}>{t("emailHint")}</span>
         </label>
@@ -158,14 +181,16 @@ export function RegisterForm({
           />
         </label>
 
-        {state.status === "error" ? (
+        {emailInvalid || state.status === "error" ? (
           <p
             ref={alertRef}
             className={clsx(css.alert, css.alertError)}
             role="alert"
             tabIndex={-1}
           >
-            {t(`errors.${state.code}`)}
+            {emailInvalid
+              ? t("errors.invalidEmail")
+              : t(`errors.${state.status === "error" ? state.code : "invalidEmail"}`)}
           </p>
         ) : null}
 
