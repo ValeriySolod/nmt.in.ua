@@ -48,6 +48,23 @@ export function AccountCabinet({
 
   return (
     <div className={css.layout}>
+      {user.email && !user.emailVerified && !demoLocked ? (
+        <section className={css.panel} aria-labelledby="account-confirm-email-title">
+          <h2 id="account-confirm-email-title" className={css.panelTitle}>
+            {t("confirmEmailTitle")}
+          </h2>
+          <p className={clsx(css.alert, css.alertHint)} role="status">
+            {t("confirmEmailLead", { email: user.email })}
+          </p>
+          <Link
+            className={css.joinLink}
+            href={`/register/check-email?email=${encodeURIComponent(user.email)}`}
+          >
+            {t("confirmEmailCta")}
+          </Link>
+        </section>
+      ) : null}
+
       <section className={css.identity} aria-labelledby="account-identity-title">
         <UserAvatar user={user} className={css.avatar} />
         <div className={css.identityCopy}>

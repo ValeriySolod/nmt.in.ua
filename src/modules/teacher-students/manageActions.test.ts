@@ -231,6 +231,12 @@ test("createStudentAccountAction uses the session teacher and returns the passwo
     revalidatePath: (path) => {
       paths.push(path);
     },
+    sendVerificationMail: async (input) => {
+      assert.equal(input.userId, 44);
+      assert.equal(input.email, "olena@school.ua");
+      assert.equal(input.loginAlreadyAllowed, true);
+      return { ok: true };
+    },
   });
 
   assert.deepEqual(state, {
@@ -240,6 +246,7 @@ test("createStudentAccountAction uses the session teacher and returns the passwo
     displayName: "Olena.K",
     groupName: "11-А",
     password: "correct-horse",
+    mailSent: true,
   });
   assert.deepEqual(captured, {
     teacherUserId: 2,
@@ -278,9 +285,11 @@ test("createStudentAccountAction allows an admin with that admin as owner", asyn
     requireUser: async () => admin,
     createStudentForTeacher: spy,
     revalidatePath: () => {},
+    sendVerificationMail: async () => ({ ok: false }),
   });
 
   assert.equal(state.status, "success");
+  if (state.status === "success") assert.equal(state.mailSent, false);
   assert.deepEqual(captured, {
     teacherUserId: 3,
     login: "new.pupil",

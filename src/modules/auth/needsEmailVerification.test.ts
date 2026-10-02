@@ -31,16 +31,43 @@ test("needsEmailVerification skips legacy accounts without email", () => {
   assert.equal(needsEmailVerification(user({})), false);
 });
 
-test("needsEmailVerification requires verified email for new accounts", () => {
+test("needsEmailVerification requires verified email for public signups", () => {
   assert.equal(
     needsEmailVerification(
-      user({ email: "a@example.com", emailVerified: false }),
+      user({
+        email: "a@example.com",
+        emailVerified: false,
+        emailVerifyRequired: true,
+      }),
     ),
     true,
   );
   assert.equal(
     needsEmailVerification(
-      user({ email: "a@example.com", emailVerified: true }),
+      user({
+        email: "a@example.com",
+        emailVerified: true,
+        emailVerifyRequired: true,
+      }),
+    ),
+    false,
+  );
+});
+
+test("needsEmailVerification does not lock out legacy or teacher-created accounts", () => {
+  assert.equal(
+    needsEmailVerification(
+      user({ email: "legacy@example.com", emailVerified: false }),
+    ),
+    false,
+  );
+  assert.equal(
+    needsEmailVerification(
+      user({
+        email: "pupil@school.ua",
+        emailVerified: false,
+        emailVerifyRequired: false,
+      }),
     ),
     false,
   );

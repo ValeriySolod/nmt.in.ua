@@ -113,7 +113,7 @@ npm run reset-demo-student
 | Що | Де |
 | --- | --- |
 | Вхід / вихід | `/login`, cookie `nmt_session`; логін блокується до verify email (демо exempt) |
-| Реєстрація | `/register?role=student\|teacher` — email обовʼязковий → `/register/check-email` → `/verify-email` |
+| Реєстрація | `/register?role=student\|teacher` — email обовʼязковий → `/register/check-email` → `/verify-email` (успіх, прострочено, недійсне, повтор). Учня, якого створив викладач, лист не блокує вхід |
 | Скидання пароля | `/forgot-password`, `/reset-password` (Brevo або log без `BREVO_API_KEY`) |
 | Реєстрація викладача (оплата) | UI на паузі; `/register/teacher` → `/register?role=teacher`. WayForPay код + `/success`/`/fail` лишаються |
 | Webhook оплати | `POST /api/payments/wayforpay/webhook` (публічний, перевірка HMAC_MD5) |
