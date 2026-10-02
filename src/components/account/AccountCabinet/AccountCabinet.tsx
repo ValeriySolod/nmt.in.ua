@@ -15,6 +15,7 @@ import { RecentResults } from "@/components/dashboard/RecentResults";
 import { UserAvatar } from "@/components/account/UserAvatar";
 import { TeacherProfileEditor } from "@/components/account/TeacherProfileEditor";
 import { AccountPhotoPanel } from "./AccountPhotoPanel";
+import { TelegramLinkControl } from "./TelegramLinkControl";
 import type { RecentResultItem } from "@/modules/results/getRecentResults";
 import type { TeacherProfile } from "@/modules/teachers/types";
 import { normalizeSlug } from "@/modules/teachers/validateProfile";
@@ -27,6 +28,7 @@ type AccountCabinetProps = {
   recentResults: RecentResultItem[];
   demoLocked: boolean;
   teacherProfile?: TeacherProfile | null;
+  telegramLinked: boolean;
 };
 
 export function AccountCabinet({
@@ -34,6 +36,7 @@ export function AccountCabinet({
   recentResults,
   demoLocked,
   teacherProfile = null,
+  telegramLinked,
 }: AccountCabinetProps) {
   const t = useTranslations("AccountCabinet");
   const tHeader = useTranslations("Header");
@@ -58,6 +61,7 @@ export function AccountCabinet({
       </section>
 
       <AccountPhotoPanel user={user} demoLocked={demoLocked} />
+      <TelegramLinkControl linked={telegramLinked} />
 
       {user.role === "student" ? (
         <section className={css.panel} aria-labelledby="account-join-title">

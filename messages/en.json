@@ -54,6 +54,11 @@
     "empty": "Results will appear after your first tests."
   },
   "AccountCabinet": {
+    "telegramConnect": "Connect Telegram",
+    "telegramLinked": "Telegram connected",
+    "telegramLoading": "Creating link...",
+    "telegramOpen": "Open Telegram to connect",
+    "telegramError": "Could not create a Telegram link. Try again.",
     "kicker": "Profile",
     "title": "Personal account",
     "lead": "Profile photo, public teacher card, password, results, and placeholders for achievements and study time.",
