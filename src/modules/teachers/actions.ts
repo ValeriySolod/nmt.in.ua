@@ -30,9 +30,16 @@ export async function saveTeacherProfileAction(
     experience: String(formData.get("experience") ?? ""),
     publications: String(formData.get("publications") ?? ""),
     city: String(formData.get("city") ?? ""),
+    country: String(formData.get("country") ?? ""),
     subjects: String(formData.get("subjects") ?? ""),
+    teachingLevels: formData.getAll("teachingLevels").map(String),
+    teachingLanguages: formData.getAll("teachingLanguages").map(String),
     contactUrl: String(formData.get("contactUrl") ?? ""),
-    isPublic: formData.get("isPublic") === "on",
+    phone: String(formData.get("phone") ?? ""),
+    lessonPrice: String(formData.get("lessonPrice") ?? ""),
+    lessonCurrency: String(formData.get("lessonCurrency") ?? ""),
+    lessonDurationMinutes: String(formData.get("lessonDurationMinutes") ?? ""),
+    joinMotivation: String(formData.get("joinMotivation") ?? ""),
   });
 
   if (!validated.ok) {
@@ -63,7 +70,10 @@ export type RateTeacherActionResult =
       avgRating: number | null;
       ratingCount: number;
     }
-  | { ok: false; code: "invalid_input" | "forbidden" | "not_found" | "generic" };
+  | {
+      ok: false;
+      code: "invalid_input" | "forbidden" | "not_found" | "generic";
+    };
 
 /** Student rates a public teacher 1–5. Id and score come from trusted session + args. */
 export async function rateTeacherAction(
