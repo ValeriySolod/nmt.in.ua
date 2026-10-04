@@ -95,6 +95,16 @@ export type ValidatedTeacherProfile = {
   joinMotivation: string;
 };
 
+export type TeacherProfileSubmissionError =
+  | "headlineRequired"
+  | "bioRequired"
+  | "experienceRequired"
+  | "countryRequired"
+  | "subjectsRequired"
+  | "teachingLevelsRequired"
+  | "teachingLanguagesRequired"
+  | "joinMotivationRequired";
+
 export function normalizeSlug(raw: string): string {
   return raw.trim().toLowerCase().replace(/\s+/g, "-").replace(/-+/g, "-");
 }
@@ -311,4 +321,54 @@ export function validateTeacherProfileInput(
       joinMotivation,
     },
   };
+}
+
+/**
+ * Checks whether a valid draft contains enough information to be submitted
+ * for moderation.
+ *
+ * Optional for submission:
+ * - city
+ * - publications
+ * - contactUrl
+ * - phone
+ * - lessonPrice / lessonCurrency
+ * - lessonDurationMinutes
+ */
+export function validateTeacherProfileSubmission(
+  profile: ValidatedTeacherProfile,
+): { ok: true } | { ok: false; code: TeacherProfileSubmissionError } {
+  if (!profile.headline) {
+    return { ok: false, code: "headlineRequired" };
+  }
+
+  if (!profile.bio) {
+    return { ok: false, code: "bioRequired" };
+  }
+
+  if (!profile.experience) {
+    return { ok: false, code: "experienceRequired" };
+  }
+
+  if (!profile.country) {
+    return { ok: false, code: "countryRequired" };
+  }
+
+  if (profile.subjects.length === 0) {
+    return { ok: false, code: "subjectsRequired" };
+  }
+
+  if (profile.teachingLevels.length === 0) {
+    return { ok: false, code: "teachingLevelsRequired" };
+  }
+
+  if (profile.teachingLanguages.length === 0) {
+    return { ok: false, code: "teachingLanguagesRequired" };
+  }
+
+  if (!profile.joinMotivation) {
+    return { ok: false, code: "joinMotivationRequired" };
+  }
+
+  return { ok: true };
 }

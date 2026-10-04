@@ -6,6 +6,7 @@ import {
   normalizeSlug,
   parseSubjects,
   validateTeacherProfileInput,
+  validateTeacherProfileSubmission,
 } from "./validateProfile";
 
 function validInput(
@@ -307,5 +308,89 @@ test("validateTeacherProfileInput allows empty optional draft fields", () => {
     assert.equal(result.value.lessonCurrency, "");
     assert.equal(result.value.lessonDurationMinutes, null);
     assert.equal(result.value.joinMotivation, "");
+  }
+});
+
+test("validateTeacherProfileSubmission accepts a complete profile", () => {
+  const draft = validateTeacherProfileInput(validInput());
+
+  assert.equal(draft.ok, true);
+
+  if (draft.ok) {
+    assert.deepEqual(validateTeacherProfileSubmission(draft.value), {
+      ok: true,
+    });
+  }
+});
+
+test("validateTeacherProfileSubmission requires submission fields", () => {
+  const cases = [
+    {
+      overrides: { headline: "" },
+      code: "headlineRequired",
+    },
+    {
+      overrides: { bio: "" },
+      code: "bioRequired",
+    },
+    {
+      overrides: { experience: "" },
+      code: "experienceRequired",
+    },
+    {
+      overrides: { country: "" },
+      code: "countryRequired",
+    },
+    {
+      overrides: { subjects: "" },
+      code: "subjectsRequired",
+    },
+    {
+      overrides: { teachingLevels: [] },
+      code: "teachingLevelsRequired",
+    },
+    {
+      overrides: { teachingLanguages: [] },
+      code: "teachingLanguagesRequired",
+    },
+    {
+      overrides: { joinMotivation: "" },
+      code: "joinMotivationRequired",
+    },
+  ];
+
+  for (const { overrides, code } of cases) {
+    const draft = validateTeacherProfileInput(validInput(overrides));
+
+    assert.equal(draft.ok, true);
+
+    if (draft.ok) {
+      assert.deepEqual(validateTeacherProfileSubmission(draft.value), {
+        ok: false,
+        code,
+      });
+    }
+  }
+});
+
+test("validateTeacherProfileSubmission allows optional publication fields to be empty", () => {
+  const draft = validateTeacherProfileInput(
+    validInput({
+      city: "",
+      publications: "",
+      contactUrl: "",
+      phone: "",
+      lessonPrice: "",
+      lessonCurrency: "",
+      lessonDurationMinutes: "",
+    }),
+  );
+
+  assert.equal(draft.ok, true);
+
+  if (draft.ok) {
+    assert.deepEqual(validateTeacherProfileSubmission(draft.value), {
+      ok: true,
+    });
   }
 });

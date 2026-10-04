@@ -3,11 +3,20 @@
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/modules/auth/getCurrentUser";
 import { canReviewConsultationRequests } from "@/modules/auth/types";
-import { saveTeacherProfile, TeacherProfileError } from "./store";
+import {
+  getOwnTeacherProfile,
+  saveTeacherProfile,
+  submitTeacherProfileForModeration,
+  TeacherProfileError,
+} from "./store";
 import { rateTeacher, RateTeacherError } from "./rateTeacher";
 import { canEditTeacherProfile, teacherPublicPath } from "./types";
 import type { TeacherProfileFieldError } from "./types";
-import { validateTeacherProfileInput } from "./validateProfile";
+import {
+  validateTeacherProfileInput,
+  validateTeacherProfileSubmission,
+  type TeacherProfileSubmissionError,
+} from "./validateProfile";
 
 export type SaveTeacherProfileActionState =
   | { status: "idle" }
@@ -19,6 +28,7 @@ export async function saveTeacherProfileAction(
   formData: FormData,
 ): Promise<SaveTeacherProfileActionState> {
   const user = await requireUser();
+
   if (!canEditTeacherProfile(user.role)) {
     return { status: "error", code: "forbidden" };
   }
@@ -48,16 +58,105 @@ export async function saveTeacherProfileAction(
 
   try {
     const saved = await saveTeacherProfile(user.id, user.role, validated.value);
+
     revalidatePath("/account");
     revalidatePath("/");
     revalidatePath("/welcome");
     revalidatePath(teacherPublicPath(saved.slug));
+
     return { status: "ok", slug: saved.slug };
   } catch (error) {
     if (error instanceof TeacherProfileError) {
-      return { status: "error", code: error.code };
+      if (
+        error.code === "slugTaken" ||
+        error.code === "forbidden" ||
+        error.code === "serverError"
+      ) {
+        return { status: "error", code: error.code };
+      }
     }
+
     console.error("saveTeacherProfileAction failed", error);
+    return { status: "error", code: "serverError" };
+  }
+}
+
+export type SubmitTeacherProfileActionState =
+  | { status: "idle" }
+  | { status: "ok" }
+  | {
+      status: "error";
+      code:
+        | TeacherProfileSubmissionError
+        | "forbidden"
+        | "notFound"
+        | "invalidModerationStatus"
+        | "serverError";
+    };
+
+export async function submitTeacherProfileForModerationAction(
+  _prev: SubmitTeacherProfileActionState,
+  _formData: FormData,
+): Promise<SubmitTeacherProfileActionState> {
+  const user = await requireUser();
+
+  if (!canEditTeacherProfile(user.role)) {
+    return { status: "error", code: "forbidden" };
+  }
+
+  try {
+    const profile = await getOwnTeacherProfile(user.id);
+
+    const submissionValidation = validateTeacherProfileSubmission({
+      slug: profile.slug,
+      headline: profile.headline,
+      bio: profile.bio,
+      experience: profile.experience,
+      publications: profile.publications,
+      city: profile.city,
+      country: profile.country,
+      subjects: profile.subjects,
+      teachingLevels: profile.teachingLevels,
+      teachingLanguages: profile.teachingLanguages,
+      contactUrl: profile.contactUrl,
+      phone: profile.phone,
+      lessonPrice: profile.lessonPrice,
+      lessonCurrency: profile.lessonCurrency,
+      lessonDurationMinutes: profile.lessonDurationMinutes,
+      joinMotivation: profile.joinMotivation,
+    });
+
+    if (!submissionValidation.ok) {
+      return {
+        status: "error",
+        code: submissionValidation.code,
+      };
+    }
+
+    const submitted = await submitTeacherProfileForModeration(
+      user.id,
+      user.role,
+    );
+
+    revalidatePath("/account");
+    revalidatePath("/");
+    revalidatePath("/welcome");
+    revalidatePath(teacherPublicPath(submitted.slug));
+
+    return { status: "ok" };
+  } catch (error) {
+    if (error instanceof TeacherProfileError) {
+      if (
+        error.code === "forbidden" ||
+        error.code === "notFound" ||
+        error.code === "invalidModerationStatus" ||
+        error.code === "serverError"
+      ) {
+        return { status: "error", code: error.code };
+      }
+    }
+
+    console.error("submitTeacherProfileForModerationAction failed", error);
     return { status: "error", code: "serverError" };
   }
 }
@@ -81,6 +180,7 @@ export async function rateTeacherAction(
   score: number,
 ): Promise<RateTeacherActionResult> {
   const user = await requireUser();
+
   if (canReviewConsultationRequests(user.role) || user.role !== "student") {
     return { ok: false, code: "forbidden" };
   }
@@ -91,7 +191,9 @@ export async function rateTeacherAction(
       studentUserId: user.id,
       score,
     });
+
     revalidatePath("/consultations");
+
     return {
       ok: true,
       teacherUserId: result.teacherUserId,
@@ -109,6 +211,7 @@ export async function rateTeacherAction(
         return { ok: false, code: error.code };
       }
     }
+
     console.error("rateTeacherAction failed", error);
     return { ok: false, code: "generic" };
   }

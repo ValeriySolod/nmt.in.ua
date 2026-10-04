@@ -7,9 +7,15 @@ import { ensureTeacherProfileSchema } from "./schema";
 import {
   canEditTeacherProfile,
   emptyTeacherProfile,
+  LESSON_CURRENCIES,
+  TEACHER_LEVELS,
+  TEACHING_LANGUAGES,
+  type LessonCurrency,
   type PublicTeacherCard,
+  type TeacherLevel,
   type TeacherModerationStatus,
   type TeacherProfile,
+  type TeachingLanguage,
 } from "./types";
 import type { ValidatedTeacherProfile } from "./validateProfile";
 
@@ -163,8 +169,28 @@ const SQL_UPSERT = `
     join_motivation = VALUES(join_motivation)
 `;
 
+const SQL_SUBMIT_FOR_MODERATION = `
+  UPDATE teacher_profiles
+  SET
+    moderation_status = 'pending',
+    submitted_at = CURRENT_TIMESTAMP,
+    reviewed_at = NULL,
+    reviewed_by = NULL,
+    rejection_reason = NULL,
+    is_public = 0
+  WHERE user_id = ?
+    AND moderation_status IN ('draft', 'rejected')
+`;
+
 export class TeacherProfileError extends Error {
-  constructor(readonly code: "slugTaken" | "forbidden" | "serverError") {
+  constructor(
+    readonly code:
+      | "slugTaken"
+      | "forbidden"
+      | "notFound"
+      | "invalidModerationStatus"
+      | "serverError",
+  ) {
     super(code);
     this.name = "TeacherProfileError";
   }
@@ -193,6 +219,26 @@ function parseStringArrayJson(raw: string | null): string[] {
   } catch {
     return [];
   }
+}
+
+function parseTeacherLevels(raw: string | null): TeacherLevel[] {
+  return parseStringArrayJson(raw).filter((item): item is TeacherLevel =>
+    TEACHER_LEVELS.includes(item as TeacherLevel),
+  );
+}
+
+function parseTeachingLanguages(raw: string | null): TeachingLanguage[] {
+  return parseStringArrayJson(raw).filter((item): item is TeachingLanguage =>
+    TEACHING_LANGUAGES.includes(item as TeachingLanguage),
+  );
+}
+
+function parseLessonCurrency(raw: string | null): LessonCurrency | "" {
+  const value = raw?.trim() ?? "";
+
+  return LESSON_CURRENCIES.includes(value as LessonCurrency)
+    ? (value as LessonCurrency)
+    : "";
 }
 
 function asPositiveInt(value: unknown): number | undefined {
@@ -240,12 +286,12 @@ function mapProfile(row: TeacherProfileRow): TeacherProfile {
     city: row.city?.trim() ?? "",
     country: row.country?.trim() ?? "",
     subjects: parseStringArrayJson(row.subjects),
-    teachingLevels: parseStringArrayJson(row.teaching_levels),
-    teachingLanguages: parseStringArrayJson(row.teaching_languages),
+    teachingLevels: parseTeacherLevels(row.teaching_levels),
+    teachingLanguages: parseTeachingLanguages(row.teaching_languages),
     contactUrl: row.contact_url?.trim() ?? "",
     phone: row.phone?.trim() ?? "",
     lessonPrice: asNullableNumber(row.lesson_price),
-    lessonCurrency: row.lesson_currency?.trim() ?? "",
+    lessonCurrency: parseLessonCurrency(row.lesson_currency),
     lessonDurationMinutes: asNullableInt(row.lesson_duration_minutes),
     joinMotivation: row.join_motivation?.trim() ?? "",
     moderationStatus: row.moderation_status,
@@ -413,6 +459,55 @@ export async function saveTeacherProfile(
     }
 
     return mapProfile(saved);
+  } finally {
+    connection.release();
+  }
+}
+
+export async function submitTeacherProfileForModeration(
+  userId: number,
+  role: UserRole,
+  deps: StoreDeps = { getConnection: loadDefaultConnection },
+): Promise<TeacherProfile> {
+  if (!canEditTeacherProfile(role)) {
+    throw new TeacherProfileError("forbidden");
+  }
+
+  await withSchema(deps);
+
+  const connection = await deps.getConnection();
+
+  try {
+    const rows = await connection.query<TeacherProfileRow>(SQL_GET_OWN, [
+      userId,
+    ]);
+
+    const current = rows[0];
+
+    if (!current) {
+      throw new TeacherProfileError("notFound");
+    }
+
+    if (
+      current.moderation_status !== "draft" &&
+      current.moderation_status !== "rejected"
+    ) {
+      throw new TeacherProfileError("invalidModerationStatus");
+    }
+
+    await connection.execute(SQL_SUBMIT_FOR_MODERATION, [userId]);
+
+    const updatedRows = await connection.query<TeacherProfileRow>(SQL_GET_OWN, [
+      userId,
+    ]);
+
+    const updated = updatedRows[0];
+
+    if (!updated) {
+      throw new TeacherProfileError("serverError");
+    }
+
+    return mapProfile(updated);
   } finally {
     connection.release();
   }

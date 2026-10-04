@@ -52,12 +52,12 @@ export type TeacherProfile = {
   city: string;
   country: string;
   subjects: string[];
-  teachingLevels: string[];
-  teachingLanguages: string[];
+  teachingLevels: TeacherLevel[];
+  teachingLanguages: TeachingLanguage[];
   contactUrl: string;
   phone: string;
   lessonPrice: number | null;
-  lessonCurrency: string;
+  lessonCurrency: LessonCurrency | "";
   lessonDurationMinutes: number | null;
   joinMotivation: string;
   moderationStatus: TeacherModerationStatus;
