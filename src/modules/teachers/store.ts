@@ -495,7 +495,13 @@ export async function submitTeacherProfileForModeration(
       throw new TeacherProfileError("invalidModerationStatus");
     }
 
-    await connection.execute(SQL_SUBMIT_FOR_MODERATION, [userId]);
+    const result = await connection.execute(SQL_SUBMIT_FOR_MODERATION, [
+      userId,
+    ]);
+
+    if (result.affectedRows !== 1) {
+      throw new TeacherProfileError("invalidModerationStatus");
+    }
 
     const updatedRows = await connection.query<TeacherProfileRow>(SQL_GET_OWN, [
       userId,

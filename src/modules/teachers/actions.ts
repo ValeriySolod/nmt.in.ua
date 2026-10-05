@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/modules/auth/getCurrentUser";
+import { findUserById } from "@/modules/auth/users";
 import { canReviewConsultationRequests } from "@/modules/auth/types";
 import {
   getOwnTeacherProfile,
@@ -88,6 +89,9 @@ export type SubmitTeacherProfileActionState =
       status: "error";
       code:
         | TeacherProfileSubmissionError
+        | "displayNameRequired"
+        | "emailRequired"
+        | "photoRequired"
         | "forbidden"
         | "notFound"
         | "invalidModerationStatus"
@@ -102,6 +106,24 @@ export async function submitTeacherProfileForModerationAction(
 
   if (!canEditTeacherProfile(user.role)) {
     return { status: "error", code: "forbidden" };
+  }
+
+  const accountUser = await findUserById(user.id);
+
+  if (!accountUser) {
+    return { status: "error", code: "notFound" };
+  }
+
+  if (!accountUser.displayName.trim()) {
+    return { status: "error", code: "displayNameRequired" };
+  }
+
+  if (!accountUser.email) {
+    return { status: "error", code: "emailRequired" };
+  }
+
+  if (!accountUser.avatarRev) {
+    return { status: "error", code: "photoRequired" };
   }
 
   try {
