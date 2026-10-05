@@ -43,6 +43,28 @@
   gap: 6px;
 }
 
+.fieldset {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  cursor: pointer;
+}
+
+.option input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--green);
+}
+
 .pair {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -61,9 +83,7 @@
   border: 1px solid var(--line-soft);
   border-radius: var(--radius-md);
   background: var(--surface);
-  transition:
-    border-color var(--t) var(--ease),
-    box-shadow var(--t) var(--ease);
+  transition: border-color var(--t) var(--ease), box-shadow var(--t) var(--ease);
 }
 
 .textarea {
@@ -151,9 +171,7 @@
   border-radius: var(--radius-pill);
   font-weight: 700;
   cursor: pointer;
-  transition:
-    transform var(--t) var(--ease),
-    opacity var(--t) var(--ease);
+  transition: transform var(--t) var(--ease), opacity var(--t) var(--ease);
 }
 
 .submit {
