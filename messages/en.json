@@ -163,6 +163,7 @@
     "saved": "Card saved.",
     "copyLink": "Copy link",
     "copied": "Copied",
+    "requiredHint": "* Required fields for submission for moderation",
     "errors": {
       "slugRequired": "Enter a page address.",
       "invalidSlug": "Use Latin letters, digits, and hyphens, 3–48 characters.",

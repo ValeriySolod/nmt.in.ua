@@ -203,6 +203,7 @@ export function TeacherProfileEditor({
           {t("title")}
         </h2>
         <p className={css.panelLead}>{t("lead")}</p>
+        <p className={css.requiredHint}>{t("requiredHint")}</p>
       </div>
 
       {state.status === "error" && !TEACHER_PROFILE_ERROR_FIELD[state.code] ? (
@@ -232,7 +233,9 @@ export function TeacherProfileEditor({
 
       <form className={css.form} onSubmit={saveProfile} noValidate>
         <label className={css.field}>
-          <span className={css.label}>{t("slug")}</span>
+          <span className={css.label}>
+            {t("slug")} <span className={css.requiredMark}>*</span>
+          </span>
           <span className={css.slugRow}>
             <span className={css.slugPrefix} aria-hidden>
               /t/
@@ -265,7 +268,10 @@ export function TeacherProfileEditor({
         </label>
 
         <label className={css.field}>
-          <span className={css.label}>{t("headline")}</span>
+          <span className={css.label}>
+            {t("headline")}
+            <span className={css.requiredMark}>*</span>
+          </span>
           <input
             className={css.input}
             type="text"
@@ -281,7 +287,9 @@ export function TeacherProfileEditor({
         </label>
 
         <label className={css.field}>
-          <span className={css.label}>{t("bio")}</span>
+          <span className={css.label}>
+            {t("bio")} <span className={css.requiredMark}>*</span>
+          </span>
           <textarea
             className={css.textarea}
             {...register("bio", {
@@ -297,7 +305,10 @@ export function TeacherProfileEditor({
         </label>
 
         <label className={css.field}>
-          <span className={css.label}>{t("experience")}</span>
+          <span className={css.label}>
+            {t("experience")}
+            <span className={css.requiredMark}>*</span>
+          </span>
           <input
             className={css.input}
             type="text"
@@ -348,7 +359,10 @@ export function TeacherProfileEditor({
           </label>
 
           <label className={css.field}>
-            <span className={css.label}>{t("country")}</span>
+            <span className={css.label}>
+              {t("country")}
+              <span className={css.requiredMark}>*</span>
+            </span>
             <input
               className={css.input}
               type="text"
@@ -364,7 +378,10 @@ export function TeacherProfileEditor({
           </label>
 
           <label className={css.field}>
-            <span className={css.label}>{t("subjects")}</span>
+            <span className={css.label}>
+              {t("subjects")}
+              <span className={css.requiredMark}>*</span>
+            </span>
             <input
               className={css.input}
               type="text"
@@ -391,7 +408,10 @@ export function TeacherProfileEditor({
         </div>
 
         <fieldset className={css.fieldset}>
-          <legend className={css.label}>{t("levels")}</legend>
+          <legend className={css.label}>
+            {t("levels")}
+            <span className={css.requiredMark}>*</span>
+          </legend>
           {(["grades_5_9", "grades_10_11", "nmt", "adult"] as const).map(
             (level) => (
               <label className={css.option} key={level}>
@@ -409,7 +429,10 @@ export function TeacherProfileEditor({
         </fieldset>
 
         <fieldset className={css.fieldset}>
-          <legend className={css.label}>{t("languages")}</legend>
+          <legend className={css.label}>
+            {t("languages")}
+            <span className={css.requiredMark}>*</span>
+          </legend>
           {(["uk", "en", "de", "pl"] as const).map((language) => (
             <label className={css.option} key={language}>
               <input

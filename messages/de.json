@@ -163,6 +163,7 @@
     "saved": "Karte gespeichert.",
     "copyLink": "Link kopieren",
     "copied": "Kopiert",
+    "requiredHint": "* Pflichtfelder für die Einreichung zur Moderation",
     "errors": {
       "slugRequired": "Bitte eine Seitenadresse angeben.",
       "invalidSlug": "Lateinische Buchstaben, Ziffern und Bindestriche, 3–48 Zeichen.",
