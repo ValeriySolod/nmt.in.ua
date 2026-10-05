@@ -7,9 +7,12 @@ import {
   PASSWORD_MAX_LEN,
   PASSWORD_MIN_LEN,
   registerUserSchema,
+  isValidEmailAddress,
   registrationErrorCode,
   teacherRegisterSchema,
 } from "@/validations/authValidation";
+
+export { isValidEmailAddress };
 import { validateSchema } from "@/validations/parse";
 
 export {

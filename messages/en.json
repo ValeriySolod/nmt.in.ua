@@ -54,6 +54,11 @@
     "empty": "Results will appear after your first tests."
   },
   "AccountCabinet": {
+    "telegramConnect": "Connect Telegram",
+    "telegramLinked": "Telegram connected",
+    "telegramLoading": "Creating link...",
+    "telegramOpen": "Open Telegram to connect",
+    "telegramError": "Could not create a Telegram link. Try again.",
     "kicker": "Profile",
     "title": "Personal account",
     "lead": "Profile photo, public teacher card, password, results, and placeholders for achievements and study time.",
@@ -86,6 +91,9 @@
     "logoutTitle": "Sign out",
     "logoutLead": "End the session on this device.",
     "logout": "Log out",
+    "confirmEmailTitle": "Confirm your email",
+    "confirmEmailLead": "{email} is not confirmed yet. You can resend the link — the account already works.",
+    "confirmEmailCta": "Resend the email",
     "joinInviteTitle": "Invite code",
     "joinInviteLead": "If a teacher sent you a code or a link, accept it here.",
     "joinInviteCta": "Enter code",
@@ -114,10 +122,39 @@
     "slugHint": "Latin letters, digits, and hyphens. 3–48 characters.",
     "headline": "Headline",
     "bio": "About",
+    "experience": "Experience",
+    "experienceHint": "For example: “12 years teaching mathematics”.",
+    "publications": "Academic work",
+    "publicationsHint": "A short list or links. Multiple lines are fine.",
     "city": "City",
     "subjects": "Subjects",
     "subjectsHint": "Comma-separated, up to 8 items.",
     "contactUrl": "Contact link",
+    "country": "Country",
+
+    "levels": "Student levels",
+    "levelsOptions": {
+      "grades_5_9": "Grades 5–9",
+      "grades_10_11": "Grades 10–11",
+      "nmt": "NMT",
+      "adult": "Adults"
+    },
+
+    "languages": "Teaching languages",
+    "languageOptions": {
+      "uk": "Ukrainian",
+      "en": "English",
+      "de": "German",
+      "pl": "Polish"
+    },
+
+    "phone": "Phone",
+    "lessonPrice": "Lesson price",
+    "currency": "Currency",
+    "lessonDuration": "Lesson duration (min)",
+    "joinMotivation": "Why do you want to join NMT?",
+    "joinMotivationHint": "Briefly tell us why you want to join the platform.",
+    "submitForModeration": "Submit for moderation",
     "isPublic": "Publish the card",
     "isPublicHint": "While unchecked, /t/… returns 404.",
     "save": "Save card",
@@ -132,6 +169,8 @@
       "slugTaken": "This address is already taken.",
       "headlineTooLong": "The headline is too long.",
       "bioTooLong": "The about text is too long.",
+      "experienceTooLong": "The experience line is too long.",
+      "publicationsTooLong": "The academic work list is too long.",
       "cityTooLong": "The city name is too long.",
       "invalidSubjects": "Too many subjects, or one item is too long.",
       "invalidContactUrl": "The link must start with http:// or https://.",
@@ -186,7 +225,9 @@
     "create": "Create student",
     "creating": "Creating…",
     "created": "Account for {name} was created.",
-    "credentialsOnce": "Copy these details now. The password disappears when you refresh, and no email is sent. The student can sign in immediately.",
+    "credentialsOnce": "Copy these details now. The password disappears when you refresh. The student can sign in immediately; the address is confirmed after they open the email.",
+    "mailSent": "A confirmation link was sent to {email}. It works for 24 hours.",
+    "mailFailed": "The account was created, but the email to {email} did not go out. The student can resend it from their account.",
     "copyCredentials": "Copy details",
     "groupOptional": "Group (optional)",
     "addTitle": "Add a student",
@@ -844,6 +885,7 @@
       "sectionsAria": "Page sections",
       "features": "Features",
       "steps": "How it works",
+      "teachers": "Teachers",
       "faq": "FAQ",
       "login": "Log in",
       "register": "Create account",
@@ -886,6 +928,7 @@
       "kicker": "Features",
       "title": "Everything you need for regular practice in one place",
       "lead": "From your first topic test to a full exam simulation.",
+      "imageAlt": "A student surrounded by tossed notebooks and math textbooks",
       "items": {
         "topics": {
           "title": "Topic tests",
@@ -940,6 +983,7 @@
       "kicker": "FAQ",
       "title": "The short answers",
       "lead": "What people ask most often before signing up.",
+      "imageAlt": "Thoughtful student preparing for an exam",
       "items": {
         "price": {
           "q": "How much does it cost?",
@@ -963,12 +1007,138 @@
         }
       }
     },
+    "teachers": {
+      "kicker": "Teachers",
+      "title": "Teachers on our platform",
+      "lead": "Public teacher cards — experience, bio and next available slot.",
+      "verified": "Verified tutor",
+      "education": "Education",
+      "experience": "Experience",
+      "nextSlot": "Next available time",
+      "reviews": "(reviews: {count})",
+      "empty": "Teacher cards will appear here soon.",
+      "carouselAria": "Platform teachers carousel",
+      "prev": "Previous teacher",
+      "next": "Next teacher",
+      "counter": "{current} / {total}",
+      "offerTitle": "Offer for teachers",
+      "offerLead": "The platform gives you tools to attract students, guide their learning and show results.",
+      "joinCta": "Join the platform",
+      "demo": {
+        "viktoriaK": {
+          "name": "Viktoriia Karakots",
+          "subject": "Mathematics",
+          "education": "Matej Bel University",
+          "experience": "more than 3 years",
+          "nextSlot": "today at 20:30",
+          "bioLead": "I tutor mathematics. I connect easily with students and explain without boring memorization — I show the logic.",
+          "bioRest": "I have over 4 years of experience teaching children. In lessons we cover school topics, practise typical NMT tasks and learn not to fear mistakes. I adapt the pace to each student."
+        },
+        "viktoriaP": {
+          "name": "Viktoriia Pohribna",
+          "subject": "Mathematics",
+          "education": "Cherkasy National University named after B. Khmelnytsky",
+          "experience": "more than 3 years",
+          "nextSlot": "tomorrow at 11:00",
+          "bioLead": "Math tutor with 3 years of experience. I explain complex topics in simple words and help students understand, not just memorize.",
+          "bioRest": "I work with different ages — from school curriculum to NMT prep. Focus on practice, error analysis and confident answers. Lessons adapt to the student’s level and goals."
+        },
+        "nazarii": {
+          "name": "Nazarii Ivakhiv",
+          "subject": "Mathematics",
+          "education": "Drohobych Ivan Franko State Pedagogical University",
+          "experience": "more than 10 years",
+          "nextSlot": "Sunday at 17:00",
+          "bioLead": "I help master math without stress, using playful methods and real examples. Focus on logic and problem-solving skills.",
+          "bioRest": "I have taught mathematics for over 10 years. Lessons match the student’s level; I explain with associations and real-life examples. Step-by-step learning builds confidence."
+        }
+      },
+      "features": {
+        "profile": {
+          "title": "Public profile",
+          "text": "A teacher page with experience, subjects and contacts for students and parents."
+        },
+        "students": {
+          "title": "Students and groups",
+          "text": "Add students, create groups and share invite codes."
+        },
+        "assign": {
+          "title": "Assign tests",
+          "text": "Set topics for several students at once — now or on a date."
+        },
+        "results": {
+          "title": "Results and sessions",
+          "text": "See class and per-student progress: averages, attempts, statuses."
+        },
+        "consultations": {
+          "title": "Consultation requests",
+          "text": "Receive student requests and join them to you or into a group."
+        }
+      }
+    },
     "cta": {
       "title": "Start with your first topic today",
       "lead": "Create a student account in a minute and take the first test to see your real level.",
       "primary": "Create account",
       "secondary": "Log in",
       "note": "No payments, no card required"
+    },
+    "devTeam": {
+      "toggle": "More about the development team",
+      "collapse": "Hide the development team",
+      "kicker": "Team",
+      "title": "People who build the platform",
+      "lead": "Developers, designers and editors behind every test and every page",
+      "socialLinkedin": "LinkedIn",
+      "socialTelegram": "Telegram",
+      "carouselAria": "Development team carousel",
+      "servicesTitle": "Services the team provides",
+      "servicesLead": "We build and support products — from education platforms to business tools.",
+      "formCta": "Discuss a project",
+      "members": {
+        "olena": {
+          "name": "Olena Koval",
+          "role": "Project lead"
+        },
+        "ihor": {
+          "name": "Ihor Bondarenko",
+          "role": "Product manager"
+        },
+        "dmytro": {
+          "name": "Dmytro Kravchuk",
+          "role": "UX/UI designer"
+        },
+        "pavlo": {
+          "name": "Pavlo Moroz",
+          "role": "Frontend developer"
+        },
+        "kateryna": {
+          "name": "Kateryna Lysenko",
+          "role": "Backend developer"
+        }
+      },
+      "services": {
+        "product": {
+          "title": "Web product development",
+          "text": "Cabinets, platforms and internal tools — from idea to a working launch."
+        },
+        "support": {
+          "title": "Support and growth",
+          "text": "Post-release care: fixes, updates and improvements as load grows."
+        },
+        "design": {
+          "title": "UX/UI design",
+          "text": "Interfaces for the client’s task, prototypes and a coherent design system."
+        },
+        "mvp": {
+          "title": "MVPs and landings",
+          "text": "A fast start to validate an idea on the market without extra scope."
+        },
+        "integrations": {
+          "title": "Integrations",
+          "text": "Payments, email, CRM and connecting services through APIs."
+        }
+      }
     },
     "footer": {
       "tagline": "Online NMT maths preparation: topic tests, result analytics, an exam simulator and learning sessions with a teacher.",
@@ -1502,7 +1672,11 @@
     "kicker": "Verification",
     "title": "Confirm your email",
     "pending": "Checking the link…",
-    "success": "Email confirmed. Opening your workspace…",
+    "success": "Email confirmed.",
+    "successLead": "You can open the workspace or sign in again.",
+    "goToCabinet": "Go to workspace",
+    "goToLogin": "Sign in",
+    "resendLead": "Send the email again — the new link replaces the previous one.",
     "resendLink": "Resend verification email",
     "backToLogin": "Back to sign in",
     "errors": {

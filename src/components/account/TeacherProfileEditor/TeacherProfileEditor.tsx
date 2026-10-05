@@ -11,7 +11,9 @@ import {
   TEACHER_PROFILE_BIO_MAX,
   TEACHER_PROFILE_CITY_MAX,
   TEACHER_PROFILE_CONTACT_URL_MAX,
+  TEACHER_PROFILE_EXPERIENCE_MAX,
   TEACHER_PROFILE_HEADLINE_MAX,
+  TEACHER_PROFILE_PUBLICATIONS_MAX,
   TEACHER_PROFILE_SLUG_MAX,
   teacherPublicPath,
   type TeacherProfile,
@@ -32,7 +34,7 @@ export function TeacherProfileEditor({
   const t = useTranslations("TeacherProfile");
   const [state, formAction, pending] = useActionState(
     saveTeacherProfileAction,
-    INITIAL,
+    INITIAL
   );
   const [copied, setCopied] = useState(false);
   const slug = profile.slug || suggestedSlug;
@@ -106,6 +108,7 @@ export function TeacherProfileEditor({
             type="text"
             name="headline"
             defaultValue={profile.headline}
+            required
             maxLength={TEACHER_PROFILE_HEADLINE_MAX}
             disabled={pending}
           />
@@ -117,10 +120,38 @@ export function TeacherProfileEditor({
             className={css.textarea}
             name="bio"
             defaultValue={profile.bio}
+            required
             maxLength={TEACHER_PROFILE_BIO_MAX}
             rows={5}
             disabled={pending}
           />
+        </label>
+
+        <label className={css.field}>
+          <span className={css.label}>{t("experience")}</span>
+          <input
+            className={css.input}
+            type="text"
+            name="experience"
+            defaultValue={profile.experience}
+            required
+            maxLength={TEACHER_PROFILE_EXPERIENCE_MAX}
+            disabled={pending}
+          />
+          <span className={css.hint}>{t("experienceHint")}</span>
+        </label>
+
+        <label className={css.field}>
+          <span className={css.label}>{t("publications")}</span>
+          <textarea
+            className={css.textarea}
+            name="publications"
+            defaultValue={profile.publications}
+            maxLength={TEACHER_PROFILE_PUBLICATIONS_MAX}
+            rows={3}
+            disabled={pending}
+          />
+          <span className={css.hint}>{t("publicationsHint")}</span>
         </label>
 
         <div className={css.pair}>
@@ -136,6 +167,17 @@ export function TeacherProfileEditor({
             />
           </label>
           <label className={css.field}>
+            <span className={css.label}>{t("country")}</span>
+            <input
+              className={css.input}
+              type="text"
+              name="country"
+              defaultValue=""
+              required
+              disabled={pending}
+            />
+          </label>
+          <label className={css.field}>
             <span className={css.label}>{t("subjects")}</span>
             <input
               className={css.input}
@@ -147,7 +189,92 @@ export function TeacherProfileEditor({
             <span className={css.hint}>{t("subjectsHint")}</span>
           </label>
         </div>
+        <fieldset className={css.fieldset}>
+          <legend className={css.label}>{t("levels")}</legend>
 
+          <label className={css.option}>
+            <input
+              type="checkbox"
+              name="levels"
+              value="grades_5_9"
+              disabled={pending}
+            />
+            <span>{t("levelsOptions.grades_5_9")}</span>
+          </label>
+
+          <label className={css.option}>
+            <input
+              type="checkbox"
+              name="levels"
+              value="grades_10_11"
+              disabled={pending}
+            />
+            <span>{t("levelsOptions.grades_10_11")}</span>
+          </label>
+
+          <label className={css.option}>
+            <input
+              type="checkbox"
+              name="levels"
+              value="nmt"
+              disabled={pending}
+            />
+            <span>{t("levelsOptions.nmt")}</span>
+          </label>
+
+          <label className={css.option}>
+            <input
+              type="checkbox"
+              name="levels"
+              value="adult"
+              disabled={pending}
+            />
+            <span>{t("levelsOptions.adult")}</span>
+          </label>
+        </fieldset>
+        <fieldset className={css.fieldset}>
+  <legend className={css.label}>{t("languages")}</legend>
+
+  <label className={css.option}>
+    <input
+      type="checkbox"
+      name="languages"
+      value="uk"
+      disabled={pending}
+    />
+    <span>{t("languageOptions.uk")}</span>
+  </label>
+
+  <label className={css.option}>
+    <input
+      type="checkbox"
+      name="languages"
+      value="en"
+      disabled={pending}
+    />
+    <span>{t("languageOptions.en")}</span>
+  </label>
+
+  <label className={css.option}>
+    <input
+      type="checkbox"
+      name="languages"
+      value="de"
+      disabled={pending}
+    />
+    <span>{t("languageOptions.de")}</span>
+  </label>
+
+  <label className={css.option}>
+    <input
+      type="checkbox"
+      name="languages"
+      value="pl"
+      disabled={pending}
+    />
+    <span>{t("languageOptions.pl")}</span>
+  </label>
+</fieldset>
         <label className={css.field}>
           <span className={css.label}>{t("contactUrl")}</span>
           <input
@@ -160,8 +287,69 @@ export function TeacherProfileEditor({
             disabled={pending}
           />
         </label>
+        <label className={css.field}>
+  <span className={css.label}>{t("phone")}</span>
+  <input
+    className={css.input}
+    type="tel"
+    name="phone"
+    autoComplete="tel"
+    disabled={pending}
+  />
+</label>
 
-        <label className={css.check}>
+<div className={css.pair}>
+  <label className={css.field}>
+    <span className={css.label}>{t("lessonPrice")}</span>
+    <input
+      className={css.input}
+      type="number"
+      name="price"
+      min="0"
+      step="0.01"
+      disabled={pending}
+    />
+  </label>
+
+  <label className={css.field}>
+    <span className={css.label}>{t("currency")}</span>
+    <select
+      className={css.input}
+      name="currency"
+      defaultValue=""
+      disabled={pending}
+    >
+      <option value="">—</option>
+      <option value="UAH">UAH</option>
+      <option value="EUR">EUR</option>
+      <option value="USD">USD</option>
+      <option value="PLN">PLN</option>
+    </select>
+  </label>
+</div>
+
+<label className={css.field}>
+  <span className={css.label}>{t("lessonDuration")}</span>
+  <input
+    className={css.input}
+    type="number"
+    name="lessonDuration"
+    min="1"
+    disabled={pending}
+  />
+</label>
+<label className={css.field}>
+  <span className={css.label}>{t("joinMotivation")}</span>
+  <textarea
+    className={css.textarea}
+    name="joinMotivation"
+    rows={5}
+    required
+    disabled={pending}
+  />
+  <span className={css.hint}>{t("joinMotivationHint")}</span>
+</label>
+        {/* <label className={css.check}>
           <input
             type="checkbox"
             name="isPublic"
@@ -172,22 +360,31 @@ export function TeacherProfileEditor({
             <span className={css.checkTitle}>{t("isPublic")}</span>
             <span className={css.hint}>{t("isPublicHint")}</span>
           </span>
-        </label>
+        </label> */}
 
-        <div className={css.actions}>
-          <button type="submit" className={css.submit} disabled={pending}>
-            {pending ? t("saving") : t("save")}
-          </button>
-          <button
-            type="button"
-            className={css.share}
-            onClick={copyShareLink}
-            disabled={!profile.slug}
-            aria-live="polite"
-          >
-            {copied ? t("copied") : t("copyLink")}
-          </button>
-        </div>
+<div className={css.actions}>
+  <button type="submit" className={css.submit} disabled={pending}>
+    {pending ? t("saving") : t("save")}
+  </button>
+
+  <button
+    type="button"
+    className={css.share}
+    disabled={pending}
+  >
+    {t("submitForModeration")}
+  </button>
+
+  <button
+    type="button"
+    className={css.share}
+    onClick={copyShareLink}
+    disabled={!profile.slug || pending}
+    aria-live="polite"
+  >
+    {copied ? t("copied") : t("copyLink")}
+  </button>
+</div>
       </form>
     </section>
   );

@@ -4,6 +4,7 @@ import { PageFrame } from "@/components/dashboard/PageFrame";
 import { createPageMetadata } from "@/constants/seo";
 import { isDemoAccountLogin } from "@/modules/auth/demoLogin";
 import { requireUser } from "@/modules/auth/getCurrentUser";
+import { getTelegramLinkStatus } from "@/modules/telegram/link";
 import { getRecentResults } from "@/modules/results/getRecentResults";
 import {
   canEditTeacherProfile,
@@ -43,6 +44,13 @@ export default async function AccountPage() {
     }
   }
 
+  let telegramLinked = false;
+  try {
+    telegramLinked = await getTelegramLinkStatus(user.id);
+  } catch (error) {
+    console.error("account: getTelegramLinkStatus failed", error);
+  }
+
   return (
     <PageFrame kicker={t("kicker")} title={t("title")} lead={t("lead")}>
       <AccountCabinet
@@ -50,6 +58,7 @@ export default async function AccountPage() {
         recentResults={recentResults}
         demoLocked={isDemoAccountLogin(user.login)}
         teacherProfile={teacherProfile}
+        telegramLinked={telegramLinked}
       />
     </PageFrame>
   );
