@@ -5,7 +5,6 @@ import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import clsx from "clsx";
-import { isDemoAccountLogin } from "@/modules/auth/demoLogin";
 import { roleLabel, type UserRole, USER_ROLES } from "@/modules/auth/client";
 import { queryHref } from "@/lib/queryHref";
 import {
@@ -141,8 +140,7 @@ export function AdminProfilesPanel({
             <ul className={css.list}>
               {items.map((profile) => {
                 const isSelf = profile.id === currentUserId;
-                const isProtected = isDemoAccountLogin(profile.login);
-                const canModerate = !isSelf && !isProtected;
+                const canModerate = !isSelf;
 
                 return (
                   <li
@@ -174,11 +172,6 @@ export function AdminProfilesPanel({
                         ) : null}
                         {profile.isBanned ? (
                           <span className={css.banned}>{t("bannedBadge")}</span>
-                        ) : null}
-                        {isProtected ? (
-                          <span className={css.protected}>
-                            {t("protectedBadge")}
-                          </span>
                         ) : null}
                       </p>
                       <p className={css.login}>@{profile.login}</p>

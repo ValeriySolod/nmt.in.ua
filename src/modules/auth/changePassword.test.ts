@@ -52,41 +52,6 @@ function makeConnection(options: {
   return connection;
 }
 
-test("changePassword rejects demo accounts without touching the database", async () => {
-  let queried = false;
-  const connection = makeConnection({
-    onUpdate: () => {
-      throw new Error("should not update");
-    },
-  });
-  const originalQuery = connection.query;
-  connection.query = async (sql, params) => {
-    queried = true;
-    return originalQuery(sql, params);
-  };
-
-  await assert.rejects(
-    () =>
-      changePassword(
-        {
-          user: {
-            id: 1,
-            login: "demo-student",
-            displayName: "Олена Коваленко",
-            role: "student",
-          },
-          currentPassword: "demo12345",
-          newPassword: "newpass12",
-          newPasswordConfirm: "newpass12",
-        },
-        { getConnection: async () => connection },
-      ),
-    (error: unknown) =>
-      error instanceof ChangePasswordError && error.code === "demoAccount",
-  );
-  assert.equal(queried, false);
-});
-
 test("changePassword rejects the wrong current password", async () => {
   const connection = makeConnection({
     passwordHash: hashPassword("oldpass12"),

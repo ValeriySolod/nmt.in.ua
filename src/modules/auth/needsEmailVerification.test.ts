@@ -14,19 +14,6 @@ function user(partial: Partial<AuthUser>): AuthUser {
   };
 }
 
-test("needsEmailVerification skips demo accounts", () => {
-  assert.equal(
-    needsEmailVerification(
-      user({
-        login: "demo-student",
-        email: "demo@example.com",
-        emailVerified: false,
-      }),
-    ),
-    false,
-  );
-});
-
 test("needsEmailVerification skips legacy accounts without email", () => {
   assert.equal(needsEmailVerification(user({})), false);
 });

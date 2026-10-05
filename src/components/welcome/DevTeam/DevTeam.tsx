@@ -1,17 +1,15 @@
 import { getTranslations } from "next-intl/server";
-import {
-  DEV_TEAM_DEMO,
-  DEV_TEAM_SERVICE_IDS,
-} from "./demoMembers";
+import { DEV_TEAM_MEMBERS, DEV_TEAM_SERVICE_IDS } from "./teamMembers";
 import { DevTeamPanel } from "./DevTeamPanel";
 
 export async function DevTeam() {
   const t = await getTranslations("WelcomeLanding.devTeam");
 
-  const members = DEV_TEAM_DEMO.map((member) => ({
+  const members = DEV_TEAM_MEMBERS.map((member) => ({
     id: member.id,
     name: t(`members.${member.id}.name`),
     role: t(`members.${member.id}.role`),
+    photoSrc: member.photoSrc,
     socials: [...member.socials],
   }));
 
@@ -31,9 +29,13 @@ export async function DevTeam() {
         kicker: t("kicker"),
         title: t("title"),
         lead: t("lead"),
-        socialLinkedin: t("socialLinkedin"),
+        socialGithub: t("socialGithub"),
         socialTelegram: t("socialTelegram"),
         carouselAria: t("carouselAria"),
+        agencyName: t("agencyName"),
+        agencyTaglineJoin: t("agencyTaglineJoin"),
+        agencyTaglineRest: t("agencyTaglineRest"),
+        agencyLogoAlt: t("agencyLogoAlt"),
         servicesTitle: t("servicesTitle"),
         servicesLead: t("servicesLead"),
         formCta: t("formCta"),

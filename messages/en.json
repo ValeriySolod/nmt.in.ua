@@ -73,7 +73,6 @@
     "photoRemoveConfirm": "Remove the profile photo?",
     "photoRemoving": "Removing…",
     "photoRemoved": "Photo removed.",
-    "demoLockedPhoto": "The photo cannot be changed on a demo account.",
     "achievementsTitle": "Achievements",
     "achievementsLead": "Badges for tests and the simulator will appear in a later version.",
     "timeTitle": "Total study time",
@@ -87,7 +86,6 @@
     "savePassword": "Save password",
     "saving": "Saving…",
     "passwordSaved": "Password updated.",
-    "demoLocked": "The password cannot be changed on a demo account.",
     "logoutTitle": "Sign out",
     "logoutLead": "End the session on this device.",
     "logout": "Log out",
@@ -104,14 +102,12 @@
       "passwordMismatch": "Confirmation does not match the new password.",
       "samePassword": "The new password must differ from the current one.",
       "wrongCurrent": "The current password is incorrect.",
-      "demoAccount": "The password cannot be changed on a demo account.",
       "serverError": "Could not change the password. Try again."
     },
     "photoErrors": {
       "requiredFile": "Choose an image file.",
       "invalidType": "Use JPEG, PNG, or WebP.",
       "tooLarge": "The file is too large.",
-      "demoAccount": "The photo cannot be changed on a demo account.",
       "serverError": "Could not save the photo. Try again."
     }
   },
@@ -131,7 +127,6 @@
     "subjectsHint": "Comma-separated, up to 8 items.",
     "contactUrl": "Contact link",
     "country": "Country",
-
     "levels": "Student levels",
     "levelsOptions": {
       "grades_5_9": "Grades 5–9",
@@ -139,7 +134,6 @@
       "nmt": "NMT",
       "adult": "Adults"
     },
-
     "languages": "Teaching languages",
     "languageOptions": {
       "uk": "Ukrainian",
@@ -147,7 +141,6 @@
       "de": "German",
       "pl": "Polish"
     },
-
     "phone": "Phone",
     "lessonPrice": "Lesson price",
     "currency": "Currency",
@@ -1012,6 +1005,7 @@
       "title": "Teachers on our platform",
       "lead": "Public teacher cards — experience, bio and next available slot.",
       "verified": "Verified tutor",
+      "city": "City",
       "education": "Education",
       "experience": "Experience",
       "nextSlot": "Next available time",
@@ -1021,38 +1015,20 @@
       "prev": "Previous teacher",
       "next": "Next teacher",
       "counter": "{current} / {total}",
+      "demo": {
+        "initials": "AK",
+        "name": "Anna Koval",
+        "subjects": "Mathematics · NMT",
+        "city": "Kyiv",
+        "experience": "8 years of NMT preparation",
+        "nextSlot": "Mon, 4:00 PM",
+        "headline": "I help students close gaps and score with confidence on the NMT.",
+        "bio": "I work with grades 10–11: diagnostics, a topic plan and regular exam-style practice.",
+        "publications": "Teaching materials in algebra and geometry for certification prep."
+      },
       "offerTitle": "Offer for teachers",
       "offerLead": "The platform gives you tools to attract students, guide their learning and show results.",
       "joinCta": "Join the platform",
-      "demo": {
-        "viktoriaK": {
-          "name": "Viktoriia Karakots",
-          "subject": "Mathematics",
-          "education": "Matej Bel University",
-          "experience": "more than 3 years",
-          "nextSlot": "today at 20:30",
-          "bioLead": "I tutor mathematics. I connect easily with students and explain without boring memorization — I show the logic.",
-          "bioRest": "I have over 4 years of experience teaching children. In lessons we cover school topics, practise typical NMT tasks and learn not to fear mistakes. I adapt the pace to each student."
-        },
-        "viktoriaP": {
-          "name": "Viktoriia Pohribna",
-          "subject": "Mathematics",
-          "education": "Cherkasy National University named after B. Khmelnytsky",
-          "experience": "more than 3 years",
-          "nextSlot": "tomorrow at 11:00",
-          "bioLead": "Math tutor with 3 years of experience. I explain complex topics in simple words and help students understand, not just memorize.",
-          "bioRest": "I work with different ages — from school curriculum to NMT prep. Focus on practice, error analysis and confident answers. Lessons adapt to the student’s level and goals."
-        },
-        "nazarii": {
-          "name": "Nazarii Ivakhiv",
-          "subject": "Mathematics",
-          "education": "Drohobych Ivan Franko State Pedagogical University",
-          "experience": "more than 10 years",
-          "nextSlot": "Sunday at 17:00",
-          "bioLead": "I help master math without stress, using playful methods and real examples. Focus on logic and problem-solving skills.",
-          "bioRest": "I have taught mathematics for over 10 years. Lessons match the student’s level; I explain with associations and real-life examples. Step-by-step learning builds confidence."
-        }
-      },
       "features": {
         "profile": {
           "title": "Public profile",
@@ -1069,6 +1045,10 @@
         "results": {
           "title": "Results and sessions",
           "text": "See class and per-student progress: averages, attempts, statuses."
+        },
+        "sessions": {
+          "title": "Learning sessions",
+          "text": "Student attempt history with filters, sorting and session statuses."
         },
         "consultations": {
           "title": "Consultation requests",
@@ -1089,34 +1069,11 @@
       "kicker": "Team",
       "title": "People who build the platform",
       "lead": "Developers, designers and editors behind every test and every page",
-      "socialLinkedin": "LinkedIn",
       "socialTelegram": "Telegram",
       "carouselAria": "Development team carousel",
       "servicesTitle": "Services the team provides",
       "servicesLead": "We build and support products — from education platforms to business tools.",
       "formCta": "Discuss a project",
-      "members": {
-        "olena": {
-          "name": "Olena Koval",
-          "role": "Project lead"
-        },
-        "ihor": {
-          "name": "Ihor Bondarenko",
-          "role": "Product manager"
-        },
-        "dmytro": {
-          "name": "Dmytro Kravchuk",
-          "role": "UX/UI designer"
-        },
-        "pavlo": {
-          "name": "Pavlo Moroz",
-          "role": "Frontend developer"
-        },
-        "kateryna": {
-          "name": "Kateryna Lysenko",
-          "role": "Backend developer"
-        }
-      },
       "services": {
         "product": {
           "title": "Web product development",
@@ -1138,7 +1095,50 @@
           "title": "Integrations",
           "text": "Payments, email, CRM and connecting services through APIs."
         }
-      }
+      },
+      "socialGithub": "GitHub",
+      "members": {
+        "mykhailo": {
+          "name": "Mykhailo Maksymov",
+          "role": "Project Lead"
+        },
+        "natalia": {
+          "name": "Nataliia",
+          "role": "Project Coordinator"
+        },
+        "oleksandr": {
+          "name": "Oleksandr Verba",
+          "role": "Fullstack Developer"
+        },
+        "anton": {
+          "name": "Anton",
+          "role": "Fullstack Developer"
+        },
+        "yuliana": {
+          "name": "Yuliana",
+          "role": "Fullstack Developer"
+        },
+        "valeriy": {
+          "name": "Valerii",
+          "role": "Fullstack Developer"
+        },
+        "adam": {
+          "name": "Adam Lekh",
+          "role": "Fullstack Developer"
+        },
+        "valentyn": {
+          "name": "Valentyn",
+          "role": "Fullstack Developer"
+        },
+        "romanna": {
+          "name": "Romanna Brych",
+          "role": "Fullstack Developer"
+        }
+      },
+      "agencyName": "JOJØ",
+      "agencyTaglineJoin": "Join.",
+      "agencyTaglineRest": "Journey to web workflow",
+      "agencyLogoAlt": "JOJØ logo"
     },
     "footer": {
       "tagline": "Online NMT maths preparation: topic tests, result analytics, an exam simulator and learning sessions with a teacher.",
@@ -1159,11 +1159,6 @@
       "student": "Student",
       "teacher": "Teacher",
       "admin": "Admin"
-    },
-    "demoAccounts": {
-      "student": "tests, results, sessions",
-      "teacher": "assigning mentor sessions",
-      "admin": "content import and settings"
     },
     "errors": {
       "requiredFields": "Enter your login and password.",
@@ -1615,7 +1610,6 @@
     "offline": "offline",
     "never": "never signed in",
     "bannedBadge": "banned",
-    "protectedBadge": "demo",
     "roleMeta": "Role: {role}",
     "lastLoginMeta": "Last login: {date}",
     "lastSeenMeta": "Last seen: {date}",
@@ -1641,7 +1635,6 @@
       "not_found": "User not found.",
       "forbidden": "Access denied.",
       "self_action": "You cannot ban or delete your own account.",
-      "protected_account": "Demo accounts are protected.",
       "last_admin": "You cannot ban or delete the last active admin.",
       "generic": "Could not complete the action. Try again."
     },

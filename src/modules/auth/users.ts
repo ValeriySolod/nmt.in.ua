@@ -2,7 +2,6 @@ import "server-only";
 
 import type { SqlConnection } from "@/lib/db/mysql";
 import type { AuthUser, UserRole, StudentOption } from "./types";
-import { DEMO_ACCOUNTS } from "./types";
 import { SQL_CREATE_USER_AVATARS } from "./avatar/schema";
 import { hashPassword } from "./password";
 
@@ -58,18 +57,6 @@ const SQL_FIND_BY_EMAIL = `
   LIMIT 1
 `;
 
-const SQL_COUNT_USERS = `SELECT COUNT(*) AS count FROM ${AUTH_USERS_TABLE}`;
-
-const SQL_UPSERT_DEMO = `
-  INSERT INTO ${AUTH_USERS_TABLE} (id, login, password_hash, display_name, role)
-  VALUES (?, ?, ?, ?, ?)
-  ON DUPLICATE KEY UPDATE
-    login = VALUES(login),
-    password_hash = VALUES(password_hash),
-    display_name = VALUES(display_name),
-    role = VALUES(role)
-`;
-
 type UserRow = {
   id: number;
   login: string;
@@ -82,8 +69,6 @@ type UserRow = {
   email_verify_required?: number | boolean | null;
   avatar_rev?: number | string | null;
 };
-
-type CountRow = { count: number };
 
 function mapAvatarRev(value: unknown): number | undefined {
   if (value == null || value === "") return undefined;
@@ -217,7 +202,6 @@ async function runAuthSchemaMigration(
     );
     await ensureEmailUniqueIndex(connection);
     await connection.execute(SQL_CREATE_USER_AVATARS, []);
-    await seedDemoUsers(connection);
   } finally {
     connection.release();
   }
@@ -235,24 +219,6 @@ export async function ensureAuthSchema(
     });
   }
   await schemaReady;
-}
-
-async function seedDemoUsers(connection: SqlConnection): Promise<void> {
-  const rows = await connection.query<CountRow>(SQL_COUNT_USERS, []);
-  const count = rows[0]?.count ?? 0;
-  if (count > 0) {
-    return;
-  }
-
-  for (const account of DEMO_ACCOUNTS) {
-    await connection.execute(SQL_UPSERT_DEMO, [
-      account.id,
-      account.login,
-      hashPassword(account.password),
-      account.displayName,
-      account.role,
-    ]);
-  }
 }
 
 const SQL_LIST_STUDENTS = `

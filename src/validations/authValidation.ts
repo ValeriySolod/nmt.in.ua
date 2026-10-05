@@ -1,7 +1,5 @@
 import Joi from "joi";
 
-import { DEMO_ACCOUNTS } from "@/modules/auth/types";
-
 export const LOGIN_MIN_LEN = 3;
 export const LOGIN_MAX_LEN = 50;
 export const DISPLAY_NAME_MIN_LEN = 2;
@@ -16,10 +14,6 @@ const LOGIN_PATTERN = /^[a-z0-9][a-z0-9._-]{1,48}[a-z0-9]$|^[a-z0-9]{3,50}$/i;
 /** Practical email check — full RFC is overkill for registration. */
 const EMAIL_PATTERN =
   /^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/i;
-
-const RESERVED_LOGINS = new Set(
-  DEMO_ACCOUNTS.map((account) => account.login.toLowerCase()),
-);
 
 const passwordSchema = Joi.string()
   .min(PASSWORD_MIN_LEN)
@@ -38,7 +32,7 @@ const loginSchema = Joi.string()
     ) {
       return helpers.error("string.pattern.base");
     }
-    if (RESERVED_LOGINS.has(value) || value.startsWith("demo-")) {
+    if (value.startsWith("demo-")) {
       return helpers.error("login.reserved");
     }
     return value;

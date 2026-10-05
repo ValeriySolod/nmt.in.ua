@@ -1,6 +1,5 @@
 import type { SqlConnection } from "@/lib/db/mysql";
 import type { AuthUser } from "../types";
-import { isDemoAccountLogin } from "../demoLogin";
 import {
   AVATAR_MAX_BYTES,
   isAvatarFile,
@@ -15,7 +14,6 @@ export type UploadAvatarErrorCode =
   | "requiredFile"
   | "invalidType"
   | "tooLarge"
-  | "demoAccount"
   | "serverError";
 
 export class UploadAvatarError extends Error {
@@ -36,13 +34,6 @@ export async function uploadAvatar(
   input: { user: AuthUser; file: FormDataEntryValue | null },
   deps?: AvatarDeps,
 ): Promise<number> {
-  if (isDemoAccountLogin(input.user.login)) {
-    throw new UploadAvatarError(
-      "Demo account avatars cannot be changed.",
-      "demoAccount",
-    );
-  }
-
   if (!isAvatarFile(input.file) || input.file.size <= 0) {
     throw new UploadAvatarError("Avatar file is required.", "requiredFile");
   }
@@ -76,13 +67,6 @@ export async function removeAvatar(
   user: AuthUser,
   deps?: AvatarDeps,
 ): Promise<void> {
-  if (isDemoAccountLogin(user.login)) {
-    throw new UploadAvatarError(
-      "Demo account avatars cannot be changed.",
-      "demoAccount",
-    );
-  }
-
   try {
     await deleteStoredAvatar(user.id, deps);
   } catch (error) {
