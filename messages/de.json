@@ -130,6 +130,31 @@
     "subjects": "Fächer",
     "subjectsHint": "Durch Kommas getrennt, bis zu 8 Einträge.",
     "contactUrl": "Kontaktlink",
+    "country": "Land",
+
+    "levels": "Schülergruppen",
+    "levelsOptions": {
+      "grades_5_9": "Klassen 5–9",
+      "grades_10_11": "Klassen 10–11",
+      "nmt": "NMT",
+      "adult": "Erwachsene"
+    },
+
+    "languages": "Unterrichtssprachen",
+    "languageOptions": {
+      "uk": "Ukrainisch",
+      "en": "Englisch",
+      "de": "Deutsch",
+      "pl": "Polnisch"
+    },
+
+    "phone": "Telefon",
+    "lessonPrice": "Preis pro Unterricht",
+    "currency": "Währung",
+    "lessonDuration": "Unterrichtsdauer (Min.)",
+    "joinMotivation": "Warum möchtest du NMT beitreten?",
+    "joinMotivationHint": "Erzähle kurz, warum du Teil der Plattform werden möchtest.",
+    "submitForModeration": "Zur Moderation senden",
     "isPublic": "Karte veröffentlichen",
     "isPublicHint": "Ohne Häkchen antwortet /t/… mit 404.",
     "save": "Karte speichern",

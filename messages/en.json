@@ -130,6 +130,31 @@
     "subjects": "Subjects",
     "subjectsHint": "Comma-separated, up to 8 items.",
     "contactUrl": "Contact link",
+    "country": "Country",
+
+    "levels": "Student levels",
+    "levelsOptions": {
+      "grades_5_9": "Grades 5–9",
+      "grades_10_11": "Grades 10–11",
+      "nmt": "NMT",
+      "adult": "Adults"
+    },
+
+    "languages": "Teaching languages",
+    "languageOptions": {
+      "uk": "Ukrainian",
+      "en": "English",
+      "de": "German",
+      "pl": "Polish"
+    },
+
+    "phone": "Phone",
+    "lessonPrice": "Lesson price",
+    "currency": "Currency",
+    "lessonDuration": "Lesson duration (min)",
+    "joinMotivation": "Why do you want to join NMT?",
+    "joinMotivationHint": "Briefly tell us why you want to join the platform.",
+    "submitForModeration": "Submit for moderation",
     "isPublic": "Publish the card",
     "isPublicHint": "While unchecked, /t/… returns 404.",
     "save": "Save card",
