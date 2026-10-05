@@ -54,11 +54,6 @@
     "empty": "Die Ergebnisse erscheinen nach deinen ersten Tests."
   },
   "AccountCabinet": {
-    "telegramConnect": "Telegram verbinden",
-    "telegramLinked": "Telegram verbunden",
-    "telegramLoading": "Link wird erstellt...",
-    "telegramOpen": "Telegram zum Verbinden öffnen",
-    "telegramError": "Telegram-Link konnte nicht erstellt werden. Bitte erneut versuchen.",
     "kicker": "Profil",
     "title": "Persönliches Konto",
     "lead": "Profilfoto, öffentliche Lehrerkarte, Passwort, Ergebnisse und Platzhalter für Erfolge und Lernzeit.",
@@ -91,9 +86,6 @@
     "logoutTitle": "Abmelden",
     "logoutLead": "Die Sitzung auf diesem Gerät beenden.",
     "logout": "Abmelden",
-    "confirmEmailTitle": "E-Mail bestätigen",
-    "confirmEmailLead": "{email} ist noch nicht bestätigt. Den Link kannst du erneut senden — das Konto funktioniert bereits.",
-    "confirmEmailCta": "E-Mail erneut senden",
     "joinInviteTitle": "Einladungscode",
     "joinInviteLead": "Wenn eine Lehrkraft einen Code oder Link geschickt hat, nimm ihn hier an.",
     "joinInviteCta": "Code eingeben",
@@ -122,39 +114,10 @@
     "slugHint": "Lateinische Buchstaben, Ziffern und Bindestriche. 3–48 Zeichen.",
     "headline": "Kurzüberschrift",
     "bio": "Über mich",
-    "experience": "Erfahrung",
-    "experienceHint": "Zum Beispiel: „12 Jahre Mathematikunterricht“.",
-    "publications": "Wissenschaftliche Arbeiten",
-    "publicationsHint": "Kurze Liste oder Links. Mehrere Zeilen sind möglich.",
     "city": "Stadt",
     "subjects": "Fächer",
     "subjectsHint": "Durch Kommas getrennt, bis zu 8 Einträge.",
     "contactUrl": "Kontaktlink",
-    "country": "Land",
-
-    "levels": "Schülergruppen",
-    "levelsOptions": {
-      "grades_5_9": "Klassen 5–9",
-      "grades_10_11": "Klassen 10–11",
-      "nmt": "NMT",
-      "adult": "Erwachsene"
-    },
-
-    "languages": "Unterrichtssprachen",
-    "languageOptions": {
-      "uk": "Ukrainisch",
-      "en": "Englisch",
-      "de": "Deutsch",
-      "pl": "Polnisch"
-    },
-
-    "phone": "Telefon",
-    "lessonPrice": "Preis pro Unterricht",
-    "currency": "Währung",
-    "lessonDuration": "Unterrichtsdauer (Min.)",
-    "joinMotivation": "Warum möchtest du NMT beitreten?",
-    "joinMotivationHint": "Erzähle kurz, warum du Teil der Plattform werden möchtest.",
-    "submitForModeration": "Zur Moderation senden",
     "isPublic": "Karte veröffentlichen",
     "isPublicHint": "Ohne Häkchen antwortet /t/… mit 404.",
     "save": "Karte speichern",
@@ -169,8 +132,6 @@
       "slugTaken": "Diese Adresse ist bereits vergeben.",
       "headlineTooLong": "Die Überschrift ist zu lang.",
       "bioTooLong": "Der Text „Über mich“ ist zu lang.",
-      "experienceTooLong": "Das Erfahrungsfeld ist zu lang.",
-      "publicationsTooLong": "Die Liste wissenschaftlicher Arbeiten ist zu lang.",
       "cityTooLong": "Der Stadtname ist zu lang.",
       "invalidSubjects": "Zu viele Fächer oder ein Eintrag ist zu lang.",
       "invalidContactUrl": "Der Link muss mit http:// oder https:// beginnen.",
@@ -225,9 +186,7 @@
     "create": "Schüler anlegen",
     "creating": "Wird angelegt…",
     "created": "Konto für {name} wurde angelegt.",
-    "credentialsOnce": "Kopiere die Daten jetzt. Nach dem Neuladen verschwindet das Passwort. Der Schüler kann sich sofort anmelden; die Adresse gilt als bestätigt, sobald der Link geöffnet wird.",
-    "mailSent": "Ein Bestätigungslink wurde an {email} gesendet. Er gilt 24 Stunden.",
-    "mailFailed": "Das Konto wurde erstellt, aber die E-Mail an {email} ist nicht rausgegangen. Der Schüler kann sie im Konto erneut senden.",
+    "credentialsOnce": "Kopiere die Daten jetzt. Nach dem Neuladen verschwindet das Passwort, eine E-Mail wird nicht gesendet. Der Schüler kann sich sofort anmelden.",
     "copyCredentials": "Daten kopieren",
     "groupOptional": "Gruppe (optional)",
     "addTitle": "Schüler hinzufügen",
@@ -885,7 +844,6 @@
       "sectionsAria": "Abschnitte der Seite",
       "features": "Funktionen",
       "steps": "So funktioniert es",
-      "teachers": "Lehrkräfte",
       "faq": "Fragen",
       "login": "Anmelden",
       "register": "Konto erstellen",
@@ -928,7 +886,6 @@
       "kicker": "Funktionen",
       "title": "Alles für regelmäßiges Üben an einem Ort",
       "lead": "Vom ersten Themen-Test bis zur vollständigen Prüfungssimulation.",
-      "imageAlt": "Ein Schüler zwischen hingeworfenen Heften und Mathebüchern",
       "items": {
         "topics": {
           "title": "Thementests",
@@ -983,7 +940,6 @@
       "kicker": "Fragen",
       "title": "Das Wichtigste in Kürze",
       "lead": "Was vor der Registrierung am häufigsten gefragt wird.",
-      "imageAlt": "Nachdenklicher Schüler bei der Prüfungsvorbereitung",
       "items": {
         "price": {
           "q": "Was kostet das?",
@@ -1007,138 +963,12 @@
         }
       }
     },
-    "teachers": {
-      "kicker": "Lehrkräfte",
-      "title": "Lehrkräfte unserer Plattform",
-      "lead": "Öffentliche Lehrerkarten — Erfahrung, Beschreibung und nächster freier Termin.",
-      "verified": "Geprüfte Lehrkraft",
-      "education": "Ausbildung",
-      "experience": "Erfahrung",
-      "nextSlot": "Nächster freier Termin",
-      "reviews": "(Bewertungen: {count})",
-      "empty": "Bald erscheinen hier Lehrerkarten.",
-      "carouselAria": "Karussell der Plattform-Lehrkräfte",
-      "prev": "Vorherige Lehrkraft",
-      "next": "Nächste Lehrkraft",
-      "counter": "{current} / {total}",
-      "offerTitle": "Angebot für Lehrkräfte",
-      "offerLead": "Die Plattform gibt Werkzeuge, um Schüler:innen zu gewinnen, Lernen zu führen und Ergebnisse zu zeigen.",
-      "joinCta": "Der Plattform beitreten",
-      "demo": {
-        "viktoriaK": {
-          "name": "Viktoriia Karakots",
-          "subject": "Mathematik",
-          "education": "Matej-Bel-Universität",
-          "experience": "mehr als 3 Jahre",
-          "nextSlot": "heute um 20:30",
-          "bioLead": "Ich unterrichte Mathematik. Finde leicht Kontakt zu Schüler:innen und erkläre ohne stures Auswendiglernen — ich zeige die Logik.",
-          "bioRest": "Über 4 Jahre Erfahrung mit Kindern. Im Unterricht: Schulthemen, typische NMT-Aufgaben und Angstfreiheit vor Fehlern. Tempo individuell angepasst."
-        },
-        "viktoriaP": {
-          "name": "Viktoriia Pohribna",
-          "subject": "Mathematik",
-          "education": "Nationale Universität Tscherkassy (B. Chmelnyzkyj)",
-          "experience": "mehr als 3 Jahre",
-          "nextSlot": "morgen um 11:00",
-          "bioLead": "Mathe-Tutorin mit 3 Jahren Erfahrung. Erkläre Komplexes einfach und helfe zu verstehen, nicht nur auswendig zu lernen.",
-          "bioRest": "Arbeit mit verschiedenen Altersgruppen — von Schulstoff bis NMT. Fokus auf Praxis, Fehleranalyse und sichere Antworten. Unterricht nach Niveau und Ziel."
-        },
-        "nazarii": {
-          "name": "Nazarii Ivakhiv",
-          "subject": "Mathematik",
-          "education": "Staatliche Pädagogische Universität Drohobytsch (I. Franko)",
-          "experience": "mehr als 10 Jahre",
-          "nextSlot": "Sonntag um 17:00",
-          "bioLead": "Mathe ohne Stress: spielerische Methoden und reale Beispiele. Fokus auf Logik und Problemlösen.",
-          "bioRest": "Über 10 Jahre Mathematikunterricht. Niveauangepasst, mit Assoziationen und Alltagsbeispielen. Schritt für Schritt zu mehr Sicherheit."
-        }
-      },
-      "features": {
-        "profile": {
-          "title": "Öffentliches Profil",
-          "text": "Lehrerseite mit Erfahrung, Fächern und Kontakt für Schüler:innen und Eltern."
-        },
-        "students": {
-          "title": "Schüler und Gruppen",
-          "text": "Schüler:innen hinzufügen, Gruppen anlegen und Einladungscodes teilen."
-        },
-        "assign": {
-          "title": "Tests zuweisen",
-          "text": "Themen für mehrere Schüler:innen zugleich setzen — sofort oder zum Termin."
-        },
-        "results": {
-          "title": "Ergebnisse und Sitzungen",
-          "text": "Fortschritt der Klasse und einzelner Schüler:innen: Mittelwerte, Versuche, Status."
-        },
-        "consultations": {
-          "title": "Beratungsanfragen",
-          "text": "Anfragen erhalten und Schüler:innen sich selbst oder einer Gruppe zuordnen."
-        }
-      }
-    },
     "cta": {
       "title": "Beginnen Sie heute mit dem ersten Thema",
       "lead": "Erstellen Sie in einer Minute ein Konto und machen Sie den ersten Test, um Ihr echtes Niveau zu sehen.",
       "primary": "Konto erstellen",
       "secondary": "Anmelden",
       "note": "Ohne Zahlung und ohne Kartendaten"
-    },
-    "devTeam": {
-      "toggle": "Mehr über das Entwicklerteam",
-      "collapse": "Entwicklerteam ausblenden",
-      "kicker": "Team",
-      "title": "Menschen hinter der Plattform",
-      "lead": "Entwickler:innen, Designer:innen und Redakteur:innen hinter jedem Test und jeder Seite",
-      "socialLinkedin": "LinkedIn",
-      "socialTelegram": "Telegram",
-      "carouselAria": "Karussell des Entwicklerteams",
-      "servicesTitle": "Leistungen des Teams",
-      "servicesLead": "Wir entwickeln und betreuen Produkte — von Bildungsplattformen bis zu Business-Tools.",
-      "formCta": "Projekt besprechen",
-      "members": {
-        "olena": {
-          "name": "Olena Koval",
-          "role": "Projektleitung"
-        },
-        "ihor": {
-          "name": "Ihor Bondarenko",
-          "role": "Product Manager"
-        },
-        "dmytro": {
-          "name": "Dmytro Kravchuk",
-          "role": "UX/UI-Designer"
-        },
-        "pavlo": {
-          "name": "Pavlo Moroz",
-          "role": "Frontend-Entwickler"
-        },
-        "kateryna": {
-          "name": "Kateryna Lysenko",
-          "role": "Backend-Entwicklerin"
-        }
-      },
-      "services": {
-        "product": {
-          "title": "Webprodukt-Entwicklung",
-          "text": "Cabinets, Plattformen und interne Tools — von der Idee zum laufenden Launch."
-        },
-        "support": {
-          "title": "Support und Weiterentwicklung",
-          "text": "Nach dem Release: Fixes, Updates und Verbesserungen bei wachsender Last."
-        },
-        "design": {
-          "title": "UX/UI-Design",
-          "text": "Interfaces zur Aufgabe des Kunden, Prototypen und ein stimmiges Designsystem."
-        },
-        "mvp": {
-          "title": "MVP und Landings",
-          "text": "Schneller Start, um eine Idee am Markt zu prüfen — ohne unnötigen Umfang."
-        },
-        "integrations": {
-          "title": "Integrationen",
-          "text": "Zahlungen, E-Mail, CRM und die Verbindung von Diensten über APIs."
-        }
-      }
     },
     "footer": {
       "tagline": "Online-Vorbereitung auf die NMT in Mathematik: Themen-Tests, Ergebnisanalyse, Prüfungssimulator und Lernsitzungen mit einer Lehrkraft.",
@@ -1672,11 +1502,7 @@
     "kicker": "Bestätigung",
     "title": "E-Mail bestätigen",
     "pending": "Link wird geprüft…",
-    "success": "E-Mail bestätigt.",
-    "successLead": "Du kannst den Arbeitsbereich öffnen oder dich erneut anmelden.",
-    "goToCabinet": "Zum Arbeitsbereich",
-    "goToLogin": "Anmelden",
-    "resendLead": "Sende die E-Mail erneut — der neue Link ersetzt den vorherigen.",
+    "success": "E-Mail bestätigt. Arbeitsbereich wird geöffnet…",
     "resendLink": "Bestätigung erneut senden",
     "backToLogin": "Zur Anmeldung",
     "errors": {

@@ -15,7 +15,6 @@ import { RecentResults } from "@/components/dashboard/RecentResults";
 import { UserAvatar } from "@/components/account/UserAvatar";
 import { TeacherProfileEditor } from "@/components/account/TeacherProfileEditor";
 import { AccountPhotoPanel } from "./AccountPhotoPanel";
-import { TelegramLinkControl } from "./TelegramLinkControl";
 import type { RecentResultItem } from "@/modules/results/getRecentResults";
 import type { TeacherProfile } from "@/modules/teachers/types";
 import { normalizeSlug } from "@/modules/teachers/validateProfile";
@@ -28,7 +27,6 @@ type AccountCabinetProps = {
   recentResults: RecentResultItem[];
   demoLocked: boolean;
   teacherProfile?: TeacherProfile | null;
-  telegramLinked: boolean;
 };
 
 export function AccountCabinet({
@@ -36,7 +34,6 @@ export function AccountCabinet({
   recentResults,
   demoLocked,
   teacherProfile = null,
-  telegramLinked,
 }: AccountCabinetProps) {
   const t = useTranslations("AccountCabinet");
   const tHeader = useTranslations("Header");
@@ -48,23 +45,6 @@ export function AccountCabinet({
 
   return (
     <div className={css.layout}>
-      {user.email && !user.emailVerified && !demoLocked ? (
-        <section className={css.panel} aria-labelledby="account-confirm-email-title">
-          <h2 id="account-confirm-email-title" className={css.panelTitle}>
-            {t("confirmEmailTitle")}
-          </h2>
-          <p className={clsx(css.alert, css.alertHint)} role="status">
-            {t("confirmEmailLead", { email: user.email })}
-          </p>
-          <Link
-            className={css.joinLink}
-            href={`/register/check-email?email=${encodeURIComponent(user.email)}`}
-          >
-            {t("confirmEmailCta")}
-          </Link>
-        </section>
-      ) : null}
-
       <section className={css.identity} aria-labelledby="account-identity-title">
         <UserAvatar user={user} className={css.avatar} />
         <div className={css.identityCopy}>
@@ -78,7 +58,6 @@ export function AccountCabinet({
       </section>
 
       <AccountPhotoPanel user={user} demoLocked={demoLocked} />
-      <TelegramLinkControl linked={telegramLinked} />
 
       {user.role === "student" ? (
         <section className={css.panel} aria-labelledby="account-join-title">

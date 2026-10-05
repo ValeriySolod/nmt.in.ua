@@ -45,19 +45,6 @@ test("validateRegistrationInput rejects missing email", () => {
   assert.deepEqual(result, { ok: false, code: "requiredFields" });
 });
 
-test("validateRegistrationInput rejects an address without a real domain", () => {
-  for (const email of ["a@b", "name@localhost", "user@", "@school.ua"]) {
-    const result = validateRegistrationInput({
-      login: "newuser",
-      displayName: "Test User",
-      email,
-      password: "12345678",
-      passwordConfirm: "12345678",
-    });
-    assert.deepEqual(result, { ok: false, code: "invalidEmail" });
-  }
-});
-
 test("validateRegistrationInput rejects invalid email", () => {
   const result = validateRegistrationInput({
     login: "newuser",

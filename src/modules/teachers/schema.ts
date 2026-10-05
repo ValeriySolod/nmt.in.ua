@@ -7,8 +7,6 @@ export const SQL_CREATE_TEACHER_PROFILES = `
     slug VARCHAR(48) NOT NULL,
     headline VARCHAR(160) NULL,
     bio TEXT NULL,
-    experience VARCHAR(160) NULL,
-    publications TEXT NULL,
     city VARCHAR(80) NULL,
     subjects VARCHAR(512) NULL,
     contact_url VARCHAR(500) NULL,
@@ -26,51 +24,12 @@ async function loadDefaultConnection(): Promise<SqlConnection> {
 
 let schemaReady: Promise<void> | undefined;
 
-async function columnNames(connection: SqlConnection): Promise<Set<string>> {
-  const rows = await connection.query<{
-    COLUMN_NAME?: string;
-    column_name?: string;
-  }>(
-    `SELECT COLUMN_NAME AS COLUMN_NAME
-     FROM information_schema.COLUMNS
-     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'teacher_profiles'`,
-    [],
-  );
-  return new Set(
-    rows.map((row) => String(row.COLUMN_NAME ?? row.column_name ?? "")),
-  );
-}
-
-/** Add experience / publications when the table was created before those columns. */
-export async function migrateTeacherProfileLandingFields(
-  connection: SqlConnection,
-): Promise<void> {
-  const columns = await columnNames(connection);
-  if (columns.size === 0) return;
-
-  if (!columns.has("experience")) {
-    await connection.execute(
-      `ALTER TABLE teacher_profiles
-       ADD COLUMN experience VARCHAR(160) NULL AFTER bio`,
-      [],
-    );
-  }
-  if (!columns.has("publications")) {
-    await connection.execute(
-      `ALTER TABLE teacher_profiles
-       ADD COLUMN publications TEXT NULL AFTER experience`,
-      [],
-    );
-  }
-}
-
 async function runTeacherProfileSchemaMigration(
   getConnection: () => Promise<SqlConnection>,
 ): Promise<void> {
   const connection = await getConnection();
   try {
     await connection.execute(SQL_CREATE_TEACHER_PROFILES, []);
-    await migrateTeacherProfileLandingFields(connection);
   } finally {
     connection.release();
   }

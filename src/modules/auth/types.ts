@@ -20,12 +20,6 @@ export type AuthUser = {
   email?: string;
   /** True when email_verified_at is set (or demo bypass). */
   emailVerified?: boolean;
-  /**
-   * Public self-signup only. When true, login stays closed until the email
-   * is confirmed. Absent or false: legacy rows and teacher-created students
-   * can sign in; an unverified address is a banner, not a lock.
-   */
-  emailVerifyRequired?: boolean;
 };
 
 export type SessionPayload = {

@@ -26,11 +26,7 @@ export async function generateMetadata() {
 }
 
 type VerifyEmailPageProps = {
-  searchParams: Promise<{
-    token?: string | string[];
-    error?: string | string[];
-    status?: string | string[];
-  }>;
+  searchParams: Promise<{ token?: string | string[]; error?: string | string[] }>;
 };
 
 export default async function VerifyEmailPage({
@@ -44,15 +40,9 @@ export default async function VerifyEmailPage({
     redirect(`/api/auth/verify-email?token=${encodeURIComponent(token)}`);
   }
 
-  const statusRaw = Array.isArray(params.status) ? params.status[0] : params.status;
-
   return (
     <AuthShell>
-      {statusRaw === "success" ? (
-        <VerifyEmailResult status="success" />
-      ) : (
-        <VerifyEmailResult status="error" code={parseError(params.error)} />
-      )}
+      <VerifyEmailResult code={parseError(params.error)} />
     </AuthShell>
   );
 }

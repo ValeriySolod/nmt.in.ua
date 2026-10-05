@@ -8,7 +8,6 @@ import css from "../landing.module.css";
 const NAV_ITEMS = [
   { key: "features", href: "#features" },
   { key: "steps", href: "#steps" },
-  { key: "teachers", href: "#teachers" },
   { key: "faq", href: "#faq" },
 ] as const;
 

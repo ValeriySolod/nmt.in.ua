@@ -21,8 +21,8 @@ const SQL_CREATE_AUTH_TOKENS = `
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 `;
 
-export const AUTH_TOKEN_TTL_MS: Record<AuthTokenPurpose, number> = {
-  email_verify: 24 * 60 * 60 * 1000,
+const TTL_MS: Record<AuthTokenPurpose, number> = {
+  email_verify: 48 * 60 * 60 * 1000,
   password_reset: 60 * 60 * 1000,
 };
 
@@ -82,7 +82,7 @@ export async function issueAuthToken(
   const connection = await deps.getConnection();
   const rawToken = mintAuthTokenRaw();
   const tokenHash = hashAuthToken(rawToken);
-  const expiresAt = new Date(Date.now() + AUTH_TOKEN_TTL_MS[purpose]);
+  const expiresAt = new Date(Date.now() + TTL_MS[purpose]);
 
   try {
     await connection.beginTransaction();

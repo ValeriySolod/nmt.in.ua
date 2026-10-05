@@ -55,8 +55,6 @@ test("createUser inserts a student and returns AuthUser", async () => {
     login: "maria_k",
     displayName: "Марія Коваленко",
     role: "student",
-    email: "maria@example.com",
-    emailVerifyRequired: true,
   });
   assert.equal(released, true);
 });
