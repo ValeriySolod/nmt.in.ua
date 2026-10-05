@@ -1,6 +1,5 @@
 export type { AuthUser, SessionPayload, UserRole, StudentOption } from "./types";
 export {
-  DEMO_ACCOUNTS,
   ADMIN_NAV_HREFS,
   avatarSrc,
   canAssignMentorSessions,
@@ -36,7 +35,6 @@ export {
   loginAction,
   registerAction,
   logoutAction,
-  demoLoginAction,
   changePasswordAction,
   uploadAvatarAction,
   removeAvatarAction,

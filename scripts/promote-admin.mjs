@@ -1,14 +1,19 @@
 /**
- * Скидає сесії та результати demo-student (user_id = 1).
- * Usage: node scripts/reset-demo-student.mjs
- * Reads DB_* from .env.local in the project root.
+ * Promote a login to admin.
+ * Usage: node scripts/promote-admin.mjs <login>
+ * Reads DB_* from .env.local (never prints secrets).
  */
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import mysql from "mysql2/promise";
 
-const DEMO_USER_ID = 1;
+const loginArg = String(process.argv[2] ?? "").trim().toLowerCase();
+if (!loginArg) {
+  console.error("Usage: node scripts/promote-admin.mjs <login>");
+  process.exit(1);
+}
+
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const envPath = path.join(root, ".env.local");
 
@@ -41,34 +46,26 @@ const conn = await mysql.createConnection({
 console.log(`Connected to ${process.env.DB_HOST}/${process.env.DB_NAME}`);
 
 try {
-  const [[beforeSessions]] = await conn.query(
-    "SELECT COUNT(*) AS c FROM task_sessions WHERE user_id = ?",
-    [DEMO_USER_ID],
+  const [found] = await conn.query(
+    `SELECT id, login, role, is_banned FROM app_users WHERE login = ? LIMIT 1`,
+    [loginArg],
   );
-  const [[beforeMappings]] = await conn.query(
-    "SELECT COUNT(*) AS c FROM tasks2session WHERE user_id = ?",
-    [DEMO_USER_ID],
-  );
-
-  console.log(
-    `Before: task_sessions=${beforeSessions.c}, tasks2session=${beforeMappings.c}`,
-  );
-
-  await conn.beginTransaction();
-  const [mappings] = await conn.execute(
-    "DELETE FROM tasks2session WHERE user_id = ?",
-    [DEMO_USER_ID],
-  );
-  const [sessions] = await conn.execute(
-    "DELETE FROM task_sessions WHERE user_id = ?",
-    [DEMO_USER_ID],
-  );
-  await conn.commit();
-
-  console.log(
-    `Deleted: tasks2session=${mappings.affectedRows}, task_sessions=${sessions.affectedRows}`,
-  );
-  console.log("Demo student (user_id=1) history cleared.");
+  if (!Array.isArray(found) || found.length === 0) {
+    console.error(`User not found: ${loginArg}`);
+    process.exitCode = 2;
+  } else {
+    const user = found[0];
+    console.log(`Found: id=${user.id} login=${user.login} role=${user.role}`);
+    if (user.role === "admin") {
+      console.log("Already admin.");
+    } else {
+      const [upd] = await conn.execute(
+        `UPDATE app_users SET role = 'admin' WHERE id = ?`,
+        [user.id],
+      );
+      console.log(`Promoted to admin (affected=${upd.affectedRows}).`);
+    }
+  }
 } finally {
   await conn.end();
 }

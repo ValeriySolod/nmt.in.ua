@@ -31,8 +31,8 @@ nmt.in.ua — тренажер підготовки до НМТ з матема�
 - Постав Node.js 20+ і npm. Клонуй репо, одразу `checkout dev` — не `main`.
 - Скопіюй `.env.example` → `.env.local` і заповни `DB_*` плюс секрети (див. §3).
 - `npm install && npm run dev` → <http://localhost:3000>
-- Залогінься як `demo-student` / `demo-teacher` / `demo-admin` (пароль `demo123`). На проді demo вимкнений.
-- Пройди happy-path **учня**: старт тесту → відповідь → фініш → `/results` → `/sessions`. Потім зайди викладачем і адміном (див. §13).
+- Зареєструй тестовий акаунт на `/register` (або візьми готовий логін у lead). Адміна підвищують у БД: `node scripts/promote-admin.mjs <login>`.
+- Пройди happy-path **учня**: старт тесту → відповідь → фініш → `/results` → `/sessions`. Потім перевір викладача й адміна (див. §13).
 - Прочитай цей файл, `README.md`, `docs/deploy.md` і `.cursor/rules/design-system.mdc` (перед будь-якою версткою).
 - Візьми задачу з відкритого беклогу (§11), заведи feature-гілку від свіжого `dev`.
 
@@ -67,21 +67,19 @@ npm run dev
 | `TEACHER_PAYMENT_TEST_BYPASS` | Кнопка «Оплата пройшла» на `/register/teacher` | За замовчуванням увімкнено лише в `development`. У production потрібні `=1` **і** sandbox `test_merch_n1`. На живому мерчанті в production завжди вимкнено |
 | `CONTENT_IMPORT_API_KEY` | Bearer для `POST /api/import` | Усі імпорти — 401 (fail-closed) |
 | `ADMIN_API_KEY` | Bearer для `POST /api/admin/sessions` | Усі admin-запити — 401 |
-| `ALLOW_DEMO_LOGIN` | One-click і пароль `demo-*` на проді | За замовчуванням у production вимкнено. **Не вмикай на публічному сайті** |
 
 Секрети не комітити. Згенерувати: `openssl rand -hex 32`. `SESSION_SECRET` не копіюй з інших ключів.
 
 Необов'язкові: пул MySQL (`DB_CONNECTION_LIMIT`, `DB_CONNECT_TIMEOUT_MS`, `DB_MAX_IDLE`, `DB_IDLE_TIMEOUT_MS`, `DB_PING_AFTER_IDLE_MS`), `DB_SSL`, `TRUSTED_PROXY_HOPS`, `MAX_BODY_BYTES` — див. `.env.example`.
 
-### 3.2. Демо-акаунти
+### 3.2. Тестові акаунти
 
-| Логін | Пароль | Роль | Навіщо зайти |
-| --- | --- | --- | --- |
-| `demo-student` | `demo123` | Учень | Тести, `?tab=interactive`, результати, свої сесії, `/join` |
-| `demo-teacher` | `demo123` | Викладач | `/assign`; `/students` (створити учня, групи, інвайти); візитка на `/account` |
-| `demo-admin` | `demo123` | Адмін | Редактор банку на `/`, імпорт `/settings`, відгуки `/feedback`, профілі `/profiles` |
+Демо-логінів (`demo-*`) більше немає. Для локальної перевірки:
 
-Таблиця `app_users` створюється сама при першому запиті. Legacy-таблицю `users` на хостингу не чіпаємо. Якщо старі сесії «прилипли» до demo-student: `npm run reset-demo-student`.
+1. Зареєструй учня / викладача на `/register`.
+2. Адміна зроби скриптом: `node scripts/promote-admin.mjs <login>` (читає `DB_*` з `.env.local`).
+
+Таблиця `app_users` створюється сама при першому запиті. Legacy-таблицю `users` на хостингу не чіпаємо.
 
 ### 3.3. Команди, які треба знати
 
@@ -91,7 +89,7 @@ npm run dev
 | `npm test` | Перед PR. Сотні кейсів у `src/**/*.test.ts` |
 | `npm run lint` | Перед PR |
 | `npm run build` | Перед здачею фічі, яка чіпає сторінки / сервер (`next build --webpack`) |
-| `npm run reset-demo-student` | Коли демо-учень завалений старими сесіями |
+| `node scripts/promote-admin.mjs <login>` | Підвищити акаунт до admin (локальна / спільна БД) |
 
 Перед здачею секції: `npm run lint && npm test && npm run build`.
 
@@ -165,7 +163,7 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 | `src/app/(app)/practice/interactive/` | Редірект → `/?tab=interactive` |
 | `src/app/api/import/` і `api/admin/sessions/` | Machine-to-machine API з Bearer |
 | `src/app/api/payments/wayforpay/` | Webhook і return еквайрингу |
-| `src/components/welcome/` | Секції лендінгу + `landing.module.css`; `#teachers` — викладачі + пропозиція можливостей; `DevTeam` — команда + послуги (розробка/підтримка) |
+| `src/components/welcome/` | Секції лендінгу + `landing.module.css`; `#teachers` — публічні візитки або демо-візитка + пропозиція; `DevTeam` — команда + послуги (розробка/підтримка) |
 | `src/components/dashboard/` | Кабінет: header, sidebar, таблиці, старт тесту |
 | `src/components/account/` | `/account` + редактор візитки викладача (досвід, наукові роботи) |
 | `src/components/admin/` | Редактор банку, форма завдання, профілі |
@@ -370,7 +368,7 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 - Імпорт і admin API без ключа мають лишатися 401.
 - Не віддавай `right_answer_n` на клієнт до перевірки в **тесті / сесії**. Задачник `/problems` — ключ можна тримати в HTML і ховати CSS-ом (за замовчуванням сховано).
 - Не бери `userId` з форми. Тільки сесія.
-- На проді demo-login вимкнений. **І форма `/login` з `demo-*` / `demo123` теж блокується**, коли demo вимкнено.
+- Логіни з префіксом `demo-` зарезервовані (реєстрація відхилить). Окремих seed-демо-акаунтів немає.
 - Статика з `public/` не повинна потрапляти під auth-guard.
 - Cookie сесії: `setSessionCookie` дає новий `exp`; `renewSessionCookie` **зберігає старий `exp`**. Не повертай `setSessionCookie` у профільні дії (аватар, upgrade cookie). `task_sessions.expire_time` ставиться раз при створенні. Див. `src/modules/testing/sessionExpiry.ts`.
 - Presence: `POST /api/presence` раз на хвилину з кабінету. Online ≈ `last_seen` за ~3 хв.
@@ -402,7 +400,7 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 
 Поза першим релізом (не хапати «бо цікаво»): CRM викладача, окремий блок ДЗ, PDF, Google-логін, AI-перевірка, типи завдань окрім вибору з 4 варіантів, повноцінний PWA. Іменовані групи й інвайти — MVP на `/students` (21.09), без CRM. Це версія 2 — питайте PM.
 
-Локально перевірити групи: `mysql … < scripts/sql/034_student_groups_invites.sql` (або відкрити `/students` — lazy `ensureTeacherStudentsSchema` створить таблиці). `demo-teacher` / `demo123`: створити групу, особистий і груповий код. `demo-student`: `/join/КОД` (гість спочатку потрапляє на логін, код у шляху зберігається). Другий груповий код замінює групу. На `/consultations` кнопка «Приєднати».
+Локально перевірити групи: `mysql … < scripts/sql/034_student_groups_invites.sql` (або відкрити `/students` — lazy `ensureTeacherStudentsSchema` створить таблиці). Зайди викладачем: створити групу, особистий і груповий код. Учнем: `/join/КОД` (гість спочатку потрапляє на логін, код у шляху зберігається). Другий груповий код замінює групу. На `/consultations` кнопка «Приєднати».
 
 ## 12. Як здати роботу
 
@@ -418,8 +416,8 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 ## 13. Перший прохід по сайту (щоб склалося в голові)
 
 1. Відкрий `/` як гість — лендінг. Спробуй `/diagnostic` без логіну.
-2. Зайди як `demo-student`. На `/` обери тему, Старт → `/session/[id]`. Заверши, глянь підсумок, `/results` і `/sessions` — цифри мають збігатися.
+2. Зареєструй / зайди як учень. На `/` обери тему, Старт → `/session/[id]`. Заверши, глянь підсумок, `/results` і `/sessions` — цифри мають збігатися.
 3. Якщо після SQL 026–031 є каталог: на `/` вкладка інтерактивних форматів (`?tab=interactive`). Інакше вкладки немає — це нормально.
 4. Відкрий `/simulator` — це **інший** банк і `NmtTrainer` (`session_type` 4).
-5. Вийди, зайди як `demo-teacher`: редірект на `/assign`. На `/students` додай або створи учня, признач тему «на зараз», на `/results` і `/sessions` обери «усі учні». На `/account` заповни візитку, відкрий `/t/{slug}` інкогніто.
-6. Зайди як `demo-admin`: `/` — список завдань теми, не тренажер. Глянь `/settings`, `/feedback`, `/profiles`. Не імпортуй випадковий файл у спільну базу без узгодження.
+5. Вийди, зайди як викладач: редірект на `/assign`. На `/students` додай або створи учня, признач тему «на зараз», на `/results` і `/sessions` обери «усі учні». На `/account` заповни візитку, відкрий `/t/{slug}` інкогніто.
+6. Зайди як адмін (`node scripts/promote-admin.mjs <login>`): `/` — список завдань теми, не тренажер. Глянь `/settings`, `/feedback`, `/profiles`. Не імпортуй випадковий файл у спільну базу без узгодження.

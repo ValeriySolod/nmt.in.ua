@@ -9,7 +9,7 @@ test("createUser inserts a student and returns AuthUser", async () => {
   const connection: SqlConnection = {
     beginTransaction: async () => {},
     query: async <T,>() => {
-      // ensureAuthSchema: CREATE TABLE, then COUNT(*) — demo seed skipped when count > 0
+      // ensureAuthSchema: CREATE TABLE (+ column ensures) before insert
       return [{ count: 3 }] as T[];
     },
     execute: async (sql, params = []) => {

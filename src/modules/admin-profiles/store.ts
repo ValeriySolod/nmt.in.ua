@@ -1,5 +1,4 @@
 import type { SqlConnection } from "@/lib/db/mysql";
-import { isDemoAccountLogin } from "@/modules/auth/demoLogin";
 import { isUserOnline } from "@/modules/auth/presence";
 import type { UserRole } from "@/modules/auth/types";
 import { ensureAuthSchema } from "@/modules/auth/users";
@@ -209,12 +208,6 @@ function assertMutableTarget(
     throw new AdminProfilesError(
       "Cannot ban or delete your own account.",
       "self_action",
-    );
-  }
-  if (isDemoAccountLogin(target.login)) {
-    throw new AdminProfilesError(
-      "Demo accounts are protected.",
-      "protected_account",
     );
   }
 }
