@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { absoluteSiteUrl } from "@/lib/siteOrigin";
-import { sendEmailVerificationMail } from "@/modules/auth/emailMessages";
 import { requireUser } from "@/modules/auth/getCurrentUser";
 import { canManageStudents } from "@/modules/auth/types";
 import { inviteJoinPath } from "./codes";
@@ -63,8 +62,6 @@ export type CreateStudentActionState =
       password: string;
       displayName: string;
       groupName: string | null;
-      /** False when the confirm letter could not be sent; the account still exists. */
-      mailSent: boolean;
     }
   | { status: "error"; code: ManageActionErrorCode };
 
@@ -289,7 +286,6 @@ export async function createStudentAccountAction(
     requireUser: typeof requireUser;
     createStudentForTeacher: typeof createStudentForTeacher;
     revalidatePath: Revalidate;
-    sendVerificationMail?: typeof sendEmailVerificationMail;
   } = { requireUser, createStudentForTeacher, revalidatePath },
 ): Promise<CreateStudentActionState> {
   const user = await deps.requireUser();
@@ -309,21 +305,6 @@ export async function createStudentAccountAction(
     });
     revalidateRoster(deps.revalidatePath);
     deps.revalidatePath(`/students/${created.studentUserId}`);
-
-    let mailSent = false;
-    try {
-      const send = deps.sendVerificationMail ?? sendEmailVerificationMail;
-      const mailed = await send({
-        userId: created.studentUserId,
-        email: created.email,
-        displayName: created.displayName,
-        loginAlreadyAllowed: true,
-      });
-      mailSent = mailed.ok;
-    } catch (error) {
-      console.error("createStudentAccountAction: send verify mail failed", error);
-    }
-
     return {
       status: "success",
       login: created.login,
@@ -331,7 +312,6 @@ export async function createStudentAccountAction(
       displayName: created.displayName,
       groupName: created.groupName,
       password,
-      mailSent,
     };
   } catch (error) {
     if (error instanceof TeacherStudentsError) {

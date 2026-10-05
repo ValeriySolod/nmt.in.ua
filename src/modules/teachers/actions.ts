@@ -27,8 +27,6 @@ export async function saveTeacherProfileAction(
     slug: String(formData.get("slug") ?? ""),
     headline: String(formData.get("headline") ?? ""),
     bio: String(formData.get("bio") ?? ""),
-    experience: String(formData.get("experience") ?? ""),
-    publications: String(formData.get("publications") ?? ""),
     city: String(formData.get("city") ?? ""),
     subjects: String(formData.get("subjects") ?? ""),
     contactUrl: String(formData.get("contactUrl") ?? ""),
@@ -42,8 +40,6 @@ export async function saveTeacherProfileAction(
   try {
     const saved = await saveTeacherProfile(user.id, user.role, validated.value);
     revalidatePath("/account");
-    revalidatePath("/");
-    revalidatePath("/welcome");
     revalidatePath(teacherPublicPath(saved.slug));
     return { status: "ok", slug: saved.slug };
   } catch (error) {

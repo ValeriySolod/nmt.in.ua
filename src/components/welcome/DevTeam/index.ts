@@ -1,1 +1,0 @@
-export { DevTeam } from "./DevTeam";

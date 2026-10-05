@@ -1,13 +1,12 @@
 "use client";
 
-import { useActionState, useState, type FormEvent } from "react";
+import { useActionState, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import clsx from "clsx";
 import { Select } from "@/components/ui/Select";
 import {
   EMAIL_MAX_LEN,
-  isValidEmailAddress,
   LOGIN_MAX_LEN,
   PASSWORD_MAX_LEN,
   PASSWORD_MIN_LEN,
@@ -63,7 +62,6 @@ export function TeacherStudentsPanel({
     CREATE_INITIAL,
   );
   const [copiedLogin, setCopiedLogin] = useState<string | null>(null);
-  const [createEmailInvalid, setCreateEmailInvalid] = useState(false);
   const credentialsCopied =
     createState.status === "success" && copiedLogin === createState.login;
   const [unlinkState, unlinkAction, unlinkPending] = useActionState(
@@ -119,15 +117,6 @@ export function TeacherStudentsPanel({
           }
           action={createAction}
           className={css.form}
-          onSubmit={(event: FormEvent<HTMLFormElement>) => {
-            const value = String(new FormData(event.currentTarget).get("email") ?? "");
-            if (!isValidEmailAddress(value)) {
-              event.preventDefault();
-              setCreateEmailInvalid(true);
-              return;
-            }
-            setCreateEmailInvalid(false);
-          }}
         >
           <div className={css.fields}>
             <label className={css.field}>
@@ -148,8 +137,7 @@ export function TeacherStudentsPanel({
               <span className={css.label}>{t("email")}</span>
               <input
                 className={css.input}
-                type="text"
-                inputMode="email"
+                type="email"
                 name="email"
                 autoComplete="off"
                 spellCheck={false}
@@ -157,13 +145,6 @@ export function TeacherStudentsPanel({
                 maxLength={EMAIL_MAX_LEN}
                 placeholder={t("emailPlaceholder")}
                 disabled={createPending}
-                aria-invalid={createEmailInvalid || undefined}
-                onInvalid={(event) => {
-                  if (event.currentTarget.validity.valueMissing) return;
-                  event.preventDefault();
-                  setCreateEmailInvalid(true);
-                }}
-                onChange={() => setCreateEmailInvalid(false)}
               />
             </label>
             <label className={css.field}>
@@ -222,11 +203,6 @@ export function TeacherStudentsPanel({
               {t("created", { name: createState.displayName })}
             </p>
             <p className={css.hint}>{t("credentialsOnce")}</p>
-            <p className={css.hint}>
-              {createState.mailSent
-                ? t("mailSent", { email: createState.email })
-                : t("mailFailed", { email: createState.email })}
-            </p>
             <label className={css.field}>
               <span className={css.label}>{t("loginNew")}</span>
               <input
@@ -265,13 +241,9 @@ export function TeacherStudentsPanel({
           </div>
         ) : null}
 
-        {createEmailInvalid || createState.status === "error" ? (
+        {createState.status === "error" ? (
           <p className={clsx(css.alert, css.alertError)} role="alert">
-            {createEmailInvalid
-              ? t("errors.invalid_email")
-              : t(
-                  `errors.${createState.status === "error" ? createState.code : "invalid_email"}`,
-                )}
+            {t(`errors.${createState.code}`)}
           </p>
         ) : null}
       </section>

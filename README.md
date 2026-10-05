@@ -113,7 +113,7 @@ npm run reset-demo-student
 | Що | Де |
 | --- | --- |
 | Вхід / вихід | `/login`, cookie `nmt_session`; логін блокується до verify email (демо exempt) |
-| Реєстрація | `/register?role=student\|teacher` — email обовʼязковий → `/register/check-email` → `/verify-email` (успіх, прострочено, недійсне, повтор). Учня, якого створив викладач, лист не блокує вхід |
+| Реєстрація | `/register?role=student\|teacher` — email обовʼязковий → `/register/check-email` → `/verify-email` |
 | Скидання пароля | `/forgot-password`, `/reset-password` (Brevo або log без `BREVO_API_KEY`) |
 | Реєстрація викладача (оплата) | UI на паузі; `/register/teacher` → `/register?role=teacher`. WayForPay код + `/success`/`/fail` лишаються |
 | Webhook оплати | `POST /api/payments/wayforpay/webhook` (публічний, перевірка HMAC_MD5) |
@@ -152,8 +152,7 @@ import styles from "./page.module.css";
 - Палітра — теплий «старий зошит»: фон `--page #efe8d7`, поверхні `--surface #fdfbf4`.
   Чистий `#fff` не використовуємо.
 - Публічний лендінг: `src/components/welcome/*` — секції `LandingHeader`, `Hero`, `Features`,
-  `Features`, `Teachers`, `Faq`, `CtaBanner`, `LandingFooter`; спільні стилі — `welcome/landing.module.css`.
-  Чотири кроки старту — у `Hero` під лідом (`#steps`).
+  `Steps`, `Faq`, `CtaBanner`, `LandingFooter`; спільні стилі — `welcome/landing.module.css`.
 - Кабінет після входу: `src/components/dashboard/*` — той самий візуал (`DashboardShell`,
   `AppHeader`, `AppSidebar`, `PageFrame`, домашня `TopicTestStart`).
 - Сторінки `/login` і `/register` — спільний каркас `components/auth/AuthShell` + `auth.module.css`.

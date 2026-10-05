@@ -2,9 +2,7 @@ import {
   TEACHER_PROFILE_BIO_MAX,
   TEACHER_PROFILE_CITY_MAX,
   TEACHER_PROFILE_CONTACT_URL_MAX,
-  TEACHER_PROFILE_EXPERIENCE_MAX,
   TEACHER_PROFILE_HEADLINE_MAX,
-  TEACHER_PROFILE_PUBLICATIONS_MAX,
   TEACHER_PROFILE_SLUG_MAX,
   TEACHER_PROFILE_SLUG_MIN,
   TEACHER_PROFILE_SUBJECTS_MAX,
@@ -62,8 +60,6 @@ export type ValidatedTeacherProfile = {
   slug: string;
   headline: string;
   bio: string;
-  experience: string;
-  publications: string;
   city: string;
   subjects: string[];
   contactUrl: string;
@@ -117,8 +113,6 @@ export function validateTeacherProfileInput(
   const slug = normalizeSlug(input.slug);
   const headline = normalizeProfileText(input.headline);
   const bio = input.bio.trim().replace(/\r\n/g, "\n");
-  const experience = normalizeProfileText(input.experience);
-  const publications = input.publications.trim().replace(/\r\n/g, "\n");
   const city = normalizeProfileText(input.city);
   const subjects = parseSubjects(input.subjects);
   const contactUrl = input.contactUrl.trim();
@@ -148,14 +142,6 @@ export function validateTeacherProfileInput(
     return { ok: false, code: "bioTooLong" };
   }
 
-  if (experience.length > TEACHER_PROFILE_EXPERIENCE_MAX) {
-    return { ok: false, code: "experienceTooLong" };
-  }
-
-  if (publications.length > TEACHER_PROFILE_PUBLICATIONS_MAX) {
-    return { ok: false, code: "publicationsTooLong" };
-  }
-
   if (city.length > TEACHER_PROFILE_CITY_MAX) {
     return { ok: false, code: "cityTooLong" };
   }
@@ -182,8 +168,6 @@ export function validateTeacherProfileInput(
       slug,
       headline,
       bio,
-      experience,
-      publications,
       city,
       subjects,
       contactUrl,

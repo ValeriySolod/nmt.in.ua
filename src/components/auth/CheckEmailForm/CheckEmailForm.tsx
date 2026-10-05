@@ -1,14 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState, type FormEvent } from "react";
+import { useActionState } from "react";
 import { useTranslations } from "next-intl";
 import clsx from "clsx";
 import {
   resendVerificationAction,
   type ResendVerifyActionState,
 } from "@/modules/auth/actions";
-import { isValidEmailAddress } from "@/modules/auth/validateRegistration";
 import css from "../auth.module.css";
 
 const INITIAL: ResendVerifyActionState = { status: "idle" };
@@ -27,24 +26,7 @@ export function CheckEmailForm({
     resendVerificationAction,
     INITIAL,
   );
-  const [clientInvalid, setClientInvalid] = useState(false);
   const hasPrefill = Boolean(email);
-
-  function onSubmit(event: FormEvent<HTMLFormElement>) {
-    const value = String(new FormData(event.currentTarget).get("email") ?? "");
-    if (!isValidEmailAddress(value)) {
-      event.preventDefault();
-      setClientInvalid(true);
-      return;
-    }
-    setClientInvalid(false);
-  }
-
-  function onInvalid(event: FormEvent<HTMLInputElement>) {
-    if (event.currentTarget.validity.valueMissing) return;
-    event.preventDefault();
-    setClientInvalid(true);
-  }
 
   return (
     <div className={css.card}>
@@ -62,7 +44,7 @@ export function CheckEmailForm({
         </p>
       </header>
 
-      <form className={css.form} action={action} onSubmit={onSubmit}>
+      <form className={css.form} action={action}>
         {hasPrefill ? (
           <input type="hidden" name="email" value={email} />
         ) : (
@@ -70,15 +52,13 @@ export function CheckEmailForm({
             <span className={css.label}>{t("email")}</span>
             <input
               className={css.input}
-              type="text"
-              inputMode="email"
+              type="email"
               name="email"
               autoComplete="email"
               spellCheck={false}
               required
               maxLength={255}
               disabled={pending}
-              onInvalid={onInvalid}
             />
           </label>
         )}
@@ -92,11 +72,9 @@ export function CheckEmailForm({
           {t("resent")}
         </p>
       ) : null}
-      {clientInvalid || state.status === "error" || (mailFailed && state.status === "idle") ? (
+      {state.status === "error" || (mailFailed && state.status === "idle") ? (
         <p className={clsx(css.alert, css.alertError)} role="alert">
-          {clientInvalid
-            ? t("errors.invalid_email")
-            : t(`errors.${state.status === "error" ? state.code : "generic"}`)}
+          {t(`errors.${state.status === "error" ? state.code : "generic"}`)}
         </p>
       ) : null}
 

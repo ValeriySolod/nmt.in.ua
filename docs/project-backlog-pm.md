@@ -149,7 +149,3 @@ Write-доступ у репозиторії є, комітів немає: **ol
 **Перф (10.09):** guest `/` поза cabinet layout; cookie-профіль + upgrade; кеш каталогу; без `ORDER BY RAND()`; вікно сесій на `/results`; KaTeX у окремому чанку.
 
 Усе інше з оригінального розкладу (1.1–1.5, 2.1–2.4, 3.1–3.9, 4.1–4.9, авторизація, підручник, варіанти НМТ, відгук) — зроблено.
-
-# Telegram integration increment (TG-001, TG-002)
-
-TG-001 provides a webhook-compatible Telegram transport. TG-002 provides one-time account linking from the authenticated account page. See [Telegram integration](telegram-integration.md) for architecture, schema, security invariants, configuration, and deployment requirements. TG-003 through TG-009 remain future work.

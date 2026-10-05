@@ -20,14 +20,13 @@ import {
 
 /**
  * Role is a SQL literal, not a bound parameter, so the client cannot choose it.
- * email_verified_at stays NULL: the address is not confirmed until the student
- * opens the one-time link. email_verify_required stays 0 so the password the
- * teacher sees once still signs them in. Public registration sets the flag to 1.
+ * email_verified_at is set here so the student can sign in with the password
+ * the teacher sees once. Public registration still leaves it NULL.
  */
 const SQL_INSERT_STUDENT = `
   INSERT INTO app_users
-    (login, password_hash, display_name, role, email, email_verified_at, email_verify_required)
-  VALUES (?, ?, ?, 'student', ?, NULL, 0)
+    (login, password_hash, display_name, role, email, email_verified_at)
+  VALUES (?, ?, ?, 'student', ?, CURRENT_TIMESTAMP)
 `;
 
 const FIELD_ERROR: Record<RegistrationFieldError, TeacherStudentsErrorCode> = {

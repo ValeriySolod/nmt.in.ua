@@ -7,13 +7,12 @@ import {
   buildWebsiteJsonLd,
 } from "@/constants/seo";
 import { CtaBanner } from "../CtaBanner";
-import { DevTeam } from "../DevTeam";
 import { Faq } from "../Faq";
 import { Features } from "../Features";
 import { Hero } from "../Hero";
 import { LandingFooter } from "../LandingFooter";
 import { LandingHeader } from "../LandingHeader";
-import { Teachers } from "../Teachers";
+import { Steps } from "../Steps";
 import css from "../landing.module.css";
 
 const structuredData = [
@@ -41,10 +40,9 @@ export async function WelcomeLanding() {
         <main id="main-content" tabIndex={-1}>
           <Hero />
           <Features />
-          <Teachers />
+          <Steps />
           <Faq />
           <CtaBanner />
-          <DevTeam />
         </main>
         <LandingFooter />
       </div>

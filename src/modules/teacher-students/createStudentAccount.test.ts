@@ -106,8 +106,7 @@ function createHarness(
         return { insertId: 0, affectedRows: 0 };
       }
       if (sql.includes("INSERT INTO app_users") && sql.includes("'student'")) {
-        assert.match(sql, /NULL, 0/);
-        assert.doesNotMatch(sql, /CURRENT_TIMESTAMP/);
+        assert.match(sql, /CURRENT_TIMESTAMP/);
         assert.equal(params.length, 4);
         const [login, passwordHash, displayName, email] = params as string[];
         state.inserts.push(sql);
@@ -132,7 +131,7 @@ function createHarness(
           display_name: displayName,
           role: "student",
           password_hash: passwordHash,
-          email_verified: false,
+          email_verified: true,
         });
         return { insertId: id, affectedRows: 1 };
       }
@@ -322,7 +321,7 @@ test("createStudentForTeacher links the new student to the teacher", async () =>
   assert.deepEqual(harness.state.links, [`2:${created.studentUserId}`]);
   const user = harness.state.users.find((row) => row.id === created.studentUserId);
   assert.equal(user?.role, "student");
-  assert.equal(user?.email_verified, false);
+  assert.equal(user?.email_verified, true);
   assert.equal(user?.password_hash, `hashed:${PASSWORD.length}`);
   assert.equal(user?.password_hash.includes(PASSWORD), false);
   assert.deepEqual(harness.state.members, {});
