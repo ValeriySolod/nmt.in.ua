@@ -53,7 +53,13 @@ type PublicTeacherRow = {
   experience: string | null;
   publications: string | null;
   city: string | null;
+  country: string | null;
   subjects: string | null;
+  teaching_levels: string | null;
+  teaching_languages: string | null;
+  lesson_price: number | string | null;
+  lesson_currency: string | null;
+  lesson_duration_minutes: number | string | null;
   contact_url: string | null;
   is_public: number | boolean;
   display_name: string;
@@ -103,10 +109,16 @@ const SQL_GET_PUBLIC = `
     p.headline,
     p.bio,
     p.experience,
-    p.publications,
-    p.city,
-    p.subjects,
-    p.contact_url,
+  p.publications,
+p.city,
+p.country,
+p.subjects,
+p.teaching_levels,
+p.teaching_languages,
+p.lesson_price,
+p.lesson_currency,
+p.lesson_duration_minutes,
+p.contact_url,
     p.is_public,
     u.display_name,
     u.login,
@@ -312,7 +324,13 @@ function mapPublicTeacherCard(row: PublicTeacherRow): PublicTeacherCard {
     experience: row.experience?.trim() ?? "",
     publications: row.publications?.trim() ?? "",
     city: row.city?.trim() ?? "",
+    country: row.country?.trim() ?? "",
     subjects: parseStringArrayJson(row.subjects),
+    teachingLevels: parseTeacherLevels(row.teaching_levels),
+    teachingLanguages: parseTeachingLanguages(row.teaching_languages),
+    lessonPrice: asNullableNumber(row.lesson_price),
+    lessonCurrency: parseLessonCurrency(row.lesson_currency),
+    lessonDurationMinutes: asNullableInt(row.lesson_duration_minutes),
     contactUrl: row.contact_url?.trim() ?? "",
     isPublic: Boolean(row.is_public),
     displayName: row.display_name.trim(),

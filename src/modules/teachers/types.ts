@@ -76,7 +76,13 @@ export type PublicTeacherCard = {
   experience: string;
   publications: string;
   city: string;
+  country: string;
   subjects: string[];
+  teachingLevels: TeacherLevel[];
+  teachingLanguages: TeachingLanguage[];
+  lessonPrice: number | null;
+  lessonCurrency: LessonCurrency | "";
+  lessonDurationMinutes: number | null;
   contactUrl: string;
   isPublic: boolean;
   displayName: string;

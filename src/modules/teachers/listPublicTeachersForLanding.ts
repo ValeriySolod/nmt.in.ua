@@ -5,7 +5,15 @@ import { ensureAuthSchema } from "@/modules/auth/users";
 import type { UserRole } from "@/modules/auth/types";
 import { ensureTeacherStudentsSchema } from "@/modules/teacher-students/schema";
 import { ensureTeacherProfileSchema } from "./schema";
-import type { TeacherLandingCard } from "./types";
+import {
+  LESSON_CURRENCIES,
+  TEACHER_LEVELS,
+  TEACHING_LANGUAGES,
+  type LessonCurrency,
+  type TeacherLandingCard,
+  type TeacherLevel,
+  type TeachingLanguage,
+} from "./types";
 
 export type { TeacherLandingCard };
 
@@ -17,7 +25,13 @@ type ListRow = {
   experience: string | null;
   publications: string | null;
   city: string | null;
+  country: string | null;
   subjects: string | null;
+  teaching_levels: string | null;
+  teaching_languages: string | null;
+  lesson_price: number | string | null;
+  lesson_currency: string | null;
+  lesson_duration_minutes: number | string | null;
   contact_url: string | null;
   is_public: number | boolean;
   display_name: string;
@@ -29,7 +43,10 @@ type ListRow = {
 
 const SQL_LIST_LANDING = `
   SELECT p.user_id, p.slug, p.headline, p.bio, p.experience, p.publications,
-         p.city, p.subjects, p.contact_url, p.is_public,
+         p.city, p.country, p.subjects,
+p.teaching_levels, p.teaching_languages,
+p.lesson_price, p.lesson_currency, p.lesson_duration_minutes,
+p.contact_url, p.is_public,
          u.display_name, u.login, u.role,
          UNIX_TIMESTAMP(a.updated_at) AS avatar_rev,
          COALESCE(sc.student_count, 0) AS student_count
@@ -41,8 +58,9 @@ const SQL_LIST_LANDING = `
     FROM teacher_students
     GROUP BY teacher_user_id
   ) sc ON sc.teacher_user_id = p.user_id
-  WHERE p.is_public = 1
-    AND u.role IN ('teacher', 'admin')
+ WHERE p.is_public = 1
+  AND p.moderation_status = 'approved'
+  AND u.role IN ('teacher', 'admin')
   ORDER BY u.display_name ASC
 `;
 
@@ -64,6 +82,40 @@ function parseSubjectsJson(raw: string | null): string[] {
   } catch {
     return [];
   }
+}
+
+function parseTeacherLevels(raw: string | null): TeacherLevel[] {
+  return parseSubjectsJson(raw).filter((item): item is TeacherLevel =>
+    TEACHER_LEVELS.includes(item as TeacherLevel),
+  );
+}
+
+function parseTeachingLanguages(raw: string | null): TeachingLanguage[] {
+  return parseSubjectsJson(raw).filter((item): item is TeachingLanguage =>
+    TEACHING_LANGUAGES.includes(item as TeachingLanguage),
+  );
+}
+
+function parseLessonCurrency(raw: string | null): LessonCurrency | "" {
+  const value = raw?.trim() ?? "";
+
+  return LESSON_CURRENCIES.includes(value as LessonCurrency)
+    ? (value as LessonCurrency)
+    : "";
+}
+
+function asNullableNumber(value: unknown): number | null {
+  if (value == null || value === "") return null;
+
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
+function asNullableInt(value: unknown): number | null {
+  if (value == null || value === "") return null;
+
+  const numeric = Number(value);
+  return Number.isInteger(numeric) ? numeric : null;
 }
 
 function asPositiveInt(value: unknown): number | undefined {
@@ -89,7 +141,13 @@ function mapRow(row: ListRow): TeacherLandingCard {
     experience: row.experience?.trim() ?? "",
     publications: row.publications?.trim() ?? "",
     city: row.city?.trim() ?? "",
+    country: row.country?.trim() ?? "",
     subjects: parseSubjectsJson(row.subjects),
+    teachingLevels: parseTeacherLevels(row.teaching_levels),
+    teachingLanguages: parseTeachingLanguages(row.teaching_languages),
+    lessonPrice: asNullableNumber(row.lesson_price),
+    lessonCurrency: parseLessonCurrency(row.lesson_currency),
+    lessonDurationMinutes: asNullableInt(row.lesson_duration_minutes),
     contactUrl: row.contact_url?.trim() ?? "",
     isPublic: Boolean(row.is_public),
     displayName: row.display_name.trim(),
