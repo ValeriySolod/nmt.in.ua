@@ -1,0 +1,34 @@
+import type { TeacherProfileFormField } from "./teacherProfileForm";
+
+export const TEACHER_PROFILE_ERROR_FIELD: Record<
+  string,
+  TeacherProfileFormField | undefined
+> = {
+  slugRequired: "slug",
+  invalidSlug: "slug",
+  reservedSlug: "slug",
+  slugTaken: "slug",
+  headlineTooLong: "headline",
+  headlineRequired: "headline",
+  bioTooLong: "bio",
+  bioRequired: "bio",
+  experienceTooLong: "experience",
+  experienceRequired: "experience",
+  publicationsTooLong: "publications",
+  cityTooLong: "city",
+  countryTooLong: "country",
+  countryRequired: "country",
+  invalidSubjects: "subjects",
+  subjectsRequired: "subjects",
+  invalidTeachingLevels: "teachingLevels",
+  teachingLevelsRequired: "teachingLevels",
+  invalidTeachingLanguages: "teachingLanguages",
+  teachingLanguagesRequired: "teachingLanguages",
+  invalidContactUrl: "contactUrl",
+  invalidPhone: "phone",
+  invalidLessonPrice: "lessonPrice",
+  invalidLessonCurrency: "lessonCurrency",
+  invalidLessonDuration: "lessonDurationMinutes",
+  joinMotivationTooLong: "joinMotivation",
+  joinMotivationRequired: "joinMotivation",
+};

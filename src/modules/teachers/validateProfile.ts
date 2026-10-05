@@ -26,7 +26,7 @@ import {
   type TeachingLanguage,
 } from "./types";
 
-const SLUG_PATTERN = /^[a-z0-9](?:[a-z0-9-]{1,46}[a-z0-9])$/;
+const SLUG_PATTERN = /^[a-z0-9](?:[a-z0-9_-]{1,46}[a-z0-9])$/;
 const PHONE_PATTERN = /^\+?[0-9][0-9\s().-]*$/;
 
 const TEACHER_LEVEL_SET = new Set<string>(TEACHER_LEVELS);

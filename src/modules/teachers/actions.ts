@@ -24,17 +24,8 @@ export type SaveTeacherProfileActionState =
   | { status: "ok"; slug: string }
   | { status: "error"; code: TeacherProfileFieldError };
 
-export async function saveTeacherProfileAction(
-  _prev: SaveTeacherProfileActionState,
-  formData: FormData,
-): Promise<SaveTeacherProfileActionState> {
-  const user = await requireUser();
-
-  if (!canEditTeacherProfile(user.role)) {
-    return { status: "error", code: "forbidden" };
-  }
-
-  const validated = validateTeacherProfileInput({
+function parseTeacherProfileFormData(formData: FormData) {
+  return {
     slug: String(formData.get("slug") ?? ""),
     headline: String(formData.get("headline") ?? ""),
     bio: String(formData.get("bio") ?? ""),
@@ -51,7 +42,22 @@ export async function saveTeacherProfileAction(
     lessonCurrency: String(formData.get("lessonCurrency") ?? ""),
     lessonDurationMinutes: String(formData.get("lessonDurationMinutes") ?? ""),
     joinMotivation: String(formData.get("joinMotivation") ?? ""),
-  });
+  };
+}
+
+export async function saveTeacherProfileAction(
+  _prev: SaveTeacherProfileActionState,
+  formData: FormData,
+): Promise<SaveTeacherProfileActionState> {
+  const user = await requireUser();
+
+  if (!canEditTeacherProfile(user.role)) {
+    return { status: "error", code: "forbidden" };
+  }
+
+  const validated = validateTeacherProfileInput(
+    parseTeacherProfileFormData(formData),
+  );
 
   if (!validated.ok) {
     return { status: "error", code: validated.code };
@@ -88,6 +94,7 @@ export type SubmitTeacherProfileActionState =
   | {
       status: "error";
       code:
+        | TeacherProfileFieldError
         | TeacherProfileSubmissionError
         | "displayNameRequired"
         | "emailRequired"
@@ -100,7 +107,7 @@ export type SubmitTeacherProfileActionState =
 
 export async function submitTeacherProfileForModerationAction(
   _prev: SubmitTeacherProfileActionState,
-  _formData: FormData,
+  formData: FormData,
 ): Promise<SubmitTeacherProfileActionState> {
   const user = await requireUser();
 
@@ -127,6 +134,15 @@ export async function submitTeacherProfileForModerationAction(
   }
 
   try {
+    const validated = validateTeacherProfileInput(
+      parseTeacherProfileFormData(formData),
+    );
+
+    if (!validated.ok) {
+      return { status: "error", code: validated.code };
+    }
+
+    await saveTeacherProfile(user.id, user.role, validated.value);
     const profile = await getOwnTeacherProfile(user.id);
 
     const submissionValidation = validateTeacherProfileSubmission({
