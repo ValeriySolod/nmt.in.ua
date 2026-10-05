@@ -191,6 +191,7 @@ test("getPendingTeacherApplications maps pending applications", async () => {
               user_id: 10,
               display_name: "  Test Teacher  ",
               email: "teacher@example.com",
+              avatar_rev: 1_700_000_111,
               slug: "test-teacher",
               headline: "Math teacher",
               bio: "About teacher",
@@ -225,6 +226,7 @@ test("getPendingTeacherApplications maps pending applications", async () => {
     displayName: "Test Teacher",
     email: "teacher@example.com",
 
+    avatarRev: 1_700_000_111,
     slug: "test-teacher",
     headline: "Math teacher",
     bio: "About teacher",

@@ -22,6 +22,7 @@ const SQL_LIST_PENDING_APPLICATIONS = `
     p.user_id,
     u.display_name,
     u.email,
+    UNIX_TIMESTAMP(a.updated_at) AS avatar_rev,
     p.slug,
     p.headline,
     p.bio,
@@ -45,6 +46,7 @@ const SQL_LIST_PENDING_APPLICATIONS = `
     p.rejection_reason
   FROM teacher_profiles p
   INNER JOIN app_users u ON u.id = p.user_id
+  LEFT JOIN user_avatars a ON a.user_id = u.id
   WHERE
     p.moderation_status = 'pending'
     AND u.role = 'teacher'
@@ -80,6 +82,7 @@ type TeacherModerationApplicationRow = {
   display_name: string;
   email: string | null;
 
+  avatar_rev: number | string | null;
   slug: string;
   headline: string | null;
   bio: string | null;
@@ -151,6 +154,14 @@ function parseLessonCurrency(raw: string | null): LessonCurrency | "" {
     : "";
 }
 
+function parseAvatarRev(value: unknown): number | undefined {
+  if (value == null || value === "") return undefined;
+
+  const numeric = Number(value);
+
+  return Number.isInteger(numeric) && numeric > 0 ? numeric : undefined;
+}
+
 function mapApplication(
   row: TeacherModerationApplicationRow,
 ): TeacherModerationApplication {
@@ -160,6 +171,7 @@ function mapApplication(
     displayName: row.display_name.trim(),
     email: row.email?.trim() || null,
 
+    avatarRev: parseAvatarRev(row.avatar_rev),
     slug: row.slug.trim(),
     headline: row.headline?.trim() ?? "",
     bio: row.bio?.trim() ?? "",

@@ -13,6 +13,7 @@ export type TeacherModerationApplication = {
   email: string | null;
 
   // Teacher profile
+  avatarRev?: number;
   slug: string;
   headline: string;
   bio: string;
