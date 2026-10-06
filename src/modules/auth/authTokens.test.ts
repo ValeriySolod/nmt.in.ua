@@ -146,6 +146,41 @@ test("consumeAuthToken rejects an unknown token", async () => {
   assert.deepEqual(result, { ok: false, code: "invalid" });
 });
 
+test("issueAuthToken retries once when the new user is not visible yet", async () => {
+  const db = memoryTokens();
+  let inserts = 0;
+  const connection: SqlConnection = {
+    beginTransaction: async () => {},
+    commit: async () => {},
+    rollback: async () => {},
+    release: () => {},
+    query: async <T,>(sql: string, params: unknown[] = []) => {
+      return db.deps.getConnection().then((current) => current.query<T>(sql, params));
+    },
+    execute: async (sql: string, params: unknown[] = []) => {
+      if (sql.includes("INSERT INTO auth_tokens")) {
+        inserts += 1;
+        if (inserts === 1) {
+          throw Object.assign(new Error("Cannot add or update a child row"), {
+            errno: 1452,
+            code: "ER_NO_REFERENCED_ROW_2",
+          });
+        }
+      }
+      const current = await db.deps.getConnection();
+      return current.execute(sql, params);
+    },
+  };
+
+  const issued = await issueAuthToken(7, "email_verify", {
+    getConnection: async () => connection,
+  });
+
+  assert.equal(inserts, 2);
+  assert.equal(db.tokens.length, 1);
+  assert.equal(db.tokens[0]?.token_hash, hashAuthToken(issued.rawToken));
+});
+
 test("issueAuthToken invalidates the previous unused link", async () => {
   const db = memoryTokens();
   const first = await issueAuthToken(7, "email_verify", db.deps);
