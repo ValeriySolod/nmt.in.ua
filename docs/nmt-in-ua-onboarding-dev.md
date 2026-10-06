@@ -1,5 +1,7 @@
 # nmt.in.ua — гід для нового розробника
 
+Локальну TG-007 інтеграцію перевірено 2026-10-06: Telegram API підтвердив повідомлення та кнопку «Деталі», MySQL зберіг `delivered`; другий запуск не створює дубля, сесія й завдання незмінні. Докази та обмеження — в [інтеграції Telegram](telegram-integration.md#завершена-локальна-перевірка-tg-007--2026-10-06).
+
 Як увійти в роботу за перший день, а не блукати тиждень.
 
 Короткий онбординг команди Goldener Rechner. Беклог для PM — [`Goldener-Rechner-beklog-PM.md`](./Goldener-Rechner-beklog-PM.md). Тут лише те, що треба, щоб написати перший PR і не зламати чужий модуль.
@@ -404,6 +406,8 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 
 ### Telegram Tasks API (TG-003)
 
+TG-005–TG-008 реалізовано: `/done`, деталі й підтвердження завершення, ledger сповіщень та захищений POST trigger із GitHub Actions schedule. Потрібні чинні схеми, міграція 037 і серверні `TELEGRAM_*` та `DB_*`. Невизначені доставки залишають `sending`; підтверджені відмови можуть повторюватися. Сповіщення не змінюють стан завдань. Локальні команди, live сценарії та обмеження rate limiting/аудиту — у [TG-010](telegram-integration.md#tg-010--перевірки-та-відомі-обмеження).
+
 Read-only сервіс `src/modules/telegram/tasks.ts` приймає Telegram identity, а не application userId. Прив'язка через `user_telegram_accounts` визначає власника; джерело даних — наявні таблиці сесій і завдань. DTO не містить правильних відповідей чи секретів. Міграція для TG-003 не потрібна. `TELEGRAM_*` залишаються опційними: без них сайт працює, але `/account` не генерує Telegram link. Webhook після ввімкнення: `https://nmt.in.ua/api/telegram/webhook`. Контракт і правила фільтрації — у [telegram-integration.md](./telegram-integration.md).
 
 ## 12. Як здати роботу
@@ -425,3 +429,7 @@ Read-only сервіс `src/modules/telegram/tasks.ts` приймає Telegram i
 4. Відкрий `/simulator` — це **інший** банк і `NmtTrainer` (`session_type` 4).
 5. Вийди, зайди як викладач: редірект на `/assign`. На `/students` додай або створи учня, признач тему «на зараз», на `/results` і `/sessions` обери «усі учні». На `/account` заповни візитку, відкрий `/t/{slug}` інкогніто.
 6. Зайди як адмін (`node scripts/promote-admin.mjs <login>`): `/` — список завдань теми, не тренажер. Глянь `/settings`, `/feedback`, `/profiles`. Не імпортуй випадковий файл у спільну базу без узгодження.
+
+## TG-008 — запуск сповіщень
+
+Реалізовано захищений POST trigger і GitHub Actions schedule кожні 5 хвилин + workflow_dispatch на main для основного хостингу ukraine.com.ua. Потрібен окремий TELEGRAM_NOTIFICATIONS_TRIGGER_SECRET у runtime та GitHub Secrets, міграція 037 і чинні налаштування Telegram. Порядок активації, зупинки й обмеження — у [Telegram integration](telegram-integration.md#tg-008--автоматичний-запуск-сповіщень). Production scheduler ще не запускався; TG-009 заплановано.
