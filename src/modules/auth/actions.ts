@@ -31,6 +31,7 @@ import {
 import {
   sendEmailVerificationMail,
   sendPasswordResetMail,
+  sendRegistrationVerificationMail,
 } from "./emailMessages";
 import { needsEmailVerification } from "./needsEmailVerification";
 import {
@@ -161,7 +162,7 @@ export async function registerAction(
 
   let mailed = false;
   try {
-    const result = await sendEmailVerificationMail({
+    const result = await sendRegistrationVerificationMail({
       userId,
       email: validated.value.email,
       displayName: validated.value.displayName,

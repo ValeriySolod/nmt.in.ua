@@ -434,7 +434,19 @@ export async function createUserRecord(
   await ensureAuthSchema(deps);
   const connection = await deps.getConnection();
   try {
-    return await insertUserOnConnection(connection, input);
+    const user = await insertUserOnConnection(connection, input);
+    // autocommit is not guaranteed on shared hosting. The verify-token insert
+    // references this row (FK in 023_auth_tokens.sql) from another pooled
+    // connection, so the user must be durable before we release.
+    await connection.commit();
+    return user;
+  } catch (error) {
+    try {
+      await connection.rollback();
+    } catch {
+      // No open transaction, or the socket is already dead.
+    }
+    throw error;
   } finally {
     connection.release();
   }
