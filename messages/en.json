@@ -205,7 +205,29 @@
     "kicker": "Teacher",
     "city": "City",
     "subjects": "Subjects",
-    "contact": "Get in touch"
+    "contact": "Get in touch",
+    "teachingLanguages": "Teaching languages",
+    "teachingLevels": "Teaching levels",
+    "experience": "Experience",
+    "minutes": "min",
+    "readMore": "Read more",
+    "showLess": "Show less",
+    "about": "About me",
+    "publications": "Publications and professional activity",
+    "professionalLink": "Professional profile",
+    "ctaPlaceholder": "Book a lesson",
+    "levels": {
+      "grades_5_9": "Grades 5–9",
+      "grades_10_11": "Grades 10–11",
+      "nmt": "NMT",
+      "adult": "Adults"
+    },
+    "languages": {
+      "uk": "Ukrainian",
+      "en": "English",
+      "de": "German",
+      "pl": "Polish"
+    }
   },
   "Common": {
     "soon": "Coming soon",

@@ -205,7 +205,29 @@
     "kicker": "Викладач",
     "city": "Місто",
     "subjects": "Предмети",
-    "contact": "Написати"
+    "contact": "Написати",
+    "teachingLanguages": "Мови викладання",
+    "teachingLevels": "Рівні навчання",
+    "experience": "Досвід",
+    "minutes": "хв",
+    "readMore": "Детальніше",
+    "showLess": "Згорнути",
+    "about": "Про мене",
+    "publications": "Публікації та професійна діяльність",
+    "professionalLink": "Професійна сторінка",
+    "ctaPlaceholder": "Записатися",
+    "levels": {
+      "grades_5_9": "5–9 класи",
+      "grades_10_11": "10–11 класи",
+      "nmt": "НМТ",
+      "adult": "Дорослі"
+    },
+    "languages": {
+      "uk": "Українська",
+      "en": "Англійська",
+      "de": "Німецька",
+      "pl": "Польська"
+    }
   },
   "Common": {
     "soon": "Незабаром",

@@ -205,7 +205,29 @@
     "kicker": "Lehrkraft",
     "city": "Stadt",
     "subjects": "Fächer",
-    "contact": "Kontakt"
+    "contact": "Kontakt",
+    "teachingLanguages": "Unterrichtssprachen",
+    "teachingLevels": "Unterrichtsstufen",
+    "experience": "Erfahrung",
+    "minutes": "Min.",
+    "readMore": "Mehr erfahren",
+    "showLess": "Weniger anzeigen",
+    "about": "Über mich",
+    "publications": "Publikationen und berufliche Tätigkeit",
+    "professionalLink": "Berufliches Profil",
+    "ctaPlaceholder": "Unterricht buchen",
+    "levels": {
+      "grades_5_9": "Klassen 5–9",
+      "grades_10_11": "Klassen 10–11",
+      "nmt": "NMT",
+      "adult": "Erwachsene"
+    },
+    "languages": {
+      "uk": "Ukrainisch",
+      "en": "Englisch",
+      "de": "Deutsch",
+      "pl": "Polnisch"
+    }
   },
   "Common": {
     "soon": "Demnächst",
