@@ -46,7 +46,8 @@
       "consultations": "Lehrerberatungen",
       "homeAdmin": "Aufgaben nach Thema",
       "profiles": "Profile",
-      "assign": "Thementest zuweisen"
+      "assign": "Thementest zuweisen",
+      "leaderboard": "Marathon-Rangliste"
     }
   },
   "RecentResults": {
@@ -700,6 +701,36 @@
     "resultsCta": "Ergebnisse nach Themen",
     "sessionsCta": "Meine Sitzungen",
     "newTest": "Test wiederholen"
+  },
+  "MarathonLeaderboard": {
+    "kicker": "Marathon",
+    "title": "Marathon-Rangliste",
+    "lead": "Rangliste der Teilnehmer des aktiven Marathons. Sortierung: durchschnittlicher % richtig, dann Geschwindigkeit (s/Aufgabe).",
+    "leadTeacher": "Marathon-Rangliste zur Übersicht. Deine Schüler sind markiert — ein Beitritt ist nicht nötig.",
+    "leadAdmin": "Pilot-Marathon und Teilnehmer-Rangliste im Blick. Verwaltung folgt nach PM-Freigabe.",
+    "teacherRoster": "Deine Schüler im Marathon: {joined} von {total}.",
+    "teacherStudentsLink": "Meine Schüler öffnen",
+    "adminMonitor": "Teilnehmer in der Rangliste: {count}.",
+    "noActiveMarathon": "Derzeit kein aktiver Marathon. Die Tabelle erscheint, sobald ein Marathon veröffentlicht ist.",
+    "joinTitle": "Teilnehmen",
+    "joinLead": "Nach dem Beitritt zählen abgeschlossene Sitzungen im Marathonzeitraum für die Rangliste.",
+    "joinCta": "Am Marathon teilnehmen",
+    "joinPending": "Wird beigetreten…",
+    "yourRank": "Dein Platz: {rank} von {total}",
+    "rules": "Nur abgeschlossene Sitzungen mit mindestens {min} Aufgaben im Marathonzeitraum zählen.",
+    "empty": "Noch keine Teilnehmer oder keine abgeschlossenen Sitzungen im Zeitraum.",
+    "hint": "Tägliche Portionen und Streaks folgen später — die Rangliste bleibt an diesen Marathon gebunden.",
+    "tableAria": "Marathon-Ranglistentabelle",
+    "colRank": "Platz",
+    "colName": "Teilnehmer",
+    "avgPercent": "Ø %",
+    "speed": "s/Aufgabe",
+    "sessions": "Sitzungen",
+    "errors": {
+      "no_marathon": "Kein aktiver Marathon gefunden.",
+      "forbidden": "Diese Rolle kann nicht teilnehmen.",
+      "generic": "Beitritt fehlgeschlagen. Bitte später erneut versuchen."
+    }
   },
   "TopicResultsTable": {
     "title": "Ergebnisse nach Thema",

@@ -46,7 +46,8 @@
       "consultations": "Teacher consultations",
       "homeAdmin": "Tasks by topic",
       "profiles": "Profiles",
-      "assign": "Assign topic test"
+      "assign": "Assign topic test",
+      "leaderboard": "Marathon leaderboard"
     }
   },
   "RecentResults": {
@@ -700,6 +701,36 @@
     "resultsCta": "Results by topic",
     "sessionsCta": "My sessions",
     "newTest": "Take it again"
+  },
+  "MarathonLeaderboard": {
+    "kicker": "Marathon",
+    "title": "Marathon leaderboard",
+    "lead": "Rankings for the active marathon. Sorted by average % correct, then speed (sec/task).",
+    "leadTeacher": "Marathon rankings for monitoring. Your students are highlighted; you do not need to join.",
+    "leadAdmin": "Monitor the pilot marathon and participant rankings. Marathon admin tools will follow PM sign-off.",
+    "teacherRoster": "Your students in the marathon: {joined} of {total}.",
+    "teacherStudentsLink": "Open My students",
+    "adminMonitor": "Participants in the ranking: {count}.",
+    "noActiveMarathon": "No active marathon right now. The table will appear when a marathon is published.",
+    "joinTitle": "Join",
+    "joinLead": "After joining, your completed sessions within the marathon dates count toward the ranking.",
+    "joinCta": "Join the marathon",
+    "joinPending": "Joining…",
+    "yourRank": "Your place: {rank} of {total}",
+    "rules": "Only completed sessions with at least {min} tasks in the marathon date range count.",
+    "empty": "No participants yet, or no completed sessions in the marathon period.",
+    "hint": "Daily portions and streaks will come later — this leaderboard stays tied to the marathon.",
+    "tableAria": "Marathon leaderboard table",
+    "colRank": "Rank",
+    "colName": "Participant",
+    "avgPercent": "Avg. %",
+    "speed": "sec/task",
+    "sessions": "Sessions",
+    "errors": {
+      "no_marathon": "No active marathon found.",
+      "forbidden": "This role cannot join.",
+      "generic": "Could not join. Please try again later."
+    }
   },
   "TopicResultsTable": {
     "title": "Results by topic",

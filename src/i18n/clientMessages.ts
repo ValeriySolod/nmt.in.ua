@@ -22,6 +22,7 @@ export const CORE_CLIENT_NAMESPACES = [
   "LearningSessionsTable",
   "Pagination",
   "TopicResultsTable",
+  "MarathonLeaderboard",
   "ProblemsWorkbook",
   "simulator",
   "nmtTrainer",
