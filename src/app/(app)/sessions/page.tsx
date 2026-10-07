@@ -18,6 +18,7 @@ import {
   getTeacherLearningSessions,
 } from "@/modules/sessions/teacherLearningSessions";
 import { getTeacherStudents } from "@/modules/teacher-students";
+import { parseTablePage } from "@/lib/pagination";
 import { isQueryFlagOn, readSearchParam } from "@/lib/queryHref";
 import { getTranslations } from "next-intl/server";
 
@@ -33,8 +34,14 @@ type SessionsPageProps = {
   searchParams: Promise<{
     extended?: string | string[];
     student?: string | string[];
+    page?: string | string[];
   }>;
 };
+
+function readPageParam(raw: string | string[] | undefined): number {
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  return parseTablePage(value);
+}
 
 function readPositiveInt(
   raw: string | string[] | undefined,
@@ -58,9 +65,11 @@ function readStudentParam(
 async function TeacherSessions({
   user,
   studentParam,
+  page,
 }: {
   user: AuthUser;
   studentParam: "all" | number;
+  page: number;
 }) {
   const t = await getTranslations("TeacherStudentSessions");
   const roster = await getTeacherStudents(user.id).catch(() => []);
@@ -107,7 +116,11 @@ async function TeacherSessions({
           selectedValue={ALL_STUDENTS_VALUE}
           basePath="/sessions"
         />
-        <TeacherClassSessions rows={rows} />
+        <TeacherClassSessions
+          rows={rows}
+          page={page}
+          paginationQueryParams={{ student: ALL_STUDENTS_VALUE }}
+        />
       </>
     );
   }
@@ -139,6 +152,8 @@ async function TeacherSessions({
         title={t("studentTitle", { name: student.displayName })}
         lead={t("studentLead")}
         empty={t("studentEmpty")}
+        page={page}
+        paginationQueryParams={{ student: String(studentParam) }}
       />
     </>
   );
@@ -149,14 +164,22 @@ export default async function SessionsPage({ searchParams }: SessionsPageProps) 
   const params = await searchParams;
   const studentParam = readStudentParam(params.student);
   const extendedRaw = readSearchParam(params.extended);
+  const page = readPageParam(params.page);
 
   if (canManageStudents(user.role)) {
     return (
-      <TeacherSessions user={user} studentParam={studentParam} />
+      <TeacherSessions user={user} studentParam={studentParam} page={page} />
     );
   }
 
   const extended = isQueryFlagOn(extendedRaw);
   const rows = await getLearningSessions(user.id);
-  return <LearningSessionsTable rows={rows} extended={extended} />;
+  return (
+    <LearningSessionsTable
+      rows={rows}
+      extended={extended}
+      page={page}
+      queryParams={{ extended: extended ? "1" : null }}
+    />
+  );
 }

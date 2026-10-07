@@ -713,6 +713,11 @@
     "selfScoreAria": "Selbsteinschätzung für «{theme}» von 1 bis 5",
     "selfScoreError": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
     "emptyAttempts": "Noch keine abgeschlossenen Versuche nach Thema.",
+    "swiperPosition": "Thema {current} von {total}",
+    "swiperPrev": "Zurück",
+    "swiperNext": "Weiter",
+    "swiperHint": "Wische nach links oder rechts für weitere Themen",
+    "swiperListAria": "Ergebnisse nach Themen, Karten",
     "hint": "Leere Felder zeigen Themen ohne abgeschlossene Versuche. Selbsteinschätzung 1–5 in der rechten Spalte. Farben: Grün ≥70%, Gelb 40–69%, Rot <40%.",
     "hintTeacher": "Versuche = alle abgeschlossenen Tests zum Thema. Durchschnitt % und Tempo aus dieser Historie. Farben: Grün ≥70%, Gelb 40–69%, Rot <40%."
   },
@@ -811,6 +816,10 @@
     "tableAriaExtended": "Erweiterte Sitzungstabelle",
     "compactInfo": "Kompakte Ansicht",
     "extendedInfo": "Erweiterte Ansicht",
+    "swiperPosition": "Sitzung {current} von {total}",
+    "swiperPrev": "Zurück",
+    "swiperNext": "Weiter",
+    "swiperHint": "Wische nach links oder rechts für weitere Sitzungen",
     "theme": "Thema",
     "difficulty": "Schwierigkeitsgrad",
     "tasks": "Aufgaben",
@@ -1334,6 +1343,14 @@
       "invalid_email": "Gib eine gültige E-Mail ein oder lass das Feld leer.",
       "generic": "Feedback konnte nicht gesendet werden. Bitte später erneut versuchen."
     }
+  },
+  "Pagination": {
+    "pagerAria": "Seiten der Liste",
+    "pagesAria": "Seitennummern",
+    "prevPage": "Zurück",
+    "nextPage": "Weiter",
+    "goToPage": "Seite {page}",
+    "pageStatus": "Seite {page} von {totalPages} · {total} gesamt"
   },
   "FeedbackAdmin": {
     "kicker": "Rückmeldung",

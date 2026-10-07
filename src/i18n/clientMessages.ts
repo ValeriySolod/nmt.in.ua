@@ -20,6 +20,8 @@ export const CORE_CLIENT_NAMESPACES = [
   "SessionInsufficientTasksNotice",
   "SessionScheduledNotice",
   "LearningSessionsTable",
+  "Pagination",
+  "TopicResultsTable",
   "ProblemsWorkbook",
   "simulator",
   "nmtTrainer",
