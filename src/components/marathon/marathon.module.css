@@ -80,9 +80,18 @@
 .button:focus-visible,
 .buttonQuiet:focus-visible,
 .input:focus-visible,
-.option input:focus-visible {
+.textarea:focus-visible,
+.select:focus-visible,
+.option input:focus-visible,
+.publicHref:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
+}
+
+.button:disabled,
+.buttonQuiet:disabled {
+  opacity: 0.72;
+  cursor: progress;
 }
 
 .form {
@@ -95,9 +104,48 @@
   gap: var(--space-2xs);
 }
 
-.field span {
+.field span,
+.fieldLabel {
   color: var(--muted);
   font-size: var(--fs-small);
+}
+
+.hint {
+  margin: 0;
+  color: var(--subtle);
+  font-size: var(--fs-small);
+}
+
+.fieldError {
+  margin: 0;
+  color: color-mix(in srgb, crimson 72%, var(--ink));
+  font-size: var(--fs-small);
+}
+
+.alertError {
+  margin: 0;
+  scroll-margin-top: 5.5rem;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid color-mix(in srgb, crimson 45%, var(--line));
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, crimson 8%, var(--surface));
+  color: var(--ink);
+}
+
+.alertError p,
+.alertError ul {
+  margin: 0;
+}
+
+.alertError ul {
+  margin-top: var(--space-2xs);
+  padding-inline-start: 1.2rem;
+}
+
+.input[aria-invalid="true"],
+.textarea[aria-invalid="true"],
+.select[aria-invalid="true"] {
+  border-color: color-mix(in srgb, crimson 55%, var(--line));
 }
 
 .input,
@@ -251,6 +299,67 @@
 .row2 {
   display: grid;
   gap: var(--space-sm);
+}
+
+.optionGrid {
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.listItem {
+  display: grid;
+  gap: var(--space-xs);
+  min-width: 0;
+  padding: var(--space-md);
+  background: var(--grad-glass);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+.editorLink {
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: var(--fs-h4);
+  text-decoration: none;
+}
+
+.editorLink:hover {
+  color: var(--green-dark);
+}
+
+.publicLink {
+  display: grid;
+  gap: var(--space-xs);
+  min-width: 0;
+}
+
+.publicLinkProminent {
+  padding: var(--space-md);
+  background: var(--grad-glass);
+  border: 1px solid color-mix(in srgb, var(--green) 40%, var(--line));
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.publicLinkProminent .meta:first-child {
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: var(--fs-h4);
+}
+
+.linkRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+
+.publicHref {
+  flex: 1 1 12rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--green-dark);
 }
 
 .badge {

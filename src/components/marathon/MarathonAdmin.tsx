@@ -1,12 +1,9 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { PageFrame } from "@/components/dashboard/PageFrame";
+import { absoluteSiteUrl } from "@/lib/siteOrigin";
+import { kyivDateIso } from "@/modules/marathons/daily/calendar";
 import {
-  addDayAction,
-  addMaterialAction,
-  addRiddleAction,
-  addTaskAction,
-  createMarathonAction,
   deleteDayAction,
   deleteMarathonAction,
   deleteMaterialAction,
@@ -14,8 +11,6 @@ import {
   deleteTaskAction,
   seedMarathonAction,
   setMarathonStatusAction,
-  updateDayAction,
-  updateMarathonAction,
 } from "@/modules/marathons/daily/actions";
 import type {
   DailyMarathon,
@@ -25,85 +20,65 @@ import type {
   Riddle,
 } from "@/modules/marathons/daily/store";
 import type { FunnelReport } from "@/modules/marathons/daily/funnel";
+import { AdminNotices } from "./admin/AdminNotices";
+import {
+  AddDayForm,
+  AddMaterialForm,
+  AddRiddleForm,
+  AddTaskForm,
+  CreateMarathonForm,
+  MarathonSettingsForm,
+  UpdateDayForm,
+} from "./admin/MarathonAdminForms";
+import { MarathonPublicLink } from "./admin/MarathonPublicLink";
 import { marathonErrorText } from "./errors";
-import { ConfirmSubmit } from "./ConfirmSubmit";
+import { ConfirmSubmit, SubmitButton } from "./ConfirmSubmit";
 import css from "./marathon.module.css";
+
+function publicHref(slug: string): string {
+  return absoluteSiteUrl(`/marathon/${encodeURIComponent(slug)}`);
+}
 
 export async function MarathonAdminList({
   marathons,
   error,
+  savedToken,
 }: {
   marathons: DailyMarathon[];
   error?: string;
+  savedToken?: string;
 }) {
   const t = await getTranslations("Marathon");
   const message = marathonErrorText(t, error);
   return (
     <PageFrame kicker={t("kicker")} title={t("adminTitle")} lead={t("adminLead")}>
-      <div className={css.stack}>
-        {message ? <p className={css.alert} role="alert">{message}</p> : null}
+      <AdminNotices
+        key={savedToken ?? "fresh"}
+        saved={Boolean(savedToken)}
+        savedText={t("saved")}
+        error={message}
+      >
         <form action={seedMarathonAction}>
-          <button type="submit" className={css.buttonQuiet}>{t("seed")}</button>
+          <SubmitButton className={css.buttonQuiet} pendingLabel={t("working")}>
+            {t("seed")}
+          </SubmitButton>
         </form>
-        <form action={createMarathonAction} className={css.card}>
-          <h2>{t("create")}</h2>
-          <MarathonFields />
-          <button type="submit" className={css.button}>{t("save")}</button>
-        </form>
+        <CreateMarathonForm today={kyivDateIso(new Date())} />
         <ul className={css.stack}>
           {marathons.map((marathon) => (
-            <li key={marathon.id}>
-              <Link href={`/admin/marathons/${marathon.id}`}>
-                {marathon.title} · {t(`status.${marathon.status}`)} · /marathon/{marathon.slug}
+            <li key={marathon.id} className={css.listItem}>
+              <Link className={css.editorLink} href={`/admin/marathons/${marathon.id}`}>
+                {marathon.title} · {t(`status.${marathon.status}`)}
               </Link>
+              <MarathonPublicLink
+                href={publicHref(marathon.slug)}
+                draft={marathon.status === "draft"}
+              />
             </li>
           ))}
         </ul>
-      </div>
+      </AdminNotices>
     </PageFrame>
-  );
-}
-
-function MarathonFields({ marathon }: { marathon?: DailyMarathon }) {
-  return (
-    <div className={css.row2}>
-      <label className={css.field}>
-        <span>Адреса</span>
-        <input className={css.input} name="slug" defaultValue={marathon?.slug ?? ""} required />
-      </label>
-      <label className={css.field}>
-          <span>Назва</span>
-        <input className={css.input} name="title" defaultValue={marathon?.title ?? ""} required />
-      </label>
-      <label className={css.field}>
-          <span>Предмет</span>
-        <input className={css.input} name="subject" defaultValue={marathon?.subject ?? "math"} />
-      </label>
-      <label className={css.field}>
-          <span>Дата старту</span>
-        <input className={css.input} name="startDate" type="date" defaultValue={marathon?.startDate ?? ""} required />
-      </label>
-      <label className={css.field}>
-          <span>Година (Київ)</span>
-        <input className={css.input} name="unlockHour" defaultValue={marathon?.unlockHour ?? "09:00"} required />
-      </label>
-      <label className={css.field}>
-          <span>Днів</span>
-        <input className={css.input} name="daysCount" type="number" min={1} max={14} defaultValue={marathon?.daysCount ?? 5} required />
-      </label>
-      <label className={css.field}>
-          <span>Поріг, %</span>
-        <input className={css.input} name="passThreshold" type="number" min={0} max={100} defaultValue={marathon?.passThreshold ?? 60} required />
-      </label>
-      <label className={css.field}>
-          <span>Текст кнопки</span>
-        <input className={css.input} name="finalCtaText" defaultValue={marathon?.finalCtaText ?? "Продовжити навчання"} required />
-      </label>
-      <label className={css.field}>
-          <span>Посилання кнопки</span>
-        <input className={css.input} name="finalCtaUrl" defaultValue={marathon?.finalCtaUrl ?? "/"} required />
-      </label>
-    </div>
   );
 }
 
@@ -120,6 +95,7 @@ export async function MarathonAdminEditor({
   funnel,
   questions,
   error,
+  savedToken,
 }: {
   marathon: DailyMarathon;
   riddles: Riddle[];
@@ -128,35 +104,48 @@ export async function MarathonAdminEditor({
   funnel: FunnelReport;
   questions: Array<{ id: number; label: string }>;
   error?: string;
+  savedToken?: string;
 }) {
   const t = await getTranslations("Marathon");
   const message = marathonErrorText(t, error);
   return (
-    <PageFrame kicker={t("kicker")} title={marathon.title} lead={`/marathon/${marathon.slug}`}>
-      <div className={css.stack}>
-        {message ? <p className={css.alert} role="alert">{message}</p> : null}
+    <PageFrame kicker={t("kicker")} title={marathon.title}>
+      <AdminNotices
+        key={savedToken ?? "fresh"}
+        saved={Boolean(savedToken)}
+        savedText={t("saved")}
+        error={message}
+      >
+        <MarathonPublicLink
+          href={publicHref(marathon.slug)}
+          draft={marathon.status === "draft"}
+          prominent
+        />
         <div className={css.actions}>
           {(["draft", "active", "finished"] as const).map((status) => (
             <form key={status} action={setMarathonStatusAction}>
               <input type="hidden" name="id" value={marathon.id} />
               <input type="hidden" name="status" value={status} />
-              <button type="submit" className={status === marathon.status ? css.button : css.buttonQuiet}>
+              <SubmitButton
+                className={status === marathon.status ? css.button : css.buttonQuiet}
+                pendingLabel={t("saving")}
+              >
                 {t(`status.${status}`)}
-              </button>
+              </SubmitButton>
             </form>
           ))}
           <form action={deleteMarathonAction}>
             <input type="hidden" name="id" value={marathon.id} />
-            <ConfirmSubmit message={t("deleteConfirm")} className={css.buttonQuiet}>
+            <ConfirmSubmit
+              message={t("deleteConfirm")}
+              pendingLabel={t("deleting")}
+              className={css.buttonQuiet}
+            >
               {t("delete")}
             </ConfirmSubmit>
           </form>
         </div>
-        <form action={updateMarathonAction} className={css.card}>
-          <input type="hidden" name="id" value={marathon.id} />
-          <MarathonFields marathon={marathon} />
-          <button type="submit" className={css.button}>{t("save")}</button>
-        </form>
+        <MarathonSettingsForm marathon={marathon} />
 
         <section className={css.card} aria-labelledby="riddles">
           <h2 id="riddles">{t("riddlesTitle")}</h2>
@@ -164,49 +153,45 @@ export async function MarathonAdminEditor({
             <form key={riddle.id} action={deleteRiddleAction} className={css.actions}>
               <input type="hidden" name="marathonId" value={marathon.id} />
               <input type="hidden" name="riddleId" value={riddle.id} />
-              <span>{riddle.order}. {riddle.title}</span>
-              <button type="submit" className={css.buttonQuiet}>{t("delete")}</button>
+              <span>
+                {riddle.order}. {riddle.title}
+              </span>
+              <SubmitButton className={css.buttonQuiet} pendingLabel={t("deleting")}>
+                {t("delete")}
+              </SubmitButton>
             </form>
           ))}
-          <form action={addRiddleAction} className={css.form}>
-            <input type="hidden" name="marathonId" value={marathon.id} />
-            <input className={css.input} name="order" type="number" min={1} placeholder={t("order")} required />
-            <input className={css.input} name="title" placeholder={t("riddleTitle")} required />
-            <textarea className={css.textarea} name="body" placeholder={t("body")} required />
-            <textarea className={css.textarea} name="answer" placeholder={t("answer")} required />
-            <textarea className={css.textarea} name="hint" placeholder={t("hint")} />
-            <button type="submit" className={css.button}>{t("addRiddle")}</button>
-          </form>
+          <AddRiddleForm marathonId={marathon.id} />
         </section>
 
         <section className={css.stack} aria-labelledby="days-admin">
           <h2 id="days-admin">{t("daysTitle")}</h2>
           <form className={css.actions} method="get">
             <input className={css.input} name="q" placeholder={t("questionSearch")} />
-            <button type="submit" className={css.buttonQuiet}>{t("search")}</button>
+            <button type="submit" className={css.buttonQuiet}>
+              {t("search")}
+            </button>
           </form>
-          <form action={addDayAction} className={css.card}>
-            <input type="hidden" name="marathonId" value={marathon.id} />
-            <div className={css.row2}>
-              <input className={css.input} name="dayNumber" type="number" min={1} max={14} placeholder={t("dayNumber")} required />
-              <input className={css.input} name="topic" placeholder={t("topic")} required />
-            </div>
-            <textarea className={css.textarea} name="introText" placeholder={t("intro")} />
-            <button type="submit" className={css.button}>{t("addDay")}</button>
-          </form>
+          <AddDayForm marathonId={marathon.id} />
           {days.map((day) => (
             <article key={day.id} className={css.card}>
-              <form action={updateDayAction} className={css.form}>
-                <input type="hidden" name="marathonId" value={marathon.id} />
-                <input type="hidden" name="dayId" value={day.id} />
-                <input className={css.input} name="topic" defaultValue={day.topic} required />
-                <textarea className={css.textarea} name="introText" defaultValue={day.introText ?? ""} />
-                <button type="submit" className={css.buttonQuiet}>{t("save")}</button>
-              </form>
+              <p className={css.meta}>{t("dayLabel", { n: day.dayNumber })}</p>
+              <UpdateDayForm
+                marathonId={marathon.id}
+                dayId={day.id}
+                topic={day.topic}
+                introText={day.introText ?? ""}
+              />
               <form action={deleteDayAction}>
                 <input type="hidden" name="marathonId" value={marathon.id} />
                 <input type="hidden" name="dayId" value={day.id} />
-                <ConfirmSubmit message={t("deleteConfirm")} className={css.buttonQuiet}>{t("delete")}</ConfirmSubmit>
+                <ConfirmSubmit
+                  message={t("deleteConfirm")}
+                  pendingLabel={t("deleting")}
+                  className={css.buttonQuiet}
+                >
+                  {t("delete")}
+                </ConfirmSubmit>
               </form>
               <ul>
                 {day.materials.map((material) => (
@@ -216,23 +201,18 @@ export async function MarathonAdminEditor({
                       <input type="hidden" name="marathonId" value={marathon.id} />
                       <input type="hidden" name="dayId" value={day.id} />
                       <input type="hidden" name="materialId" value={material.id} />
-                      <button type="submit" className={css.buttonQuiet}>{t("delete")}</button>
+                      <SubmitButton className={css.buttonQuiet} pendingLabel={t("deleting")}>
+                        {t("delete")}
+                      </SubmitButton>
                     </form>
                   </li>
                 ))}
               </ul>
-              <form action={addMaterialAction} className={css.form}>
-                <input type="hidden" name="marathonId" value={marathon.id} />
-                <input type="hidden" name="dayId" value={day.id} />
-                <input className={css.input} name="order" type="number" min={1} defaultValue={day.materials.length + 1} />
-                <select className={css.select} name="materialType" defaultValue="text">
-                  <option value="text">text</option>
-                  <option value="youtube">youtube</option>
-                  <option value="loom">loom</option>
-                </select>
-                <textarea className={css.textarea} name="urlOrBody" required />
-                <button type="submit" className={css.buttonQuiet}>{t("addMaterial")}</button>
-              </form>
+              <AddMaterialForm
+                marathonId={marathon.id}
+                dayId={day.id}
+                nextOrder={day.materials.length + 1}
+              />
               <ul>
                 {day.tasks.map((task) => (
                   <li key={task.id}>
@@ -241,26 +221,19 @@ export async function MarathonAdminEditor({
                       <input type="hidden" name="marathonId" value={marathon.id} />
                       <input type="hidden" name="dayId" value={day.id} />
                       <input type="hidden" name="taskId" value={task.id} />
-                      <button type="submit" className={css.buttonQuiet}>{t("delete")}</button>
+                      <SubmitButton className={css.buttonQuiet} pendingLabel={t("deleting")}>
+                        {t("delete")}
+                      </SubmitButton>
                     </form>
                   </li>
                 ))}
               </ul>
-              <form action={addTaskAction} className={css.form}>
-                <input type="hidden" name="marathonId" value={marathon.id} />
-                <input type="hidden" name="dayId" value={day.id} />
-                <input className={css.input} name="order" type="number" min={1} defaultValue={day.tasks.length + 1} />
-                <input className={css.input} name="questionId" type="number" min={1} placeholder={t("questionId")} />
-                {questions.length > 0 ? (
-                  <p className={css.meta}>{questions.map((item) => item.label).join(" · ")}</p>
-                ) : null}
-                <textarea className={css.textarea} name="prompt" placeholder={t("inlinePrompt")} />
-                {[1, 2, 3, 4].map((index) => (
-                  <input key={index} className={css.input} name={`option${index}`} placeholder={`${t("option")} ${index}`} />
-                ))}
-                <input className={css.input} name="correct" type="number" min={1} max={4} placeholder={t("correct")} />
-                <button type="submit" className={css.buttonQuiet}>{t("addTask")}</button>
-              </form>
+              <AddTaskForm
+                marathonId={marathon.id}
+                dayId={day.id}
+                nextOrder={day.tasks.length + 1}
+                questions={questions}
+              />
             </article>
           ))}
         </section>
@@ -275,11 +248,16 @@ export async function MarathonAdminEditor({
               converted: funnel.totals.converted,
             })}
           </p>
-          <p>{funnel.totals.days.map((count, index) => `${t("dayLabel", { n: index + 1 })}: ${count}`).join(" · ")}</p>
+          <p>
+            {funnel.totals.days
+              .map((count, index) => `${t("dayLabel", { n: index + 1 })}: ${count}`)
+              .join(" · ")}
+          </p>
           <ul>
             {funnel.bySource.map((row) => (
               <li key={row.source}>
-                {row.source}: {row.counts.registered} / {row.counts.emailVerified} / {row.counts.converted}
+                {row.source}: {row.counts.registered} / {row.counts.emailVerified} /{" "}
+                {row.counts.converted}
               </li>
             ))}
           </ul>
@@ -319,7 +297,7 @@ export async function MarathonAdminEditor({
             </table>
           </div>
         </section>
-      </div>
+      </AdminNotices>
     </PageFrame>
   );
 }

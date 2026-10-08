@@ -18,10 +18,14 @@ export async function generateMetadata() {
   });
 }
 
+function first(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
+
 export default async function AdminMarathonsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string | string[] }>;
+  searchParams: Promise<{ error?: string | string[]; saved?: string | string[] }>;
 }) {
   const user = await requireUser();
   if (!hasPermission(user.role, "marathon:manage")) redirect("/");
@@ -30,7 +34,8 @@ export default async function AdminMarathonsPage({
   return (
     <MarathonAdminList
       marathons={marathons}
-      error={Array.isArray(query.error) ? query.error[0] : query.error}
+      error={first(query.error)}
+      savedToken={first(query.saved)}
     />
   );
 }
