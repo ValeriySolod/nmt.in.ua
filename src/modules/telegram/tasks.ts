@@ -45,7 +45,7 @@ const SQL_LINKED_USER = `
   LIMIT 1
 `;
 
-function taskSessionsSql(today: boolean): string {
+function taskSessionsSql(today: boolean, all = false, sessionId?: number): string {
   return `
   SELECT uta.user_id, ts.id, ts.session_type, ts.theme_id,
     t.name AS theme_name, ts.session_status, ts.tasks_number, ts.expire_time,
@@ -59,6 +59,7 @@ function taskSessionsSql(today: boolean): string {
   LEFT JOIN task_sessions ts ON ts.user_id = uta.user_id
     AND ts.session_status IN (?, ?)
     AND ts.expire_time > ?
+    ${sessionId === undefined ? "" : "AND ts.id = ?"}
     ${today ? "AND ts.expire_time >= ? AND ts.expire_time < ?" : ""}
     AND NOT (ts.tasks_number > 0 AND ts.right_number >= ts.tasks_number AND ts.time > 0)
     AND NOT EXISTS (
@@ -70,7 +71,7 @@ function taskSessionsSql(today: boolean): string {
   LEFT JOIN themes t ON t.id = ts.theme_id
   WHERE uta.telegram_user_id = ?
   ORDER BY ts.id DESC
-  ${today ? "" : `LIMIT ${TELEGRAM_TASK_SESSIONS_LIMIT}`}
+  ${today || all ? "" : `LIMIT ${TELEGRAM_TASK_SESSIONS_LIMIT}`}
 `;
 }
 
@@ -108,7 +109,12 @@ export async function getTelegramTodayTaskSessions(telegramUserId: unknown, deps
   return readTaskSessions(telegramUserId, deps, true);
 }
 
-async function readTaskSessions(telegramUserId: unknown, deps: Deps, today: boolean): Promise<TelegramTaskSessionsResult> {
+export async function getTelegramAvailableTaskSessions(telegramUserId: unknown, deps: Deps = defaultDeps, sessionId?: number): Promise<TelegramTaskSessionsResult> {
+  if (sessionId !== undefined && (!Number.isSafeInteger(sessionId) || sessionId <= 0)) return { status: "error", code: "invalidIdentity" };
+  return readTaskSessions(telegramUserId, deps, false, true, sessionId);
+}
+
+async function readTaskSessions(telegramUserId: unknown, deps: Deps, today: boolean, all = false, sessionId?: number): Promise<TelegramTaskSessionsResult> {
   const identity = normalizeIdentity(telegramUserId);
   if (!identity) return { status: "error", code: "invalidIdentity" };
   return read(identity, deps, async (connection, id): Promise<TelegramTaskSessionsResult> => {
@@ -126,7 +132,7 @@ async function readTaskSessions(telegramUserId: unknown, deps: Deps, today: bool
       expire_time: number;
       mapping_count: number;
       answered_count: number;
-    }>(taskSessionsSql(today), [TASK_STATUS_CORRECT, TASK_STATUS_INCORRECT, SESSION_STATUS_CREATED, SESSION_STATUS_PLANNED, now, ...dayParams, now, now, id]);
+    }>(taskSessionsSql(today, all, sessionId), [TASK_STATUS_CORRECT, TASK_STATUS_INCORRECT, SESSION_STATUS_CREATED, SESSION_STATUS_PLANNED, now, ...(sessionId === undefined ? [] : [sessionId]), ...dayParams, now, now, id]);
     if (!rows.length) return { status: "error", code: "notLinked" };
     return {
       status: "success",

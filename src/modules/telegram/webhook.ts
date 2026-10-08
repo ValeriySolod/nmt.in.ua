@@ -4,6 +4,10 @@ import { timingSafeEqual } from "node:crypto";
 import { consumeTelegramLink } from "./link";
 import { getTelegramTaskSessions, getTelegramTodayTaskSessions } from "./tasks";
 import { formatTelegramTasks } from "./taskCommands";
+import { completeTelegramTask } from "./completeTask";
+import { createTaskReference } from "./taskReference";
+import { handleTaskCallback, parseTaskCallback, type TelegramReply } from "./taskInteraction";
+import { getTelegramTaskDetails } from "./taskDetails";
 
 type TelegramMessage = {
   chat?: { id?: number; type?: string };
@@ -46,8 +50,39 @@ export async function handleTelegramUpdate(
     getTasks?: typeof getTelegramTaskSessions;
     getTodayTasks?: typeof getTelegramTodayTaskSessions;
     logError?: (error: unknown) => void;
+    completeTask?: typeof completeTelegramTask;
+    referenceSecret?: string;
+    getDetails?: typeof getTelegramTaskDetails;
+    acknowledgeCallback?: (queryId: string) => Promise<void>;
   } = { consume: consumeTelegramLink },
-): Promise<{ chatId: string; text: string } | null> {
+): Promise<TelegramReply | null> {
+  const callback = parseTaskCallback(update);
+  if (callback) {
+    if (deps.acknowledgeCallback) await deps.acknowledgeCallback(callback.queryId);
+    try {
+      return await handleTaskCallback(callback, {
+        secret: deps.referenceSecret ?? process.env.TELEGRAM_WEBHOOK_SECRET ?? "",
+        getDetails: deps.getDetails, completeTask: deps.completeTask,
+      });
+    } catch (error) {
+      (deps.logError ?? ((value) => console.error("telegram callback failed", value)))(error);
+      return { chatId: callback.chatId, text: "Не вдалося обробити дію. Спробуйте пізніше." };
+    }
+  }
+  const done = parseTelegramDoneCommand(update);
+  if (done) {
+    if (!done.reference) return { chatId: done.chatId, text: "Використайте /done <посилання> зі списку /tasks або /today." };
+    try {
+      const result = await (deps.completeTask ?? completeTelegramTask)(done.userId, done.reference);
+      return { chatId: done.chatId, text: result.status === "success" ? "Завдання завершено."
+        : result.code === "notLinked" ? "Спочатку підключіть Telegram у своєму кабінеті на nmt.in.ua."
+        : result.code === "databaseFailure" ? "Не вдалося завершити завдання. Спробуйте пізніше."
+        : "Це завдання не можна завершити. Перевірте його стан і відповіді в кабінеті." };
+    } catch (error) {
+      (deps.logError ?? ((value) => console.error("telegram completion failed", value)))(error);
+      return { chatId: done.chatId, text: "Не вдалося завершити завдання. Спробуйте пізніше." };
+    }
+  }
   const command = parseTelegramTaskCommand(update);
   if (command) {
     try {
@@ -60,7 +95,21 @@ export async function handleTelegramUpdate(
           ? "Не вдалося отримати завдання. Спробуйте пізніше."
           : "Спочатку підключіть Telegram у своєму кабінеті на nmt.in.ua." };
       }
-      return { chatId: command.chatId, text: formatTelegramTasks(result.sessions, command.today) };
+      const secret = deps.referenceSecret ?? process.env.TELEGRAM_WEBHOOK_SECRET;
+      const references = new Map<number, string>();
+      const text = formatTelegramTasks(result.sessions, command.today, secret ? (id) => {
+        const reference = createTaskReference(id, command.userId, secret);
+        references.set(id, reference);
+        return reference;
+      } : undefined);
+      const rows = result.sessions.filter((session) => {
+        const reference = references.get(session.sessionId);
+        return reference && text.includes(`/done ${reference}`);
+      }).map((session, index) => [
+        { text: `${index + 1}. Деталі`, callback_data: `d:${references.get(session.sessionId)}` },
+        { text: "Завершити", callback_data: `a:${references.get(session.sessionId)}` },
+      ]);
+      return { chatId: command.chatId, text, ...(rows.length ? { replyMarkup: { inline_keyboard: rows } } : {}) };
     } catch (error) {
       if (deps.logError) deps.logError(error);
       else console.error("telegram tasks: command failed", error);
@@ -83,6 +132,17 @@ export async function handleTelegramUpdate(
       ? "Telegram успішно підключено до вашого облікового запису."
       : "Посилання недійсне або термін його дії минув. Створіть нове у своєму кабінеті.",
   };
+}
+
+export function parseTelegramDoneCommand(update: unknown): { chatId: string; userId: string; reference: string | null } | null {
+  if (typeof update !== "object" || update === null) return null;
+  const message = (update as { message?: TelegramMessage }).message;
+  if (!message?.chat || !message.from || message.chat.type !== "private" ||
+      !Number.isSafeInteger(message.from.id) || Number(message.from.id) <= 0 ||
+      message.chat.id !== message.from.id || typeof message.text !== "string") return null;
+  if (!/^\/done(?:@\w+)?(?:\s|$)/.test(message.text)) return null;
+  const match = /^\/done(?:@\w+)?\s+([A-Za-z0-9_-]{39,59})\s*$/.exec(message.text);
+  return { chatId: String(message.chat.id), userId: String(message.from.id), reference: match?.[1] ?? null };
 }
 
 export function parseTelegramTaskCommand(update: unknown): {
