@@ -1,13 +1,6 @@
-import Link from "next/link";
-import clsx from "clsx";
-import {
-  formatPercent,
-  formatSpeed,
-  getScoreLevel,
-  type TopicResultRow,
-} from "@/modules/results/types";
 import { getTranslations } from "next-intl/server";
-import { ThemeSelfScoreCell } from "./ThemeSelfScoreCell";
+import type { TopicResultRow } from "@/modules/results/types";
+import { TopicResultsTableBody } from "./TopicResultsTableBody";
 import css from "./TopicResultsTable.module.css";
 
 type TopicResultsTableProps = {
@@ -20,20 +13,10 @@ type TopicResultsTableProps = {
   hideEmptyThemes?: boolean;
   /** Nested under another page heading. */
   headingLevel?: "h1" | "h2";
+  page?: number;
+  pathname?: string;
+  queryParams?: Record<string, string | null | undefined>;
 };
-
-function metricClass(percent: number | null): string {
-  switch (getScoreLevel(percent)) {
-    case "high":
-      return css.metricHigh;
-    case "medium":
-      return css.metricMedium;
-    case "low":
-      return css.metricLow;
-    default:
-      return css.metricNone;
-  }
-}
 
 export async function TopicResultsTable({
   rows,
@@ -42,6 +25,9 @@ export async function TopicResultsTable({
   lead,
   hideEmptyThemes = false,
   headingLevel = "h1",
+  page = 1,
+  pathname = "/results",
+  queryParams = {},
 }: TopicResultsTableProps) {
   const t = await getTranslations("TopicResultsTable");
   const visible = hideEmptyThemes
@@ -64,65 +50,13 @@ export async function TopicResultsTable({
           {t("emptyAttempts")}
         </p>
       ) : (
-        <div className={css.tableWrap}>
-          <table className={css.table}>
-            <thead>
-              <tr>
-                <th scope="col">{t("topic")}</th>
-                <th scope="col">{t("attempts")}</th>
-                <th scope="col">{t("overall")}</th>
-                <th scope="col">{t("lastThree")}</th>
-                <th scope="col">{t("speed")}</th>
-                {readOnly ? null : <th scope="col">{t("selfScore")}</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {visible.map((row) => (
-                <tr key={row.themeId}>
-                  <td className={css.themeCell}>
-                    <Link
-                      href={`/materials/textbook?topic=${encodeURIComponent(row.themeCode)}`}
-                      className={css.themeLink}
-                    >
-                      {row.displayIndex}. {row.themeName}
-                    </Link>
-                  </td>
-                  <td className={clsx(css.metric, css.metricNone)}>
-                    {row.attemptsCount > 0 ? row.attemptsCount : "—"}
-                  </td>
-                  <td
-                    className={clsx(css.metric, metricClass(row.overallPercent))}
-                  >
-                    {formatPercent(row.overallPercent)}
-                  </td>
-                  <td
-                    className={clsx(
-                      css.metric,
-                      metricClass(row.lastThreePercent),
-                    )}
-                  >
-                    {formatPercent(row.lastThreePercent)}
-                  </td>
-                  <td className={clsx(css.metric, css.metricNone)}>
-                    {formatSpeed(row.avgSecondsPerTask)}
-                  </td>
-                  {readOnly ? null : (
-                    <td className={css.selfScoreTd}>
-                      <ThemeSelfScoreCell
-                        themeId={row.themeId}
-                        value={row.selfScore ?? null}
-                        labels={{
-                          aria: t("selfScoreAria", { theme: row.themeName }),
-                          errorGeneric: t("selfScoreError"),
-                        }}
-                      />
-                    </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <TopicResultsTableBody
+          rows={visible}
+          readOnly={readOnly}
+          page={page}
+          pathname={pathname}
+          queryParams={queryParams}
+        />
       )}
 
       <p className={css.hint}>{readOnly ? t("hintTeacher") : t("hint")}</p>

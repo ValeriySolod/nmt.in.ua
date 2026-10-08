@@ -8,7 +8,7 @@
 
 Джерело правди — Markdown. Word/docx копій немає.
 
-Оновлено 28 вересня 2026.
+Оновлено 7 жовтня 2026.
 
 ---
 
@@ -397,6 +397,11 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 | Email verify + reset (Brevo) | `src/modules/auth`, `src/modules/mail`, `/verify-email` | Середня | ✅ 16.09: блок логіну до verify; forgot/reset; без ключа — log. 18.09: прод-листи з `SITE_URL` / `https://nmt.in.ua`, не localhost. Підтвердження через `GET /api/auth/verify-email` (cookie в RSC давала фейкову помилку). 29.09: відправка через Brevo (`BREVO_API_KEY`), не Resend. 06.10: перший лист реєстрації повторюється в тому ж запиті, якщо токен або Brevo впали; кнопка «Надіслати ще раз» лишається. AV на спільному PHP tmp ріже outbound усього акаунта — після чистки пересканувати панель |
 | A11y + Select + 404/error | `SkipLink`, `Select`, `StatusScene`, Motion | Мала | ✅ 17.09: skip-link, кастомні списки, status-сторінки |
 | Перф (TTFB / бандл) | `(app)`/`(marketing)` layouts, `catalogCache`, `sampleRandomIds` | — | ✅ 10.09: без `ORDER BY RAND()`, кеш довідників, cookie-профіль |
+| Пагінація `/results`, `/sessions` | `src/components/ui/Pagination`, `src/lib/pagination.ts` | Мала | ✅ 10.2026: 10/стор., URL `?page=`; лише ≥768px |
+| Мобільний свайпер сесій / результатів | `LearningSessionsTable`, `TopicResultsTable` | Мала | ✅ 10.2026: картки + свайп, без пагінації на телефоні |
+| Лідерборд марафону | `src/modules/marathons`, `/leaderboard` | Середня | ✅ v0 на гілці `leaderboard`: join + рейтинг з `task_sessions`. 8.4 (денні порції) — після PM |
+| 8.4 Марафон (повний) | `docs/leaderboard-proposal.md`, Trello 8.4 | — | ⏸️ чекає PM; лідерборд уже прив’язаний до `marathons` |
+| Досягнення | `/account` заглушки | Середня | Відкрито; після подій марафону |
 
 Карта app router: `src/app/page.tsx` — `/` (гість легкий / учень → CabinetHome); `src/app/(marketing)/` — welcome / login / register / diagnostic / `t/[slug]`; `src/app/(app)/` — кабінет (`force-dynamic`). Root layout лише `html`/`body` + `globals.css`. Неіснуючий публічний шлях на кшталт `/welcome/немає` дає кастомний 404; випадковий `/foo` без сесії — редірект на `/login` (auth-guard).
 

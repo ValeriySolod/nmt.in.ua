@@ -13,7 +13,10 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import clsx from "clsx";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { Pagination } from "@/components/ui/Pagination";
+import { paginateSlice } from "@/lib/pagination";
 import {
   popoverExit,
   popoverHidden,
@@ -387,6 +390,8 @@ type TeacherClassSessionsProps = {
   lead?: string;
   empty?: string;
   headingLevel?: "h1" | "h2";
+  page?: number;
+  paginationQueryParams?: Record<string, string | null | undefined>;
 };
 
 export function TeacherClassSessions({
@@ -396,8 +401,11 @@ export function TeacherClassSessions({
   lead,
   empty,
   headingLevel = "h1",
+  page = 1,
+  paginationQueryParams = {},
 }: TeacherClassSessionsProps) {
   const t = useTranslations("TeacherStudentSessions");
+  const router = useRouter();
   const isDesktop = useMinWidth(768);
   const [sort, setSort] = useState<SortState>({ key: "when", dir: "desc" });
   const [filters, setFilters] = useState<FilterState>({});
@@ -459,6 +467,23 @@ export function TeacherClassSessions({
     list.sort((a, b) => compareRows(a, b, sort));
     return list;
   }, [rows, columns, filters, sort, labelCreated, labelStatus]);
+
+  const paginated = useMemo(
+    () => paginateSlice(visible, page),
+    [visible, page],
+  );
+  const pageRows = paginated.items;
+
+  useEffect(() => {
+    if (paginated.page === page) return;
+    router.replace(
+      queryHref("/sessions", {
+        ...paginationQueryParams,
+        page: paginated.page > 1 ? String(paginated.page) : null,
+      }),
+      { scroll: false },
+    );
+  }, [paginated.page, page, paginationQueryParams, router]);
 
   function onSort(key: ColumnKey, dir: SortDir) {
     setSort({ key, dir });
@@ -546,7 +571,7 @@ export function TeacherClassSessions({
 
           {!isDesktop && visible.length > 0 ? (
             <ul className={css.cardList}>
-              {visible.map((row) => (
+              {pageRows.map((row) => (
                 <li key={row.id} className={css.card}>
                   <div className={css.cardTop}>
                     {showStudent ? (
@@ -624,7 +649,7 @@ export function TeacherClassSessions({
                       </td>
                     </tr>
                   ) : (
-                    visible.map((row) => (
+                    pageRows.map((row) => (
                       <tr key={row.id}>
                         {showStudent ? (
                           <td className={css.colStudent}>
@@ -670,6 +695,16 @@ export function TeacherClassSessions({
                 </tbody>
               </table>
             </div>
+          ) : null}
+
+          {visible.length > 0 ? (
+            <Pagination
+              pathname="/sessions"
+              page={paginated.page}
+              totalPages={paginated.totalPages}
+              total={paginated.total}
+              queryParams={paginationQueryParams}
+            />
           ) : null}
         </>
       )}

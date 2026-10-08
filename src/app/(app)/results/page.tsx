@@ -25,6 +25,7 @@ import {
   loadStudentTopicBundles,
 } from "@/modules/results/teacherStudentResults";
 import { getTeacherStudents } from "@/modules/teacher-students";
+import { parseTablePage } from "@/lib/pagination";
 import { getTranslations } from "next-intl/server";
 
 const item = getNavItem("/results");
@@ -40,8 +41,14 @@ type ResultsPageProps = {
     sessionId?: string | string[];
     student?: string | string[];
     theme?: string | string[];
+    page?: string | string[];
   }>;
 };
+
+function readPageParam(raw: string | string[] | undefined): number {
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  return parseTablePage(value);
+}
 
 function readPositiveInt(
   raw: string | string[] | undefined,
@@ -65,9 +72,11 @@ function readStudentParam(
 async function StudentOwnResults({
   userId,
   finishedSessionId,
+  page,
 }: {
   userId: number;
   finishedSessionId: number | null;
+  page: number;
 }) {
   const t = await getTranslations("Recommendations");
   const [rows, topicStats] = await Promise.all([
@@ -78,7 +87,15 @@ async function StudentOwnResults({
 
   return (
     <>
-      <TopicResultsTable rows={rows} />
+      <TopicResultsTable
+        rows={rows}
+        page={page}
+        queryParams={
+          finishedSessionId
+            ? { sessionId: String(finishedSessionId) }
+            : undefined
+        }
+      />
       <RecommendedActionsPanel actions={actions} />
       {finishedSessionId ? (
         <PostTestFeedbackPrompt sessionId={finishedSessionId} />
@@ -91,10 +108,12 @@ async function TeacherStudentResults({
   user,
   studentParam,
   themeId,
+  page,
 }: {
   user: AuthUser;
   studentParam: "all" | number;
   themeId: number | null;
+  page: number;
 }) {
   const t = await getTranslations("TeacherStudentResults");
   const roster = await getTeacherStudents(user.id).catch(() => []);
@@ -137,6 +156,11 @@ async function TeacherStudentResults({
         <TeacherClassTopicTable
           rows={classRows}
           selectedThemeId={selectedTheme?.themeId ?? null}
+          page={page}
+          queryParams={{
+            student: ALL_STUDENTS_VALUE,
+            theme: themeId ? String(themeId) : null,
+          }}
         />
         {selectedTheme ? (
           <TeacherThemeStudentsPanel
@@ -175,6 +199,8 @@ async function TeacherStudentResults({
         hideEmptyThemes
         title={t("title", { name: bundle.student.displayName })}
         lead={t("lead")}
+        page={page}
+        queryParams={{ student: String(studentParam) }}
       />
     </>
   );
@@ -186,6 +212,7 @@ export default async function ResultsPage({ searchParams }: ResultsPageProps) {
   const finishedSessionId = readPositiveInt(params.sessionId);
   const studentParam = readStudentParam(params.student);
   const themeId = readPositiveInt(params.theme);
+  const page = readPageParam(params.page);
 
   if (canManageStudents(user.role)) {
     return (
@@ -193,6 +220,7 @@ export default async function ResultsPage({ searchParams }: ResultsPageProps) {
         user={user}
         studentParam={studentParam}
         themeId={themeId}
+        page={page}
       />
     );
   }
@@ -201,6 +229,7 @@ export default async function ResultsPage({ searchParams }: ResultsPageProps) {
     <StudentOwnResults
       userId={user.id}
       finishedSessionId={finishedSessionId}
+      page={page}
     />
   );
 }

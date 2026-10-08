@@ -46,7 +46,8 @@
       "consultations": "Lehrerberatungen",
       "homeAdmin": "Aufgaben nach Thema",
       "profiles": "Profile",
-      "assign": "Thementest zuweisen"
+      "assign": "Thementest zuweisen",
+      "leaderboard": "Marathon-Rangliste"
     }
   },
   "RecentResults": {
@@ -719,6 +720,36 @@
     "sessionsCta": "Meine Sitzungen",
     "newTest": "Test wiederholen"
   },
+  "MarathonLeaderboard": {
+    "kicker": "Marathon",
+    "title": "Marathon-Rangliste",
+    "lead": "Rangliste der Teilnehmer des aktiven Marathons. Sortierung: durchschnittlicher % richtig, dann Geschwindigkeit (s/Aufgabe).",
+    "leadTeacher": "Marathon-Rangliste zur Übersicht. Deine Schüler sind markiert — ein Beitritt ist nicht nötig.",
+    "leadAdmin": "Pilot-Marathon und Teilnehmer-Rangliste im Blick. Verwaltung folgt nach PM-Freigabe.",
+    "teacherRoster": "Deine Schüler im Marathon: {joined} von {total}.",
+    "teacherStudentsLink": "Meine Schüler öffnen",
+    "adminMonitor": "Teilnehmer in der Rangliste: {count}.",
+    "noActiveMarathon": "Derzeit kein aktiver Marathon. Die Tabelle erscheint, sobald ein Marathon veröffentlicht ist.",
+    "joinTitle": "Teilnehmen",
+    "joinLead": "Nach dem Beitritt zählen abgeschlossene Sitzungen im Marathonzeitraum für die Rangliste.",
+    "joinCta": "Am Marathon teilnehmen",
+    "joinPending": "Wird beigetreten…",
+    "yourRank": "Dein Platz: {rank} von {total}",
+    "rules": "Nur abgeschlossene Sitzungen mit mindestens {min} Aufgaben im Marathonzeitraum zählen.",
+    "empty": "Noch keine Teilnehmer oder keine abgeschlossenen Sitzungen im Zeitraum.",
+    "hint": "Tägliche Portionen und Streaks folgen später — die Rangliste bleibt an diesen Marathon gebunden.",
+    "tableAria": "Marathon-Ranglistentabelle",
+    "colRank": "Platz",
+    "colName": "Teilnehmer",
+    "avgPercent": "Ø %",
+    "speed": "s/Aufgabe",
+    "sessions": "Sitzungen",
+    "errors": {
+      "no_marathon": "Kein aktiver Marathon gefunden.",
+      "forbidden": "Diese Rolle kann nicht teilnehmen.",
+      "generic": "Beitritt fehlgeschlagen. Bitte später erneut versuchen."
+    }
+  },
   "TopicResultsTable": {
     "title": "Ergebnisse nach Thema",
     "lead": "Fortschritt nach Thema: Versuche, Durchschnitt %, letzte Tests, Tempo und Selbsteinschätzung.",
@@ -731,6 +762,11 @@
     "selfScoreAria": "Selbsteinschätzung für «{theme}» von 1 bis 5",
     "selfScoreError": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
     "emptyAttempts": "Noch keine abgeschlossenen Versuche nach Thema.",
+    "swiperPosition": "Thema {current} von {total}",
+    "swiperPrev": "Zurück",
+    "swiperNext": "Weiter",
+    "swiperHint": "Wische nach links oder rechts für weitere Themen",
+    "swiperListAria": "Ergebnisse nach Themen, Karten",
     "hint": "Leere Felder zeigen Themen ohne abgeschlossene Versuche. Selbsteinschätzung 1–5 in der rechten Spalte. Farben: Grün ≥70%, Gelb 40–69%, Rot <40%.",
     "hintTeacher": "Versuche = alle abgeschlossenen Tests zum Thema. Durchschnitt % und Tempo aus dieser Historie. Farben: Grün ≥70%, Gelb 40–69%, Rot <40%."
   },
@@ -829,6 +865,10 @@
     "tableAriaExtended": "Erweiterte Sitzungstabelle",
     "compactInfo": "Kompakte Ansicht",
     "extendedInfo": "Erweiterte Ansicht",
+    "swiperPosition": "Sitzung {current} von {total}",
+    "swiperPrev": "Zurück",
+    "swiperNext": "Weiter",
+    "swiperHint": "Wische nach links oder rechts für weitere Sitzungen",
     "theme": "Thema",
     "difficulty": "Schwierigkeitsgrad",
     "tasks": "Aufgaben",
@@ -1354,6 +1394,14 @@
       "invalid_email": "Gib eine gültige E-Mail ein oder lass das Feld leer.",
       "generic": "Feedback konnte nicht gesendet werden. Bitte später erneut versuchen."
     }
+  },
+  "Pagination": {
+    "pagerAria": "Seiten der Liste",
+    "pagesAria": "Seitennummern",
+    "prevPage": "Zurück",
+    "nextPage": "Weiter",
+    "goToPage": "Seite {page}",
+    "pageStatus": "Seite {page} von {totalPages} · {total} gesamt"
   },
   "FeedbackAdmin": {
     "kicker": "Rückmeldung",

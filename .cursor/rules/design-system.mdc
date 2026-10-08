@@ -666,6 +666,16 @@ npm run lint && npm test && npm run build
   Справа — «Пропозиція для викладачів». З реальними вчителями — карусель з БД.
 - Перевірити: 375 / 768 / 1240 / 1440 / 1920.
 
+### 2026-09-22 — Pagination (кабінет)
+
+- `src/components/ui/Pagination`: 10 рядків на сторінку, URL `?page=`, смуга номерів (1…5 біля старту,
+  остання сторінка, «…»), «Попередня» / «Наступна» — `--grad-brand`; namespace `Pagination` у client i18n.
+- Підключено: `/results` (учень + викладач), `/sessions` (учень + `TeacherClassSessions`).
+- `/sessions` учень: до 768 — свайпер по всіх сесіях (`LearningSessionsMobileSwiper`, без пагінації);
+  з 768 — таблиця + `Pagination`.
+- `/results` (`TopicResultsTable`): той самий мобільний свайпер по темах; з 768 — таблиця + пагінація.
+- Утиліти: `src/lib/pagination.ts` (`TABLE_PAGE_SIZE` 10, `TABLE_PAGE_JUMP` 5).
+
 ### 2026-10-02 — FAQ: фото зліва, питання справа
 
 - `#faq`: двоколонка з 768 — `faq-student.jpg` зліва, kicker/title/lead + акордеон справа.
