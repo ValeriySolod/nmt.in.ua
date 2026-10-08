@@ -1,0 +1,204 @@
+.application {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-sm);
+  padding: var(--space-lg);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  background: var(--grad-glass);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(10px);
+}
+
+@supports not (backdrop-filter: blur(4px)) {
+  .panel {
+    background: rgb(253 251 244 / 92%);
+  }
+}
+
+.panelHeader {
+  display: block;
+}
+
+.panelTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-h3);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink-deep);
+}
+
+.panelLead {
+  margin: 4px 0 0;
+  max-width: 42rem;
+  color: var(--muted);
+  font-size: var(--fs-small);
+  line-height: 1.5;
+}
+
+.adminDetails {
+  width: min(100% - 32px, 1120px);
+  margin-inline: auto;
+  padding: var(--space-lg);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.adminDetailsTitle {
+  margin: 0 0 var(--space-md);
+  font-size: var(--fs-h3);
+}
+
+.detailsList {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-md);
+  margin: 0;
+}
+
+.detail,
+.motivation {
+  display: grid;
+  gap: 4px;
+}
+
+.detail dt,
+.motivation dt {
+  color: var(--muted);
+  font-size: var(--fs-small);
+  font-weight: 700;
+}
+
+.detail dd,
+.motivation dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.motivation {
+  grid-column: 1 / -1;
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--line-soft);
+}
+
+@media (max-width: 720px) {
+  .detailsList {
+    grid-template-columns: 1fr;
+  }
+
+  .motivation {
+    grid-column: auto;
+  }
+}
+
+.moderationActions {
+  display: grid;
+  gap: var(--space-md);
+  width: min(100% - 32px, 1120px);
+  margin-inline: auto;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.approveButton,
+.rejectButton,
+.confirmRejectButton {
+  min-height: 42px;
+  padding: 9px 20px;
+  border-radius: var(--radius-pill);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.approveButton {
+  border: 0;
+  background: var(--grad-brand);
+  color: #f6f1e2;
+}
+
+.rejectButton {
+  border: 1px solid crimson;
+  background: transparent;
+  color: crimson;
+}
+
+.rejectForm {
+  display: grid;
+  gap: 12px;
+  padding: var(--space-lg);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.rejectLabel {
+  display: grid;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.rejectTextarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 12px;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: inherit;
+  font: inherit;
+}
+
+.confirmRejectButton {
+  justify-self: end;
+  border: 0;
+  background: crimson;
+  color: white;
+}
+
+.approveButton:disabled,
+.rejectButton:disabled,
+.confirmRejectButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.actionError {
+  margin: 0;
+  color: crimson;
+  font-size: var(--fs-small);
+  font-weight: 700;
+}
+
+@media (max-width: 720px) {
+  .actionButtons {
+    justify-content: stretch;
+  }
+
+  .actionButtons form,
+  .approveButton,
+  .rejectButton {
+    width: 100%;
+  }
+
+  .actionButtons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .confirmRejectButton {
+    justify-self: stretch;
+  }
+}

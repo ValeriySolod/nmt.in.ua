@@ -74,6 +74,7 @@ export async function approveTeacherApplicationAction(
 
     revalidatePath("/");
     revalidatePath("/account");
+    revalidatePath("/profiles");
 
     return { status: "ok" };
   } catch (error) {
@@ -128,6 +129,7 @@ export async function rejectTeacherApplicationAction(
 
     revalidatePath("/");
     revalidatePath("/account");
+    revalidatePath("/profiles");
 
     return { status: "ok" };
   } catch (error) {
