@@ -7,16 +7,21 @@ import { canImportContent } from "@/modules/auth/types";
 import {
   createQuizTask,
   deleteQuizTask,
+  deleteQuizTasks,
   getQuizTaskById,
   updateQuizTask,
+  updateQuizTaskDifficulty,
+  updateThemeDifficultyGuide,
 } from "./store";
 import {
+  ADMIN_TASKS_PAGE_SIZE,
   AdminContentError,
   type AdminQuizTask,
 } from "./types";
 import {
   parseAdminQuizTaskInput,
   parseTaskId,
+  parseTaskIds,
 } from "./validate";
 
 export type SaveQuizTaskActionState =
@@ -35,6 +40,15 @@ export type DeleteQuizTaskActionState =
   | { status: "idle" }
   | { status: "success"; taskId: number }
   | { status: "error"; code: DeleteQuizTaskErrorCode };
+
+export type DeleteQuizTasksActionState =
+  | { status: "idle" }
+  | { status: "success"; count: number }
+  | { status: "error"; code: DeleteQuizTaskErrorCode };
+
+export type UpdateDifficultyResult =
+  | { status: "success" }
+  | { status: "error"; code: "invalid_input" | "not_found" | "forbidden" | "generic" };
 
 export type DeleteQuizTaskErrorCode =
   | "invalid_input"
@@ -107,9 +121,30 @@ type SaveDeps = {
   invalidateCatalogCache: typeof invalidateCatalogCache;
 };
 
+type DifficultyDeps = {
+  requireUser: typeof requireUser;
+  updateQuizTaskDifficulty: typeof updateQuizTaskDifficulty;
+  revalidatePath: typeof revalidatePath;
+  invalidateCatalogCache: typeof invalidateCatalogCache;
+};
+
+type GuideDeps = {
+  requireUser: typeof requireUser;
+  updateThemeDifficultyGuide: typeof updateThemeDifficultyGuide;
+  revalidatePath: typeof revalidatePath;
+  invalidateCatalogCache: typeof invalidateCatalogCache;
+};
+
 type DeleteDeps = {
   requireUser: typeof requireUser;
   deleteQuizTask: typeof deleteQuizTask;
+  revalidatePath: typeof revalidatePath;
+  invalidateCatalogCache: typeof invalidateCatalogCache;
+};
+
+type DeleteManyDeps = {
+  requireUser: typeof requireUser;
+  deleteQuizTasks: typeof deleteQuizTasks;
   revalidatePath: typeof revalidatePath;
   invalidateCatalogCache: typeof invalidateCatalogCache;
 };
@@ -161,6 +196,70 @@ export async function saveQuizTaskAction(
   }
 }
 
+export async function updateQuizTaskDifficultyAction(
+  taskId: number,
+  difficulty: number,
+  deps: DifficultyDeps = {
+    requireUser,
+    updateQuizTaskDifficulty,
+    revalidatePath,
+    invalidateCatalogCache,
+  },
+): Promise<UpdateDifficultyResult> {
+  const user = await deps.requireUser();
+  if (!canImportContent(user.role)) {
+    return { status: "error", code: "forbidden" };
+  }
+
+  try {
+    await deps.updateQuizTaskDifficulty(taskId, difficulty);
+    bustCaches(deps);
+    return { status: "success" };
+  } catch (error) {
+    if (error instanceof AdminContentError) {
+      const code = mapSaveError(error);
+      return {
+        status: "error",
+        code: code === "theme_not_found" ? "generic" : code,
+      };
+    }
+    console.error("updateQuizTaskDifficultyAction failed", error);
+    return { status: "error", code: "generic" };
+  }
+}
+
+export async function updateThemeDifficultyGuideAction(
+  themeId: number,
+  guide: string,
+  deps: GuideDeps = {
+    requireUser,
+    updateThemeDifficultyGuide,
+    revalidatePath,
+    invalidateCatalogCache,
+  },
+): Promise<UpdateDifficultyResult> {
+  const user = await deps.requireUser();
+  if (!canImportContent(user.role)) {
+    return { status: "error", code: "forbidden" };
+  }
+
+  try {
+    await deps.updateThemeDifficultyGuide(themeId, guide);
+    bustCaches(deps);
+    return { status: "success" };
+  } catch (error) {
+    if (error instanceof AdminContentError) {
+      const code = mapSaveError(error);
+      return {
+        status: "error",
+        code: code === "theme_not_found" ? "generic" : code,
+      };
+    }
+    console.error("updateThemeDifficultyGuideAction failed", error);
+    return { status: "error", code: "generic" };
+  }
+}
+
 export async function deleteQuizTaskAction(
   _prev: DeleteQuizTaskActionState,
   formData: FormData,
@@ -186,6 +285,38 @@ export async function deleteQuizTaskAction(
       return { status: "error", code: mapDeleteError(error) };
     }
     console.error("deleteQuizTaskAction failed", error);
+    return { status: "error", code: "generic" };
+  }
+}
+
+export async function deleteQuizTasksAction(
+  _prev: DeleteQuizTasksActionState,
+  formData: FormData,
+  deps: DeleteManyDeps = {
+    requireUser,
+    deleteQuizTasks,
+    revalidatePath,
+    invalidateCatalogCache,
+  },
+): Promise<DeleteQuizTasksActionState> {
+  const user = await deps.requireUser();
+  if (!canImportContent(user.role)) {
+    return { status: "error", code: "forbidden" };
+  }
+
+  try {
+    const taskIds = parseTaskIds(
+      formData.getAll("taskId"),
+      ADMIN_TASKS_PAGE_SIZE,
+    );
+    const count = await deps.deleteQuizTasks(taskIds);
+    bustCaches(deps);
+    return { status: "success", count };
+  } catch (error) {
+    if (error instanceof AdminContentError) {
+      return { status: "error", code: mapDeleteError(error) };
+    }
+    console.error("deleteQuizTasksAction failed", error);
     return { status: "error", code: "generic" };
   }
 }

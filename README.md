@@ -33,7 +33,6 @@ npm run dev
 | `npm start` | запуск зібраного сайту через `server.js` |
 | `npm test` | unit-тести (192 кейси) |
 | `npm run lint` | перевірка ESLint |
-| `npm run reset-demo-student` | скинути сесії/результати demo-student (`user_id=1`) |
 
 ## Що вже працює end-to-end
 
@@ -76,17 +75,11 @@ npm run dev
 
 Якщо `CONTENT_IMPORT_API_KEY` або `ADMIN_API_KEY` не задані — відповідні ендпоінти відхиляють **усі** запити (`401`, fail-closed).
 
-### Демо-облікові записи
+### Облікові записи
 
-Після першого входу таблиця `app_users` створюється автоматично (legacy `users` на хостингу не чіпаємо). Для перевірки:
+Після першого входу таблиця `app_users` створюється автоматично (legacy `users` на хостингу не чіпаємо). Демо-логінів немає — зареєструй тестовий акаунт на `/register` або попроси lead підвищити роль у БД (`node scripts/promote-admin.mjs <login>`).
 
-| Логін | Пароль | Роль | Можливості |
-| --- | --- | --- | --- |
-| `demo-student` | `demo123` | Учень | тести, результати, власні сесії |
-| `demo-teacher` | `demo123` | Викладач | + призначення mentor-сесій на `/sessions` і «Мої учні» на `/students` |
-| `demo-admin` | `demo123` | Адмін | + імпорт контенту на `/settings` (і той самий список учнів) |
-
-На `/login` є кнопки швидкого входу для кожної ролі (у dev). Публічна реєстрація — `/register` з вибором **учень / викладач** (`?role=`), обовʼязковий email і підтвердження листа перед першим входом. Платний `/register/teacher` (WayForPay, 500 грн) **приховано в UI** — редірект на `/register?role=teacher`; код еквайрингу лишається для майбутньої оплати доп. функцій. Адмін цим потоком не створюється.
+Публічна реєстрація — `/register` з вибором **учень / викладач** (`?role=`), обовʼязковий email і підтвердження листа перед першим входом. Платний `/register/teacher` (WayForPay, 500 грн) **приховано в UI** — редірект на `/register?role=teacher`; код еквайрингу лишається для майбутньої оплати доп. функцій. Адмін цим потоком не створюється.
 
 ### Оплата кабінету викладача (WayForPay) — код є, UI на паузі
 
@@ -100,20 +93,12 @@ npm run dev
 6. Сума **500 грн**. WayForPay приймає major units з двома знаками (`amount=500.00`, `currency=UAH`); у БД лишаємо `50000` копійок. Без ключів застосунок **не** підписує checkout. CSP `form-action` дозволяє `https://secure.wayforpay.com`. Ключі лише в `.env.local` / хостинг `.env.production`, не в git.
 7. Локально / пісочниця `test_merch_n1`: після «Сплатити» сторінка **не** стрибає одразу на WayForPay. Є кнопка **«Оплата пройшла»** — той самий шлях, що Approved webhook (активує викладача + сесія на `/`). На живому мерчанті в `NODE_ENV=production` кнопки немає. Вимкнути локально: `TEACHER_PAYMENT_TEST_BYPASS=0`.
 
-**Скидання демо-даних:** старі тести до auth писалися з `user_id=1`, тому вони «прилипають» до demo-student. Очистити:
-
-```bash
-npm run reset-demo-student
-```
-
-Або SQL: `scripts/sql/002_reset_demo_student.sql`.
-
 ## Auth (модуль 5)
 
 | Що | Де |
 | --- | --- |
-| Вхід / вихід | `/login`, cookie `nmt_session`; логін блокується до verify email (демо exempt) |
-| Реєстрація | `/register?role=student\|teacher` — email обовʼязковий → `/register/check-email` → `/verify-email` |
+| Вхід / вихід | `/login`, cookie `nmt_session`; логін блокується до verify email |
+| Реєстрація | `/register?role=student\|teacher` — email обовʼязковий → `/register/check-email` → `/verify-email` (успіх, прострочено, недійсне, повтор). Учня, якого створив викладач, лист не блокує вхід |
 | Скидання пароля | `/forgot-password`, `/reset-password` (Brevo або log без `BREVO_API_KEY`) |
 | Реєстрація викладача (оплата) | UI на паузі; `/register/teacher` → `/register?role=teacher`. WayForPay код + `/success`/`/fail` лишаються |
 | Webhook оплати | `POST /api/payments/wayforpay/webhook` (публічний, перевірка HMAC_MD5) |
@@ -152,7 +137,8 @@ import styles from "./page.module.css";
 - Палітра — теплий «старий зошит»: фон `--page #efe8d7`, поверхні `--surface #fdfbf4`.
   Чистий `#fff` не використовуємо.
 - Публічний лендінг: `src/components/welcome/*` — секції `LandingHeader`, `Hero`, `Features`,
-  `Steps`, `Faq`, `CtaBanner`, `LandingFooter`; спільні стилі — `welcome/landing.module.css`.
+  `Features`, `Teachers`, `Faq`, `CtaBanner`, `LandingFooter`; спільні стилі — `welcome/landing.module.css`.
+  Чотири кроки старту — у `Hero` під лідом (`#steps`).
 - Кабінет після входу: `src/components/dashboard/*` — той самий візуал (`DashboardShell`,
   `AppHeader`, `AppSidebar`, `PageFrame`, домашня `TopicTestStart`).
 - Сторінки `/login` і `/register` — спільний каркас `components/auth/AuthShell` + `auth.module.css`.
@@ -240,8 +226,8 @@ scripts/deploy-hosting.sh         єдиний реліз (локально аб
 scripts/rewrite-next-build-paths.sh  шляхи runner у .next → шлях хоста
 scripts/hosting-remote-lib.sh     стоп / старт / health на хості
 scripts/rollback-hosting.sh       аварійно повернути попередній www
-scripts/reset-demo-student.mjs    очистка сесій demo-student
-scripts/sql/                      DDL для app_users, reset demo
+scripts/promote-admin.mjs         підвищити логін до admin (DB_* з .env.local)
+scripts/sql/                      DDL для app_users та інших таблиць
 docs/deploy.md                    як потрапляє на nmt.in.ua
 docs/mentor-tasks.md              pending-таски для команди
 ```

@@ -21,8 +21,8 @@ const SQL_CREATE_AUTH_TOKENS = `
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 `;
 
-const TTL_MS: Record<AuthTokenPurpose, number> = {
-  email_verify: 48 * 60 * 60 * 1000,
+export const AUTH_TOKEN_TTL_MS: Record<AuthTokenPurpose, number> = {
+  email_verify: 24 * 60 * 60 * 1000,
   password_reset: 60 * 60 * 1000,
 };
 
@@ -70,19 +70,31 @@ export type IssueAuthTokenResult = {
   expiresAt: Date;
 };
 
-/** Invalidates unused tokens of the same purpose, then inserts a new one. */
-export async function issueAuthToken(
+function isMissingParentUser(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const record = error as { errno?: number; code?: string };
+  const errno = Number(record.errno);
+  return (
+    errno === 1452 ||
+    errno === 1216 ||
+    record.code === "ER_NO_REFERENCED_ROW_2" ||
+    record.code === "ER_NO_REFERENCED_ROW"
+  );
+}
+
+const sleep = (ms: number) =>
+  new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+async function issueAuthTokenOnce(
   userId: number,
   purpose: AuthTokenPurpose,
-  deps: { getConnection: () => Promise<SqlConnection> } = {
-    getConnection: loadDefaultConnection,
-  },
+  deps: { getConnection: () => Promise<SqlConnection> },
 ): Promise<IssueAuthTokenResult> {
   await ensureAuthTokenSchema(deps.getConnection);
   const connection = await deps.getConnection();
   const rawToken = mintAuthTokenRaw();
   const tokenHash = hashAuthToken(rawToken);
-  const expiresAt = new Date(Date.now() + TTL_MS[purpose]);
+  const expiresAt = new Date(Date.now() + AUTH_TOKEN_TTL_MS[purpose]);
 
   try {
     await connection.beginTransaction();
@@ -100,10 +112,35 @@ export async function issueAuthToken(
     await connection.commit();
     return { rawToken, expiresAt };
   } catch (error) {
-    await connection.rollback();
+    try {
+      await connection.rollback();
+    } catch {
+      // The insert failed before a transaction was open, or rollback itself failed.
+    }
     throw error;
   } finally {
     connection.release();
+  }
+}
+
+/**
+ * Invalidates unused tokens of the same purpose, then inserts a new one.
+ * Retries once when the parent user is not visible yet: registration commits
+ * the account and then immediately asks for a token, and the FK can lose that race.
+ */
+export async function issueAuthToken(
+  userId: number,
+  purpose: AuthTokenPurpose,
+  deps: { getConnection: () => Promise<SqlConnection> } = {
+    getConnection: loadDefaultConnection,
+  },
+): Promise<IssueAuthTokenResult> {
+  try {
+    return await issueAuthTokenOnce(userId, purpose, deps);
+  } catch (error) {
+    if (!isMissingParentUser(error)) throw error;
+    await sleep(100);
+    return await issueAuthTokenOnce(userId, purpose, deps);
   }
 }
 

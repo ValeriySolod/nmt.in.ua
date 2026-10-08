@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Reveal } from "@/components/ui/Reveal";
 import { DiagnosticPageTurnLink } from "@/components/welcome/DiagnosticPageTurnLink";
@@ -7,9 +6,11 @@ import { ArrowRightIcon, CheckIcon, TimerIcon, TrendIcon } from "../icons";
 import css from "../landing.module.css";
 
 const STAT_KEYS = ["topics", "simulator", "materials"] as const;
+const STEP_KEYS = ["diagnose", "signup", "train", "track"] as const;
 
 export async function Hero() {
   const t = await getTranslations("WelcomeLanding.hero");
+  const steps = await getTranslations("WelcomeLanding.steps");
 
   return (
     <section className={css.hero} aria-labelledby="hero-title">
@@ -21,22 +22,51 @@ export async function Hero() {
           </p>
 
           <h1 id="hero-title" className={css.heroTitle}>
-            {t("titleStart")} <span className={css.accent}>{t("titleAccent")}</span>
+            {t("titleStart")}{" "}
+            <span className={css.accent}>{t("titleAccent")}</span>
           </h1>
 
           <p className={css.heroLead}>{t("lead")}</p>
 
-          <div className={css.heroActions}>
-            <Link href="/register" className={`${css.btn} ${css.btnPrimary}`}>
-              {t("ctaPrimary")}
-              <ArrowRightIcon size={18} />
-            </Link>
-            <Link href="/login" className={`${css.btn} ${css.btnGhost}`}>
-              {t("ctaSecondary")}
-            </Link>
-            <DiagnosticPageTurnLink href="/diagnostic" className={`${css.btn} ${css.btnGhost}`}>
-              {t("ctaDiagnostic")}
-            </DiagnosticPageTurnLink>
+          <div className={css.heroCtaBlock}>
+            <ol
+              id="steps"
+              className={css.heroSteps}
+              aria-label={steps("kicker")}
+            >
+              {STEP_KEYS.map((key, index) => (
+                <li key={key} className={css.heroStep}>
+                  <span className={css.heroStepNum} aria-hidden>
+                    {index + 1}
+                  </span>
+                  <div className={css.heroStepCopy}>
+                    <p className={css.heroStepTitle}>
+                      {steps(`items.${key}.title`)}
+                    </p>
+                    <p className={css.heroStepText}>
+                      {steps(`items.${key}.text`)}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+
+            <div className={css.heroActions}>
+              {/* Recommended first step: the guest diagnostic needs no account. */}
+              <div className={css.heroPathPrimary}>
+                <p className={css.heroPathPrompt}>{t("diagnosticPrompt")}</p>
+                <div className={css.heroPathRow}>
+                  <DiagnosticPageTurnLink
+                    href="/diagnostic"
+                    className={`${css.btn} ${css.btnPrimary}`}
+                  >
+                    {t("ctaDiagnostic")}
+                    <ArrowRightIcon size={18} />
+                  </DiagnosticPageTurnLink>
+                  <p className={css.heroPathText}>{t("diagnosticHint")}</p>
+                </div>
+              </div>
+            </div>
           </div>
 
           <p className={css.heroNote}>

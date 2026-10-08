@@ -6,10 +6,11 @@ import { createUser, CreateUserError, findUserById } from "./users";
 
 test("createUser inserts a student and returns AuthUser", async () => {
   let released = false;
+  let committed = false;
   const connection: SqlConnection = {
     beginTransaction: async () => {},
     query: async <T,>() => {
-      // ensureAuthSchema: CREATE TABLE, then COUNT(*) — demo seed skipped when count > 0
+      // ensureAuthSchema: CREATE TABLE (+ column ensures) before insert
       return [{ count: 3 }] as T[];
     },
     execute: async (sql, params = []) => {
@@ -30,7 +31,9 @@ test("createUser inserts a student and returns AuthUser", async () => {
       }
       return { insertId: 0, affectedRows: 0 };
     },
-    commit: async () => {},
+    commit: async () => {
+      committed = true;
+    },
     rollback: async () => {},
     release: () => {
       released = true;
@@ -55,8 +58,11 @@ test("createUser inserts a student and returns AuthUser", async () => {
     login: "maria_k",
     displayName: "Марія Коваленко",
     role: "student",
+    email: "maria@example.com",
+    emailVerifyRequired: true,
   });
   assert.equal(released, true);
+  assert.equal(committed, true);
 });
 
 test("createUser maps MySQL duplicate key to login_taken", async () => {

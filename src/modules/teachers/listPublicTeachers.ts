@@ -14,6 +14,8 @@ type ListRow = {
   slug: string;
   headline: string | null;
   bio: string | null;
+  experience: string | null;
+  publications: string | null;
   city: string | null;
   subjects: string | null;
   contact_url: string | null;
@@ -28,7 +30,8 @@ type ListRow = {
 };
 
 const SQL_LIST_PUBLIC = `
-  SELECT p.user_id, p.slug, p.headline, p.bio, p.city, p.subjects, p.contact_url, p.is_public,
+  SELECT p.user_id, p.slug, p.headline, p.bio, p.experience, p.publications,
+         p.city, p.subjects, p.contact_url, p.is_public,
          u.display_name, u.login, u.role,
          UNIX_TIMESTAMP(a.updated_at) AS avatar_rev,
          stats.avg_rating,
@@ -100,6 +103,8 @@ function mapRow(row: ListRow): TeacherCarouselItem {
     slug: row.slug,
     headline: row.headline?.trim() ?? "",
     bio: row.bio?.trim() ?? "",
+    experience: row.experience?.trim() ?? "",
+    publications: row.publications?.trim() ?? "",
     city: row.city?.trim() ?? "",
     subjects: parseSubjectsJson(row.subjects),
     contactUrl: row.contact_url?.trim() ?? "",

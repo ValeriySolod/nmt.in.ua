@@ -20,6 +20,12 @@ export type AuthUser = {
   email?: string;
   /** True when email_verified_at is set (or demo bypass). */
   emailVerified?: boolean;
+  /**
+   * Public self-signup only. When true, login stays closed until the email
+   * is confirmed. Absent or false: legacy rows and teacher-created students
+   * can sign in; an unverified address is a banner, not a lock.
+   */
+  emailVerifyRequired?: boolean;
 };
 
 export type SessionPayload = {
@@ -39,33 +45,6 @@ export function avatarSrc(
   if (!user.avatarRev) return null;
   return `/api/avatar/${user.id}?v=${user.avatarRev}`;
 }
-
-export const DEMO_ACCOUNTS = [
-  {
-    login: "demo-student",
-    password: "demo123",
-    displayName: "Олена Коваленко",
-    role: "student" as const,
-    id: 1,
-    description: "Учень — тести, результати, сесії",
-  },
-  {
-    login: "demo-teacher",
-    password: "demo123",
-    displayName: "Ігор Петренко",
-    role: "teacher" as const,
-    id: 2,
-    description: "Викладач — призначення mentor-сесій",
-  },
-  {
-    login: "demo-admin",
-    password: "demo123",
-    displayName: "Адміністратор",
-    role: "admin" as const,
-    id: 3,
-    description: "Адмін — редактор завдань і профілів",
-  },
-] as const;
 
 export function roleLabel(role: UserRole): string {
   switch (role) {
@@ -117,5 +96,6 @@ export const ADMIN_NAV_HREFS = [
   "/materials/textbook",
   "/problems",
   "/feedback",
+  "/leaderboard",
   "/settings",
 ] as const;

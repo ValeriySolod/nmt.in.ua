@@ -9,6 +9,8 @@ import type {
   ClassTopicRow,
   ThemeStudentAverage,
 } from "@/modules/results/teacherStudentResults";
+import { Pagination } from "@/components/ui/Pagination";
+import { paginateSlice } from "@/lib/pagination";
 import { getTranslations } from "next-intl/server";
 import { queryHref } from "@/lib/queryHref";
 import css from "../TopicResultsTable/TopicResultsTable.module.css";
@@ -30,14 +32,19 @@ function metricClass(percent: number | null): string {
 type TeacherClassTopicTableProps = {
   rows: ClassTopicRow[];
   selectedThemeId: number | null;
+  page?: number;
+  queryParams?: Record<string, string | null | undefined>;
 };
 
 export async function TeacherClassTopicTable({
   rows,
   selectedThemeId,
+  page = 1,
+  queryParams = {},
 }: TeacherClassTopicTableProps) {
   const t = await getTranslations("TeacherStudentResults");
   const visible = rows.filter((row) => row.attemptsCount > 0);
+  const paginated = paginateSlice(visible, page);
 
   return (
     <section className={css.topicResults} aria-labelledby="class-topics-title">
@@ -66,7 +73,7 @@ export async function TeacherClassTopicTable({
               </tr>
             </thead>
             <tbody>
-              {visible.map((row) => {
+              {paginated.items.map((row) => {
                 const active = row.themeId === selectedThemeId;
                 return (
                   <tr
@@ -76,7 +83,9 @@ export async function TeacherClassTopicTable({
                     <td className={css.themeCell}>
                       <Link
                         href={queryHref("/results", {
+                          ...queryParams,
                           theme: String(row.themeId),
+                          page: null,
                         })}
                         className={css.themeLink}
                         aria-current={active ? "true" : undefined}
@@ -116,6 +125,19 @@ export async function TeacherClassTopicTable({
           </table>
         </div>
       )}
+
+      {visible.length > 0 ? (
+        <Pagination
+          pathname="/results"
+          page={paginated.page}
+          totalPages={paginated.totalPages}
+          total={paginated.total}
+          queryParams={{
+            ...queryParams,
+            theme: selectedThemeId ? String(selectedThemeId) : null,
+          }}
+        />
+      ) : null}
 
       <p className={css.hint}>{t("allHint")}</p>
     </section>

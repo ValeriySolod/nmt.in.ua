@@ -152,5 +152,9 @@ proxy_set_header X-Forwarded-For $remote_addr;
 
 - https://nmt.in.ua відповідає 200
 - `/welcome` вантажить hero
-- вхід `demo-student` / звичайний учень і реєстрація
+- вхід звичайного учня і реєстрація
 - `/wp-admin` і `/.env` — 404
+
+## TG-008 — запуск сповіщень
+
+Реалізовано захищений POST trigger і GitHub Actions schedule кожні 5 хвилин + workflow_dispatch на main для основного хостингу ukraine.com.ua. Потрібен окремий TELEGRAM_NOTIFICATIONS_TRIGGER_SECRET у runtime та GitHub Secrets, міграція 037 і чинні налаштування Telegram. Порядок активації, зупинки й обмеження — у [Telegram integration](telegram-integration.md#tg-008--автоматичний-запуск-сповіщень). Production scheduler ще не запускався; TG-009 заплановано.

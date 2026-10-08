@@ -14,33 +14,47 @@ function user(partial: Partial<AuthUser>): AuthUser {
   };
 }
 
-test("needsEmailVerification skips demo accounts", () => {
+test("needsEmailVerification skips legacy accounts without email", () => {
+  assert.equal(needsEmailVerification(user({})), false);
+});
+
+test("needsEmailVerification requires verified email for public signups", () => {
   assert.equal(
     needsEmailVerification(
       user({
-        login: "demo-student",
-        email: "demo@example.com",
+        email: "a@example.com",
         emailVerified: false,
+        emailVerifyRequired: true,
+      }),
+    ),
+    true,
+  );
+  assert.equal(
+    needsEmailVerification(
+      user({
+        email: "a@example.com",
+        emailVerified: true,
+        emailVerifyRequired: true,
       }),
     ),
     false,
   );
 });
 
-test("needsEmailVerification skips legacy accounts without email", () => {
-  assert.equal(needsEmailVerification(user({})), false);
-});
-
-test("needsEmailVerification requires verified email for new accounts", () => {
+test("needsEmailVerification does not lock out legacy or teacher-created accounts", () => {
   assert.equal(
     needsEmailVerification(
-      user({ email: "a@example.com", emailVerified: false }),
+      user({ email: "legacy@example.com", emailVerified: false }),
     ),
-    true,
+    false,
   );
   assert.equal(
     needsEmailVerification(
-      user({ email: "a@example.com", emailVerified: true }),
+      user({
+        email: "pupil@school.ua",
+        emailVerified: false,
+        emailVerifyRequired: false,
+      }),
     ),
     false,
   );

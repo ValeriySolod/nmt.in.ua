@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 import { safeInternalPath } from "@/lib/safeInternalPath";
 import { claimGuestProgress } from "@/modules/diagnostic/claimGuestProgress";
 import { clearGuestCookie } from "./guestToken";
-import { isDemoAccountLogin, isDemoLoginEnabled } from "./demoLogin";
 import { verifyPassword } from "./password";
 import {
   clearSessionCookie,
@@ -32,6 +31,7 @@ import {
 import {
   sendEmailVerificationMail,
   sendPasswordResetMail,
+  sendRegistrationVerificationMail,
 } from "./emailMessages";
 import { needsEmailVerification } from "./needsEmailVerification";
 import {
@@ -84,11 +84,6 @@ export async function loginAction(
   }
   const { login, password } = parsed.value;
   const nextPath = safeInternalPath(formData.get("next"));
-
-  // Same gate as one-click demo: password form must not unlock demo-* on prod.
-  if (isDemoAccountLogin(login) && !isDemoLoginEnabled()) {
-    return { status: "error", code: "invalidCredentials" };
-  }
 
   const user = await findUserByLogin(login);
 
@@ -167,7 +162,7 @@ export async function registerAction(
 
   let mailed = false;
   try {
-    const result = await sendEmailVerificationMail({
+    const result = await sendRegistrationVerificationMail({
       userId,
       email: validated.value.email,
       displayName: validated.value.displayName,
@@ -179,23 +174,6 @@ export async function registerAction(
 
   const checkEmail = `/register/check-email?email=${encodeURIComponent(validated.value.email)}`;
   redirect(mailed ? checkEmail : `${checkEmail}&mail=failed`);
-}
-
-export async function demoLoginAction(
-  login: string,
-  nextPath = "/",
-): Promise<void> {
-  if (!isDemoLoginEnabled() || !isDemoAccountLogin(login)) {
-    redirect("/login");
-  }
-
-  const user = await findUserByLogin(login);
-  if (!user || user.isBanned) {
-    redirect("/login");
-  }
-  await recordLoginPresence(user.id);
-  await setSessionCookie(user);
-  redirect(safeInternalPath(nextPath));
 }
 
 export async function logoutAction(): Promise<void> {

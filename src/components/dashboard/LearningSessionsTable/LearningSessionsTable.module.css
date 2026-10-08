@@ -69,7 +69,217 @@
   box-shadow: 1px 1px 0 var(--green-lift);
 }
 
+/* Mobile swipe carousel (<768). Remove `.swipeRoot` block to revert table-only. */
+.swipeRoot {
+  display: grid;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+
+.swipeToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.swipeStatus {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--fs-small);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.swipeNav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.swipeNavBtn {
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--grad-brand);
+  color: #fdfbf4;
+  font: inherit;
+  font-size: var(--fs-small);
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgb(17 83 42 / 22%);
+  transition:
+    transform var(--t) var(--ease),
+    opacity var(--t) var(--ease);
+}
+
+.swipeNavBtn:hover,
+.swipeNavBtn:focus-visible {
+  transform: translateY(-1px);
+}
+
+.swipeNavBtnDisabled {
+  opacity: 0.45;
+  transform: none;
+  cursor: not-allowed;
+  pointer-events: none;
+  background: rgb(253 251 244 / 78%);
+  color: var(--muted);
+  border: 1px solid var(--line-soft);
+  box-shadow: none;
+}
+
+.swipeTrack {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 100%;
+  gap: var(--space-sm);
+  margin: 0;
+  padding: 2px 0 8px;
+  list-style: none;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.swipeTrack:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow: var(--ring);
+  border-radius: var(--radius-md);
+}
+
+.swipeSlide {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  min-width: 0;
+}
+
+.swipeHint {
+  margin: 0;
+  color: var(--subtle);
+  font-size: var(--fs-kicker);
+  text-align: center;
+}
+
+.desktopPager {
+  display: none;
+}
+
+.card {
+  display: grid;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  background: var(--grad-glass);
+  box-shadow: var(--shadow-sm);
+}
+
+.cardTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.cardTitleBlock {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.cardIndex {
+  color: var(--subtle);
+  font-size: var(--fs-kicker);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.cardTheme {
+  margin: 0;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 14px;
+}
+
+.meta div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.metaWide {
+  grid-column: 1 / -1;
+}
+
+.meta dt {
+  color: var(--subtle);
+  font-size: var(--fs-kicker);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.meta dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.cardFoot {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-sm);
+  padding-top: var(--space-2xs);
+  border-top: 1px solid var(--line-soft);
+}
+
+.score {
+  flex: 0 0 auto;
+  min-width: 3.25rem;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.scoreHigh {
+  color: var(--green-dark);
+  background: var(--green-bg);
+}
+
+.scoreMedium {
+  color: color-mix(in srgb, var(--ink) 88%, var(--green-dark));
+  background: color-mix(in srgb, var(--green-bg) 55%, var(--surface));
+}
+
+.scoreLow {
+  color: color-mix(in srgb, crimson 75%, var(--ink));
+  background: color-mix(in srgb, crimson 10%, var(--surface));
+}
+
+.scoreNone {
+  color: var(--muted);
+  background: rgb(253 251 244 / 88%);
+}
+
 .tableWrap {
+  display: none;
   width: 100%;
   max-width: 100%;
   min-width: 0;
@@ -381,6 +591,18 @@
 }
 
 @media (min-width: 768px) {
+  .swipeRoot {
+    display: none;
+  }
+
+  .desktopPager {
+    display: block;
+  }
+
+  .tableWrap {
+    display: block;
+  }
+
   .descriptionRow {
     flex-direction: row;
     align-items: center;

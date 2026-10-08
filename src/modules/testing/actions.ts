@@ -4,7 +4,6 @@ import {
   recommendNextActionsForStats,
   recommendFromSessionMistakes,
   persistRecommendations,
-  buildPracticeResultInsight,
   type RecommendationTranslator,
 } from "@/modules/recommendations";
 import { getStudentTopicStats } from "@/modules/recommendations/getStudentTopicStats";
@@ -68,6 +67,7 @@ import type {
   AddSpacedRepetitionTaskActionState,
 } from "./types";
 import { getTranslations } from "next-intl/server";
+import { sessionCompletionFollowUp } from "./sessionCompletionFollowUp";
 
 export type StartTopicTestErrorCode =
   | "insufficientTasks"
@@ -318,34 +318,7 @@ export async function finishTrainerSessionAction(
         ? input.locale
         : "uk";
 
-    const translatorFactory =
-      deps.getRecommendationTranslator ?? getRecommendationTranslator;
-
-    const t = await translatorFactory(locale);
-
-    const mistakes = await deps.getSessionMistakeReview(
-      input.sessionId,
-      userId,
-    );
-    const topicStats = await deps.getStudentTopicStats(userId);
-    const fromMistakes = deps.recommendFromSessionMistakes(mistakes, t);
-    const rawActions =
-      fromMistakes.length > 0
-        ? fromMistakes
-        : await deps.recommendNextActionsForStats(topicStats, t);
-    const { actions: recommendations } = await deps.persistRecommendations(
-      userId,
-      rawActions,
-    );
-    const insight = buildPracticeResultInsight({ summary, mistakes, topicStats });
-
-    try {
-      revalidatePath("/results");
-      revalidatePath("/sessions");
-      revalidatePath("/");
-    } catch {
-      // No-op outside a Next.js request context (unit tests).
-    }
+    const { recommendations, insight } = await sessionCompletionFollowUp(userId, summary, locale, deps);
 
     return { status: "success", summary, recommendations, insight };
   } catch (error) {

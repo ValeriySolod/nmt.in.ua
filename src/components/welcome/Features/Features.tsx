@@ -1,54 +1,101 @@
+import Image from "next/image";
 import { getTranslations } from "next-intl/server";
-import type { ComponentType, SVGProps } from "react";
 import { Reveal } from "@/components/ui/Reveal";
-import {
-  BookIcon,
-  ChartIcon,
-  CompassIcon,
-  ExamIcon,
-  TopicsIcon,
-  UsersIcon,
-} from "../icons";
-import css from "../landing.module.css";
+import landing from "../landing.module.css";
+import css from "./Features.module.css";
 
-type IconComponent = ComponentType<SVGProps<SVGSVGElement> & { size?: number }>;
+const FEATURE_KEYS = [
+  "topics",
+  "simulator",
+  "materials",
+  "results",
+  "recommendations",
+  "sessions",
+] as const;
 
-const FEATURES: ReadonlyArray<{ key: string; Icon: IconComponent }> = [
-  { key: "topics", Icon: TopicsIcon },
-  { key: "simulator", Icon: ExamIcon },
-  { key: "materials", Icon: BookIcon },
-  { key: "results", Icon: ChartIcon },
-  { key: "recommendations", Icon: CompassIcon },
-  { key: "sessions", Icon: UsersIcon },
-];
+const BOOK_SLOT = [
+  "slotA",
+  "slotB",
+  "slotC",
+  "slotD",
+  "slotE",
+  "slotF",
+] as const;
+
+const CLOSED_SLOTS = ["closedA", "closedB", "closedC", "closedD"] as const;
 
 export async function Features() {
   const t = await getTranslations("WelcomeLanding.features");
 
   return (
-    <section id="features" className={css.section} aria-labelledby="features-title">
-      <div className={css.container}>
-        <Reveal className={css.sectionHead}>
-          <p className={css.kicker}>{t("kicker")}</p>
-          <h2 id="features-title" className={css.sectionTitle}>
+    <section
+      id="features"
+      className={landing.section}
+      aria-labelledby="features-title"
+    >
+      <div className={landing.container}>
+        <Reveal className={landing.sectionHead}>
+          <p className={landing.kicker}>{t("kicker")}</p>
+          <h2 id="features-title" className={landing.sectionTitle}>
             {t("title")}
           </h2>
-          <p className={css.sectionLead}>{t("lead")}</p>
+          <p className={landing.sectionLead}>{t("lead")}</p>
         </Reveal>
 
-        <ul className={`${css.grid} ${css.gridThree}`}>
-          {FEATURES.map(({ key, Icon }, index) => (
-            <Reveal as="li" key={key} delay={index * 70}>
-              <article className={css.card}>
-                <span className={css.cardIcon} aria-hidden>
-                  <Icon size={22} />
+        <Reveal className={css.stage}>
+          <div className={css.layout}>
+            <div className={css.scatter} aria-hidden>
+              {CLOSED_SLOTS.map((slot) => (
+                <span key={slot} className={`${css.closedBook} ${css[slot]}`}>
+                  <span className={css.closedPages} />
+                  <span className={css.closedCover} />
                 </span>
-                <h3 className={css.cardTitle}>{t(`items.${key}.title`)}</h3>
-                <p className={css.cardText}>{t(`items.${key}.text`)}</p>
-              </article>
-            </Reveal>
-          ))}
-        </ul>
+              ))}
+            </div>
+
+            <div className={css.stationery} aria-hidden>
+              <span className={`${css.pencil} ${css.pencilA}`} />
+              <span className={`${css.pencil} ${css.pencilB}`} />
+              <span className={`${css.pen} ${css.penA}`} />
+              <span className={`${css.pen} ${css.penB}`} />
+              <span className={`${css.ruler} ${css.rulerA}`} />
+              <span className={`${css.triangle} ${css.triangleA}`} />
+              <span className={`${css.compass} ${css.compassA}`}>
+                <span className={css.compassLeg} />
+                <span className={css.compassLegAlt} />
+                <span className={css.compassKnob} />
+              </span>
+            </div>
+
+            <div className={css.studentWrap}>
+              <Image
+                className={css.student}
+                src="/landing/features-student-cut.webp"
+                alt={t("imageAlt")}
+                width={864}
+                height={1152}
+                sizes="(min-width: 1920px) 32rem, (min-width: 1440px) 29rem, (min-width: 1240px) 26rem, (min-width: 768px) 22rem, 1px"
+              />
+            </div>
+
+            <ul className={css.openBooks}>
+              {FEATURE_KEYS.map((key, index) => (
+                <li
+                  key={key}
+                  className={`${css.openBook} ${css[BOOK_SLOT[index]]}`}
+                >
+                  <div className={css.spread} aria-hidden>
+                    <span className={css.pageSheet} />
+                  </div>
+                  <div className={css.openBookCopy}>
+                    <h3 className={css.bookTitle}>{t(`items.${key}.title`)}</h3>
+                    <p className={css.bookText}>{t(`items.${key}.text`)}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Reveal>
       </div>
     </section>
   );

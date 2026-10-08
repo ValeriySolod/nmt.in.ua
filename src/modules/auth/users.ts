@@ -2,7 +2,6 @@ import "server-only";
 
 import type { SqlConnection } from "@/lib/db/mysql";
 import type { AuthUser, UserRole, StudentOption } from "./types";
-import { DEMO_ACCOUNTS } from "./types";
 import { SQL_CREATE_USER_AVATARS } from "./avatar/schema";
 import { hashPassword } from "./password";
 
@@ -16,6 +15,7 @@ const SQL_CREATE_USERS = `
     display_name VARCHAR(100) NOT NULL,
     email VARCHAR(255) NULL,
     email_verified_at TIMESTAMP NULL DEFAULT NULL,
+    email_verify_required TINYINT(1) NOT NULL DEFAULT 0,
     role ENUM('student', 'teacher', 'admin') NOT NULL,
     is_banned TINYINT(1) NOT NULL DEFAULT 0,
     last_login_at TIMESTAMP NULL DEFAULT NULL,
@@ -29,7 +29,7 @@ const SQL_CREATE_USERS = `
 
 const SQL_FIND_BY_LOGIN = `
   SELECT u.id, u.login, u.password_hash, u.display_name, u.role, u.is_banned,
-         u.email, u.email_verified_at,
+         u.email, u.email_verified_at, u.email_verify_required,
          UNIX_TIMESTAMP(a.updated_at) AS avatar_rev
   FROM ${AUTH_USERS_TABLE} u
   LEFT JOIN user_avatars a ON a.user_id = u.id
@@ -39,7 +39,7 @@ const SQL_FIND_BY_LOGIN = `
 
 const SQL_FIND_BY_ID = `
   SELECT u.id, u.login, u.display_name, u.role, u.is_banned,
-         u.email, u.email_verified_at,
+         u.email, u.email_verified_at, u.email_verify_required,
          UNIX_TIMESTAMP(a.updated_at) AS avatar_rev
   FROM ${AUTH_USERS_TABLE} u
   LEFT JOIN user_avatars a ON a.user_id = u.id
@@ -49,24 +49,12 @@ const SQL_FIND_BY_ID = `
 
 const SQL_FIND_BY_EMAIL = `
   SELECT u.id, u.login, u.password_hash, u.display_name, u.role, u.is_banned,
-         u.email, u.email_verified_at,
+         u.email, u.email_verified_at, u.email_verify_required,
          UNIX_TIMESTAMP(a.updated_at) AS avatar_rev
   FROM ${AUTH_USERS_TABLE} u
   LEFT JOIN user_avatars a ON a.user_id = u.id
   WHERE u.email = ?
   LIMIT 1
-`;
-
-const SQL_COUNT_USERS = `SELECT COUNT(*) AS count FROM ${AUTH_USERS_TABLE}`;
-
-const SQL_UPSERT_DEMO = `
-  INSERT INTO ${AUTH_USERS_TABLE} (id, login, password_hash, display_name, role)
-  VALUES (?, ?, ?, ?, ?)
-  ON DUPLICATE KEY UPDATE
-    login = VALUES(login),
-    password_hash = VALUES(password_hash),
-    display_name = VALUES(display_name),
-    role = VALUES(role)
 `;
 
 type UserRow = {
@@ -78,10 +66,9 @@ type UserRow = {
   is_banned?: number | boolean | null;
   email?: string | null;
   email_verified_at?: Date | string | null;
+  email_verify_required?: number | boolean | null;
   avatar_rev?: number | string | null;
 };
-
-type CountRow = { count: number };
 
 function mapAvatarRev(value: unknown): number | undefined {
   if (value == null || value === "") return undefined;
@@ -115,6 +102,9 @@ function mapUser(row: UserRow): AuthUser {
     if (!Number.isNaN(verified.getTime())) {
       user.emailVerified = true;
     }
+  }
+  if (isTruthyFlag(row.email_verify_required)) {
+    user.emailVerifyRequired = true;
   }
   const avatarRev = mapAvatarRev(row.avatar_rev);
   if (avatarRev) {
@@ -205,9 +195,13 @@ async function runAuthSchemaMigration(
       "email_verified_at",
       "email_verified_at TIMESTAMP NULL DEFAULT NULL AFTER email",
     );
+    await ensureUserColumn(
+      connection,
+      "email_verify_required",
+      "email_verify_required TINYINT(1) NOT NULL DEFAULT 0 AFTER email_verified_at",
+    );
     await ensureEmailUniqueIndex(connection);
     await connection.execute(SQL_CREATE_USER_AVATARS, []);
-    await seedDemoUsers(connection);
   } finally {
     connection.release();
   }
@@ -225,24 +219,6 @@ export async function ensureAuthSchema(
     });
   }
   await schemaReady;
-}
-
-async function seedDemoUsers(connection: SqlConnection): Promise<void> {
-  const rows = await connection.query<CountRow>(SQL_COUNT_USERS, []);
-  const count = rows[0]?.count ?? 0;
-  if (count > 0) {
-    return;
-  }
-
-  for (const account of DEMO_ACCOUNTS) {
-    await connection.execute(SQL_UPSERT_DEMO, [
-      account.id,
-      account.login,
-      hashPassword(account.password),
-      account.displayName,
-      account.role,
-    ]);
-  }
 }
 
 const SQL_LIST_STUDENTS = `
@@ -358,8 +334,8 @@ export async function markEmailVerified(
 
 const SQL_INSERT_USER = `
   INSERT INTO ${AUTH_USERS_TABLE}
-    (login, password_hash, display_name, role, email, email_verified_at)
-  VALUES (?, ?, ?, ?, ?, NULL)
+    (login, password_hash, display_name, role, email, email_verified_at, email_verify_required)
+  VALUES (?, ?, ?, ?, ?, NULL, ?)
 `;
 
 export type CreateUserInput = {
@@ -424,18 +400,21 @@ export async function insertUserOnConnection(
       typeof input.email === "string" && input.email.trim()
         ? input.email.trim().toLowerCase()
         : null;
+    const emailVerifyRequired = email ? 1 : 0;
     const result = await connection.execute(SQL_INSERT_USER, [
       input.login,
       input.passwordHash,
       input.displayName,
       input.role,
       email,
+      emailVerifyRequired,
     ]);
     return {
       id: result.insertId,
       login: input.login,
       displayName: input.displayName,
       role: input.role,
+      ...(email ? { email, emailVerifyRequired: true } : {}),
     };
   } catch (error) {
     mapDupOrThrow(error);
@@ -455,7 +434,19 @@ export async function createUserRecord(
   await ensureAuthSchema(deps);
   const connection = await deps.getConnection();
   try {
-    return await insertUserOnConnection(connection, input);
+    const user = await insertUserOnConnection(connection, input);
+    // autocommit is not guaranteed on shared hosting. The verify-token insert
+    // references this row (FK in 023_auth_tokens.sql) from another pooled
+    // connection, so the user must be durable before we release.
+    await connection.commit();
+    return user;
+  } catch (error) {
+    try {
+      await connection.rollback();
+    } catch {
+      // No open transaction, or the socket is already dead.
+    }
+    throw error;
   } finally {
     connection.release();
   }

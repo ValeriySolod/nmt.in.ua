@@ -1,8 +1,16 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { PUBLIC_PAGE_PATHS } from "@/constants/publicRoutes";
+import {
+  budgetCharges,
+  isPublicAsset,
+  isUncountedRequest,
+  takeCharges,
+  type BudgetBucket,
+} from "@/lib/requestBudget";
 import { clientIp, isBlockedPath } from "@/lib/security";
 import { absoluteSiteUrl } from "@/lib/siteOrigin";
+import type { SessionPayload } from "@/modules/auth/types";
 import {
   SESSION_COOKIE_NAME,
   verifySessionToken,
@@ -12,74 +20,10 @@ function redirectOnSite(path: string): NextResponse {
   return NextResponse.redirect(absoluteSiteUrl(path));
 }
 
-type Bucket = { count: number; resetAt: number };
-
-const buckets = new Map<string, Bucket>();
-
-const WINDOW_MS = 60_000;
-const LIMIT_PAGE = 90;
-const LIMIT_STATIC = 300;
-const LIMIT_OTHER = 60;
-const LIMIT_AUTH = 20;
-const MAX_BUCKETS = 5_000;
-
-function prune(now: number) {
-  if (buckets.size < MAX_BUCKETS) return;
-  for (const [key, bucket] of buckets) {
-    if (bucket.resetAt <= now) buckets.delete(key);
-  }
-  if (buckets.size < MAX_BUCKETS) return;
-  // Drop oldest half if still too large (memory guard on shared hosting).
-  const keys = [...buckets.keys()].slice(0, Math.floor(buckets.size / 2));
-  for (const key of keys) buckets.delete(key);
-}
-
-function take(key: string, limit: number, now: number): boolean {
-  prune(now);
-  const current = buckets.get(key);
-  if (!current || current.resetAt <= now) {
-    buckets.set(key, { count: 1, resetAt: now + WINDOW_MS });
-    return true;
-  }
-  if (current.count >= limit) return false;
-  current.count += 1;
-  return true;
-}
-
-function limitFor(pathname: string): number {
-  if (pathname.startsWith("/_next/static")) return LIMIT_STATIC;
-  if (pathname.startsWith("/_next")) return LIMIT_OTHER;
-  if (pathname.startsWith("/api/avatar")) return LIMIT_PAGE;
-  if (
-    pathname === "/api/payments/wayforpay/webhook" ||
-    pathname === "/api/payments/wayforpay/return"
-  ) {
-    return LIMIT_PAGE;
-  }
-  if (
-    pathname === "/login" ||
-    pathname === "/register" ||
-    pathname.startsWith("/login/") ||
-    pathname.startsWith("/register/") ||
-    pathname === "/verify-email" ||
-    pathname.startsWith("/verify-email/") ||
-    pathname === "/forgot-password" ||
-    pathname.startsWith("/forgot-password/") ||
-    pathname === "/reset-password" ||
-    pathname.startsWith("/reset-password/") ||
-    pathname.startsWith("/api/")
-  ) {
-    return LIMIT_AUTH;
-  }
-  return LIMIT_PAGE;
-}
-
-/** Files shipped in /public — images, fonts, manifest. Never behind the auth guard. */
-const PUBLIC_ASSET =
-  /\.(?:webp|avif|png|jpe?g|gif|svg|ico|woff2?|ttf|otf|css|js|map|json|txt|xml|webmanifest)$/i;
+const buckets = new Map<string, BudgetBucket>();
 
 function isPublicPath(pathname: string): boolean {
-  if (PUBLIC_ASSET.test(pathname)) return true;
+  if (isPublicAsset(pathname)) return true;
   // Includes `/t` so public teacher cards (`/t/{slug}`) skip the auth guard.
   return PUBLIC_PAGE_PATHS.some(
     (path) => pathname === path || pathname.startsWith(`${path}/`),
@@ -103,19 +47,27 @@ function requiresTeacherOrAdmin(pathname: string): boolean {
   return pathname === "/students" || pathname.startsWith("/students/");
 }
 
-async function authGuard(request: NextRequest): Promise<NextResponse | null> {
-  const { pathname } = request.nextUrl;
-
-  if (
+function skipsAuth(pathname: string): boolean {
+  return (
     isPublicPath(pathname) ||
     pathname.startsWith("/api/") ||
     pathname.startsWith("/_next")
-  ) {
-    return null;
-  }
+  );
+}
 
+async function readSession(request: NextRequest): Promise<SessionPayload | null> {
   const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
-  const session = token ? await verifySessionToken(token) : null;
+  if (!token) return null;
+  return verifySessionToken(token);
+}
+
+function authGuard(
+  request: NextRequest,
+  session: SessionPayload | null,
+): NextResponse | null {
+  const { pathname } = request.nextUrl;
+
+  if (skipsAuth(pathname)) return null;
 
   if (!session) {
     const loginUrl = new URL(absoluteSiteUrl("/login"));
@@ -151,30 +103,36 @@ export async function proxy(request: NextRequest) {
     });
   }
 
-  // Prefer X-Real-IP / CF / rightmost XFF — never leftmost client spoof.
+  // Chunks and public files skip the session read. A cabinet prefetch still
+  // needs it, because the auth guard runs on that path.
+  const uncounted = isUncountedRequest(request.method, pathname, request.headers);
+  const session =
+    uncounted && skipsAuth(pathname) ? null : await readSession(request);
   const ip = clientIp(request.headers);
-  const now = Date.now();
-  const limit = limitFor(pathname);
-  const kind =
-    limit === LIMIT_STATIC ? "static" : limit === LIMIT_AUTH ? "auth" : "app";
-  const key = `${ip}:${kind}`;
+  const verdict = takeCharges(
+    buckets,
+    budgetCharges({
+      method: request.method,
+      pathname,
+      headers: request.headers,
+      ip,
+      userId: session?.userId ?? null,
+    }),
+    Date.now(),
+  );
 
-  if (!take(key, limit, now)) {
-    const retryAfter = Math.max(
-      1,
-      Math.ceil(((buckets.get(key)?.resetAt ?? now + WINDOW_MS) - now) / 1000),
-    );
+  if (!verdict.ok) {
     return new NextResponse("Too Many Requests", {
       status: 429,
       headers: {
-        "Retry-After": String(retryAfter),
+        "Retry-After": String(verdict.retryAfterSec),
         "Cache-Control": "no-store",
         "X-Content-Type-Options": "nosniff",
       },
     });
   }
 
-  const authResponse = await authGuard(request);
+  const authResponse = authGuard(request, session);
   if (authResponse) return authResponse;
 
   const requestHeaders = new Headers(request.headers);
@@ -187,8 +145,8 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Apply to all paths except Next image optimizer internals we don't use heavily.
-     * Static assets still get a higher limit via limitFor().
+     * Apply to all paths except the image optimizer.
+     * Chunks, public files, and router prefetch do not spend the budget.
      */
     "/((?!_next/image).*)",
   ],

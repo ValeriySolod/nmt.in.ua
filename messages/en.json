@@ -46,7 +46,8 @@
       "consultations": "Teacher consultations",
       "homeAdmin": "Tasks by topic",
       "profiles": "Profiles",
-      "assign": "Assign topic test"
+      "assign": "Assign topic test",
+      "leaderboard": "Marathon leaderboard"
     }
   },
   "RecentResults": {
@@ -54,6 +55,11 @@
     "empty": "Results will appear after your first tests."
   },
   "AccountCabinet": {
+    "telegramConnect": "Connect Telegram",
+    "telegramLinked": "Telegram connected",
+    "telegramLoading": "Creating link...",
+    "telegramOpen": "Open Telegram to connect",
+    "telegramError": "Could not create a Telegram link. Try again.",
     "kicker": "Profile",
     "title": "Personal account",
     "lead": "Profile photo, public teacher card, password, results, and placeholders for achievements and study time.",
@@ -68,7 +74,6 @@
     "photoRemoveConfirm": "Remove the profile photo?",
     "photoRemoving": "Removing…",
     "photoRemoved": "Photo removed.",
-    "demoLockedPhoto": "The photo cannot be changed on a demo account.",
     "achievementsTitle": "Achievements",
     "achievementsLead": "Badges for tests and the simulator will appear in a later version.",
     "timeTitle": "Total study time",
@@ -82,10 +87,12 @@
     "savePassword": "Save password",
     "saving": "Saving…",
     "passwordSaved": "Password updated.",
-    "demoLocked": "The password cannot be changed on a demo account.",
     "logoutTitle": "Sign out",
     "logoutLead": "End the session on this device.",
     "logout": "Log out",
+    "confirmEmailTitle": "Confirm your email",
+    "confirmEmailLead": "{email} is not confirmed yet. You can resend the link — the account already works.",
+    "confirmEmailCta": "Resend the email",
     "joinInviteTitle": "Invite code",
     "joinInviteLead": "If a teacher sent you a code or a link, accept it here.",
     "joinInviteCta": "Enter code",
@@ -96,14 +103,12 @@
       "passwordMismatch": "Confirmation does not match the new password.",
       "samePassword": "The new password must differ from the current one.",
       "wrongCurrent": "The current password is incorrect.",
-      "demoAccount": "The password cannot be changed on a demo account.",
       "serverError": "Could not change the password. Try again."
     },
     "photoErrors": {
       "requiredFile": "Choose an image file.",
       "invalidType": "Use JPEG, PNG, or WebP.",
       "tooLarge": "The file is too large.",
-      "demoAccount": "The photo cannot be changed on a demo account.",
       "serverError": "Could not save the photo. Try again."
     }
   },
@@ -114,10 +119,36 @@
     "slugHint": "Latin letters, digits, and hyphens. 3–48 characters.",
     "headline": "Headline",
     "bio": "About",
+    "experience": "Experience",
+    "experienceHint": "For example: “12 years teaching mathematics”.",
+    "publications": "Academic work",
+    "publicationsHint": "A short list or links. Multiple lines are fine.",
     "city": "City",
     "subjects": "Subjects",
     "subjectsHint": "Comma-separated, up to 8 items.",
     "contactUrl": "Contact link",
+    "country": "Country",
+    "levels": "Student levels",
+    "levelsOptions": {
+      "grades_5_9": "Grades 5–9",
+      "grades_10_11": "Grades 10–11",
+      "nmt": "NMT",
+      "adult": "Adults"
+    },
+    "languages": "Teaching languages",
+    "languageOptions": {
+      "uk": "Ukrainian",
+      "en": "English",
+      "de": "German",
+      "pl": "Polish"
+    },
+    "phone": "Phone",
+    "lessonPrice": "Lesson price",
+    "currency": "Currency",
+    "lessonDuration": "Lesson duration (min)",
+    "joinMotivation": "Why do you want to join NMT?",
+    "joinMotivationHint": "Briefly tell us why you want to join the platform.",
+    "submitForModeration": "Submit for moderation",
     "isPublic": "Publish the card",
     "isPublicHint": "While unchecked, /t/… returns 404.",
     "save": "Save card",
@@ -132,6 +163,8 @@
       "slugTaken": "This address is already taken.",
       "headlineTooLong": "The headline is too long.",
       "bioTooLong": "The about text is too long.",
+      "experienceTooLong": "The experience line is too long.",
+      "publicationsTooLong": "The academic work list is too long.",
       "cityTooLong": "The city name is too long.",
       "invalidSubjects": "Too many subjects, or one item is too long.",
       "invalidContactUrl": "The link must start with http:// or https://.",
@@ -186,7 +219,9 @@
     "create": "Create student",
     "creating": "Creating…",
     "created": "Account for {name} was created.",
-    "credentialsOnce": "Copy these details now. The password disappears when you refresh, and no email is sent. The student can sign in immediately.",
+    "credentialsOnce": "Copy these details now. The password disappears when you refresh. The student can sign in immediately; the address is confirmed after they open the email.",
+    "mailSent": "A confirmation link was sent to {email}. It works for 24 hours.",
+    "mailFailed": "The account was created, but the email to {email} did not go out. The student can resend it from their account.",
     "copyCredentials": "Copy details",
     "groupOptional": "Group (optional)",
     "addTitle": "Add a student",
@@ -685,6 +720,36 @@
     "sessionsCta": "My sessions",
     "newTest": "Take it again"
   },
+  "MarathonLeaderboard": {
+    "kicker": "Marathon",
+    "title": "Marathon leaderboard",
+    "lead": "Rankings for the active marathon. Sorted by average % correct, then speed (sec/task).",
+    "leadTeacher": "Marathon rankings for monitoring. Your students are highlighted; you do not need to join.",
+    "leadAdmin": "Monitor the pilot marathon and participant rankings. Marathon admin tools will follow PM sign-off.",
+    "teacherRoster": "Your students in the marathon: {joined} of {total}.",
+    "teacherStudentsLink": "Open My students",
+    "adminMonitor": "Participants in the ranking: {count}.",
+    "noActiveMarathon": "No active marathon right now. The table will appear when a marathon is published.",
+    "joinTitle": "Join",
+    "joinLead": "After you join, only completed sessions that started after you joined and fall inside the marathon dates count.",
+    "joinCta": "Join the marathon",
+    "joinPending": "Joining…",
+    "yourRank": "Your place: {rank} of {total}",
+    "rules": "Only completed sessions with at least {min} tasks that started after you joined, and before the marathon ends, count.",
+    "empty": "No participants yet, or no completed sessions in the marathon period.",
+    "hint": "Daily portions and streaks will come later — this leaderboard stays tied to the marathon.",
+    "tableAria": "Marathon leaderboard table",
+    "colRank": "Rank",
+    "colName": "Participant",
+    "avgPercent": "Avg. %",
+    "speed": "sec/task",
+    "sessions": "Sessions",
+    "errors": {
+      "no_marathon": "No active marathon found.",
+      "forbidden": "This role cannot join.",
+      "generic": "Could not join. Please try again later."
+    }
+  },
   "TopicResultsTable": {
     "title": "Results by topic",
     "lead": "Progress by topic: attempts, average %, recent tests, speed, and self-assessment.",
@@ -697,6 +762,11 @@
     "selfScoreAria": "Self-assessment for «{theme}» from 1 to 5",
     "selfScoreError": "Could not save. Try again.",
     "emptyAttempts": "No completed attempts by topic yet.",
+    "swiperPosition": "Topic {current} of {total}",
+    "swiperPrev": "Previous",
+    "swiperNext": "Next",
+    "swiperHint": "Swipe left or right to browse other topics",
+    "swiperListAria": "Topic results cards",
     "hint": "Empty cells mean topics with no completed attempts. Set a 1–5 self-assessment in the rightmost column. Colors: green ≥70%, yellow 40–69%, red <40%.",
     "hintTeacher": "Attempts are all completed tests for the topic. Average % and speed use that history. Colors: green ≥70%, yellow 40–69%, red <40%."
   },
@@ -795,6 +865,10 @@
     "tableAriaExtended": "Expanded sessions table",
     "compactInfo": "Compact view",
     "extendedInfo": "Expanded view",
+    "swiperPosition": "Session {current} of {total}",
+    "swiperPrev": "Previous",
+    "swiperNext": "Next",
+    "swiperHint": "Swipe left or right to browse other sessions",
     "theme": "Topic",
     "difficulty": "Difficulty",
     "tasks": "Tasks",
@@ -844,6 +918,7 @@
       "sectionsAria": "Page sections",
       "features": "Features",
       "steps": "How it works",
+      "teachers": "Teachers",
       "faq": "FAQ",
       "login": "Log in",
       "register": "Create account",
@@ -854,9 +929,9 @@
       "titleStart": "Prepare for the NMT in maths —",
       "titleAccent": "systematically, with results",
       "lead": "An online workspace that shows your weak topics, trains you in exam format and gives a clear plan for the next steps. No scattered PDFs, no random tests.",
-      "ctaPrimary": "Start preparing",
-      "ctaSecondary": "I already have an account",
+      "diagnosticPrompt": "Not sure where to start? Check your level",
       "ctaDiagnostic": "Test your knowledge",
+      "diagnosticHint": "A short test, no sign-up needed. Find out your level and your strong and weak topics, and get recommendations for what to study next.",
       "note": "Sign up in a minute — no card, no payment",
       "imageAlt": "Illustration: a function graph, a progress ring and geometric shapes",
       "stats": {
@@ -886,6 +961,7 @@
       "kicker": "Features",
       "title": "Everything you need for regular practice in one place",
       "lead": "From your first topic test to a full exam simulation.",
+      "imageAlt": "A student surrounded by tossed notebooks and math textbooks",
       "items": {
         "topics": {
           "title": "Topic tests",
@@ -924,7 +1000,7 @@
         },
         "diagnose": {
           "title": "Take the diagnostic",
-          "text": "The first test shows your level and weak topics."
+          "text": "A short test, no sign-up needed, shows your level and weak topics."
         },
         "train": {
           "title": "Practise with a plan",
@@ -940,6 +1016,7 @@
       "kicker": "FAQ",
       "title": "The short answers",
       "lead": "What people ask most often before signing up.",
+      "imageAlt": "Thoughtful student preparing for an exam",
       "items": {
         "price": {
           "q": "How much does it cost?",
@@ -963,12 +1040,145 @@
         }
       }
     },
+    "teachers": {
+      "kicker": "Teachers",
+      "title": "Teachers on our platform",
+      "lead": "Public teacher cards — experience, bio and next available slot.",
+      "verified": "Verified tutor",
+      "city": "City",
+      "education": "Education",
+      "experience": "Experience",
+      "nextSlot": "Next available time",
+      "reviews": "(reviews: {count})",
+      "empty": "Teacher cards will appear here soon.",
+      "carouselAria": "Platform teachers carousel",
+      "prev": "Previous teacher",
+      "next": "Next teacher",
+      "counter": "{current} / {total}",
+      "demo": {
+        "initials": "MM",
+        "name": "Mykhailo Maksymov",
+        "subjects": "Web development · Entrepreneurship and startups",
+        "city": "Kharkiv",
+        "experience": "12 years of teaching",
+        "nextSlot": "—",
+        "headline": "Graduated from the Kharkiv Physics and Mathematics Lyceum and earned a specialist degree in economic cybernetics at Karazin University.",
+        "bio": "Taught “Fundamentals of Entrepreneurship”, “Entrepreneurship and Startups” and “E-governance” at the university’s School of Economics. In 2018 became head of the Scientific Society of students, postgraduates, doctoral students and young researchers at Karazin University. Since 2008 has run a business in IT education and information technology.",
+        "publications": "Sole author of six research papers and a participant in many international conferences. Contributed to the Kharkiv regional entrepreneurship support program for 2016–2020 and to the Kharkiv city development strategy. Coached young researchers in the Junior Academy of Sciences and prepared more than 15 winners of regional and national research competitions."
+      },
+      "offerTitle": "Offer for teachers",
+      "offerLead": "The platform gives you tools to attract students, guide their learning and show results.",
+      "joinCta": "Join the platform",
+      "features": {
+        "profile": {
+          "title": "Public profile",
+          "text": "A teacher page with experience, subjects and contacts for students and parents."
+        },
+        "students": {
+          "title": "Students and groups",
+          "text": "Add students, create groups and share invite codes."
+        },
+        "assign": {
+          "title": "Assign tests",
+          "text": "Set topics for several students at once — now or on a date."
+        },
+        "results": {
+          "title": "Results and sessions",
+          "text": "See class and per-student progress: averages, attempts, statuses."
+        },
+        "sessions": {
+          "title": "Learning sessions",
+          "text": "Student attempt history with filters, sorting and session statuses."
+        },
+        "consultations": {
+          "title": "Consultation requests",
+          "text": "Receive student requests and join them to you or into a group."
+        }
+      }
+    },
     "cta": {
       "title": "Start with your first topic today",
       "lead": "Create a student account in a minute and take the first test to see your real level.",
       "primary": "Create account",
       "secondary": "Log in",
       "note": "No payments, no card required"
+    },
+    "devTeam": {
+      "toggle": "More about the development team",
+      "collapse": "Hide the development team",
+      "kicker": "Team",
+      "title": "People who build the platform",
+      "lead": "Developers, designers and editors behind every test and every page",
+      "socialTelegram": "Telegram",
+      "carouselAria": "Development team carousel",
+      "servicesTitle": "Services the team provides",
+      "servicesLead": "We build and support products — from education platforms to business tools.",
+      "formCta": "Discuss a project",
+      "services": {
+        "product": {
+          "title": "Web product development",
+          "text": "Cabinets, platforms and internal tools — from idea to a working launch."
+        },
+        "support": {
+          "title": "Support and growth",
+          "text": "Post-release care: fixes, updates and improvements as load grows."
+        },
+        "design": {
+          "title": "UX/UI design",
+          "text": "Interfaces for the client’s task, prototypes and a coherent design system."
+        },
+        "mvp": {
+          "title": "MVPs and landings",
+          "text": "A fast start to validate an idea on the market without extra scope."
+        },
+        "integrations": {
+          "title": "Integrations",
+          "text": "Payments, email, CRM and connecting services through APIs."
+        }
+      },
+      "socialGithub": "GitHub",
+      "members": {
+        "mykhailo": {
+          "name": "Mykhailo Maksymov",
+          "role": "Project Lead"
+        },
+        "natalia": {
+          "name": "Nataliia",
+          "role": "Project Coordinator"
+        },
+        "oleksandr": {
+          "name": "Oleksandr Verba",
+          "role": "Fullstack Developer"
+        },
+        "anton": {
+          "name": "Anton",
+          "role": "Fullstack Developer"
+        },
+        "yuliana": {
+          "name": "Yuliana",
+          "role": "Fullstack Developer"
+        },
+        "valeriy": {
+          "name": "Valerii",
+          "role": "Fullstack Developer"
+        },
+        "adam": {
+          "name": "Adam Lekh",
+          "role": "Fullstack Developer"
+        },
+        "valentyn": {
+          "name": "Valentyn",
+          "role": "Fullstack Developer"
+        },
+        "romanna": {
+          "name": "Romanna Brych",
+          "role": "Fullstack Developer"
+        }
+      },
+      "agencyName": "JOJØ",
+      "agencyTaglineJoin": "Join.",
+      "agencyTaglineRest": "Journey to web workflow",
+      "agencyLogoAlt": "JOJØ logo"
     },
     "footer": {
       "tagline": "Online NMT maths preparation: topic tests, result analytics, an exam simulator and learning sessions with a teacher.",
@@ -989,11 +1199,6 @@
       "student": "Student",
       "teacher": "Teacher",
       "admin": "Admin"
-    },
-    "demoAccounts": {
-      "student": "tests, results, sessions",
-      "teacher": "assigning mentor sessions",
-      "admin": "content import and settings"
     },
     "errors": {
       "requiredFields": "Enter your login and password.",
@@ -1190,6 +1395,14 @@
       "generic": "Could not send feedback. Please try again later."
     }
   },
+  "Pagination": {
+    "pagerAria": "List pages",
+    "pagesAria": "Page numbers",
+    "prevPage": "Previous",
+    "nextPage": "Next",
+    "goToPage": "Page {page}",
+    "pageStatus": "Page {page} of {totalPages} · {total} total"
+  },
   "FeedbackAdmin": {
     "kicker": "Feedback",
     "title": "Site feedback",
@@ -1384,6 +1597,10 @@
     "chooseTheme": "Choose a topic:",
     "noThemes": "No topics in the bank yet.",
     "taskCount": "In this topic: {count} tasks",
+    "difficultyGuideLabel": "Difficulty level notes",
+    "difficultyGuideHint": "What each difficulty number means in this topic. Saved when the field loses focus.",
+    "difficultyGuideAria": "Difficulty notes for topic \"{name}\"",
+    "difficultyGuideSaved": "Saved.",
     "listTitle": "Topic tasks",
     "listLead": "Edit existing items or add new tests to the selected topic.",
     "create": "New task",
@@ -1394,11 +1611,21 @@
     "pageStatus": "Page {page} of {totalPages} · {total} tasks",
     "colDescription": "Task",
     "colDifficulty": "Difficulty",
+    "difficultyAria": "Difficulty of \"{name}\"",
     "colEdit": "Edit",
     "colDelete": "Delete",
     "editAria": "Edit \"{name}\"",
     "deleteAria": "Delete \"{name}\"",
     "deleteConfirm": "Delete task \"{name}\"?",
+    "deleteConfirmInUse": "Task \"{name}\" is already in student sessions. Delete it from the bank and from those sessions? Session scores will be recalculated.",
+    "selectAllAria": "Select all tasks on this page",
+    "selectAria": "Select \"{name}\"",
+    "deleteSelectedHint": "Select tasks on this page.",
+    "deleteSelected": "Delete selected ({count})",
+    "deleteSelectedConfirm": "Delete the selected tasks ({count})?",
+    "deleteSelectedConfirmInUse": "Some of the selected tasks ({count}) were already used in sessions. Delete them from the bank and from those sessions? Session scores will be recalculated.",
+    "deleting": "Deleting…",
+    "deletedMany": "Deleted tasks: {count}.",
     "createTitle": "New task",
     "createLead": "Enter the question, answer choices, and save — the task will appear in the topic bank.",
     "editTitle": "Edit task",
@@ -1445,7 +1672,6 @@
     "offline": "offline",
     "never": "never signed in",
     "bannedBadge": "banned",
-    "protectedBadge": "demo",
     "roleMeta": "Role: {role}",
     "lastLoginMeta": "Last login: {date}",
     "lastSeenMeta": "Last seen: {date}",
@@ -1471,7 +1697,6 @@
       "not_found": "User not found.",
       "forbidden": "Access denied.",
       "self_action": "You cannot ban or delete your own account.",
-      "protected_account": "Demo accounts are protected.",
       "last_admin": "You cannot ban or delete the last active admin.",
       "generic": "Could not complete the action. Try again."
     },
@@ -1502,7 +1727,11 @@
     "kicker": "Verification",
     "title": "Confirm your email",
     "pending": "Checking the link…",
-    "success": "Email confirmed. Opening your workspace…",
+    "success": "Email confirmed.",
+    "successLead": "You can open the workspace or sign in again.",
+    "goToCabinet": "Go to workspace",
+    "goToLogin": "Sign in",
+    "resendLead": "Send the email again — the new link replaces the previous one.",
     "resendLink": "Resend verification email",
     "backToLogin": "Back to sign in",
     "errors": {

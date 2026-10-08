@@ -58,35 +58,6 @@ test("setProfileBanned blocks self-action", async () => {
   );
 });
 
-test("setProfileBanned blocks demo accounts", async () => {
-  await assert.rejects(
-    () =>
-      setProfileBanned(
-        { actorUserId: 3, targetUserId: 1, banned: true },
-        {
-          getConnection: async () =>
-            mockConnection({
-              query: async () => [
-                {
-                  id: 1,
-                  login: "demo-student",
-                  display_name: "Олена",
-                  role: "student",
-                  is_banned: 0,
-                  last_login_at: null,
-                  last_seen_at: null,
-                  created_at: "2026-01-01T00:00:00.000Z",
-                },
-              ],
-            }),
-        },
-      ),
-    (error: unknown) =>
-      error instanceof AdminProfilesError &&
-      error.code === "protected_account",
-  );
-});
-
 test("setProfileBanned bans a regular student", async () => {
   const profile = await setProfileBanned(
     { actorUserId: 3, targetUserId: 10, banned: true },
