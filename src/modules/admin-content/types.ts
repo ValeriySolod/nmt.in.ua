@@ -4,7 +4,11 @@ export type AdminThemeOption = {
   name: string;
   ord: number;
   taskCount: number;
+  /** Plain-text legend of what each difficulty number means in this theme. */
+  difficultyGuide: string;
 };
+
+export const MAX_DIFFICULTY_GUIDE_LENGTH = 4000;
 
 export type AdminQuizTaskListItem = {
   id: number;
@@ -12,6 +16,8 @@ export type AdminQuizTaskListItem = {
   label: string;
   taskText: string;
   difficulty: number;
+  /** True when a topic session already references this task. */
+  inUse: boolean;
 };
 
 export const ADMIN_TASKS_PAGE_SIZE = 10;

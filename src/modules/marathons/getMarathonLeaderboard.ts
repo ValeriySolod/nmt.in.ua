@@ -1,10 +1,11 @@
 import "server-only";
 import type { SqlConnection } from "@/lib/db/mysql";
 import { SESSION_STATUS_COMPLETED } from "@/modules/sessions/types";
-import { ensureMarathonSchema } from "./schema";
+import { closeExpiredMarathons } from "./schema";
 import {
   aggregateSessions,
   compareStandings,
+  countsTowardMarathon,
   type SessionAggregateInput,
 } from "./scoring";
 import type {
@@ -17,6 +18,7 @@ type ParticipantRow = {
   user_id: number;
   display_name: string;
   login: string;
+  joined_at: number | string;
 };
 
 type SessionRow = {
@@ -24,6 +26,7 @@ type SessionRow = {
   tasks_number: number;
   right_number: number;
   time: number;
+  start_time: number;
 };
 
 async function loadDefaultConnection(): Promise<SqlConnection> {
@@ -38,16 +41,17 @@ function mapMarathon(row: MarathonRecord): MarathonRecord {
 export async function getActiveMarathon(
   getConnection: () => Promise<SqlConnection> = loadDefaultConnection,
 ): Promise<MarathonRecord | null> {
-  await ensureMarathonSchema(getConnection);
+  await closeExpiredMarathons(getConnection);
+  const now = Math.floor(Date.now() / 1000);
   const connection = await getConnection();
   try {
     const rows = await connection.query<MarathonRecord>(
       `SELECT id, slug, title, description, status, starts_at, ends_at, min_tasks_per_session
        FROM marathons
-       WHERE status = 'active'
+       WHERE status = 'active' AND starts_at <= ? AND ends_at > ?
        ORDER BY starts_at DESC
        LIMIT 1`,
-      [],
+      [now, now],
     );
     const row = rows[0];
     return row ? mapMarathon(row) : null;
@@ -69,7 +73,8 @@ export async function getMarathonLeaderboard(
 ): Promise<MarathonLeaderboardView | null> {
   const marathonSlug = options.marathonSlug;
   const rosterStudentIds = options.rosterStudentIds ?? new Set<number>();
-  await ensureMarathonSchema(getConnection);
+  await closeExpiredMarathons(getConnection);
+  const now = Math.floor(Date.now() / 1000);
   const connection = await getConnection();
   try {
     const marathonRows = await connection.query<MarathonRecord>(
@@ -77,14 +82,17 @@ export async function getMarathonLeaderboard(
         ? `SELECT id, slug, title, description, status, starts_at, ends_at, min_tasks_per_session
            FROM marathons WHERE slug = ? LIMIT 1`
         : `SELECT id, slug, title, description, status, starts_at, ends_at, min_tasks_per_session
-           FROM marathons WHERE status = 'active' ORDER BY starts_at DESC LIMIT 1`,
-      marathonSlug ? [marathonSlug] : [],
+           FROM marathons
+           WHERE status = 'active' AND starts_at <= ? AND ends_at > ?
+           ORDER BY starts_at DESC LIMIT 1`,
+      marathonSlug ? [marathonSlug] : [now, now],
     );
     const marathon = marathonRows[0];
     if (!marathon || marathon.status === "draft") return null;
 
     const participants = await connection.query<ParticipantRow>(
-      `SELECT mp.user_id, u.display_name, u.login
+      `SELECT mp.user_id, u.display_name, u.login,
+              UNIX_TIMESTAMP(mp.joined_at) AS joined_at
        FROM marathon_participants mp
        INNER JOIN app_users u ON u.id = mp.user_id
        WHERE mp.marathon_id = ?
@@ -109,7 +117,7 @@ export async function getMarathonLeaderboard(
 
     const placeholders = participantIds.map(() => "?").join(", ");
     const sessions = await connection.query<SessionRow>(
-      `SELECT user_id, tasks_number, right_number, time
+      `SELECT user_id, tasks_number, right_number, time, start_time
        FROM task_sessions
        WHERE user_id IN (${placeholders})
          AND session_status = ?
@@ -123,8 +131,27 @@ export async function getMarathonLeaderboard(
       ],
     );
 
+    const joinedAtByUser = new Map(
+      participants.map((participant) => [
+        participant.user_id,
+        Number(participant.joined_at),
+      ]),
+    );
     const sessionsByUser = new Map<number, SessionAggregateInput[]>();
     for (const session of sessions) {
+      const joinedAtUnix = joinedAtByUser.get(session.user_id);
+      if (
+        joinedAtUnix == null ||
+        !Number.isFinite(joinedAtUnix) ||
+        !countsTowardMarathon({
+          startTime: Number(session.start_time),
+          marathonStartsAt: Number(marathon.starts_at),
+          marathonEndsAt: Number(marathon.ends_at),
+          joinedAtUnix,
+        })
+      ) {
+        continue;
+      }
       const list = sessionsByUser.get(session.user_id) ?? [];
       list.push({
         tasksNumber: session.tasks_number,

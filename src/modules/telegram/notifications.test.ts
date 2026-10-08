@@ -2,6 +2,10 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { SqlConnection } from "@/lib/db/mysql";
 import { processTelegramTaskNotifications } from "./notifications";
+import {
+  isNotificationClaimable,
+  NOTIFICATION_SENDING_RETRY_SEC,
+} from "./notificationDelivery";
 import { sendTelegramMessage, type TelegramSendResult } from "./transport";
 import { resolveTaskReference } from "./taskReference";
 import { handleTelegramUpdate } from "./webhook";
@@ -203,6 +207,35 @@ test("notifications do not inherit the 50-task display limit", async () => {
   const db = database(Array.from({ length: 60 }, (_, i) => session(i + 1)));
   assert.equal((await processTelegramTaskNotifications(db.deps)).sent, 60);
   assert.equal(db.replies.length, 60);
+});
+
+test("a sending claim can be retried only after the cooldown", () => {
+  const attempted = 1_000;
+  assert.equal(isNotificationClaimable("ready", null, attempted), true);
+  assert.equal(
+    isNotificationClaimable(
+      "sending",
+      attempted,
+      attempted + NOTIFICATION_SENDING_RETRY_SEC - 1,
+    ),
+    false,
+  );
+  assert.equal(
+    isNotificationClaimable(
+      "sending",
+      attempted,
+      attempted + NOTIFICATION_SENDING_RETRY_SEC,
+    ),
+    true,
+  );
+  assert.equal(
+    isNotificationClaimable("delivered", attempted, attempted + NOTIFICATION_SENDING_RETRY_SEC),
+    false,
+  );
+  assert.equal(
+    isNotificationClaimable("sending", null, attempted + NOTIFICATION_SENDING_RETRY_SEC),
+    false,
+  );
 });
 
 test("unknown transport outcome and post-send database failure retain the claim to prevent duplicates", async () => {

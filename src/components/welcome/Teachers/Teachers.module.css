@@ -72,17 +72,13 @@
 
 .carousel {
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
   gap: var(--space-md);
   min-width: 0;
-  min-height: 0;
-  height: 100%;
 }
 
 .viewport {
   min-width: 0;
-  min-height: 0;
-  height: 100%;
   overflow: hidden;
   touch-action: pan-y;
   cursor: grab;
@@ -95,7 +91,7 @@
 
 .track {
   display: flex;
-  height: 100%;
+  align-items: stretch;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -106,7 +102,6 @@
   flex: none;
   width: 100%;
   min-width: 0;
-  height: 100%;
   pointer-events: none;
 }
 
@@ -119,9 +114,8 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   width: 100%;
-  height: 100%;
   min-width: 0;
-  min-height: 22rem;
+  min-height: 32rem;
   overflow: hidden;
   border: 1px solid var(--line-soft);
   border-radius: var(--radius-xl);
@@ -317,10 +311,6 @@
 
 .bioRest {
   color: var(--muted);
-  display: -webkit-box;
-  -webkit-line-clamp: 5;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
 .controls {
@@ -369,7 +359,6 @@
   gap: var(--space-sm);
   width: 100%;
   min-width: 0;
-  height: 100%;
   padding: var(--space-md);
   border: 1px solid var(--line-soft);
   border-radius: var(--radius-xl);
@@ -395,18 +384,21 @@
 }
 
 .offerList {
-  display: grid;
-  flex: 1;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: var(--space-xs);
   margin: 0;
   padding: 0;
   list-style: none;
-  align-content: start;
 }
 
 .offerCard {
   display: grid;
+  flex: 1 1 100%;
   gap: 4px;
+  max-width: 100%;
+  min-width: 0;
   padding: var(--space-sm);
   border: 1px solid var(--line-soft);
   border-radius: var(--radius-lg);
@@ -457,13 +449,12 @@
 
 @media (min-width: 768px) {
   .body {
-    grid-template-columns: minmax(0, 1.55fr) minmax(15rem, 0.8fr);
     gap: var(--space-lg);
   }
 
   .card {
     grid-template-columns: minmax(11rem, 0.38fr) minmax(0, 1fr);
-    min-height: 0;
+    min-height: 36rem;
   }
 
   .side {
@@ -481,12 +472,18 @@
     gap: var(--space-sm);
   }
 
-  .bioRest {
-    -webkit-line-clamp: 7;
-  }
-
   .offer {
     padding: var(--space-lg);
+  }
+
+  .offerCard {
+    flex-basis: calc((100% - var(--space-xs)) / 2);
+    max-width: calc((100% - var(--space-xs)) / 2);
+  }
+
+  .joinCta {
+    align-self: center;
+    width: calc((100% - var(--space-xs)) / 2);
   }
 }
 
@@ -507,8 +504,13 @@
     gap: var(--space-md);
   }
 
-  .bioRest {
-    -webkit-line-clamp: 8;
+  .offerCard {
+    flex-basis: calc((100% - 2 * var(--space-xs)) / 3);
+    max-width: calc((100% - 2 * var(--space-xs)) / 3);
+  }
+
+  .joinCta {
+    width: calc((100% - 2 * var(--space-xs)) / 3);
   }
 }
 
