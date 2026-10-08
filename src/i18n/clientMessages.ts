@@ -103,7 +103,9 @@ function isMarketingPath(pathname: string): boolean {
     pathname === "/diagnostic" ||
     pathname.startsWith("/diagnostic/") ||
     pathname === "/t" ||
-    pathname.startsWith("/t/")
+    pathname.startsWith("/t/") ||
+    /^\/marathon\/[^/]+$/.test(pathname) ||
+    /^\/marathon\/[^/]+\/join$/.test(pathname)
   );
 }
 

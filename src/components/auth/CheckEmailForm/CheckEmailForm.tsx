@@ -16,11 +16,13 @@ const INITIAL: ResendVerifyActionState = { status: "idle" };
 type CheckEmailFormProps = {
   email: string;
   mailFailed?: boolean;
+  nextPath?: string;
 };
 
 export function CheckEmailForm({
   email,
   mailFailed = false,
+  nextPath = "/",
 }: CheckEmailFormProps) {
   const t = useTranslations("CheckEmail");
   const [state, action, pending] = useActionState(
@@ -101,7 +103,7 @@ export function CheckEmailForm({
       ) : null}
 
       <p className={css.switch}>
-        <Link href="/login" className={css.switchLink}>
+        <Link href={`/login?next=${encodeURIComponent(nextPath)}`} className={css.switchLink}>
           {t("backToLogin")}
         </Link>
       </p>

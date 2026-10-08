@@ -54,6 +54,10 @@ export async function handleTelegramUpdate(
     referenceSecret?: string;
     getDetails?: typeof getTelegramTaskDetails;
     acknowledgeCallback?: (queryId: string) => Promise<void>;
+    consumeMarathon?: (
+      token: string,
+      identity: { userId: string; chatId: string; username?: string },
+    ) => Promise<boolean>;
   } = { consume: consumeTelegramLink },
 ): Promise<TelegramReply | null> {
   const callback = parseTaskCallback(update);
@@ -118,6 +122,26 @@ export async function handleTelegramUpdate(
   }
   const start = parseTelegramStart(update);
   if (!start) return null;
+  if (start.payload && start.payload.startsWith("mth_") && start.payload.length !== 43) {
+    try {
+      const consumeMarathon = deps.consumeMarathon
+        ?? (await import("@/modules/marathons/daily/botLink")).consumeMarathonStart;
+      const linked = await consumeMarathon(start.payload, {
+        userId: start.userId,
+        chatId: start.chatId,
+        username: start.username,
+      });
+      return {
+        chatId: start.chatId,
+        text: linked
+          ? "Бот марафону підключено. Нагадування про дні приходитимуть сюди."
+          : "Код марафону недійсний або його термін минув. Створіть новий у кабінеті марафону.",
+      };
+    } catch (error) {
+      (deps.logError ?? ((value) => console.error("marathon telegram link failed", value)))(error);
+      return { chatId: start.chatId, text: "Не вдалося підключити бота. Спробуйте пізніше." };
+    }
+  }
   if (!start.payload) {
     return { chatId: start.chatId, text: "Щоб підключити Telegram, почніть у своєму кабінеті на nmt.in.ua." };
   }
