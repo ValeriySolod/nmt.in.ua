@@ -1,0 +1,41 @@
+name: Telegram task notifications
+
+on:
+  schedule:
+    - cron: '2-57/5 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: telegram-task-notifications
+  cancel-in-progress: false
+
+jobs:
+  notify:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Process notifications
+        env:
+          TRIGGER_SECRET: ${{ secrets.TELEGRAM_NOTIFICATIONS_TRIGGER_SECRET }}
+        run: |
+          set -euo pipefail
+          if [ -z "${TRIGGER_SECRET//[[:space:]]/}" ]; then
+            echo "Missing notification trigger secret." >&2
+            exit 1
+          fi
+          curl --silent --show-error --fail \
+            --proto '=https' --connect-timeout 10 --max-time 240 \
+            --request POST \
+            --header "Authorization: Bearer ${TRIGGER_SECRET}" \
+            https://nmt.in.ua/api/telegram/notifications/process > "$RUNNER_TEMP/telegram-notifications.json"
+          node -e '
+            const fs = require("node:fs");
+            const counts = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+            const keys = ["sent", "skipped", "failed", "rejected", "uncertain"];
+            if (!keys.every(key => Number.isSafeInteger(counts[key]) && counts[key] >= 0)) process.exit(1);
+            console.log(Object.fromEntries(keys.map(key => [key, counts[key]])));
+            if (counts.failed || counts.rejected || counts.uncertain) process.exit(1);
+          ' "$RUNNER_TEMP/telegram-notifications.json"

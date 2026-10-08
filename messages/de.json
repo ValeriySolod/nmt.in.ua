@@ -74,7 +74,6 @@
     "photoRemoveConfirm": "Profilfoto entfernen?",
     "photoRemoving": "Wird entfernt…",
     "photoRemoved": "Foto entfernt.",
-    "demoLockedPhoto": "Auf dem Demo-Konto kann das Foto nicht geändert werden.",
     "achievementsTitle": "Erfolge",
     "achievementsLead": "Abzeichen für Tests und den Simulator erscheinen in einer späteren Version.",
     "timeTitle": "Gesamte Lernzeit",
@@ -88,7 +87,6 @@
     "savePassword": "Passwort speichern",
     "saving": "Wird gespeichert…",
     "passwordSaved": "Passwort aktualisiert.",
-    "demoLocked": "Auf dem Demo-Konto kann das Passwort nicht geändert werden.",
     "logoutTitle": "Abmelden",
     "logoutLead": "Die Sitzung auf diesem Gerät beenden.",
     "logout": "Abmelden",
@@ -105,14 +103,12 @@
       "passwordMismatch": "Die Bestätigung stimmt nicht mit dem neuen Passwort überein.",
       "samePassword": "Das neue Passwort muss sich vom aktuellen unterscheiden.",
       "wrongCurrent": "Das aktuelle Passwort ist falsch.",
-      "demoAccount": "Auf dem Demo-Konto kann das Passwort nicht geändert werden.",
       "serverError": "Das Passwort konnte nicht geändert werden. Bitte erneut versuchen."
     },
     "photoErrors": {
       "requiredFile": "Bitte eine Bilddatei wählen.",
       "invalidType": "JPEG, PNG oder WebP verwenden.",
       "tooLarge": "Die Datei ist zu groß.",
-      "demoAccount": "Auf dem Demo-Konto kann das Foto nicht geändert werden.",
       "serverError": "Das Foto konnte nicht gespeichert werden. Bitte erneut versuchen."
     }
   },
@@ -131,6 +127,28 @@
     "subjects": "Fächer",
     "subjectsHint": "Durch Kommas getrennt, bis zu 8 Einträge.",
     "contactUrl": "Kontaktlink",
+    "country": "Land",
+    "levels": "Schülergruppen",
+    "levelsOptions": {
+      "grades_5_9": "Klassen 5–9",
+      "grades_10_11": "Klassen 10–11",
+      "nmt": "NMT",
+      "adult": "Erwachsene"
+    },
+    "languages": "Unterrichtssprachen",
+    "languageOptions": {
+      "uk": "Ukrainisch",
+      "en": "Englisch",
+      "de": "Deutsch",
+      "pl": "Polnisch"
+    },
+    "phone": "Telefon",
+    "lessonPrice": "Preis pro Unterricht",
+    "currency": "Währung",
+    "lessonDuration": "Unterrichtsdauer (Min.)",
+    "joinMotivation": "Warum möchtest du NMT beitreten?",
+    "joinMotivationHint": "Erzähle kurz, warum du Teil der Plattform werden möchtest.",
+    "submitForModeration": "Zur Moderation senden",
     "isPublic": "Karte veröffentlichen",
     "isPublicHint": "Ohne Häkchen antwortet /t/… mit 404.",
     "save": "Karte speichern",
@@ -911,9 +929,9 @@
       "titleStart": "Vorbereitung auf die NMT in Mathematik —",
       "titleAccent": "systematisch und mit Ergebnis",
       "lead": "Ein Online-Bereich, der Ihre Schwachstellen zeigt, im Prüfungsformat trainiert und einen klaren Plan für die nächsten Schritte gibt. Ohne verstreute PDFs und zufällige Tests.",
-      "ctaPrimary": "Vorbereitung starten",
-      "ctaSecondary": "Ich habe ein Konto",
+      "diagnosticPrompt": "Du weißt nicht, wo du anfangen sollst? Prüfe dein Niveau",
       "ctaDiagnostic": "Teste dein Wissen",
+      "diagnosticHint": "Ein kurzer Test ohne Registrierung. Erfahre dein Niveau, deine starken und schwachen Themen und erhalte Empfehlungen für die weitere Vorbereitung.",
       "note": "Registrierung in einer Minute — ohne Karte und Zahlung",
       "imageAlt": "Illustration: Funktionsgraph, Fortschrittsdiagramm und geometrische Formen",
       "stats": {
@@ -982,7 +1000,7 @@
         },
         "diagnose": {
           "title": "Diagnose absolvieren",
-          "text": "Der erste Test zeigt Niveau und schwache Themen."
+          "text": "Ein kurzer Test ohne Registrierung zeigt Niveau und schwache Themen."
         },
         "train": {
           "title": "Nach Plan üben",
@@ -1027,6 +1045,7 @@
       "title": "Lehrkräfte unserer Plattform",
       "lead": "Öffentliche Lehrerkarten — Erfahrung, Beschreibung und nächster freier Termin.",
       "verified": "Geprüfte Lehrkraft",
+      "city": "Stadt",
       "education": "Ausbildung",
       "experience": "Erfahrung",
       "nextSlot": "Nächster freier Termin",
@@ -1036,38 +1055,20 @@
       "prev": "Vorherige Lehrkraft",
       "next": "Nächste Lehrkraft",
       "counter": "{current} / {total}",
+      "demo": {
+        "initials": "AK",
+        "name": "Anna Kowal",
+        "subjects": "Mathematik · NMT",
+        "city": "Kyjiw",
+        "experience": "8 Jahre NMT-Vorbereitung",
+        "nextSlot": "Mo, 16:00",
+        "headline": "Ich helfe Schüler:innen, Lücken zu schließen und sicher zur NMT zu kommen.",
+        "bio": "Ich arbeite mit den Klassen 10–11: Diagnose, Themenplan und regelmäßiges Prüfungstraining.",
+        "publications": "Lehrmaterialien zu Algebra und Geometrie für die Zertifizierungsvorbereitung."
+      },
       "offerTitle": "Angebot für Lehrkräfte",
       "offerLead": "Die Plattform gibt Werkzeuge, um Schüler:innen zu gewinnen, Lernen zu führen und Ergebnisse zu zeigen.",
       "joinCta": "Der Plattform beitreten",
-      "demo": {
-        "viktoriaK": {
-          "name": "Viktoriia Karakots",
-          "subject": "Mathematik",
-          "education": "Matej-Bel-Universität",
-          "experience": "mehr als 3 Jahre",
-          "nextSlot": "heute um 20:30",
-          "bioLead": "Ich unterrichte Mathematik. Finde leicht Kontakt zu Schüler:innen und erkläre ohne stures Auswendiglernen — ich zeige die Logik.",
-          "bioRest": "Über 4 Jahre Erfahrung mit Kindern. Im Unterricht: Schulthemen, typische NMT-Aufgaben und Angstfreiheit vor Fehlern. Tempo individuell angepasst."
-        },
-        "viktoriaP": {
-          "name": "Viktoriia Pohribna",
-          "subject": "Mathematik",
-          "education": "Nationale Universität Tscherkassy (B. Chmelnyzkyj)",
-          "experience": "mehr als 3 Jahre",
-          "nextSlot": "morgen um 11:00",
-          "bioLead": "Mathe-Tutorin mit 3 Jahren Erfahrung. Erkläre Komplexes einfach und helfe zu verstehen, nicht nur auswendig zu lernen.",
-          "bioRest": "Arbeit mit verschiedenen Altersgruppen — von Schulstoff bis NMT. Fokus auf Praxis, Fehleranalyse und sichere Antworten. Unterricht nach Niveau und Ziel."
-        },
-        "nazarii": {
-          "name": "Nazarii Ivakhiv",
-          "subject": "Mathematik",
-          "education": "Staatliche Pädagogische Universität Drohobytsch (I. Franko)",
-          "experience": "mehr als 10 Jahre",
-          "nextSlot": "Sonntag um 17:00",
-          "bioLead": "Mathe ohne Stress: spielerische Methoden und reale Beispiele. Fokus auf Logik und Problemlösen.",
-          "bioRest": "Über 10 Jahre Mathematikunterricht. Niveauangepasst, mit Assoziationen und Alltagsbeispielen. Schritt für Schritt zu mehr Sicherheit."
-        }
-      },
       "features": {
         "profile": {
           "title": "Öffentliches Profil",
@@ -1084,6 +1085,10 @@
         "results": {
           "title": "Ergebnisse und Sitzungen",
           "text": "Fortschritt der Klasse und einzelner Schüler:innen: Mittelwerte, Versuche, Status."
+        },
+        "sessions": {
+          "title": "Lernsitzungen",
+          "text": "Versuchsverlauf der Schüler:innen mit Filtern, Sortierung und Status."
         },
         "consultations": {
           "title": "Beratungsanfragen",
@@ -1104,34 +1109,11 @@
       "kicker": "Team",
       "title": "Menschen hinter der Plattform",
       "lead": "Entwickler:innen, Designer:innen und Redakteur:innen hinter jedem Test und jeder Seite",
-      "socialLinkedin": "LinkedIn",
       "socialTelegram": "Telegram",
       "carouselAria": "Karussell des Entwicklerteams",
       "servicesTitle": "Leistungen des Teams",
       "servicesLead": "Wir entwickeln und betreuen Produkte — von Bildungsplattformen bis zu Business-Tools.",
       "formCta": "Projekt besprechen",
-      "members": {
-        "olena": {
-          "name": "Olena Koval",
-          "role": "Projektleitung"
-        },
-        "ihor": {
-          "name": "Ihor Bondarenko",
-          "role": "Product Manager"
-        },
-        "dmytro": {
-          "name": "Dmytro Kravchuk",
-          "role": "UX/UI-Designer"
-        },
-        "pavlo": {
-          "name": "Pavlo Moroz",
-          "role": "Frontend-Entwickler"
-        },
-        "kateryna": {
-          "name": "Kateryna Lysenko",
-          "role": "Backend-Entwicklerin"
-        }
-      },
       "services": {
         "product": {
           "title": "Webprodukt-Entwicklung",
@@ -1153,7 +1135,50 @@
           "title": "Integrationen",
           "text": "Zahlungen, E-Mail, CRM und die Verbindung von Diensten über APIs."
         }
-      }
+      },
+      "socialGithub": "GitHub",
+      "members": {
+        "mykhailo": {
+          "name": "Mykhailo Maksymov",
+          "role": "Projektleiter"
+        },
+        "natalia": {
+          "name": "Nataliia",
+          "role": "Projektkoordinatorin"
+        },
+        "oleksandr": {
+          "name": "Oleksandr Verba",
+          "role": "Fullstack Developer"
+        },
+        "anton": {
+          "name": "Anton",
+          "role": "Fullstack Developer"
+        },
+        "yuliana": {
+          "name": "Yuliana",
+          "role": "Fullstack Developer"
+        },
+        "valeriy": {
+          "name": "Valerii",
+          "role": "Fullstack Developer"
+        },
+        "adam": {
+          "name": "Adam Lekh",
+          "role": "Fullstack Developer"
+        },
+        "valentyn": {
+          "name": "Valentyn",
+          "role": "Fullstack Developer"
+        },
+        "romanna": {
+          "name": "Romanna Brych",
+          "role": "Fullstack Developer"
+        }
+      },
+      "agencyName": "JOJØ",
+      "agencyTaglineJoin": "Join.",
+      "agencyTaglineRest": "Journey to web workflow",
+      "agencyLogoAlt": "Logo von JOJØ"
     },
     "footer": {
       "tagline": "Online-Vorbereitung auf die NMT in Mathematik: Themen-Tests, Ergebnisanalyse, Prüfungssimulator und Lernsitzungen mit einer Lehrkraft.",
@@ -1174,11 +1199,6 @@
       "student": "Schüler",
       "teacher": "Lehrkraft",
       "admin": "Admin"
-    },
-    "demoAccounts": {
-      "student": "Tests, Ergebnisse und Sitzungen",
-      "teacher": "Zuweisung von Mentor-Sitzungen",
-      "admin": "Content-Import und Einstellungen"
     },
     "errors": {
       "requiredFields": "Gib Login und Passwort ein.",
@@ -1638,7 +1658,6 @@
     "offline": "offline",
     "never": "noch nie angemeldet",
     "bannedBadge": "gesperrt",
-    "protectedBadge": "demo",
     "roleMeta": "Rolle: {role}",
     "lastLoginMeta": "Letzter Login: {date}",
     "lastSeenMeta": "Zuletzt aktiv: {date}",
@@ -1664,7 +1683,6 @@
       "not_found": "Benutzer nicht gefunden.",
       "forbidden": "Kein Zugriff.",
       "self_action": "Eigenes Konto kann nicht gesperrt oder gelöscht werden.",
-      "protected_account": "Demo-Konten sind geschützt.",
       "last_admin": "Der letzte aktive Admin kann nicht gesperrt oder gelöscht werden.",
       "generic": "Aktion fehlgeschlagen. Bitte erneut versuchen."
     },

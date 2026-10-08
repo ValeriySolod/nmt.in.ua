@@ -37,7 +37,6 @@ export type AdminProfilesErrorCode =
   | "not_found"
   | "forbidden"
   | "self_action"
-  | "protected_account"
   | "last_admin"
   | "db_error";
 

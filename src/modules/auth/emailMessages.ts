@@ -69,6 +69,39 @@ export async function sendEmailVerificationMail(input: {
   return { ok: result.ok };
 }
 
+/**
+ * Public signup (student or teacher) gets one automatic second try.
+ * The manual «Надіслати лист ще раз» button is that same second call;
+ * a dropped first Brevo request or a token insert that raced the new user
+ * used to stop there, and the letter only left after the person clicked.
+ */
+export async function sendRegistrationVerificationMail(
+  input: {
+    userId: number;
+    email: string;
+    displayName: string;
+    locale?: string;
+  },
+  deps: { send?: typeof sendEmailVerificationMail } = {},
+): Promise<{ ok: boolean }> {
+  const send = deps.send ?? sendEmailVerificationMail;
+  try {
+    const first = await send(input);
+    if (first.ok) return first;
+  } catch (error) {
+    console.error(
+      "sendRegistrationVerificationMail: first attempt failed",
+      error,
+    );
+  }
+  try {
+    return await send(input);
+  } catch (error) {
+    console.error("sendRegistrationVerificationMail: retry failed", error);
+    return { ok: false };
+  }
+}
+
 export async function sendPasswordResetMail(input: {
   userId: number;
   email: string;

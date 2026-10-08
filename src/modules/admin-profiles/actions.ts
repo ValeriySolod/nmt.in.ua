@@ -20,7 +20,6 @@ export type ProfileModerationErrorCode =
   | "not_found"
   | "forbidden"
   | "self_action"
-  | "protected_account"
   | "last_admin"
   | "generic";
 
@@ -37,7 +36,6 @@ function mapError(error: AdminProfilesError): ProfileModerationErrorCode {
     case "not_found":
     case "forbidden":
     case "self_action":
-    case "protected_account":
     case "last_admin":
       return error.code;
     default:
