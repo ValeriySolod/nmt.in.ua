@@ -96,5 +96,6 @@ export const ADMIN_NAV_HREFS = [
   "/materials/textbook",
   "/problems",
   "/feedback",
+  "/leaderboard",
   "/settings",
 ] as const;

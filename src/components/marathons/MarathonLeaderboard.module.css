@@ -1,0 +1,259 @@
+.root {
+  display: grid;
+  gap: var(--space-md);
+  min-width: 0;
+}
+
+.marathonMeta {
+  display: grid;
+  gap: var(--space-2xs);
+}
+
+.marathonTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-h3);
+  font-weight: 800;
+  color: var(--ink-deep);
+}
+
+.marathonDesc,
+.marathonRules {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--fs-small);
+  line-height: 1.45;
+}
+
+.joinPanel {
+  padding: var(--space-md);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  background: var(--grad-glass);
+  box-shadow: var(--shadow-sm);
+}
+
+.joinTitle {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--fs-h4);
+  font-weight: 800;
+}
+
+.joinForm {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.joinLead {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--fs-body);
+}
+
+.joinBtn {
+  justify-self: start;
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--grad-brand);
+  color: #fdfbf4;
+  font: inherit;
+  font-size: var(--fs-small);
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 22px rgb(17 83 42 / 24%);
+}
+
+.joinBtn:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.joinError {
+  margin: 0;
+  color: crimson;
+  font-size: var(--fs-small);
+  font-weight: 600;
+}
+
+.myRank {
+  margin: 0;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-lg);
+  background: var(--green-bg);
+  color: var(--green-dark);
+  font-weight: 700;
+}
+
+.monitorBanner {
+  margin: 0;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px dashed rgb(31 143 69 / 35%);
+  border-radius: var(--radius-lg);
+  background: var(--green-bg);
+  color: var(--green-dark);
+  font-size: var(--fs-small);
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.monitorLink {
+  color: var(--green-dark);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.cardRoster {
+  border-color: rgb(31 143 69 / 40%);
+}
+
+.rowRoster {
+  background: color-mix(in srgb, var(--green-bg) 30%, var(--surface));
+}
+
+.empty,
+.hint {
+  margin: 0;
+  color: var(--subtle);
+  font-size: var(--fs-small);
+}
+
+.cardList {
+  display: grid;
+  gap: var(--space-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tableWrap {
+  display: none;
+  overflow-x: auto;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.table th {
+  font-size: var(--fs-kicker);
+  font-weight: 800;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--surface) 82%, var(--green-bg));
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.rowSelf {
+  background: color-mix(in srgb, var(--green-bg) 45%, var(--surface));
+}
+
+.card {
+  display: grid;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  background: var(--grad-glass);
+  box-shadow: var(--shadow-sm);
+}
+
+.cardSelf {
+  border-color: rgb(31 143 69 / 45%);
+  box-shadow: var(--shadow-md);
+}
+
+.cardTop {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+}
+
+.rank {
+  font-size: var(--fs-h4);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--green-dark);
+}
+
+.name {
+  display: grid;
+  gap: 2px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.login {
+  color: var(--subtle);
+  font-size: var(--fs-small);
+  font-weight: 600;
+}
+
+.meta {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.meta div {
+  display: grid;
+  gap: 2px;
+}
+
+.meta dt {
+  color: var(--subtle);
+  font-size: var(--fs-kicker);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.meta dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+}
+
+.colRank {
+  width: 4rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.colName {
+  min-width: 10rem;
+}
+
+.colMetric {
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  .cardList {
+    display: none;
+  }
+
+  .tableWrap {
+    display: block;
+  }
+}

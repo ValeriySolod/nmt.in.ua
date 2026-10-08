@@ -1,12 +1,14 @@
 # nmt.in.ua — гід для нового розробника
 
+Локальну TG-007 інтеграцію перевірено 2026-10-06: Telegram API підтвердив повідомлення та кнопку «Деталі», MySQL зберіг `delivered`; другий запуск не створює дубля, сесія й завдання незмінні. Докази та обмеження — в [інтеграції Telegram](telegram-integration.md#завершена-локальна-перевірка-tg-007--2026-10-06).
+
 Як увійти в роботу за перший день, а не блукати тиждень.
 
 Короткий онбординг команди Goldener Rechner. Беклог для PM — [`Goldener-Rechner-beklog-PM.md`](./Goldener-Rechner-beklog-PM.md). Тут лише те, що треба, щоб написати перший PR і не зламати чужий модуль.
 
 Джерело правди — Markdown. Word/docx копій немає.
 
-Оновлено 28 вересня 2026.
+Оновлено 7 жовтня 2026.
 
 ---
 
@@ -395,6 +397,11 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 | Email verify + reset (Brevo) | `src/modules/auth`, `src/modules/mail`, `/verify-email` | Середня | ✅ 16.09: блок логіну до verify; forgot/reset; без ключа — log. 18.09: прод-листи з `SITE_URL` / `https://nmt.in.ua`, не localhost. Підтвердження через `GET /api/auth/verify-email` (cookie в RSC давала фейкову помилку). 29.09: відправка через Brevo (`BREVO_API_KEY`), не Resend. 06.10: перший лист реєстрації повторюється в тому ж запиті, якщо токен або Brevo впали; кнопка «Надіслати ще раз» лишається. AV на спільному PHP tmp ріже outbound усього акаунта — після чистки пересканувати панель |
 | A11y + Select + 404/error | `SkipLink`, `Select`, `StatusScene`, Motion | Мала | ✅ 17.09: skip-link, кастомні списки, status-сторінки |
 | Перф (TTFB / бандл) | `(app)`/`(marketing)` layouts, `catalogCache`, `sampleRandomIds` | — | ✅ 10.09: без `ORDER BY RAND()`, кеш довідників, cookie-профіль |
+| Пагінація `/results`, `/sessions` | `src/components/ui/Pagination`, `src/lib/pagination.ts` | Мала | ✅ 10.2026: 10/стор., URL `?page=`; лише ≥768px |
+| Мобільний свайпер сесій / результатів | `LearningSessionsTable`, `TopicResultsTable` | Мала | ✅ 10.2026: картки + свайп, без пагінації на телефоні |
+| Лідерборд марафону | `src/modules/marathons`, `/leaderboard` | Середня | ✅ v0 на гілці `leaderboard`: join + рейтинг з `task_sessions`. 8.4 (денні порції) — після PM |
+| 8.4 Марафон (повний) | `docs/leaderboard-proposal.md`, Trello 8.4 | — | ⏸️ чекає PM; лідерборд уже прив’язаний до `marathons` |
+| Досягнення | `/account` заглушки | Середня | Відкрито; після подій марафону |
 
 Карта app router: `src/app/page.tsx` — `/` (гість легкий / учень → CabinetHome); `src/app/(marketing)/` — welcome / login / register / diagnostic / `t/[slug]`; `src/app/(app)/` — кабінет (`force-dynamic`). Root layout лише `html`/`body` + `globals.css`. Неіснуючий публічний шлях на кшталт `/welcome/немає` дає кастомний 404; випадковий `/foo` без сесії — редірект на `/login` (auth-guard).
 
@@ -403,6 +410,8 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 Локально перевірити групи: `mysql … < scripts/sql/034_student_groups_invites.sql` (або відкрити `/students` — lazy `ensureTeacherStudentsSchema` створить таблиці). Зайди викладачем: створити групу, особистий і груповий код. Учнем: `/join/КОД` (гість спочатку потрапляє на логін, код у шляху зберігається). Другий груповий код замінює групу. На `/consultations` кнопка «Приєднати».
 
 ### Telegram Tasks API (TG-003)
+
+TG-005–TG-008 реалізовано: `/done`, деталі й підтвердження завершення, ledger сповіщень та захищений POST trigger із GitHub Actions schedule. Потрібні чинні схеми, міграція 037 і серверні `TELEGRAM_*` та `DB_*`. Невизначені доставки залишають `sending`; підтверджені відмови можуть повторюватися. Сповіщення не змінюють стан завдань. Локальні команди, live сценарії та обмеження rate limiting/аудиту — у [TG-010](telegram-integration.md#tg-010--перевірки-та-відомі-обмеження).
 
 Read-only сервіс `src/modules/telegram/tasks.ts` приймає Telegram identity, а не application userId. Прив'язка через `user_telegram_accounts` визначає власника; джерело даних — наявні таблиці сесій і завдань. DTO не містить правильних відповідей чи секретів. Міграція для TG-003 не потрібна. `TELEGRAM_*` залишаються опційними: без них сайт працює, але `/account` не генерує Telegram link. Webhook після ввімкнення: `https://nmt.in.ua/api/telegram/webhook`. Контракт і правила фільтрації — у [telegram-integration.md](./telegram-integration.md).
 
@@ -425,3 +434,7 @@ Read-only сервіс `src/modules/telegram/tasks.ts` приймає Telegram i
 4. Відкрий `/simulator` — це **інший** банк і `NmtTrainer` (`session_type` 4).
 5. Вийди, зайди як викладач: редірект на `/assign`. На `/students` додай або створи учня, признач тему «на зараз», на `/results` і `/sessions` обери «усі учні». На `/account` заповни візитку, відкрий `/t/{slug}` інкогніто.
 6. Зайди як адмін (`node scripts/promote-admin.mjs <login>`): `/` — список завдань теми, не тренажер. Глянь `/settings`, `/feedback`, `/profiles`. Не імпортуй випадковий файл у спільну базу без узгодження.
+
+## TG-008 — запуск сповіщень
+
+Реалізовано захищений POST trigger і GitHub Actions schedule кожні 5 хвилин + workflow_dispatch на main для основного хостингу ukraine.com.ua. Потрібен окремий TELEGRAM_NOTIFICATIONS_TRIGGER_SECRET у runtime та GitHub Secrets, міграція 037 і чинні налаштування Telegram. Порядок активації, зупинки й обмеження — у [Telegram integration](telegram-integration.md#tg-008--автоматичний-запуск-сповіщень). Production scheduler ще не запускався; TG-009 заплановано.

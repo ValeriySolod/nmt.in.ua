@@ -112,7 +112,7 @@ test("both task commands reject unlinked identities and safely report logged sto
 test("invalid task updates and unsupported commands never retrieve tasks", async () => {
   const db = database();
   const deps = { consume: async () => false, getTasks: (id: unknown) => getTelegramTaskSessions(id, db.deps), getTodayTasks: (id: unknown) => getTelegramTodayTaskSessions(id, db.deps) };
-  for (const invalid of [null, {}, update("/done"), update("/tasks 7"), update("/today", -1),
+  for (const invalid of [null, {}, update("/unknown"), update("/tasks 7"), update("/today", -1),
     { message: { ...update("/tasks").message, chat: { id: 123, type: "group" } } },
     { message: { ...update("/tasks").message, from: { id: 456 } } }]) {
     assert.equal(await handleTelegramUpdate(invalid, deps), null);

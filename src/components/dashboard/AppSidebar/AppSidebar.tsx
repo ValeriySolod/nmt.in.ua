@@ -35,6 +35,7 @@ const NAV_ICONS: Record<string, string> = {
   "/feedback": "★",
   "/settings": "⚙",
   "/consultations": "✉",
+  "/leaderboard": "▴",
 };
 
 const NAV_KEYS: Record<string, string> = {
@@ -50,6 +51,7 @@ const NAV_KEYS: Record<string, string> = {
   "/feedback": "feedback",
   "/settings": "settings",
   "/consultations": "consultations",
+  "/leaderboard": "leaderboard",
 };
 
 const ADMIN_NAV_SET = new Set<string>(ADMIN_NAV_HREFS);
