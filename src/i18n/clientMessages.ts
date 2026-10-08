@@ -27,6 +27,7 @@ export const CORE_CLIENT_NAMESPACES = [
   "FractionPractice",
   "Stage2",
   "TeacherProfile",
+  "TeacherPublicCard",
   // Soft-nav from other cabinet routes must already carry these namespaces —
   // `(app)` layout does not re-pick messages mid-chain.
   "Consultations",
