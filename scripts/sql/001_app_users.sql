@@ -19,6 +19,5 @@ CREATE TABLE IF NOT EXISTS app_users (
   UNIQUE KEY uq_app_users_email (email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Demo accounts (password for all: demo123) are seeded by ensureAuthSchema() in the app.
--- IDs 1–3 align with task_sessions.user_id used in existing data.
--- Public registration inserts new rows with role='student' (auto-increment id >= 4).
+-- Public registration inserts new rows with role='student'.
+-- Promote an admin manually: node scripts/promote-admin.mjs <login>

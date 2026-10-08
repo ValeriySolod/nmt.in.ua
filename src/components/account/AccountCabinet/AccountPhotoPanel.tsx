@@ -21,10 +21,9 @@ const INITIAL: UploadAvatarActionState = { status: "idle" };
 
 type AccountPhotoPanelProps = {
   user: AuthUser;
-  demoLocked: boolean;
 };
 
-export function AccountPhotoPanel({ user, demoLocked }: AccountPhotoPanelProps) {
+export function AccountPhotoPanel({ user }: AccountPhotoPanelProps) {
   const t = useTranslations("AccountCabinet");
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -111,12 +110,6 @@ export function AccountPhotoPanel({ user, demoLocked }: AccountPhotoPanelProps) 
         <p className={css.panelLead}>{t("photoLead")}</p>
       </div>
 
-      {demoLocked ? (
-        <p className={clsx(css.alert, css.alertHint)} role="status">
-          {t("demoLockedPhoto")}
-        </p>
-      ) : null}
-
       {errorState ? (
         <p className={clsx(css.alert, css.alertError)} role="alert">
           {t(`photoErrors.${errorState.code}`)}
@@ -162,7 +155,7 @@ export function AccountPhotoPanel({ user, demoLocked }: AccountPhotoPanelProps) 
                 name="avatar"
                 accept={AVATAR_ACCEPT}
                 required
-                disabled={demoLocked || pending}
+                disabled={pending}
                 onChange={onPick}
               />
               <span className={css.hint}>{t("photoHint", { maxKb })}</span>
@@ -170,7 +163,7 @@ export function AccountPhotoPanel({ user, demoLocked }: AccountPhotoPanelProps) 
             <button
               type="submit"
               className={css.submit}
-              disabled={demoLocked || pending}
+              disabled={pending}
             >
               {uploadPending ? t("photoSaving") : t("photoSave")}
             </button>
@@ -188,7 +181,7 @@ export function AccountPhotoPanel({ user, demoLocked }: AccountPhotoPanelProps) 
               <button
                 type="submit"
                 className={css.logout}
-                disabled={demoLocked || pending}
+                disabled={pending}
               >
                 {removePending ? t("photoRemoving") : t("photoRemove")}
               </button>

@@ -26,7 +26,6 @@ const INITIAL: ChangePasswordActionState = { status: "idle" };
 type AccountCabinetProps = {
   user: AuthUser;
   recentResults: RecentResultItem[];
-  demoLocked: boolean;
   teacherProfile?: TeacherProfile | null;
   telegramLinked: boolean;
 };
@@ -34,7 +33,6 @@ type AccountCabinetProps = {
 export function AccountCabinet({
   user,
   recentResults,
-  demoLocked,
   teacherProfile = null,
   telegramLinked,
 }: AccountCabinetProps) {
@@ -48,7 +46,7 @@ export function AccountCabinet({
 
   return (
     <div className={css.layout}>
-      {user.email && !user.emailVerified && !demoLocked ? (
+      {user.email && !user.emailVerified ? (
         <section className={css.panel} aria-labelledby="account-confirm-email-title">
           <h2 id="account-confirm-email-title" className={css.panelTitle}>
             {t("confirmEmailTitle")}
@@ -77,7 +75,7 @@ export function AccountCabinet({
         </div>
       </section>
 
-      <AccountPhotoPanel user={user} demoLocked={demoLocked} />
+      <AccountPhotoPanel user={user} />
       <TelegramLinkControl linked={telegramLinked} />
 
       {user.role === "student" ? (
@@ -133,12 +131,6 @@ export function AccountCabinet({
           <p className={css.panelLead}>{t("passwordLead")}</p>
         </div>
 
-        {demoLocked ? (
-          <p className={clsx(css.alert, css.alertHint)} role="status">
-            {t("demoLocked")}
-          </p>
-        ) : null}
-
         {state.status === "error" ? (
           <p className={clsx(css.alert, css.alertError)} role="alert">
             {t(`errors.${state.code}`)}
@@ -161,7 +153,7 @@ export function AccountCabinet({
               autoComplete="current-password"
               required
               maxLength={PASSWORD_MAX_LEN}
-              disabled={demoLocked || pending}
+              disabled={pending}
             />
           </label>
           <label className={css.field}>
@@ -174,7 +166,7 @@ export function AccountCabinet({
               required
               minLength={PASSWORD_MIN_LEN}
               maxLength={PASSWORD_MAX_LEN}
-              disabled={demoLocked || pending}
+              disabled={pending}
             />
             <span className={css.hint}>
               {t("passwordHint", { min: PASSWORD_MIN_LEN })}
@@ -190,14 +182,10 @@ export function AccountCabinet({
               required
               minLength={PASSWORD_MIN_LEN}
               maxLength={PASSWORD_MAX_LEN}
-              disabled={demoLocked || pending}
+              disabled={pending}
             />
           </label>
-          <button
-            type="submit"
-            className={css.submit}
-            disabled={demoLocked || pending}
-          >
+          <button type="submit" className={css.submit} disabled={pending}>
             {pending ? t("saving") : t("savePassword")}
           </button>
         </form>

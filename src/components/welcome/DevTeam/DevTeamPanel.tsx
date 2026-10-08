@@ -7,13 +7,14 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
-import type { DevSocialLink } from "./demoMembers";
+import type { DevSocialLink } from "./teamMembers";
 import css from "./DevTeam.module.css";
 
 export type DevTeamMemberCard = {
   id: string;
   name: string;
   role: string;
+  photoSrc?: string;
   socials: DevSocialLink[];
 };
 
@@ -29,9 +30,13 @@ export type DevTeamPanelLabels = {
   kicker: string;
   title: string;
   lead: string;
-  socialLinkedin: string;
+  socialGithub: string;
   socialTelegram: string;
   carouselAria: string;
+  agencyName: string;
+  agencyTaglineJoin: string;
+  agencyTaglineRest: string;
+  agencyLogoAlt: string;
   servicesTitle: string;
   servicesLead: string;
   formCta: string;
@@ -45,7 +50,13 @@ export type DevTeamPanelProps = {
 
 const AUTO_SPEED_PX_PER_SEC = 36;
 
-function PseudoPhoto({ name }: { name: string }) {
+function MemberPhoto({
+  name,
+  photoSrc,
+}: {
+  name: string;
+  photoSrc?: string;
+}) {
   const initials = name
     .split(/\s+/)
     .filter(Boolean)
@@ -55,7 +66,12 @@ function PseudoPhoto({ name }: { name: string }) {
 
   return (
     <div className={css.photo} aria-hidden>
-      <span className={css.photoInitials}>{initials || "∑"}</span>
+      {photoSrc ? (
+        // eslint-disable-next-line @next/next/no-img-element -- static public portrait
+        <img className={css.photoImg} src={photoSrc} alt="" draggable={false} />
+      ) : (
+        <span className={css.photoInitials}>{initials || "∑"}</span>
+      )}
     </div>
   );
 }
@@ -63,7 +79,7 @@ function PseudoPhoto({ name }: { name: string }) {
 function SocialIcon({ id }: { id: DevSocialLink["id"] }) {
   if (id === "telegram") {
     return (
-      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden>
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden>
         <path
           fill="currentColor"
           d="M21.5 4.3 3.7 11.2c-1.2.5-1.2 1.1-.2 1.4l4.6 1.4 1.8 5.4c.2.7.4.9 1 .9.6 0 .9-.3 1.2-.6l2.7-2.6 4.6 3.4c.8.5 1.4.2 1.6-.8L23 5.5c.3-1.2-.4-1.7-1.5-1.2Zm-3.2 2.6-9.4 8.5-.4 3.1-1.9-5.9 11.7-5.7Z"
@@ -73,10 +89,10 @@ function SocialIcon({ id }: { id: DevSocialLink["id"] }) {
   }
 
   return (
-    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden>
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden>
       <path
         fill="currentColor"
-        d="M6.5 9H3.7v11.3h2.8V9Zm-.1-3.9c-.9 0-1.6.7-1.6 1.6S5.5 8.3 6.4 8.3s1.6-.7 1.6-1.6-.7-1.6-1.6-1.6ZM20.3 14.2c0-3.1-1.7-5.2-4.4-5.2-2 0-2.9 1.1-3.4 1.9V9H9.7c0 .9 0 11.3 0 11.3h2.8v-6.3c0-.3 0-.7.1-1 .3-.7.9-1.5 2-1.5 1.4 0 2 1.1 2 2.6v6.2h2.8v-6.4Z"
+        d="M12 2.1c-5.5 0-9.9 4.4-9.9 9.9 0 4.4 2.8 8.1 6.8 9.4.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.2-3.4-1.2-.4-1.1-1.1-1.4-1.1-1.4-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.3 1.1 2.9.8.1-.6.3-1.1.6-1.3-2.2-.2-4.5-1.1-4.5-4.9 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.8 1 .8-.2 1.6-.3 2.5-.3s1.7.1 2.5.3c1.9-1.3 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.8-2.3 4.6-4.5 4.9.4.3.7.9.7 1.8v2.7c0 .3.2.6.7.5 4-1.3 6.8-5 6.8-9.4 0-5.5-4.4-9.9-9.9-9.9Z"
       />
     </svg>
   );
@@ -93,7 +109,7 @@ function MemberCard({
 }) {
   return (
     <article className={css.card} aria-labelledby={titleId}>
-      <PseudoPhoto name={member.name} />
+      <MemberPhoto name={member.name} photoSrc={member.photoSrc} />
       <div className={css.cardBody}>
         <h3 id={titleId} className={css.name}>
           {member.name}
@@ -106,14 +122,13 @@ function MemberCard({
                 <a
                   className={css.socialLink}
                   href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   aria-label={
                     social.id === "telegram"
                       ? labels.socialTelegram
-                      : labels.socialLinkedin
+                      : labels.socialGithub
                   }
-                  onClick={(event) => {
-                    if (social.href === "#") event.preventDefault();
-                  }}
                 >
                   <SocialIcon id={social.id} />
                 </a>
@@ -339,11 +354,35 @@ export function DevTeamPanel({ members, services, labels }: DevTeamPanelProps) {
 
           <div className={css.body}>
             {members.length > 0 ? (
-              <DevTeamMarquee
-                members={members}
-                labels={labels}
-                panelId={panelId}
-              />
+              <div className={css.teamStack}>
+                <DevTeamMarquee
+                  members={members}
+                  labels={labels}
+                  panelId={panelId}
+                />
+                <div className={css.agency} aria-label={labels.agencyName}>
+                  {/* eslint-disable-next-line @next/next/no-img-element -- static brand mark */}
+                  <img
+                    className={css.agencyLogo}
+                    src="/landing/jojo-logo.webp?v=3"
+                    alt={labels.agencyLogoAlt}
+                    width={72}
+                    height={72}
+                    draggable={false}
+                  />
+                  <div className={css.agencyCopy}>
+                    <p className={css.agencyName}>{labels.agencyName}</p>
+                    <p className={css.agencyTagline}>
+                      <span className={css.agencyJoin}>
+                        {labels.agencyTaglineJoin}
+                      </span>{" "}
+                      <span className={css.agencyJourney}>
+                        {labels.agencyTaglineRest}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </div>
             ) : null}
 
             <aside

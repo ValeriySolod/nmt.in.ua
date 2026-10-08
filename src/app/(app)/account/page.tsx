@@ -2,7 +2,6 @@ import { getTranslations } from "next-intl/server";
 import { AccountCabinet } from "@/components/account/AccountCabinet";
 import { PageFrame } from "@/components/dashboard/PageFrame";
 import { createPageMetadata } from "@/constants/seo";
-import { isDemoAccountLogin } from "@/modules/auth/demoLogin";
 import { requireUser } from "@/modules/auth/getCurrentUser";
 import { getTelegramLinkStatus } from "@/modules/telegram/link";
 import { getRecentResults } from "@/modules/results/getRecentResults";
@@ -56,7 +55,6 @@ export default async function AccountPage() {
       <AccountCabinet
         user={user}
         recentResults={recentResults}
-        demoLocked={isDemoAccountLogin(user.login)}
         teacherProfile={teacherProfile}
         telegramLinked={telegramLinked}
       />

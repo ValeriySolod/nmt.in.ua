@@ -7,7 +7,6 @@
     "build": "next build --webpack",
     "start": "node server.js",
     "lint": "eslint",
-    "reset-demo-student": "node scripts/reset-demo-student.mjs",
     "test": "node --require ./test/stub-server-only.cjs --import tsx --test \"src/**/*.test.ts\" \"lib/**/*.test.js\""
   },
   "dependencies": {

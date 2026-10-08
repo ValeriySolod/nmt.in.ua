@@ -152,5 +152,5 @@ proxy_set_header X-Forwarded-For $remote_addr;
 
 - https://nmt.in.ua відповідає 200
 - `/welcome` вантажить hero
-- вхід `demo-student` / звичайний учень і реєстрація
+- вхід звичайного учня і реєстрація
 - `/wp-admin` і `/.env` — 404

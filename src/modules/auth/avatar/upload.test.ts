@@ -55,34 +55,6 @@ function makeConnection(options: {
   return connection;
 }
 
-test("uploadAvatar rejects demo accounts without touching the database", async () => {
-  let touched = false;
-  const connection = makeConnection({
-    onUpsert: () => {
-      touched = true;
-    },
-  });
-
-  await assert.rejects(
-    () =>
-      uploadAvatar(
-        {
-          user: {
-            id: 1,
-            login: "demo-student",
-            displayName: "Олена Коваленко",
-            role: "student",
-          },
-          file: jpegFile(),
-        },
-        { getConnection: async () => connection },
-      ),
-    (error: unknown) =>
-      error instanceof UploadAvatarError && error.code === "demoAccount",
-  );
-  assert.equal(touched, false);
-});
-
 test("uploadAvatar rejects a missing file", async () => {
   const connection = makeConnection({});
   await assert.rejects(
@@ -166,29 +138,4 @@ test("removeAvatar deletes the row for a real account", async () => {
 
   await removeAvatar(student, { getConnection: async () => connection });
   assert.deepEqual(deletes, [[42]]);
-});
-
-test("removeAvatar rejects demo accounts", async () => {
-  let deleted = false;
-  const connection = makeConnection({
-    onDelete: () => {
-      deleted = true;
-    },
-  });
-
-  await assert.rejects(
-    () =>
-      removeAvatar(
-        {
-          id: 1,
-          login: "demo-student",
-          displayName: "Олена Коваленко",
-          role: "student",
-        },
-        { getConnection: async () => connection },
-      ),
-    (error: unknown) =>
-      error instanceof UploadAvatarError && error.code === "demoAccount",
-  );
-  assert.equal(deleted, false);
 });
