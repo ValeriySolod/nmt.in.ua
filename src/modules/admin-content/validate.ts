@@ -150,3 +150,15 @@ export function parseTaskId(raw: unknown): number {
   }
   return taskId;
 }
+
+/** Ids from one list page. Duplicates collapse; an empty or oversized set is rejected. */
+export function parseTaskIds(raw: unknown[], max: number): number[] {
+  if (!Number.isInteger(max) || max < 1 || raw.length === 0 || raw.length > max) {
+    throw new AdminContentError("Invalid taskId.", "invalid_input");
+  }
+  const ids = [...new Set(raw.map((value) => parseTaskId(value)))];
+  if (ids.length === 0 || ids.length > max) {
+    throw new AdminContentError("Invalid taskId.", "invalid_input");
+  }
+  return ids;
+}

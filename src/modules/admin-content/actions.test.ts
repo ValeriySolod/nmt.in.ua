@@ -3,7 +3,9 @@ import test from "node:test";
 
 import {
   deleteQuizTaskAction,
+  deleteQuizTasksAction,
   saveQuizTaskAction,
+  updateThemeDifficultyGuideAction,
 } from "./actions";
 import { AdminContentError } from "./types";
 
@@ -154,4 +156,50 @@ test("deleteQuizTaskAction maps in_use", async () => {
     },
   );
   assert.deepEqual(state, { status: "error", code: "in_use" });
+});
+
+test("deleteQuizTasksAction deletes the posted ids and reports the count", async () => {
+  const data = new FormData();
+  data.append("taskId", "10");
+  data.append("taskId", "11");
+  let received: number[] = [];
+  const state = await deleteQuizTasksAction({ status: "idle" }, data, {
+    requireUser: async () => admin,
+    deleteQuizTasks: async (ids) => {
+      received = ids;
+      return ids.length;
+    },
+    revalidatePath: () => undefined,
+    invalidateCatalogCache: () => undefined,
+  });
+  assert.deepEqual(received, [10, 11]);
+  assert.deepEqual(state, { status: "success", count: 2 });
+});
+
+test("updateThemeDifficultyGuideAction stores the legend for the theme", async () => {
+  let received: { themeId: number; guide: string } | null = null;
+  const state = await updateThemeDifficultyGuideAction(2, "1. Додавання.", {
+    requireUser: async () => admin,
+    updateThemeDifficultyGuide: async (themeId, guide) => {
+      received = { themeId, guide };
+    },
+    revalidatePath: () => undefined,
+    invalidateCatalogCache: () => undefined,
+  });
+  assert.deepEqual(received, { themeId: 2, guide: "1. Додавання." });
+  assert.deepEqual(state, { status: "success" });
+});
+
+test("deleteQuizTasksAction rejects an empty selection", async () => {
+  const state = await deleteQuizTasksAction(
+    { status: "idle" },
+    new FormData(),
+    {
+      requireUser: async () => admin,
+      deleteQuizTasks: async () => 0,
+      revalidatePath: () => undefined,
+      invalidateCatalogCache: () => undefined,
+    },
+  );
+  assert.deepEqual(state, { status: "error", code: "invalid_input" });
 });

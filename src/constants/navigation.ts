@@ -86,6 +86,13 @@ export const DASHBOARD_NAV: NavItem[] = [
       "Запит на консультацію: учень надсилає заявку, викладачі бачать її в кабінеті.",
     status: "ready",
   },
+  {
+    href: "/leaderboard",
+    label: "Лідерборд марафону",
+    description:
+      "Рейтинг учасників марафону: середній % правильних відповідей і швидкість.",
+    status: "ready",
+  },
 ];
 
 export function getNavItem(href: string): NavItem {

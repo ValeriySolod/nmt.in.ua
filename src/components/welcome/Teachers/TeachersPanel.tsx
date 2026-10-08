@@ -6,7 +6,6 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useReducedMotion } from "motion/react";
 import css from "./Teachers.module.css";
@@ -17,9 +16,11 @@ export type TeacherOfferItem = {
   text: string;
 };
 
-export type DemoTeacherCard = {
+export type LandingTeacherCard = {
   id: string;
-  photoSrc: string;
+  /** Absolute/public avatar URL when the teacher uploaded a photo. */
+  photoSrc: string | null;
+  initials: string;
   name: string;
   subject: string;
   education: string;
@@ -51,7 +52,7 @@ export type TeachersPanelLabels = {
 };
 
 export type TeachersPanelProps = {
-  teachers: DemoTeacherCard[];
+  teachers: LandingTeacherCard[];
   features: TeacherOfferItem[];
   labels: TeachersPanelLabels;
 };
@@ -93,7 +94,7 @@ function TeacherCard({
   labels,
   titleId,
 }: {
-  teacher: DemoTeacherCard;
+  teacher: LandingTeacherCard;
   labels: TeachersPanelLabels;
   titleId?: string;
 }) {
@@ -106,14 +107,19 @@ function TeacherCard({
     <article className={css.card} aria-labelledby={titleId}>
       <div className={css.side}>
         <div className={css.photoWrap}>
-          <Image
-            className={css.photo}
-            src={teacher.photoSrc}
-            alt=""
-            fill
-            sizes="(min-width: 1240px) 280px, (min-width: 768px) 240px, 42vw"
-            draggable={false}
-          />
+          {teacher.photoSrc ? (
+            // eslint-disable-next-line @next/next/no-img-element -- per-user API blob, not a static asset
+            <img
+              className={css.photo}
+              src={teacher.photoSrc}
+              alt=""
+              draggable={false}
+            />
+          ) : (
+            <span className={css.photoFallback} aria-hidden>
+              {teacher.initials}
+            </span>
+          )}
         </div>
         <p className={css.verified}>{labels.verified}</p>
         <div className={css.sideMeta}>
@@ -123,13 +129,21 @@ function TeacherCard({
             </h3>
             <VerifiedShield />
           </div>
-          <p className={css.rating}>
-            <span className={css.star} aria-hidden>
-              <StarIcon />
-            </span>
-            <span className={css.ratingValue}>{teacher.rating.toFixed(1)}</span>
-            <span className={css.reviews}>{reviews}</span>
-          </p>
+          {teacher.rating > 0 ? (
+            <p className={css.rating}>
+              <span className={css.star} aria-hidden>
+                <StarIcon />
+              </span>
+              <span className={css.ratingValue}>
+                {teacher.rating.toFixed(1)}
+              </span>
+              <span className={css.reviews}>{reviews}</span>
+            </p>
+          ) : teacher.reviewCount > 0 ? (
+            <p className={css.rating}>
+              <span className={css.reviews}>{reviews}</span>
+            </p>
+          ) : null}
         </div>
       </div>
 
@@ -163,7 +177,7 @@ function TeachersCarousel({
   labels,
   panelId,
 }: {
-  teachers: DemoTeacherCard[];
+  teachers: LandingTeacherCard[];
   labels: TeachersPanelLabels;
   panelId: string;
 }) {

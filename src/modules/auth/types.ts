@@ -46,33 +46,6 @@ export function avatarSrc(
   return `/api/avatar/${user.id}?v=${user.avatarRev}`;
 }
 
-export const DEMO_ACCOUNTS = [
-  {
-    login: "demo-student",
-    password: "demo123",
-    displayName: "Олена Коваленко",
-    role: "student" as const,
-    id: 1,
-    description: "Учень — тести, результати, сесії",
-  },
-  {
-    login: "demo-teacher",
-    password: "demo123",
-    displayName: "Ігор Петренко",
-    role: "teacher" as const,
-    id: 2,
-    description: "Викладач — призначення mentor-сесій",
-  },
-  {
-    login: "demo-admin",
-    password: "demo123",
-    displayName: "Адміністратор",
-    role: "admin" as const,
-    id: 3,
-    description: "Адмін — редактор завдань і профілів",
-  },
-] as const;
-
 export function roleLabel(role: UserRole): string {
   switch (role) {
     case "student":
@@ -123,5 +96,6 @@ export const ADMIN_NAV_HREFS = [
   "/materials/textbook",
   "/problems",
   "/feedback",
+  "/leaderboard",
   "/settings",
 ] as const;

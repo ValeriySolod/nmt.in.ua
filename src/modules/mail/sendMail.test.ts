@@ -7,6 +7,7 @@ import {
   mailDeliveryMode,
   parseMailFrom,
   resolveMailSiteUrl,
+  sendMail,
 } from "./sendMail";
 
 test("resolveMailSiteUrl prefers SITE_URL and ignores NEXT_PUBLIC_SITE_URL", () => {
@@ -78,6 +79,80 @@ test("mailDeliveryMode logs locally and fails closed in production without a key
     mailDeliveryMode({ NODE_ENV: "production", BREVO_API_KEY: "xkeysib-test" }),
     "brevo",
   );
+});
+
+const brevoEnv = {
+  NODE_ENV: "production",
+  BREVO_API_KEY: "xkeysib-test",
+  MAIL_FROM: "NMT.in.ua <noreply@nmt.in.ua>",
+};
+
+const letter = {
+  to: "teacher@example.com",
+  subject: "Підтвердіть email — nmt.in.ua",
+  html: "<p>Підтвердіть</p>",
+  text: "Підтвердіть",
+};
+
+test("sendMail reads the Brevo body and retries a dropped connection", async () => {
+  const calls: RequestInit[] = [];
+  let attempt = 0;
+  const result = await sendMail(letter, {
+    env: brevoEnv,
+    sleep: async () => {},
+    fetchImpl: async (_url, init) => {
+      calls.push(init);
+      attempt += 1;
+      if (attempt === 1) {
+        throw new TypeError("fetch failed");
+      }
+      return new Response(JSON.stringify({ messageId: "ok" }), { status: 201 });
+    },
+  });
+
+  assert.deepEqual(result, { ok: true, mode: "brevo" });
+  assert.equal(calls.length, 2);
+  assert.equal(calls[0]?.cache, "no-store");
+  assert.equal(calls[0]?.method, "POST");
+});
+
+test("sendMail retries a transient Brevo status and then accepts 201", async () => {
+  let attempt = 0;
+  const result = await sendMail(letter, {
+    env: brevoEnv,
+    sleep: async () => {},
+    fetchImpl: async () => {
+      attempt += 1;
+      if (attempt === 1) {
+        return new Response(JSON.stringify({ message: "slow down" }), {
+          status: 503,
+          statusText: "Service Unavailable",
+        });
+      }
+      return new Response("{}", { status: 201 });
+    },
+  });
+
+  assert.deepEqual(result, { ok: true, mode: "brevo" });
+  assert.equal(attempt, 2);
+});
+
+test("sendMail does not retry a rejected sender", async () => {
+  let attempt = 0;
+  const result = await sendMail(letter, {
+    env: brevoEnv,
+    sleep: async () => {},
+    fetchImpl: async () => {
+      attempt += 1;
+      return new Response(JSON.stringify({ message: "sender not valid" }), {
+        status: 400,
+        statusText: "Bad Request",
+      });
+    },
+  });
+
+  assert.deepEqual(result, { ok: false, error: "brevo_error" });
+  assert.equal(attempt, 1);
 });
 
 test("parseMailFrom splits a display name from the address", () => {

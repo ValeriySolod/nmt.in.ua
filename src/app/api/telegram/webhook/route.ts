@@ -1,4 +1,6 @@
 import { readTelegramConfig } from "@/modules/telegram/config";
+import { consumeTelegramLink } from "@/modules/telegram/link";
+import { sendTelegramMessage } from "@/modules/telegram/transport";
 import { handleTelegramUpdate, verifyTelegramWebhookSecret } from "@/modules/telegram/webhook";
 
 export const runtime = "nodejs";
@@ -26,15 +28,22 @@ export async function POST(request: Request): Promise<Response> {
     return new Response(null, { status: 400 });
   }
   try {
-    const reply = await handleTelegramUpdate(update);
+    const reply = await handleTelegramUpdate(update, {
+      consume: consumeTelegramLink,
+      acknowledgeCallback: async (queryId) => {
+        const response = await fetch(`https://api.telegram.org/bot${config.botToken}/answerCallbackQuery`, {
+          method: "POST", headers: { "content-type": "application/json" },
+          body: JSON.stringify({ callback_query_id: queryId }), cache: "no-store",
+        });
+        if (!response.ok) throw new Error("Telegram callback acknowledgement failed");
+      },
+    });
     if (reply) {
-      const response = await fetch(`https://api.telegram.org/bot${config.botToken}/sendMessage`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ chat_id: reply.chatId, text: reply.text }),
-        cache: "no-store",
-      });
-      if (!response.ok) return new Response(null, { status: 502 });
+      const result = await sendTelegramMessage(reply, config.botToken);
+      if (result.status !== "sent") {
+        console.error("telegram webhook delivery failed", result.context);
+        return new Response(null, { status: 502 });
+      }
     }
     return new Response(null, { status: 200 });
   } catch {

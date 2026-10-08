@@ -1,7 +1,9 @@
 import type { SqlConnection } from "@/lib/db/mysql";
+import { MIN_DIFFICULTY } from "@/modules/content-import/schema";
 import {
   AdminContentError,
   ADMIN_TASKS_PAGE_SIZE,
+  MAX_DIFFICULTY_GUIDE_LENGTH,
   type AdminQuizTask,
   type AdminQuizTaskInput,
   type AdminQuizTaskListItem,
@@ -9,21 +11,56 @@ import {
   type AdminThemeOption,
 } from "./types";
 
+/** Default legend for every theme that has not been edited yet. */
+const DEFAULT_DIFFICULTY_GUIDE = `1. Додавання однозначних чисел.
+2. Додавання та віднімання чисел в межах 10.
+3. Множення чисел в межах 10.
+4. Додавання та віднімання чисел в межах 100 (таблиця додавання/віднімання)
+5. Множення однозначних чисел між собою (таблиця множення/ділення однозначних чисел).
+6. Операції із числами в межах 1000.
+7. Ділення чисел на числа типу 10,100,1000,10000 із утворенням десяткових дробів.`;
+
 const SQL_ADMIN_THEMES = `
-  SELECT t.id, t.code, t.name, t.ord, COUNT(q.id) AS task_count
+  SELECT t.id, t.code, t.name, t.ord,
+    ANY_VALUE(t.difficulty_guide) AS difficulty_guide,
+    COUNT(q.id) AS task_count
   FROM themes t
   LEFT JOIN quiz_tasks q ON q.theme_id = t.id
   GROUP BY t.id, t.code, t.name, t.ord
   ORDER BY t.ord ASC, t.id ASC
 `;
 
+const SQL_GUIDE_COLUMN = `
+  SELECT COLUMN_NAME AS COLUMN_NAME
+  FROM information_schema.COLUMNS
+  WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'themes'
+    AND COLUMN_NAME = 'difficulty_guide'
+`;
+
+const SQL_SEED_DIFFICULTY_GUIDE = `
+  UPDATE themes
+  SET difficulty_guide = ?
+  WHERE difficulty_guide IS NULL
+`;
+
+const SQL_UPDATE_GUIDE = `
+  UPDATE themes
+  SET difficulty_guide = ?
+  WHERE id = ?
+`;
+
 const SQL_THEME_EXISTS = `SELECT id FROM themes WHERE id = ? LIMIT 1`;
 
 const SQL_LIST_BY_THEME = `
-  SELECT id, name, task_text, difficulty
-  FROM quiz_tasks
-  WHERE theme_id = ?
-  ORDER BY id ASC
+  SELECT q.id, q.name, q.task_text, q.difficulty,
+    EXISTS (
+      SELECT 1 FROM tasks2session s
+      WHERE s.task_id = q.id AND s.task_type = 1
+    ) AS in_use
+  FROM quiz_tasks q
+  WHERE q.theme_id = ?
+  ORDER BY q.id ASC
 `;
 
 const SQL_COUNT_BY_THEME = `
@@ -67,20 +104,59 @@ const SQL_UPDATE = `
   WHERE id = ?
 `;
 
+const SQL_UPDATE_DIFFICULTY = `
+  UPDATE quiz_tasks
+  SET difficulty = ?
+  WHERE id = ?
+`;
+
 const SQL_DELETE = `DELETE FROM quiz_tasks WHERE id = ?`;
 
-const SQL_USED_IN_SESSIONS = `
-  SELECT 1 AS used
+/** Topic-bank rows only. The same numeric id can belong to an NMT task. */
+const SQL_SESSION_IDS_FOR_TASK = `
+  SELECT DISTINCT session_id
   FROM tasks2session
   WHERE task_id = ? AND task_type = 1
-  LIMIT 1
 `;
+
+const SQL_DELETE_SESSION_LINKS = `
+  DELETE FROM tasks2session
+  WHERE task_id = ? AND task_type = 1
+`;
+
+/**
+ * After a bank task leaves a session, stored totals must match the rows
+ * that remain. Follow-ups (`practice_task_origin`) stay out of the score,
+ * same as `finishTrainerSession`. A session with no rows left becomes 0/0.
+ */
+function sqlRecalculateSessions(sessionIds: number[]): string {
+  const list = sessionIds.join(",");
+  return `
+    UPDATE task_sessions ts
+    LEFT JOIN (
+      SELECT t2s.session_id,
+        SUM(po.tasks2session_id IS NULL) AS tasks_number,
+        SUM(
+          po.tasks2session_id IS NULL
+          AND COALESCE(t2s.first_attempt_status, t2s.status) = 1
+        ) AS right_number
+      FROM tasks2session t2s
+      LEFT JOIN practice_task_origin po ON po.tasks2session_id = t2s.id
+      WHERE t2s.session_id IN (${list})
+      GROUP BY t2s.session_id
+    ) agg ON agg.session_id = ts.id
+    SET ts.tasks_number = COALESCE(agg.tasks_number, 0),
+        ts.right_number = COALESCE(agg.right_number, 0)
+    WHERE ts.id IN (${list})
+  `;
+}
 
 type ThemeRow = {
   id: number;
   code: string;
   name: string;
   ord: number;
+  difficulty_guide: string | null;
   task_count: number | string;
 };
 
@@ -89,6 +165,7 @@ type ListRow = {
   name: string;
   task_text: string;
   difficulty: number;
+  in_use: number | string | boolean;
 };
 
 type TaskRow = {
@@ -130,11 +207,56 @@ async function loadDefaultConnection(): Promise<SqlConnection> {
   return getConnection();
 }
 
+let difficultyGuideReady: Promise<void> | undefined;
+
+async function ensureDifficultyGuideColumn(
+  getConnection: () => Promise<SqlConnection>,
+): Promise<void> {
+  if (!difficultyGuideReady) {
+    difficultyGuideReady = (async () => {
+      const connection = await getConnection();
+      try {
+        const rows = await connection.query<{
+          COLUMN_NAME?: string;
+          column_name?: string;
+        }>(SQL_GUIDE_COLUMN, []);
+        const present = rows.some(
+          (row) =>
+            String(row.COLUMN_NAME ?? row.column_name ?? "") ===
+            "difficulty_guide",
+        );
+        if (!present) {
+          try {
+            await connection.execute(
+              `ALTER TABLE themes ADD COLUMN difficulty_guide TEXT NULL`,
+              [],
+            );
+          } catch (error) {
+            const errno = (error as { errno?: number }).errno;
+            // Another process added the column between the check and ALTER.
+            if (errno !== 1060) throw error;
+          }
+        }
+        await connection.execute(SQL_SEED_DIFFICULTY_GUIDE, [
+          DEFAULT_DIFFICULTY_GUIDE,
+        ]);
+      } finally {
+        connection.release();
+      }
+    })().catch((error: unknown) => {
+      difficultyGuideReady = undefined;
+      throw error;
+    });
+  }
+  await difficultyGuideReady;
+}
+
 export async function getAdminThemes(
   deps: { getConnection: () => Promise<SqlConnection> } = {
     getConnection: loadDefaultConnection,
   },
 ): Promise<AdminThemeOption[]> {
+  await ensureDifficultyGuideColumn(deps.getConnection);
   const connection = await deps.getConnection();
   try {
     const rows = await connection.query<ThemeRow>(SQL_ADMIN_THEMES, []);
@@ -144,7 +266,46 @@ export async function getAdminThemes(
       name: row.name.trim(),
       ord: row.ord,
       taskCount: Number(row.task_count),
+      difficultyGuide: (row.difficulty_guide ?? "").trim(),
     }));
+  } finally {
+    connection.release();
+  }
+}
+
+export async function updateThemeDifficultyGuide(
+  themeId: number,
+  guide: string,
+  deps: { getConnection: () => Promise<SqlConnection> } = {
+    getConnection: loadDefaultConnection,
+  },
+): Promise<void> {
+  const text = guide.trim();
+  if (
+    !Number.isInteger(themeId) ||
+    themeId <= 0 ||
+    text.length > MAX_DIFFICULTY_GUIDE_LENGTH
+  ) {
+    throw new AdminContentError("Invalid difficulty guide.", "invalid_input");
+  }
+
+  await ensureDifficultyGuideColumn(deps.getConnection);
+  const connection = await deps.getConnection();
+  try {
+    const result = await connection.execute(SQL_UPDATE_GUIDE, [text, themeId]);
+    // MySQL reports 0 when the text is already stored. That is a successful save.
+    if (result.affectedRows === 0) {
+      const existing = await connection.query<{ id: number }>(SQL_THEME_EXISTS, [
+        themeId,
+      ]);
+      if (!existing[0]) {
+        throw new AdminContentError("Theme not found.", "not_found");
+      }
+    }
+  } catch (error) {
+    if (error instanceof AdminContentError) throw error;
+    console.error("updateThemeDifficultyGuide: unexpected database error", error);
+    throw new AdminContentError("Database operation failed.", "db_error");
   } finally {
     connection.release();
   }
@@ -159,6 +320,7 @@ function mapListItem(row: ListRow): AdminQuizTaskListItem {
     label,
     taskText,
     difficulty: row.difficulty,
+    inUse: row.in_use === true || Number(row.in_use) === 1,
   };
 }
 
@@ -368,35 +530,96 @@ export async function updateQuizTask(
   }
 }
 
-export async function deleteQuizTask(
+export async function updateQuizTaskDifficulty(
   taskId: number,
+  difficulty: number,
   deps: { getConnection: () => Promise<SqlConnection> } = {
     getConnection: loadDefaultConnection,
   },
 ): Promise<void> {
+  if (
+    !Number.isInteger(taskId) ||
+    taskId <= 0 ||
+    !Number.isInteger(difficulty) ||
+    difficulty < MIN_DIFFICULTY
+  ) {
+    throw new AdminContentError("Invalid difficulty.", "invalid_input");
+  }
+
   const connection = await deps.getConnection();
   try {
-    const used = await connection.query<{ used: number }>(SQL_USED_IN_SESSIONS, [
+    const result = await connection.execute(SQL_UPDATE_DIFFICULTY, [
+      difficulty,
       taskId,
     ]);
-    if (used[0]) {
-      throw new AdminContentError(
-        "Task is referenced by existing sessions.",
-        "in_use",
-      );
-    }
-
-    const result = await connection.execute(SQL_DELETE, [taskId]);
+    // Unchanged difficulty reports 0 changed rows. Confirm the task exists.
     if (result.affectedRows === 0) {
-      throw new AdminContentError("Task not found.", "not_found");
+      const existing = await connection.query<{ id: number }>(
+        `SELECT id FROM quiz_tasks WHERE id = ? LIMIT 1`,
+        [taskId],
+      );
+      if (!existing[0]) {
+        throw new AdminContentError("Task not found.", "not_found");
+      }
     }
   } catch (error) {
+    if (error instanceof AdminContentError) throw error;
+    console.error("updateQuizTaskDifficulty: unexpected database error", error);
+    throw new AdminContentError("Database operation failed.", "db_error");
+  } finally {
+    connection.release();
+  }
+}
+
+async function unlinkAndDeleteQuizTask(
+  connection: SqlConnection,
+  taskId: number,
+): Promise<void> {
+  const sessionRows = await connection.query<{ session_id: number }>(
+    SQL_SESSION_IDS_FOR_TASK,
+    [taskId],
+  );
+  const sessionIds = [
+    ...new Set(
+      sessionRows
+        .map((row) => Number(row.session_id))
+        .filter((id) => Number.isInteger(id) && id > 0),
+    ),
+  ];
+
+  await connection.execute(SQL_DELETE_SESSION_LINKS, [taskId]);
+  if (sessionIds.length > 0) {
+    await connection.execute(sqlRecalculateSessions(sessionIds));
+  }
+
+  const result = await connection.execute(SQL_DELETE, [taskId]);
+  if (result.affectedRows === 0) {
+    throw new AdminContentError("Task not found.", "not_found");
+  }
+}
+
+async function withDeleteTransaction<T>(
+  deps: { getConnection: () => Promise<SqlConnection> },
+  work: (connection: SqlConnection) => Promise<T>,
+): Promise<T> {
+  const connection = await deps.getConnection();
+  try {
+    await connection.beginTransaction();
+    const value = await work(connection);
+    await connection.commit();
+    return value;
+  } catch (error) {
+    try {
+      await connection.rollback();
+    } catch {
+      // The connection may already be rolled back.
+    }
     if (error instanceof AdminContentError) throw error;
     const errno =
       typeof error === "object" && error !== null && "errno" in error
         ? Number((error as { errno?: number }).errno)
         : undefined;
-    // MySQL ER_ROW_IS_REFERENCED_2
+    // MySQL ER_ROW_IS_REFERENCED_2 — something other than session links.
     if (errno === 1451) {
       throw new AdminContentError(
         "Task is referenced by existing sessions.",
@@ -408,4 +631,43 @@ export async function deleteQuizTask(
   } finally {
     connection.release();
   }
+}
+
+export async function deleteQuizTask(
+  taskId: number,
+  deps: { getConnection: () => Promise<SqlConnection> } = {
+    getConnection: loadDefaultConnection,
+  },
+): Promise<void> {
+  await withDeleteTransaction(deps, (connection) =>
+    unlinkAndDeleteQuizTask(connection, taskId),
+  );
+}
+
+/** Deletes every id in one transaction. A missing id is skipped. */
+export async function deleteQuizTasks(
+  taskIds: number[],
+  deps: { getConnection: () => Promise<SqlConnection> } = {
+    getConnection: loadDefaultConnection,
+  },
+): Promise<number> {
+  const ids = [...new Set(taskIds)];
+  return withDeleteTransaction(deps, async (connection) => {
+    let deleted = 0;
+    for (const taskId of ids) {
+      try {
+        await unlinkAndDeleteQuizTask(connection, taskId);
+        deleted += 1;
+      } catch (error) {
+        if (error instanceof AdminContentError && error.code === "not_found") {
+          continue;
+        }
+        throw error;
+      }
+    }
+    if (deleted === 0) {
+      throw new AdminContentError("Task not found.", "not_found");
+    }
+    return deleted;
+  });
 }

@@ -24,7 +24,194 @@
   color: var(--muted);
 }
 
+/* Mobile swipe (<768) — same pattern as LearningSessionsTable */
+.swipeRoot {
+  display: grid;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+
+.swipeToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.swipeStatus {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--fs-small);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.swipeNav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.swipeNavBtn {
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--grad-brand);
+  color: #fdfbf4;
+  font: inherit;
+  font-size: var(--fs-small);
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgb(17 83 42 / 22%);
+}
+
+.swipeNavBtnDisabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+  background: rgb(253 251 244 / 78%);
+  color: var(--muted);
+  border: 1px solid var(--line-soft);
+  box-shadow: none;
+}
+
+.swipeTrack {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 100%;
+  gap: var(--space-sm);
+  margin: 0;
+  padding: 2px 0 8px;
+  list-style: none;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.swipeSlide {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  min-width: 0;
+}
+
+.swipeHint {
+  margin: 0;
+  color: var(--subtle);
+  font-size: var(--fs-kicker);
+  text-align: center;
+}
+
+.card {
+  display: grid;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  background: var(--grad-glass);
+  box-shadow: var(--shadow-sm);
+}
+
+.cardTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.cardTitleBlock {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.cardIndex {
+  color: var(--subtle);
+  font-size: var(--fs-kicker);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.cardThemeLink {
+  margin: 0;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--ink);
+  text-decoration-color: transparent;
+  overflow-wrap: anywhere;
+}
+
+.cardThemeLink:hover,
+.cardThemeLink:focus-visible {
+  color: var(--green-dark);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.meta {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 14px;
+}
+
+.meta div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.metaWide {
+  grid-column: 1 / -1;
+}
+
+.meta dt {
+  color: var(--subtle);
+  font-size: var(--fs-kicker);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.meta dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.cardFoot {
+  display: grid;
+  gap: var(--space-xs);
+  padding-top: var(--space-2xs);
+  border-top: 1px solid var(--line-soft);
+}
+
+.cardFootLabel {
+  color: var(--subtle);
+  font-size: var(--fs-kicker);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.score {
+  flex: 0 0 auto;
+  min-width: 3.25rem;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.desktopPager {
+  display: none;
+}
+
 .tableWrap {
+  display: none;
   overflow-x: auto;
   border: 1px solid var(--line-soft);
   border-radius: var(--radius-lg);
@@ -150,6 +337,18 @@
 }
 
 @media (min-width: 768px) {
+  .swipeRoot {
+    display: none;
+  }
+
+  .tableWrap {
+    display: block;
+  }
+
+  .desktopPager {
+    display: block;
+  }
+
   .table th,
   .table td {
     padding: 14px 16px;

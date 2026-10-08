@@ -1,6 +1,5 @@
 import type { SqlConnection } from "@/lib/db/mysql";
 import type { AuthUser } from "./types";
-import { isDemoAccountLogin } from "./demoLogin";
 import { verifyPassword } from "./password";
 import { findUserByLogin, updateUserPassword } from "./users";
 import { validateChangePasswordInput } from "./validateChangePassword";
@@ -12,7 +11,6 @@ export type ChangePasswordErrorCode =
   | "passwordMismatch"
   | "samePassword"
   | "wrongCurrent"
-  | "demoAccount"
   | "serverError";
 
 export class ChangePasswordError extends Error {
@@ -40,13 +38,6 @@ export async function changePassword(
   input: ChangePasswordInput,
   deps?: ChangePasswordDeps,
 ): Promise<void> {
-  if (isDemoAccountLogin(input.user.login)) {
-    throw new ChangePasswordError(
-      "Demo account passwords cannot be changed.",
-      "demoAccount",
-    );
-  }
-
   const validated = validateChangePasswordInput({
     currentPassword: input.currentPassword,
     newPassword: input.newPassword,

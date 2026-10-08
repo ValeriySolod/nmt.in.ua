@@ -55,7 +55,7 @@ test("setProfileBannedAction bans for admin", async () => {
   }
 });
 
-test("deleteProfileAction maps protected_account", async () => {
+test("deleteProfileAction maps last_admin", async () => {
   const state = await deleteProfileAction(
     { status: "idle" },
     form({ userId: "1" }),
@@ -65,12 +65,12 @@ test("deleteProfileAction maps protected_account", async () => {
         throw new Error("unused");
       },
       deleteProfile: async () => {
-        throw new AdminProfilesError("no", "protected_account");
+        throw new AdminProfilesError("no", "last_admin");
       },
       revalidatePath: () => undefined,
     },
   );
-  assert.deepEqual(state, { status: "error", code: "protected_account" });
+  assert.deepEqual(state, { status: "error", code: "last_admin" });
 });
 
 test("setProfileBannedAction forbids non-admin", async () => {

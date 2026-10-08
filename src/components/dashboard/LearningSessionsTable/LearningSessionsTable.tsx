@@ -1,23 +1,22 @@
 "use client";
 
-import Link from "next/link";
-import { useActionState } from "react";
+import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
-import {
-  cancelLearningSessionAction,
-  type CancelLearningSessionActionState,
-} from "@/modules/sessions/actions";
 import type { LearningSessionRow } from "@/modules/sessions/types";
 import {
   formatDurationSeconds,
   formatTimePerTask,
 } from "@/modules/sessions/types";
+import { formatPercent as formatResultPercent } from "@/modules/results/types";
 import { useTranslations } from "next-intl";
+import { Pagination } from "@/components/ui/Pagination";
+import { paginateSlice } from "@/lib/pagination";
 import { queryHref } from "@/lib/queryHref";
+import { LearningSessionsMobileSwiper } from "./LearningSessionsMobileSwiper";
+import { SessionActions } from "./LearningSessionActions";
+import { SessionStatusBlock } from "./LearningSessionStatus";
 import css from "./LearningSessionsTable.module.css";
-
-const CANCEL_INITIAL: CancelLearningSessionActionState = { status: "idle" };
 
 type LearningSessionsTableProps = {
   rows: LearningSessionRow[];
@@ -29,73 +28,13 @@ type LearningSessionsTableProps = {
   empty?: string;
   /** Kept when toggling compact/extended (e.g. `student`). */
   queryParams?: Record<string, string | null | undefined>;
+  page?: number;
+  pathname?: string;
 };
 
 function formatPercent(percent: number | null): string {
   if (percent === null) return "—";
-  return `${Math.round(percent)}%`;
-}
-
-function statusClass(status: LearningSessionRow["status"]): string {
-  if (status === "completed") return css.statusCompleted;
-  if (status === "expired") return css.statusExpired;
-  return css.statusPlanned;
-}
-
-function SessionActions({ row }: { row: LearningSessionRow }) {
-  const t = useTranslations("LearningSessionsTable");
-
-  const [state, formAction, pending] = useActionState(
-    cancelLearningSessionAction,
-    CANCEL_INITIAL
-  );
-
-  if (row.status === "completed") {
-    return null;
-  }
-
-  const waiting = row.status === "planned" && !row.canStart;
-
-  return (
-    <div className={css.actions}>
-      {row.status === "expired" ? null : waiting ? (
-        <span
-          className={css.scheduledBadge}
-          title={row.availableAtLabel ?? undefined}
-        >
-          {t("opensAt", { date: row.availableAtLabel ?? "—" })}
-        </span>
-      ) : (
-        <Link href={`/session/${row.id}`} className={css.startLink}>
-          {t("start")}
-        </Link>
-      )}
-      <form
-        action={formAction}
-        className={css.cancelForm}
-        onSubmit={(event) => {
-          if (!window.confirm(t("cancelConfirm", { theme: row.themeName }))) {
-            event.preventDefault();
-          }
-        }}
-      >
-        <input type="hidden" name="sessionId" value={row.id} />
-        <button
-          type="submit"
-          className={css.cancelButton}
-          disabled={pending}
-          aria-label={t("cancelSession", { id: row.id })}
-        >
-          ×
-        </button>
-      </form>
-      {state.status === "error" ? (
-        <span className={css.error} role="alert">
-          {t(`errors.${state.code}`)}
-        </span>
-      ) : null}
-    </div>
-  );
+  return formatResultPercent(percent);
 }
 
 export function LearningSessionsTable({
@@ -106,10 +45,36 @@ export function LearningSessionsTable({
   lead,
   empty,
   queryParams,
+  page = 1,
+  pathname = "/sessions",
 }: LearningSessionsTableProps) {
   const t = useTranslations("LearningSessionsTable");
   const router = useRouter();
   const showExtendedInfo = extended;
+  const paginated = useMemo(() => paginateSlice(rows, page), [rows, page]);
+  const displayRows = useMemo(
+    () =>
+      paginated.items.map((row, index) => ({
+        ...row,
+        rowNumber: (paginated.page - 1) * paginated.pageSize + index + 1,
+      })),
+    [paginated],
+  );
+  const mobileRows = useMemo(
+    () =>
+      rows.map((row, index) => ({
+        ...row,
+        rowNumber: index + 1,
+      })),
+    [rows],
+  );
+  const pagerQuery = {
+    ...queryParams,
+    extended: extended ? "1" : null,
+  };
+  const listLabel = showExtendedInfo
+    ? t("tableAriaExtended")
+    : t("tableAria");
 
   return (
     <section
@@ -128,14 +93,15 @@ export function LearningSessionsTable({
                 type="button"
                 className={css.detailsToggle}
                 aria-expanded={showExtendedInfo}
-                aria-controls="learning-sessions-table"
+                aria-controls="learning-sessions-cards learning-sessions-table"
                 onClick={() =>
                   router.replace(
-                    queryHref("/sessions", {
-                      ...queryParams,
+                    queryHref(pathname, {
+                      ...pagerQuery,
                       extended: showExtendedInfo ? null : "1",
+                      page: paginated.page > 1 ? String(paginated.page) : null,
                     }),
-                    { scroll: false }
+                    { scroll: false },
                   )
                 }
               >
@@ -151,129 +117,126 @@ export function LearningSessionsTable({
           {empty ?? t("empty")}
         </p>
       ) : (
-        <div
-          id="learning-sessions-table"
-          className={css.tableWrap}
-          aria-label={
-            showExtendedInfo ? t("tableAriaExtended") : t("tableAria")
-          }
-        >
-          <table
-            className={clsx(css.table, showExtendedInfo && css.tableExpanded)}
+        <>
+          <LearningSessionsMobileSwiper
+            rows={mobileRows}
+            extended={showExtendedInfo}
+            readOnly={readOnly}
+            listLabel={listLabel}
+          />
+
+          <div
+            id="learning-sessions-table"
+            className={css.tableWrap}
+            aria-label={listLabel}
           >
-            <thead>
-              <tr>
-                <th scope="col" className={css.colIndex}>
-                  #
-                </th>
-                <th scope="col" className={css.colTheme}>
-                  {t("theme")}
-                </th>
-                <th scope="col" className={css.colDifficulty}>
-                  {t("difficulty")}
-                </th>
-                {showExtendedInfo ? (
-                  <>
-                    <th scope="col" className={css.colNarrow}>
-                      {t("tasks")}
-                    </th>
-                    <th scope="col" className={css.colNarrow}>
-                      {t("correct")}
-                    </th>
-                  </>
-                ) : null}
-                <th scope="col" className={css.colNarrow}>
-                  %
-                </th>
-                {showExtendedInfo ? (
-                  <th scope="col" className={css.colNarrow}>
-                    {t("timeSeconds")}
+            <table
+              className={clsx(css.table, showExtendedInfo && css.tableExpanded)}
+            >
+              <thead>
+                <tr>
+                  <th scope="col" className={css.colIndex}>#</th>
+                  <th scope="col" className={css.colTheme}>{t("theme")}</th>
+                  <th scope="col" className={css.colDifficulty}>
+                    {t("difficulty")}
                   </th>
-                ) : null}
-                <th scope="col" className={css.colTimePer}>
-                  {t("timePerTest")}
-                </th>
-                {showExtendedInfo ? (
-                  <>
-                    <th scope="col" className={css.colDate}>
-                      {t("startDate")}
-                    </th>
-                    <th scope="col" className={css.colCreatedBy}>
-                      {t("createdBy")}
-                    </th>
-                  </>
-                ) : null}
-                <th scope="col" className={css.colStatus}>
-                  {t("status")}
-                </th>
-                {readOnly ? null : (
-                  <th scope="col" className={css.colActions}>
-                    {t("actions")}
-                  </th>
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.id}>
-                  <td className={css.colIndex}>{row.rowNumber}</td>
-                  <td className={css.colTheme}>{row.themeName}</td>
-                  <td className={css.colDifficulty}>{row.difficulty ?? "—"}</td>
                   {showExtendedInfo ? (
                     <>
-                      <td className={css.colNarrow}>{row.tasksNumber}</td>
-                      <td className={css.colNarrow}>{row.rightNumber}</td>
+                      <th scope="col" className={css.colNarrow}>
+                        {t("tasks")}
+                      </th>
+                      <th scope="col" className={css.colNarrow}>
+                        {t("correct")}
+                      </th>
                     </>
                   ) : null}
-                  <td className={css.colNarrow}>
-                    {formatPercent(row.percent)}
-                  </td>
+                  <th scope="col" className={css.colNarrow}>%</th>
                   {showExtendedInfo ? (
-                    <td className={css.colNarrow}>
-                      {formatDurationSeconds(row.timeSec)}
-                    </td>
+                    <th scope="col" className={css.colNarrow}>
+                      {t("timeSeconds")}
+                    </th>
                   ) : null}
-                  <td className={css.colTimePer}>
-                    {formatTimePerTask(row.timePerTaskSec)}
-                  </td>
+                  <th scope="col" className={css.colTimePer}>
+                    {t("timePerTest")}
+                  </th>
                   {showExtendedInfo ? (
                     <>
-                      <td className={css.colDate}>{row.startTimeLabel}</td>
-                      <td className={css.colCreatedBy}>
-                        {t(`createdByValues.${row.createdBy}`)}
-                      </td>
+                      <th scope="col" className={css.colDate}>
+                        {t("startDate")}
+                      </th>
+                      <th scope="col" className={css.colCreatedBy}>
+                        {t("createdBy")}
+                      </th>
                     </>
                   ) : null}
-                  <td className={css.colStatus}>
-                    <div className={css.statusStack}>
-                      <span className={clsx(statusClass(row.status))}>
-                        {t(`statuses.${row.status}`)}
-                      </span>
-                      {row.availableAtLabel && row.status === "planned" ? (
-                        <span className={css.scheduledHint}>
-                          {t("opensAt", { date: row.availableAtLabel })}
-                        </span>
-                      ) : null}
-                      {row.dueAtLabel &&
-                      row.status === "planned" &&
-                      row.createdBy === "mentor" ? (
-                        <span className={css.scheduledHint}>
-                          {t("dueAt", { date: row.dueAtLabel })}
-                        </span>
-                      ) : null}
-                    </div>
-                  </td>
+                  <th scope="col" className={css.colStatus}>{t("status")}</th>
                   {readOnly ? null : (
-                    <td className={css.colActions}>
-                      <SessionActions row={row} />
-                    </td>
+                    <th scope="col" className={css.colActions}>
+                      {t("actions")}
+                    </th>
                   )}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {displayRows.map((row) => (
+                  <tr key={row.id}>
+                    <td className={css.colIndex}>{row.rowNumber}</td>
+                    <td className={css.colTheme}>{row.themeName}</td>
+                    <td className={css.colDifficulty}>
+                      {row.difficulty ?? "—"}
+                    </td>
+                    {showExtendedInfo ? (
+                      <>
+                        <td className={css.colNarrow}>{row.tasksNumber}</td>
+                        <td className={css.colNarrow}>{row.rightNumber}</td>
+                      </>
+                    ) : null}
+                    <td className={css.colNarrow}>
+                      {formatPercent(row.percent)}
+                    </td>
+                    {showExtendedInfo ? (
+                      <td className={css.colNarrow}>
+                        {formatDurationSeconds(row.timeSec)}
+                      </td>
+                    ) : null}
+                    <td className={css.colTimePer}>
+                      {formatTimePerTask(row.timePerTaskSec)}
+                    </td>
+                    {showExtendedInfo ? (
+                      <>
+                        <td className={css.colDate}>{row.startTimeLabel}</td>
+                        <td className={css.colCreatedBy}>
+                          {t(`createdByValues.${row.createdBy}`)}
+                        </td>
+                      </>
+                    ) : null}
+                    <td className={css.colStatus}>
+                      <SessionStatusBlock row={row} />
+                    </td>
+                    {readOnly ? null : (
+                      <td className={css.colActions}>
+                        <SessionActions row={row} />
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
+
+      {rows.length > 0 ? (
+        <div className={css.desktopPager}>
+          <Pagination
+            pathname={pathname}
+            page={paginated.page}
+            totalPages={paginated.totalPages}
+            total={paginated.total}
+            queryParams={pagerQuery}
+          />
+        </div>
+      ) : null}
 
       <p className={css.hint}>{t("hint")}</p>
     </section>

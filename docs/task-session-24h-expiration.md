@@ -26,7 +26,7 @@
 ### Auth: розділено видачу і оновлення cookie
 
 - `setSessionCookie(user)` — без змін, завжди свіжий `exp = now + 86400`.
-  Лишається лише для `loginAction`/`registerAction`/`demoLoginAction`.
+  Лишається лише для `loginAction`/`registerAction`.
 - **Новий** `renewSessionCookie(user)` (`getCurrentUser.ts`) — читає `exp` з
   уже підписаного й перевіреного поточного payload (`getSessionPayload`,
   який сам відхиляє протермінований/невалідний токен), переносить його як є
