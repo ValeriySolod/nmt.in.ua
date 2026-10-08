@@ -11,3 +11,4 @@ export {
   roleLabel,
   userInitials,
 } from "./types";
+export { hasPermission, MARATHON_MANAGE } from "./permissions";

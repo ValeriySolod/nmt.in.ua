@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { VerifyEmailResult } from "@/components/auth/VerifyEmailResult/VerifyEmailResult";
 import { createPageMetadata } from "@/constants/seo";
+import { readMarathonReturnCookie } from "@/modules/marathons/daily/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -45,11 +46,16 @@ export default async function VerifyEmailPage({
   }
 
   const statusRaw = Array.isArray(params.status) ? params.status[0] : params.status;
+  const continueHref =
+    statusRaw === "success" ? await readMarathonReturnCookie() : null;
 
   return (
     <AuthShell>
       {statusRaw === "success" ? (
-        <VerifyEmailResult status="success" />
+        <VerifyEmailResult
+          status="success"
+          continueHref={continueHref ?? undefined}
+        />
       ) : (
         <VerifyEmailResult status="error" code={parseError(params.error)} />
       )}

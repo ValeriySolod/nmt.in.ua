@@ -47,7 +47,8 @@
       "homeAdmin": "Tasks by topic",
       "profiles": "Profiles",
       "assign": "Assign topic test",
-      "leaderboard": "Marathon leaderboard"
+      "leaderboard": "Marathon leaderboard",
+      "marathons": "Marathon"
     }
   },
   "RecentResults": {
@@ -719,6 +720,105 @@
     "resultsCta": "Results by topic",
     "sessionsCta": "My sessions",
     "newTest": "Take it again"
+  },
+  "Marathon": {
+    "kicker": "Marathon",
+    "landingLead": "{days} free days of math: one topic a day. The riddles on this page do not gate access.",
+    "riddlesTitle": "Riddles",
+    "showHint": "Hint",
+    "showAnswer": "Answer",
+    "join": "Join",
+    "haveAccount": "I already have an account",
+    "finishedNote": "This marathon has finished.",
+    "joinTitle": "Join the marathon",
+    "joinLead": "Create an account to take “{title}”. Confirm your email and the day map will open.",
+    "name": "Name",
+    "email": "Email",
+    "password": "Password",
+    "passwordConfirm": "Password again",
+    "mapLead": "{days} days. An open day can be finished any time; future days unlock for everyone at once.",
+    "streak": "Streak: {count}",
+    "dayLabel": "Day {n}",
+    "markPassed": "Passed · {score}%",
+    "markFailed": "Below the bar · {score}%",
+    "open": "Open",
+    "opensAt": "Opens {when}",
+    "toFinal": "Summary",
+    "notifyTitle": "Notifications",
+    "notifyEmail": "Email",
+    "notifyBot": "Telegram",
+    "save": "Save",
+    "botLinked": "Bot already linked",
+    "linkBot": "Link Telegram",
+    "botOff": "The bot is not configured yet.",
+    "materialsTitle": "Materials",
+    "toTasks": "To the tasks",
+    "tasksTitle": "Tasks",
+    "submit": "Check",
+    "backToMap": "Back to the map",
+    "finalTitle": "Marathon summary",
+    "notDone": "Not finished yet",
+    "weakTitle": "Weak topics",
+    "noWeak": "Every day is passed.",
+    "badgeAll": "Every day passed",
+    "badgeFinish": "Marathon finished",
+    "badgePartial": "You can still catch up",
+    "adminTitle": "Marathons",
+    "adminLead": "Create a marathon, fill the days, and launch it. A day unlocks for every participant at the same Kyiv time.",
+    "seed": "Add the sample: 5 days of math",
+    "create": "New marathon",
+    "delete": "Delete",
+    "deleteConfirm": "Delete permanently?",
+    "addRiddle": "Add a riddle",
+    "addDay": "Add a day",
+    "addMaterial": "Add material",
+    "addTask": "Add a task",
+    "order": "Order",
+    "riddleTitle": "Riddle title",
+    "body": "Text",
+    "answer": "Answer",
+    "hint": "Hint",
+    "daysTitle": "Days",
+    "dayNumber": "Day number",
+    "topic": "Topic",
+    "intro": "Intro",
+    "questionSearch": "Search the question bank",
+    "search": "Search",
+    "questionId": "Bank ID",
+    "inlinePrompt": "Or your own prompt",
+    "option": "Option",
+    "correct": "Correct option number",
+    "funnelTitle": "Funnel",
+    "funnelLine": "Registered {registered} → email {verified} → final {final} → converted {converted}",
+    "participants": "Participants",
+    "streakLabel": "Streak",
+    "status": {
+      "draft": "Draft",
+      "active": "Active",
+      "finished": "Finished"
+    },
+    "errors": {
+      "closed": "This marathon is not accepting participants.",
+      "invalid": "Check the form fields.",
+      "duplicate": "That entry already exists.",
+      "server": "Could not save. Try again.",
+      "seed_exists": "The sample marathon already exists.",
+      "question": "No question with that ID is in the bank.",
+      "locked": "This day is not open yet.",
+      "missing": "Marathon not found.",
+      "materials_required": "Read the materials first.",
+      "bot_off": "The bot is not configured yet.",
+      "requiredFields": "Fill in every field.",
+      "invalidLogin": "This email cannot become a login. Try another address.",
+      "invalidDisplayName": "The name must be 2 to 80 characters.",
+      "invalidEmail": "Enter a real email address.",
+      "passwordTooShort": "The password is too short.",
+      "passwordTooLong": "The password is too long.",
+      "passwordMismatch": "The passwords do not match.",
+      "loginTaken": "That login is already taken.",
+      "emailTaken": "That email is already registered.",
+      "reservedLogin": "That login is reserved."
+    }
   },
   "MarathonLeaderboard": {
     "kicker": "Marathon",
@@ -1532,6 +1632,30 @@
     "resetPassword": {
       "title": "New password",
       "description": "Set a new password for the learning workspace."
+    },
+    "marathon": {
+      "title": "Math marathon",
+      "description": "A free math marathon: riddles, registration, and one topic a day."
+    },
+    "marathonJoin": {
+      "title": "Join the marathon",
+      "description": "Register for the nmt.in.ua math marathon."
+    },
+    "marathonMap": {
+      "title": "Marathon day map",
+      "description": "Open and upcoming days of the math marathon."
+    },
+    "marathonDay": {
+      "title": "Marathon day {n}",
+      "description": "Materials and tasks for a day of the math marathon."
+    },
+    "marathonFinal": {
+      "title": "Marathon summary",
+      "description": "Results of the marathon days and an offer to keep learning."
+    },
+    "marathonAdmin": {
+      "title": "Marathons",
+      "description": "Manage math marathons, participants, and the funnel."
     },
     "assign": {
       "title": "Assign topic test",

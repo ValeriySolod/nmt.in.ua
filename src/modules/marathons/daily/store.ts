@@ -1,0 +1,1108 @@
+import "server-only";
+
+import type { SqlConnection } from "@/lib/db/mysql";
+import { evaluateDayAccess } from "./calendar";
+import { submitOpenedDay, type SubmitSuccess } from "./submit";
+import type { ProgressMark } from "./streak";
+
+export type DailyStatus = "draft" | "active" | "finished";
+export type MaterialType = "loom" | "youtube" | "text";
+
+export type DailyMarathon = {
+  id: number;
+  slug: string;
+  title: string;
+  subject: string;
+  startDate: string;
+  unlockHour: string;
+  daysCount: number;
+  passThreshold: number;
+  finalCtaText: string;
+  finalCtaUrl: string;
+  status: DailyStatus;
+};
+
+export type Riddle = {
+  id: number;
+  order: number;
+  title: string;
+  body: string;
+  answer: string;
+  hint: string | null;
+};
+
+export type MarathonDay = {
+  id: number;
+  dayNumber: number;
+  topic: string;
+  introText: string | null;
+};
+
+export type Material = {
+  id: number;
+  order: number;
+  type: MaterialType;
+  urlOrBody: string;
+};
+
+export type PlayTask = {
+  id: number;
+  order: number;
+  prompt: string;
+  options: string[];
+};
+
+export type Participant = {
+  userId: number;
+  source: string | null;
+  streak: number;
+  finishedAt: string | null;
+  convertedAt: string | null;
+  telegramChatId: string | null;
+  notifyEmail: boolean;
+  notifyBot: boolean;
+};
+
+export type DayProgress = {
+  dayId: number;
+  dayNumber: number;
+  materialsViewed: boolean;
+  score: number | null;
+  passed: boolean;
+  completedAt: number | null;
+};
+
+export type ParticipantReport = {
+  userId: number;
+  displayName: string;
+  login: string;
+  email: string | null;
+  emailVerified: boolean;
+  source: string | null;
+  streak: number;
+  finished: boolean;
+  converted: boolean;
+  days: Array<{ dayNumber: number; score: number | null; passed: boolean; completed: boolean }>;
+};
+
+type Conn = () => Promise<SqlConnection>;
+
+async function loadDefaultConnection(): Promise<SqlConnection> {
+  const { getConnection } = await import("@/lib/db/mysql");
+  return getConnection();
+}
+
+async function withConn<T>(
+  fn: (connection: SqlConnection) => Promise<T>,
+  getConnection: Conn = loadDefaultConnection,
+): Promise<T> {
+  const { ensureMarathonSchema } = await import("../schema");
+  await ensureMarathonSchema(getConnection);
+  const connection = await getConnection();
+  try {
+    return await fn(connection);
+  } finally {
+    connection.release();
+  }
+}
+
+function flag(value: unknown): boolean {
+  return value === true || value === 1 || value === "1";
+}
+
+function isoDate(value: unknown): string {
+  const match = /^(\d{4}-\d{2}-\d{2})/.exec(String(value ?? ""));
+  return match?.[1] ?? "";
+}
+
+function asMs(value: unknown): number | null {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(String(value));
+  const ms = date.getTime();
+  return Number.isNaN(ms) ? null : ms;
+}
+
+function mapMarathon(row: {
+  id: number;
+  slug: string;
+  title: string;
+  subject: string;
+  start_date: unknown;
+  unlock_hour: string;
+  days_count: number;
+  pass_threshold: number;
+  final_cta_text: string | null;
+  final_cta_url: string | null;
+  status: string;
+}): DailyMarathon | null {
+  if (row.status !== "draft" && row.status !== "active" && row.status !== "finished") {
+    return null;
+  }
+  const startDate = isoDate(row.start_date);
+  if (!startDate) return null;
+  return {
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    subject: row.subject,
+    startDate,
+    unlockHour: String(row.unlock_hour).slice(0, 5),
+    daysCount: Number(row.days_count),
+    passThreshold: Number(row.pass_threshold),
+    finalCtaText: row.final_cta_text ?? "",
+    finalCtaUrl: row.final_cta_url ?? "",
+    status: row.status,
+  };
+}
+
+const MARATHON_SELECT = `id, slug, title, subject, start_date, unlock_hour, days_count,
+  pass_threshold, final_cta_text, final_cta_url, status`;
+
+export async function listDailyMarathons(getConnection?: Conn): Promise<DailyMarathon[]> {
+  return withConn(async (connection) => {
+    const rows = await connection.query<Parameters<typeof mapMarathon>[0]>(
+      `SELECT ${MARATHON_SELECT} FROM marathons WHERE kind = 'daily' ORDER BY id DESC`,
+      [],
+    );
+    return rows.flatMap((row) => {
+      const marathon = mapMarathon(row);
+      return marathon ? [marathon] : [];
+    });
+  }, getConnection);
+}
+
+export async function getDailyBySlug(
+  slug: string,
+  getConnection?: Conn,
+): Promise<DailyMarathon | null> {
+  return withConn(async (connection) => {
+    const rows = await connection.query<Parameters<typeof mapMarathon>[0]>(
+      `SELECT ${MARATHON_SELECT} FROM marathons WHERE slug = ? AND kind = 'daily' LIMIT 1`,
+      [slug],
+    );
+    return rows[0] ? mapMarathon(rows[0]) : null;
+  }, getConnection);
+}
+
+export async function getDailyById(
+  id: number,
+  getConnection?: Conn,
+): Promise<DailyMarathon | null> {
+  return withConn(async (connection) => {
+    const rows = await connection.query<Parameters<typeof mapMarathon>[0]>(
+      `SELECT ${MARATHON_SELECT} FROM marathons WHERE id = ? AND kind = 'daily' LIMIT 1`,
+      [id],
+    );
+    return rows[0] ? mapMarathon(rows[0]) : null;
+  }, getConnection);
+}
+
+export async function insertDailyMarathon(
+  input: Omit<DailyMarathon, "id" | "status"> & { startsAt: number; endsAt: number },
+  getConnection?: Conn,
+): Promise<number> {
+  return withConn(async (connection) => {
+    const result = await connection.execute(
+      `INSERT INTO marathons
+        (slug, title, description, status, starts_at, ends_at, min_tasks_per_session,
+         kind, subject, start_date, unlock_hour, days_count, pass_threshold,
+         final_cta_text, final_cta_url)
+       VALUES (?, ?, ?, 'draft', ?, ?, 5, 'daily', ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        input.slug,
+        input.title,
+        input.subject,
+        input.startsAt,
+        input.endsAt,
+        input.subject,
+        input.startDate,
+        input.unlockHour,
+        input.daysCount,
+        input.passThreshold,
+        input.finalCtaText,
+        input.finalCtaUrl,
+      ],
+    );
+    return result.insertId;
+  }, getConnection);
+}
+
+export async function updateDailyMarathon(
+  id: number,
+  input: Omit<DailyMarathon, "id" | "status"> & { startsAt: number; endsAt: number },
+  getConnection?: Conn,
+): Promise<void> {
+  await withConn(async (connection) => {
+    await connection.execute(
+      `UPDATE marathons
+       SET slug = ?, title = ?, subject = ?, start_date = ?, unlock_hour = ?,
+           days_count = ?, pass_threshold = ?, final_cta_text = ?, final_cta_url = ?,
+           starts_at = ?, ends_at = ?
+       WHERE id = ? AND kind = 'daily'`,
+      [
+        input.slug,
+        input.title,
+        input.subject,
+        input.startDate,
+        input.unlockHour,
+        input.daysCount,
+        input.passThreshold,
+        input.finalCtaText,
+        input.finalCtaUrl,
+        input.startsAt,
+        input.endsAt,
+        id,
+      ],
+    );
+  }, getConnection);
+}
+
+export async function setDailyStatus(
+  id: number,
+  status: DailyStatus,
+  getConnection?: Conn,
+): Promise<void> {
+  await withConn(async (connection) => {
+    await connection.execute(
+      `UPDATE marathons SET status = ? WHERE id = ? AND kind = 'daily'`,
+      [status, id],
+    );
+  }, getConnection);
+}
+
+export async function deleteDailyMarathon(id: number, getConnection?: Conn): Promise<void> {
+  await withConn(async (connection) => {
+    await connection.execute(
+      `DELETE t FROM marathon_day_tasks t
+       INNER JOIN marathon_days d ON d.id = t.day_id
+       WHERE d.marathon_id = ?`,
+      [id],
+    );
+    await connection.execute(
+      `DELETE m FROM marathon_day_materials m
+       INNER JOIN marathon_days d ON d.id = m.day_id
+       WHERE d.marathon_id = ?`,
+      [id],
+    );
+    await connection.execute(
+      `DELETE pr FROM marathon_day_progress pr
+       INNER JOIN marathon_days d ON d.id = pr.day_id
+       WHERE d.marathon_id = ?`,
+      [id],
+    );
+    await connection.execute(`DELETE FROM marathon_days WHERE marathon_id = ?`, [id]);
+    await connection.execute(`DELETE FROM marathon_riddles WHERE marathon_id = ?`, [id]);
+    await connection.execute(`DELETE FROM marathon_notifications WHERE marathon_id = ?`, [id]);
+    await connection.execute(`DELETE FROM marathon_bot_links WHERE marathon_id = ?`, [id]);
+    await connection.execute(`DELETE FROM marathon_participants WHERE marathon_id = ?`, [id]);
+    await connection.execute(`DELETE FROM marathons WHERE id = ? AND kind = 'daily'`, [id]);
+  }, getConnection);
+}
+
+export async function listRiddles(marathonId: number, getConnection?: Conn): Promise<Riddle[]> {
+  return withConn(async (connection) => {
+    const rows = await connection.query<{
+      id: number;
+      sort_order: number;
+      title: string;
+      body: string;
+      answer: string;
+      hint: string | null;
+    }>(
+      `SELECT id, sort_order, title, body, answer, hint
+       FROM marathon_riddles WHERE marathon_id = ? ORDER BY sort_order`,
+      [marathonId],
+    );
+    return rows.map((row) => ({
+      id: row.id,
+      order: row.sort_order,
+      title: row.title,
+      body: row.body,
+      answer: row.answer,
+      hint: row.hint,
+    }));
+  }, getConnection);
+}
+
+export async function insertRiddle(
+  marathonId: number,
+  input: Omit<Riddle, "id">,
+  getConnection?: Conn,
+): Promise<void> {
+  await withConn(async (connection) => {
+    await connection.execute(
+      `INSERT INTO marathon_riddles (marathon_id, sort_order, title, body, answer, hint)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [marathonId, input.order, input.title, input.body, input.answer, input.hint],
+    );
+  }, getConnection);
+}
+
+export async function deleteRiddle(
+  marathonId: number,
+  riddleId: number,
+  getConnection?: Conn,
+): Promise<void> {
+  await withConn(async (connection) => {
+    await connection.execute(
+      `DELETE FROM marathon_riddles WHERE id = ? AND marathon_id = ?`,
+      [riddleId, marathonId],
+    );
+  }, getConnection);
+}
+
+export async function listDays(marathonId: number, getConnection?: Conn): Promise<MarathonDay[]> {
+  return withConn(async (connection) => {
+    const rows = await connection.query<{
+      id: number;
+      day_number: number;
+      topic: string;
+      intro_text: string | null;
+    }>(
+      `SELECT id, day_number, topic, intro_text
+       FROM marathon_days WHERE marathon_id = ? ORDER BY day_number`,
+      [marathonId],
+    );
+    return rows.map((row) => ({
+      id: row.id,
+      dayNumber: row.day_number,
+      topic: row.topic,
+      introText: row.intro_text,
+    }));
+  }, getConnection);
+}
+
+export async function insertDay(
+  marathonId: number,
+  input: Omit<MarathonDay, "id">,
+  getConnection?: Conn,
+): Promise<number> {
+  return withConn(async (connection) => {
+    const result = await connection.execute(
+      `INSERT INTO marathon_days (marathon_id, day_number, topic, intro_text)
+       VALUES (?, ?, ?, ?)`,
+      [marathonId, input.dayNumber, input.topic, input.introText],
+    );
+    return result.insertId;
+  }, getConnection);
+}
+
+export async function updateDay(
+  marathonId: number,
+  dayId: number,
+  input: { topic: string; introText: string },
+  getConnection?: Conn,
+): Promise<void> {
+  await withConn(async (connection) => {
+    await connection.execute(
+      `UPDATE marathon_days SET topic = ?, intro_text = ?
+       WHERE id = ? AND marathon_id = ?`,
+      [input.topic, input.introText, dayId, marathonId],
+    );
+  }, getConnection);
+}
+
+export async function deleteDay(
+  marathonId: number,
+  dayId: number,
+  getConnection?: Conn,
+): Promise<void> {
+  await withConn(async (connection) => {
+    await connection.execute(
+      `DELETE FROM marathon_day_tasks WHERE day_id = ?`,
+      [dayId],
+    );
+    await connection.execute(
+      `DELETE FROM marathon_day_materials WHERE day_id = ?`,
+      [dayId],
+    );
+    await connection.execute(
+      `DELETE FROM marathon_day_progress WHERE day_id = ?`,
+      [dayId],
+    );
+    await connection.execute(
+      `DELETE FROM marathon_days WHERE id = ? AND marathon_id = ?`,
+      [dayId, marathonId],
+    );
+  }, getConnection);
+}
+
+export async function listMaterials(dayId: number, getConnection?: Conn): Promise<Material[]> {
+  return withConn(async (connection) => {
+    const rows = await connection.query<{
+      id: number;
+      sort_order: number;
+      material_type: MaterialType;
+      url_or_body: string;
+    }>(
+      `SELECT id, sort_order, material_type, url_or_body
+       FROM marathon_day_materials WHERE day_id = ? ORDER BY sort_order`,
+      [dayId],
+    );
+    return rows.map((row) => ({
+      id: row.id,
+      order: row.sort_order,
+      type: row.material_type,
+      urlOrBody: row.url_or_body,
+    }));
+  }, getConnection);
+}
+
+export async function insertMaterial(
+  dayId: number,
+  input: Omit<Material, "id">,
+  getConnection?: Conn,
+): Promise<void> {
+  await withConn(async (connection) => {
+    await connection.execute(
+      `INSERT INTO marathon_day_materials (day_id, sort_order, material_type, url_or_body)
+       VALUES (?, ?, ?, ?)`,
+      [dayId, input.order, input.type, input.urlOrBody],
+    );
+  }, getConnection);
+}
+
+export async function deleteMaterial(
+  dayId: number,
+  materialId: number,
+  getConnection?: Conn,
+): Promise<void> {
+  await withConn(async (connection) => {
+    await connection.execute(
+      `DELETE FROM marathon_day_materials WHERE id = ? AND day_id = ?`,
+      [materialId, dayId],
+    );
+  }, getConnection);
+}
+
+type TaskRow = {
+  id: number;
+  sort_order: number;
+  question_id: number | null;
+  inline_prompt: string | null;
+  inline_options: string | null;
+  inline_correct: number | null;
+  task_text: string | null;
+  answer_1: string | null;
+  answer_2: string | null;
+  answer_3: string | null;
+  answer_4: string | null;
+  right_answer_n: number | null;
+};
+
+function parseOptions(raw: string | null): string[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((item): item is string => typeof item === "string" && item.trim().length > 0);
+  } catch {
+    return [];
+  }
+}
+
+function mapTask(row: TaskRow): (PlayTask & { correct: number }) | null {
+  if (row.question_id && row.task_text && row.right_answer_n) {
+    const options = [row.answer_1, row.answer_2, row.answer_3, row.answer_4].filter(
+      (item): item is string => Boolean(item && item.trim()),
+    );
+    if (options.length < 2) return null;
+    return {
+      id: row.id,
+      order: row.sort_order,
+      prompt: row.task_text,
+      options,
+      correct: Number(row.right_answer_n),
+    };
+  }
+  const options = parseOptions(row.inline_options);
+  if (!row.inline_prompt || options.length < 2 || !row.inline_correct) return null;
+  return {
+    id: row.id,
+    order: row.sort_order,
+    prompt: row.inline_prompt,
+    options,
+    correct: Number(row.inline_correct),
+  };
+}
+
+async function loadTasks(
+  connection: SqlConnection,
+  dayId: number,
+): Promise<Array<PlayTask & { correct: number }>> {
+  const rows = await connection.query<TaskRow>(
+    `SELECT t.id, t.sort_order, t.question_id, t.inline_prompt, t.inline_options, t.inline_correct,
+            q.task_text, q.answer_1, q.answer_2, q.answer_3, q.answer_4, q.right_answer_n
+     FROM marathon_day_tasks t
+     LEFT JOIN quiz_tasks q ON q.id = t.question_id
+     WHERE t.day_id = ?
+     ORDER BY t.sort_order`,
+    [dayId],
+  );
+  return rows.flatMap((row) => {
+    const task = mapTask(row);
+    return task ? [task] : [];
+  });
+}
+
+export async function listPlayTasks(dayId: number, getConnection?: Conn): Promise<PlayTask[]> {
+  return withConn(async (connection) => {
+    const tasks = await loadTasks(connection, dayId);
+    return tasks.map(({ correct: _correct, ...task }) => task);
+  }, getConnection);
+}
+
+export async function listAdminTasks(
+  dayId: number,
+  getConnection?: Conn,
+): Promise<Array<PlayTask & { correct: number; questionId: number | null }>> {
+  return withConn(async (connection) => {
+    const rows = await connection.query<TaskRow>(
+      `SELECT t.id, t.sort_order, t.question_id, t.inline_prompt, t.inline_options, t.inline_correct,
+              q.task_text, q.answer_1, q.answer_2, q.answer_3, q.answer_4, q.right_answer_n
+       FROM marathon_day_tasks t
+       LEFT JOIN quiz_tasks q ON q.id = t.question_id
+       WHERE t.day_id = ?
+       ORDER BY t.sort_order`,
+      [dayId],
+    );
+    return rows.flatMap((row) => {
+      const task = mapTask(row);
+      if (!task) {
+        return [{
+          id: row.id,
+          order: row.sort_order,
+          prompt: row.inline_prompt || row.task_text || `Завдання #${row.question_id ?? row.id}`,
+          options: [],
+          correct: Number(row.inline_correct ?? row.right_answer_n ?? 0),
+          questionId: row.question_id,
+        }];
+      }
+      return [{ ...task, questionId: row.question_id }];
+    });
+  }, getConnection);
+}
+
+export async function insertTask(
+  dayId: number,
+  input: {
+    order: number;
+    questionId: number | null;
+    prompt: string | null;
+    options: string[] | null;
+    correct: number | null;
+  },
+  getConnection?: Conn,
+): Promise<void> {
+  await withConn(async (connection) => {
+    await connection.execute(
+      `INSERT INTO marathon_day_tasks
+        (day_id, sort_order, question_id, inline_prompt, inline_options, inline_correct)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [
+        dayId,
+        input.order,
+        input.questionId,
+        input.prompt,
+        input.options ? JSON.stringify(input.options) : null,
+        input.correct,
+      ],
+    );
+  }, getConnection);
+}
+
+export async function deleteTask(
+  dayId: number,
+  taskId: number,
+  getConnection?: Conn,
+): Promise<void> {
+  await withConn(async (connection) => {
+    await connection.execute(
+      `DELETE FROM marathon_day_tasks WHERE id = ? AND day_id = ?`,
+      [taskId, dayId],
+    );
+  }, getConnection);
+}
+
+export async function quizTaskExists(
+  id: number,
+  getConnection?: Conn,
+): Promise<boolean> {
+  if (!Number.isInteger(id) || id <= 0) return false;
+  return withConn(async (connection) => {
+    const rows = await connection.query<{ id: number }>(
+      `SELECT id FROM quiz_tasks WHERE id = ? LIMIT 1`,
+      [id],
+    );
+    return Boolean(rows[0]);
+  }, getConnection);
+}
+
+export async function searchQuizTasks(
+  query: string,
+  getConnection?: Conn,
+): Promise<Array<{ id: number; label: string }>> {
+  const term = query.trim().slice(0, 80);
+  if (!term) return [];
+  const like = `%${term.replace(/[\\%_]/g, "\\$&")}%`;
+  return withConn(async (connection) => {
+    const rows = await connection.query<{ id: number; name: string | null; task_text: string }>(
+      `SELECT id, name, task_text FROM quiz_tasks
+       WHERE CAST(id AS CHAR) = ? OR name LIKE ? ESCAPE '\\\\' OR task_text LIKE ? ESCAPE '\\\\'
+       ORDER BY id DESC LIMIT 12`,
+      [term, like, like],
+    );
+    return rows.map((row) => ({
+      id: row.id,
+      label: `${row.id}. ${(row.name || row.task_text).slice(0, 120)}`,
+    }));
+  }, getConnection);
+}
+
+export async function getParticipant(
+  marathonId: number,
+  userId: number,
+  getConnection?: Conn,
+): Promise<Participant | null> {
+  return withConn(async (connection) => {
+    const rows = await connection.query<{
+      user_id: number;
+      source: string | null;
+      streak: number;
+      finished_at: unknown;
+      converted_at: unknown;
+      telegram_chat_id: number | string | null;
+      notify_email: number;
+      notify_bot: number;
+    }>(
+      `SELECT user_id, source, streak, finished_at, converted_at, telegram_chat_id,
+              notify_email, notify_bot
+       FROM marathon_participants WHERE marathon_id = ? AND user_id = ? LIMIT 1`,
+      [marathonId, userId],
+    );
+    const row = rows[0];
+    if (!row) return null;
+    return {
+      userId: row.user_id,
+      source: row.source,
+      streak: Number(row.streak) || 0,
+      finishedAt: row.finished_at ? String(row.finished_at) : null,
+      convertedAt: row.converted_at ? String(row.converted_at) : null,
+      telegramChatId: row.telegram_chat_id == null ? null : String(row.telegram_chat_id),
+      notifyEmail: flag(row.notify_email),
+      notifyBot: flag(row.notify_bot),
+    };
+  }, getConnection);
+}
+
+export async function joinParticipant(
+  marathonId: number,
+  userId: number,
+  source: string | null,
+  getConnection?: Conn,
+): Promise<void> {
+  await withConn(async (connection) => {
+    await connection.execute(
+      `INSERT IGNORE INTO marathon_participants (marathon_id, user_id, source) VALUES (?, ?, ?)`,
+      [marathonId, userId, source],
+    );
+    if (source) {
+      await connection.execute(
+        `UPDATE marathon_participants SET source = ?
+         WHERE marathon_id = ? AND user_id = ? AND source IS NULL`,
+        [source, marathonId, userId],
+      );
+    }
+  }, getConnection);
+}
+
+export async function listProgress(
+  marathonId: number,
+  userId: number,
+  getConnection?: Conn,
+): Promise<DayProgress[]> {
+  return withConn(async (connection) => {
+    const rows = await connection.query<{
+      day_id: number;
+      day_number: number;
+      materials_viewed_at: unknown;
+      score: number | null;
+      passed: number;
+      completed_at: unknown;
+    }>(
+      `SELECT pr.day_id, d.day_number, pr.materials_viewed_at, pr.score, pr.passed, pr.completed_at
+       FROM marathon_day_progress pr
+       INNER JOIN marathon_days d ON d.id = pr.day_id
+       WHERE pr.marathon_id = ? AND pr.user_id = ?
+       ORDER BY d.day_number`,
+      [marathonId, userId],
+    );
+    return rows.map((row) => ({
+      dayId: row.day_id,
+      dayNumber: row.day_number,
+      materialsViewed: Boolean(row.materials_viewed_at),
+      score: row.score == null ? null : Number(row.score),
+      passed: flag(row.passed),
+      completedAt: asMs(row.completed_at),
+    }));
+  }, getConnection);
+}
+
+export async function markMaterialsViewed(input: {
+  marathon: DailyMarathon;
+  userId: number;
+  day: MarathonDay;
+  now: Date;
+}, getConnection?: Conn): Promise<"ok" | "locked" | "missing"> {
+  const access = evaluateDayAccess({
+    now: input.now,
+    startDate: input.marathon.startDate,
+    unlockHour: input.marathon.unlockHour,
+    daysCount: input.marathon.daysCount,
+    dayNumber: input.day.dayNumber,
+  });
+  if (!access.open) return access.code === "locked" ? "locked" : "missing";
+  await withConn(async (connection) => {
+    await connection.execute(
+      `INSERT INTO marathon_day_progress (marathon_id, user_id, day_id, materials_viewed_at)
+       VALUES (?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         materials_viewed_at = COALESCE(materials_viewed_at, VALUES(materials_viewed_at))`,
+      [input.marathon.id, input.userId, input.day.id, input.now],
+    );
+  }, getConnection);
+  return "ok";
+}
+
+export async function completeParticipantDay(input: {
+  marathon: DailyMarathon;
+  userId: number;
+  day: MarathonDay;
+  answers: Record<number, number>;
+  materialsViewed: boolean;
+  progress: ProgressMark[];
+  now: Date;
+}, getConnection?: Conn): Promise<SubmitSuccess | { ok: false; code: "invalid_day" | "locked" | "materials_required" }> {
+  return withConn(async (connection) => {
+    const tasks = await loadTasks(connection, input.day.id);
+    return submitOpenedDay(
+      {
+        startDate: input.marathon.startDate,
+        unlockHour: input.marathon.unlockHour,
+        daysCount: input.marathon.daysCount,
+        dayNumber: input.day.dayNumber,
+        materialsViewed: input.materialsViewed,
+        passThreshold: input.marathon.passThreshold,
+        progress: input.progress,
+      },
+      {
+        now: () => input.now,
+        grade: () => {
+          let correct = 0;
+          for (const task of tasks) {
+            if (input.answers[task.id] === task.correct) correct += 1;
+          }
+          return { correct, total: tasks.length };
+        },
+        persist: async (result) => {
+          await connection.execute(
+            `INSERT INTO marathon_day_progress
+              (marathon_id, user_id, day_id, materials_viewed_at, score, passed, completed_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE
+               score = VALUES(score),
+               passed = VALUES(passed),
+               completed_at = VALUES(completed_at),
+               materials_viewed_at = COALESCE(materials_viewed_at, VALUES(materials_viewed_at))`,
+            [
+              input.marathon.id,
+              input.userId,
+              input.day.id,
+              input.now,
+              result.score,
+              result.passed ? 1 : 0,
+              input.now,
+            ],
+          );
+          const done = new Set(
+            input.progress
+              .filter((row) => row.completedAt != null)
+              .map((row) => row.dayNumber),
+          );
+          done.add(input.day.dayNumber);
+          const finished = done.size >= input.marathon.daysCount;
+          await connection.execute(
+            `UPDATE marathon_participants
+             SET streak = ?,
+                 finished_at = CASE
+                   WHEN ? = 1 THEN COALESCE(finished_at, ?)
+                   ELSE finished_at
+                 END
+             WHERE marathon_id = ? AND user_id = ?`,
+            [
+              result.streak,
+              finished ? 1 : 0,
+              input.now,
+              input.marathon.id,
+              input.userId,
+            ],
+          );
+        },
+      },
+    );
+  }, getConnection);
+}
+
+export async function setNotifyPrefs(
+  marathonId: number,
+  userId: number,
+  prefs: { notifyEmail: boolean; notifyBot: boolean },
+  getConnection?: Conn,
+): Promise<void> {
+  await withConn(async (connection) => {
+    await connection.execute(
+      `UPDATE marathon_participants
+       SET notify_email = ?, notify_bot = ?
+       WHERE marathon_id = ? AND user_id = ?`,
+      [prefs.notifyEmail ? 1 : 0, prefs.notifyBot ? 1 : 0, marathonId, userId],
+    );
+  }, getConnection);
+}
+
+export async function silenceEmail(
+  marathonId: number,
+  userId: number,
+  getConnection?: Conn,
+): Promise<boolean> {
+  return withConn(async (connection) => {
+    const result = await connection.execute(
+      `UPDATE marathon_participants SET notify_email = 0
+       WHERE marathon_id = ? AND user_id = ?`,
+      [marathonId, userId],
+    );
+    return result.affectedRows > 0;
+  }, getConnection);
+}
+
+export async function markConverted(
+  marathonId: number,
+  userId: number,
+  now: Date,
+  getConnection?: Conn,
+): Promise<void> {
+  await withConn(async (connection) => {
+    await connection.execute(
+      `UPDATE marathon_participants
+       SET converted_at = COALESCE(converted_at, ?)
+       WHERE marathon_id = ? AND user_id = ?`,
+      [now, marathonId, userId],
+    );
+  }, getConnection);
+}
+
+export async function listParticipantReports(
+  marathonId: number,
+  getConnection?: Conn,
+): Promise<ParticipantReport[]> {
+  return withConn(async (connection) => {
+    const rows = await connection.query<{
+      user_id: number;
+      display_name: string;
+      login: string;
+      email: string | null;
+      email_verified_at: unknown;
+      source: string | null;
+      streak: number;
+      finished_at: unknown;
+      converted_at: unknown;
+      day_number: number | null;
+      score: number | null;
+      passed: number | null;
+      completed_at: unknown;
+    }>(
+      `SELECT u.id AS user_id, u.display_name, u.login, u.email, u.email_verified_at,
+              p.source, p.streak, p.finished_at, p.converted_at,
+              d.day_number, pr.score, pr.passed, pr.completed_at
+       FROM marathon_participants p
+       INNER JOIN app_users u ON u.id = p.user_id
+       LEFT JOIN marathon_days d ON d.marathon_id = p.marathon_id
+       LEFT JOIN marathon_day_progress pr
+         ON pr.marathon_id = p.marathon_id AND pr.user_id = p.user_id AND pr.day_id = d.id
+       WHERE p.marathon_id = ?
+       ORDER BY u.display_name, d.day_number`,
+      [marathonId],
+    );
+    const byUser = new Map<number, ParticipantReport>();
+    for (const row of rows) {
+      let report = byUser.get(row.user_id);
+      if (!report) {
+        report = {
+          userId: row.user_id,
+          displayName: row.display_name,
+          login: row.login,
+          email: row.email,
+          emailVerified: Boolean(row.email_verified_at),
+          source: row.source,
+          streak: Number(row.streak) || 0,
+          finished: Boolean(row.finished_at),
+          converted: Boolean(row.converted_at),
+          days: [],
+        };
+        byUser.set(row.user_id, report);
+      }
+      if (row.day_number != null) {
+        report.days.push({
+          dayNumber: row.day_number,
+          score: row.score == null ? null : Number(row.score),
+          passed: flag(row.passed),
+          completed: Boolean(row.completed_at),
+        });
+      }
+    }
+    return [...byUser.values()];
+  }, getConnection);
+}
+
+export type NotifyAudienceMarathon = {
+  marathonId: number;
+  slug: string;
+  title: string;
+  startDate: string;
+  unlockHour: string;
+  daysCount: number;
+  topics: Record<number, string>;
+  people: Array<{
+    userId: number;
+    email: string | null;
+    telegramChatId: string | null;
+    notifyEmail: boolean;
+    notifyBot: boolean;
+    completedDayNumbers: number[];
+  }>;
+};
+
+export async function loadNotifyAudience(
+  getConnection?: Conn,
+): Promise<NotifyAudienceMarathon[]> {
+  return withConn(async (connection) => {
+    const rows = await connection.query<{
+      marathon_id: number;
+      slug: string;
+      title: string;
+      start_date: unknown;
+      unlock_hour: string;
+      days_count: number;
+      day_number: number | null;
+      topic: string | null;
+      user_id: number;
+      email: string | null;
+      telegram_chat_id: number | string | null;
+      notify_email: number;
+      notify_bot: number;
+      completed_at: unknown;
+      is_banned: number;
+    }>(
+      `SELECT m.id AS marathon_id, m.slug, m.title, m.start_date, m.unlock_hour, m.days_count,
+              d.day_number, d.topic,
+              p.user_id, u.email, p.telegram_chat_id, p.notify_email, p.notify_bot,
+              pr.completed_at, u.is_banned
+       FROM marathons m
+       INNER JOIN marathon_participants p ON p.marathon_id = m.id
+       INNER JOIN app_users u ON u.id = p.user_id
+       LEFT JOIN marathon_days d ON d.marathon_id = m.id
+       LEFT JOIN marathon_day_progress pr
+         ON pr.marathon_id = m.id AND pr.user_id = p.user_id AND pr.day_id = d.id
+       WHERE m.kind = 'daily' AND m.status = 'active'`,
+      [],
+    );
+    const grouped = new Map<number, NotifyAudienceMarathon>();
+    const people = new Map<string, NotifyAudienceMarathon["people"][number]>();
+    for (const row of rows) {
+      if (flag(row.is_banned)) continue;
+      let marathon = grouped.get(row.marathon_id);
+      if (!marathon) {
+        const startDate = isoDate(row.start_date);
+        if (!startDate) continue;
+        marathon = {
+          marathonId: row.marathon_id,
+          slug: row.slug,
+          title: row.title,
+          startDate,
+          unlockHour: String(row.unlock_hour).slice(0, 5),
+          daysCount: Number(row.days_count),
+          topics: {},
+          people: [],
+        };
+        grouped.set(row.marathon_id, marathon);
+      }
+      if (row.day_number != null && row.topic) {
+        marathon.topics[row.day_number] = row.topic;
+      }
+      const personKey = `${row.marathon_id}:${row.user_id}`;
+      let person = people.get(personKey);
+      if (!person) {
+        person = {
+          userId: row.user_id,
+          email: row.email,
+          telegramChatId:
+            row.telegram_chat_id == null ? null : String(row.telegram_chat_id),
+          notifyEmail: flag(row.notify_email),
+          notifyBot: flag(row.notify_bot),
+          completedDayNumbers: [],
+        };
+        people.set(personKey, person);
+        marathon.people.push(person);
+      }
+      if (row.day_number != null && row.completed_at) {
+        person.completedDayNumbers.push(row.day_number);
+      }
+    }
+    return [...grouped.values()];
+  }, getConnection);
+}
+
+export async function claimNotification(
+  intent: {
+    marathonId: number;
+    userId: number;
+    dayNumber: number;
+    kind: "day_open" | "reminder";
+    channel: "email" | "telegram";
+  },
+  getConnection?: Conn,
+): Promise<"claimed" | "duplicate"> {
+  return withConn(async (connection) => {
+    try {
+      await connection.execute(
+        `INSERT INTO marathon_notifications
+          (marathon_id, user_id, day_number, kind, channel)
+         VALUES (?, ?, ?, ?, ?)`,
+        [intent.marathonId, intent.userId, intent.dayNumber, intent.kind, intent.channel],
+      );
+      return "claimed";
+    } catch (error) {
+      const errno = (error as { errno?: number }).errno;
+      if (errno === 1062) return "duplicate";
+      throw error;
+    }
+  }, getConnection);
+}
+
+export async function releaseNotification(
+  intent: {
+    marathonId: number;
+    userId: number;
+    dayNumber: number;
+    kind: "day_open" | "reminder";
+    channel: "email" | "telegram";
+  },
+  getConnection?: Conn,
+): Promise<void> {
+  await withConn(async (connection) => {
+    await connection.execute(
+      `DELETE FROM marathon_notifications
+       WHERE marathon_id = ? AND user_id = ? AND day_number = ? AND kind = ? AND channel = ?`,
+      [intent.marathonId, intent.userId, intent.dayNumber, intent.kind, intent.channel],
+    );
+  }, getConnection);
+}

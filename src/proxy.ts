@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { PUBLIC_PAGE_PATHS } from "@/constants/publicRoutes";
+import { hasPermission } from "@/modules/auth/permissions";
+import { isMarathonManagePath, isPublicMarathonPath } from "@/modules/marathons/daily/routes";
 import {
   budgetCharges,
   isPublicAsset,
@@ -27,7 +29,7 @@ function isPublicPath(pathname: string): boolean {
   // Includes `/t` so public teacher cards (`/t/{slug}`) skip the auth guard.
   return PUBLIC_PAGE_PATHS.some(
     (path) => pathname === path || pathname.startsWith(`${path}/`),
-  );
+  ) || isPublicMarathonPath(pathname);
 }
 
 function requiresAdmin(pathname: string): boolean {
@@ -76,6 +78,13 @@ function authGuard(
   }
 
   if (requiresAdmin(pathname) && session.role !== "admin") {
+    return redirectOnSite("/");
+  }
+
+  if (
+    isMarathonManagePath(pathname) &&
+    !hasPermission(session.role, "marathon:manage")
+  ) {
     return redirectOnSite("/");
   }
 

@@ -1,5 +1,6 @@
 import "server-only";
 import type { SqlConnection } from "@/lib/db/mysql";
+import { migrateDailyMarathon } from "./dailySchema";
 
 const SQL_CREATE_MARATHONS = `
   CREATE TABLE IF NOT EXISTS marathons (
@@ -116,6 +117,7 @@ async function runMarathonSchemaMigration(
     await connection.execute(SQL_CREATE_MARATHONS, []);
     await connection.execute(SQL_CREATE_PARTICIPANTS, []);
     await ensureParticipantForeignKeys(connection);
+    await migrateDailyMarathon(connection);
   } finally {
     connection.release();
   }
@@ -142,7 +144,8 @@ export async function closeExpiredMarathons(
   try {
     const now = Math.floor(Date.now() / 1000);
     await connection.execute(
-      `UPDATE marathons SET status = 'archived' WHERE status = 'active' AND ends_at <= ?`,
+      `UPDATE marathons SET status = 'archived'
+       WHERE status = 'active' AND ends_at <= ? AND kind = 'leaderboard'`,
       [now],
     );
   } finally {
