@@ -48,8 +48,8 @@ export async function Teachers() {
     nextSlot: t("demo.nextSlot"),
     bioLead: t("demo.headline"),
     bioRest: [t("demo.bio"), t("demo.publications")].filter(Boolean).join(" "),
-    rating: 4.9,
-    reviewCount: 18,
+    rating: 0,
+    reviewCount: 0,
   };
 
   const teachers = fromDb.length > 0 ? fromDb : [demoTeacher];
