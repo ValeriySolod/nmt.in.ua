@@ -6,6 +6,7 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import Link from "next/link";
 import { useReducedMotion } from "motion/react";
 import css from "./Teachers.module.css";
 
@@ -380,9 +381,9 @@ export function TeachersPanel({
                 </li>
               ))}
             </ul>
-            <button type="button" className={css.joinCta}>
+            <Link href="/register/teacher" className={css.joinCta}>
               {labels.joinCta}
-            </button>
+            </Link>
           </aside>
         </div>
       </div>

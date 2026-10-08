@@ -61,7 +61,7 @@
 .track {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(16.5rem, 18.5rem);
+  grid-auto-columns: minmax(0, 100%);
   gap: var(--space-sm);
   overflow-x: auto;
   overscroll-behavior-x: contain;
@@ -75,6 +75,19 @@
   outline: 2px solid transparent;
   box-shadow: var(--ring);
   border-radius: var(--radius-md);
+}
+
+.carouselItem {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-sm);
+  align-content: start;
+  scroll-snap-align: start;
+}
+
+.carouselItem.cardSelected {
+  border-radius: var(--radius-lg);
+  box-shadow: 0 0 0 2px rgb(31 143 69 / 55%);
 }
 
 .card {
@@ -158,8 +171,10 @@
 }
 
 .ratingBlock {
-  display: grid;
-  gap: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
 }
 
 .ratingMeta {
@@ -171,7 +186,7 @@
 .stars {
   display: flex;
   flex-wrap: wrap;
-  gap: 2px;
+  gap: 0;
 }
 
 .star {
@@ -236,9 +251,11 @@
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: end;
   }
+}
 
+@media (min-width: 1024px) {
   .track {
-    grid-auto-columns: minmax(18rem, 20rem);
+    grid-auto-columns: calc((100% - var(--space-sm)) / 2);
   }
 }
 

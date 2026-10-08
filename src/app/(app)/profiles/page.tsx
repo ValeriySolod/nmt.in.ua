@@ -10,6 +10,9 @@ import {
   getAdminProfiles,
   type AdminProfilesPage,
 } from "@/modules/admin-profiles";
+import { getPendingTeacherApplications } from "@/modules/teacher-moderation/store";
+import type { TeacherModerationApplication } from "@/modules/teacher-moderation/types";
+import { TeacherModerationPanel } from "@/components/admin/TeacherModerationPanel/TeacherModerationPanel";
 import { readSearchParam } from "@/lib/queryHref";
 
 const item = getNavItem("/profiles");
@@ -52,7 +55,9 @@ const EMPTY_PAGE: AdminProfilesPage = {
   roleCounts: { all: 0, student: 0, teacher: 0, admin: 0 },
 };
 
-export default async function ProfilesPage({ searchParams }: ProfilesPageProps) {
+export default async function ProfilesPage({
+  searchParams,
+}: ProfilesPageProps) {
   const user = await requireRole(["admin"]);
   const t = await getTranslations("AdminProfiles");
   const params = await searchParams;
@@ -60,14 +65,22 @@ export default async function ProfilesPage({ searchParams }: ProfilesPageProps) 
   const page = parsePage(readSearchParam(params.page));
 
   let profilesPage: AdminProfilesPage = EMPTY_PAGE;
+  let teacherApplications: TeacherModerationApplication[] = [];
   try {
     profilesPage = await getAdminProfiles({ page, role: roleFilter });
   } catch (error) {
     console.error("profiles: getAdminProfiles failed", error);
   }
+  try {
+    teacherApplications = await getPendingTeacherApplications();
+  } catch (error) {
+    console.error("profiles: getPendingTeacherApplications failed", error);
+  }
 
   return (
     <PageFrame kicker={t("kicker")} title={t("title")} lead={t("lead")}>
+      <TeacherModerationPanel applications={teacherApplications} />
+
       <AdminProfilesPanel
         profilesPage={profilesPage}
         currentUserId={user.id}
