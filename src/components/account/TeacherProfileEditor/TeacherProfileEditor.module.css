@@ -240,6 +240,23 @@
   color: var(--green-dark);
 }
 
+.alertPending {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.statusTitle {
+  margin: 0;
+  font-weight: 700;
+}
+
+.statusReason {
+  margin: 4px 0 0;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
 @media (min-width: 768px) {
   .panel {
     padding: var(--space-xl);

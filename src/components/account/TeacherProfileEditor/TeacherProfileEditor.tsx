@@ -206,6 +206,31 @@ export function TeacherProfileEditor({
         <p className={css.requiredHint}>{t("requiredHint")}</p>
       </div>
 
+      {profile.moderationStatus === "pending" ? (
+        <p className={clsx(css.alert, css.alertPending)} role="status">
+          {t("moderationPending")}
+        </p>
+      ) : null}
+
+      {profile.moderationStatus === "rejected" ? (
+        <div className={clsx(css.alert, css.alertError)} role="alert">
+          <p className={css.statusTitle}>{t("moderationRejected")}</p>
+          {profile.rejectionReason ? (
+            <p className={css.statusReason}>
+              {t("moderationRejectedReason", {
+                reason: profile.rejectionReason,
+              })}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
+      {profile.moderationStatus === "approved" ? (
+        <p className={clsx(css.alert, css.alertSuccess)} role="status">
+          {t("moderationApproved")}
+        </p>
+      ) : null}
+
       {state.status === "error" && !TEACHER_PROFILE_ERROR_FIELD[state.code] ? (
         <p className={clsx(css.alert, css.alertError)} role="alert">
           {t(`errors.${state.code}`)}
@@ -600,14 +625,17 @@ export function TeacherProfileEditor({
             {pending ? t("saving") : t("save")}
           </button>
 
-          <button
-            type="button"
-            onClick={submitForModeration}
-            className={css.share}
-            disabled={disabled}
-          >
-            {t("submitForModeration")}
-          </button>
+          {profile.moderationStatus === "draft" ||
+          profile.moderationStatus === "rejected" ? (
+            <button
+              type="button"
+              onClick={submitForModeration}
+              className={css.share}
+              disabled={disabled}
+            >
+              {t("submitForModeration")}
+            </button>
+          ) : null}
 
           <button
             type="button"
