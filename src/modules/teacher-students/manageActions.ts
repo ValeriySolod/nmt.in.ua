@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { absoluteSiteUrl } from "@/lib/siteOrigin";
-import { sendEmailVerificationMail } from "@/modules/auth/emailMessages";
+import { sendRegistrationVerificationMail } from "@/modules/auth/emailMessages";
 import { requireUser } from "@/modules/auth/getCurrentUser";
 import { canManageStudents } from "@/modules/auth/types";
 import { inviteJoinPath } from "./codes";
@@ -289,7 +289,7 @@ export async function createStudentAccountAction(
     requireUser: typeof requireUser;
     createStudentForTeacher: typeof createStudentForTeacher;
     revalidatePath: Revalidate;
-    sendVerificationMail?: typeof sendEmailVerificationMail;
+    sendVerificationMail?: typeof sendRegistrationVerificationMail;
   } = { requireUser, createStudentForTeacher, revalidatePath },
 ): Promise<CreateStudentActionState> {
   const user = await deps.requireUser();
@@ -312,7 +312,7 @@ export async function createStudentAccountAction(
 
     let mailSent = false;
     try {
-      const send = deps.sendVerificationMail ?? sendEmailVerificationMail;
+      const send = deps.sendVerificationMail ?? sendRegistrationVerificationMail;
       const mailed = await send({
         userId: created.studentUserId,
         email: created.email,

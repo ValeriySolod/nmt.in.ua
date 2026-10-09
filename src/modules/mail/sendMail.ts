@@ -1,5 +1,6 @@
 import "server-only";
 
+import https from "node:https";
 import {
   absoluteSiteUrl,
   resolveSiteUrl,
@@ -51,8 +52,20 @@ export function mailDeliveryMode(
 const TRANSIENT_BREVO_STATUS = new Set([408, 429, 500, 502, 503, 504]);
 const BREVO_ATTEMPTS = 2;
 
+export type BrevoPostResult = {
+  status: number;
+  statusText: string;
+  raw: string;
+};
+
 export type SendMailDeps = {
+  /** Test seam. Production does not use global `fetch` — Next patches it. */
   fetchImpl?: (url: string, init: RequestInit) => Promise<Response>;
+  /** Test seam for the production transport (`node:https`). */
+  postImpl?: (input: {
+    body: string;
+    headers: Record<string, string>;
+  }) => Promise<BrevoPostResult>;
   env?: MailSiteEnv;
   sleep?: (ms: number) => Promise<void>;
 };
@@ -60,14 +73,67 @@ export type SendMailDeps = {
 const defaultSleep = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms));
 
+const BREVO_TIMEOUT_MS = 8_000;
+
+/**
+ * `node:https`, not global `fetch`. Next's patched fetch is tied to the
+ * server-action request. Registration calls `redirect()` as soon as this
+ * returns; a body that was only queued, not read, used to die with that
+ * request. Resend never redirects, so the same letter left on the second click.
+ * The full response is read before this promise resolves.
+ */
+function postViaHttps(
+  body: string,
+  headers: Record<string, string>,
+): Promise<BrevoPostResult> {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const finish = (run: () => void) => {
+      if (settled) return;
+      settled = true;
+      run();
+    };
+
+    const req = https.request(
+      BREVO_SMTP_URL,
+      {
+        method: "POST",
+        headers: {
+          ...headers,
+          "content-length": String(Buffer.byteLength(body)),
+        },
+        timeout: BREVO_TIMEOUT_MS,
+      },
+      (res) => {
+        const chunks: Buffer[] = [];
+        res.on("data", (chunk: Buffer) => {
+          chunks.push(chunk);
+        });
+        res.on("end", () => {
+          finish(() =>
+            resolve({
+              status: res.statusCode ?? 0,
+              statusText: res.statusMessage ?? "",
+              raw: Buffer.concat(chunks).toString("utf8"),
+            }),
+          );
+        });
+      },
+    );
+    req.on("timeout", () => {
+      req.destroy(new Error("Brevo request timed out"));
+    });
+    req.on("error", (error) => {
+      finish(() => reject(error));
+    });
+    req.end(body);
+  });
+}
+
 /**
  * Sends transactional email via Brevo when `BREVO_API_KEY` is set.
  * Without a key, local/dev logs the message and returns ok. Production
  * without a key fails closed — otherwise the UI pretends the letter left.
- *
- * The response body is read before this returns. Registration then calls
- * `redirect()`, and a socket closed after headers-only used to drop the
- * first letter while the later resend (a fresh request) went through.
  * One retry covers a reset connection or a transient Brevo status.
  */
 export async function sendMail(
@@ -104,8 +170,12 @@ export async function sendMail(
     return { ok: false, error: "bad_from" };
   }
 
-  const fetchImpl = deps.fetchImpl ?? fetch;
   const sleep = deps.sleep ?? defaultSleep;
+  const headers = {
+    accept: "application/json",
+    "content-type": "application/json",
+    "api-key": apiKey,
+  };
   const body = JSON.stringify({
     sender,
     to: [{ email: to }],
@@ -117,33 +187,32 @@ export async function sendMail(
   let lastError = "send_failed";
   for (let attempt = 1; attempt <= BREVO_ATTEMPTS; attempt += 1) {
     try {
-      const response = await fetchImpl(BREVO_SMTP_URL, {
-        method: "POST",
-        cache: "no-store",
-        signal: AbortSignal.timeout(12_000),
-        headers: {
-          accept: "application/json",
-          "content-type": "application/json",
-          "api-key": apiKey,
-        },
-        body,
-      });
-      const raw = await response.text();
-      if (!response.ok) {
-        const detail = readBrevoError(raw, response.statusText);
-        console.error("sendMail: Brevo error", response.status, detail);
+      const posted = await postBrevo(body, headers, deps);
+      if (posted.status < 200 || posted.status >= 300) {
+        const detail = readBrevoError(posted.raw, posted.statusText);
+        console.error("sendMail: Brevo error", {
+          to,
+          status: posted.status,
+          detail,
+          attempt,
+        });
         lastError = "brevo_error";
         if (
-          !TRANSIENT_BREVO_STATUS.has(response.status) ||
+          !TRANSIENT_BREVO_STATUS.has(posted.status) ||
           attempt === BREVO_ATTEMPTS
         ) {
           return { ok: false, error: "brevo_error" };
         }
       } else {
+        console.info("sendMail: accepted", {
+          to,
+          messageId: readMessageId(posted.raw),
+          attempt,
+        });
         return { ok: true, mode: "brevo" };
       }
     } catch (error) {
-      console.error("sendMail: unexpected error", error);
+      console.error("sendMail: unexpected error", { to, attempt, error });
       lastError = "send_failed";
       if (attempt === BREVO_ATTEMPTS) {
         return { ok: false, error: "send_failed" };
@@ -152,6 +221,41 @@ export async function sendMail(
     await sleep(200);
   }
   return { ok: false, error: lastError };
+}
+
+async function postBrevo(
+  body: string,
+  headers: Record<string, string>,
+  deps: SendMailDeps,
+): Promise<BrevoPostResult> {
+  if (deps.fetchImpl) {
+    const response = await deps.fetchImpl(BREVO_SMTP_URL, {
+      method: "POST",
+      cache: "no-store",
+      signal: AbortSignal.timeout(12_000),
+      headers,
+      body,
+    });
+    return {
+      status: response.status,
+      statusText: response.statusText,
+      raw: await response.text(),
+    };
+  }
+  if (deps.postImpl) return deps.postImpl({ body, headers });
+  return postViaHttps(body, headers);
+}
+
+function readMessageId(raw: string): string | null {
+  try {
+    const body = JSON.parse(raw) as { messageId?: unknown };
+    if (typeof body.messageId === "string" && body.messageId.trim()) {
+      return body.messageId.trim();
+    }
+  } catch {
+    // A 201 with an empty body still means Brevo accepted the letter.
+  }
+  return null;
 }
 
 function readBrevoError(raw: string, statusText: string): string {

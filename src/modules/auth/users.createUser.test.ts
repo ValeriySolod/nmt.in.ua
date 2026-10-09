@@ -7,8 +7,11 @@ import { createUser, CreateUserError, findUserById } from "./users";
 test("createUser inserts a student and returns AuthUser", async () => {
   let released = false;
   let committed = false;
+  const steps: string[] = [];
   const connection: SqlConnection = {
-    beginTransaction: async () => {},
+    beginTransaction: async () => {
+      steps.push("begin");
+    },
     query: async <T,>() => {
       // ensureAuthSchema: CREATE TABLE (+ column ensures) before insert
       return [{ count: 3 }] as T[];
@@ -21,6 +24,7 @@ test("createUser inserts a student and returns AuthUser", async () => {
         return { insertId: 0, affectedRows: 1 };
       }
       if (sql.includes("INSERT INTO app_users")) {
+        steps.push("insert");
         assert.equal(params[0], "maria_k");
         assert.equal(typeof params[1], "string");
         assert.match(String(params[1]), /^scrypt:/);
@@ -32,6 +36,7 @@ test("createUser inserts a student and returns AuthUser", async () => {
       return { insertId: 0, affectedRows: 0 };
     },
     commit: async () => {
+      steps.push("commit");
       committed = true;
     },
     rollback: async () => {},
@@ -64,6 +69,10 @@ test("createUser inserts a student and returns AuthUser", async () => {
   });
   assert.equal(released, true);
   assert.equal(committed, true);
+  const beginAt = steps.indexOf("begin");
+  const insertAt = steps.indexOf("insert");
+  const commitAt = steps.indexOf("commit");
+  assert.ok(beginAt !== -1 && beginAt < insertAt && insertAt < commitAt);
 });
 
 test("createUser maps MySQL duplicate key to login_taken", async () => {

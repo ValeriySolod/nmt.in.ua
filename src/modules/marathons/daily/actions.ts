@@ -342,11 +342,33 @@ export async function joinMarathonAction(formData: FormData): Promise<void> {
   redirect(`/marathon/${slug}/map`);
 }
 
-export async function registerMarathonAction(formData: FormData): Promise<void> {
+type RegisterMarathonDeps = {
+  loadMarathon?: (
+    slug: string,
+  ) => Promise<{ id: number; status: string } | null>;
+  createUser?: typeof createUser;
+  joinParticipant?: typeof joinParticipant;
+  sendVerificationMail?: typeof sendRegistrationVerificationMail;
+  rememberReturn?: (path: string) => Promise<void>;
+  redirectTo?: (path: string) => never;
+};
+
+export async function registerMarathonAction(
+  formData: FormData,
+  deps: RegisterMarathonDeps = {},
+): Promise<void> {
+  const go = (path: string): never => {
+    if (deps.redirectTo) return deps.redirectTo(path);
+    return redirect(path);
+  };
   const slug = readText(formData.get("slug"), 64);
   const back = `/marathon/${slug}/join`;
-  const marathon = await openMarathon(slug);
-  if (!marathon || marathon.status !== "active") redirect(`${back}?error=closed`);
+  const marathon = deps.loadMarathon
+    ? await deps.loadMarathon(slug)
+    : await openMarathon(slug);
+  if (!marathon || marathon.status !== "active") {
+    return go(`${back}?error=closed`);
+  }
   const name = readText(formData.get("name"), 100);
   const email = readText(formData.get("email"), 255);
   const password = String(formData.get("password") ?? "");
@@ -370,8 +392,9 @@ export async function registerMarathonAction(formData: FormData): Promise<void> 
       if (validated.ok || validated.code !== "invalidLogin") break;
     }
   }
-  if (!validated.ok) redirect(`${back}?error=${validated.code}`);
+  if (!validated.ok) return go(`${back}?error=${validated.code}`);
   const value = validated.value;
+  const create = deps.createUser ?? createUser;
   let userId = 0;
   for (const login of loginCandidatesFromEmail(value.email)) {
     const attempt = validateRegistrationInput({
@@ -383,7 +406,7 @@ export async function registerMarathonAction(formData: FormData): Promise<void> 
     });
     if (!attempt.ok) continue;
     try {
-      const user = await createUser({
+      const user = await create({
         login: attempt.value.login,
         displayName: attempt.value.displayName,
         email: attempt.value.email,
@@ -396,34 +419,41 @@ export async function registerMarathonAction(formData: FormData): Promise<void> 
     } catch (error) {
       if (error instanceof CreateUserError && error.code === "login_taken") continue;
       if (error instanceof CreateUserError && error.code === "email_taken") {
-        redirect(`${back}?error=emailTaken`);
+        return go(`${back}?error=emailTaken`);
       }
       console.error("registerMarathonAction", error);
-      redirect(`${back}?error=server`);
+      return go(`${back}?error=server`);
     }
   }
-  if (!userId) redirect(`${back}?error=server`);
-  await joinParticipant(marathon.id, userId, utmJsonFromForm(formData));
+  if (!userId) return go(`${back}?error=server`);
+  const join = deps.joinParticipant ?? joinParticipant;
+  await join(marathon.id, userId, utmJsonFromForm(formData));
+  let mailed = false;
   try {
-    await sendRegistrationVerificationMail({
+    const send = deps.sendVerificationMail ?? sendRegistrationVerificationMail;
+    const result = await send({
       userId,
       email: value.email,
       displayName: value.displayName,
     });
+    mailed = result.ok;
   } catch (error) {
     console.error("registerMarathonAction mail", error);
   }
   const nextPath = safeInternalPath(`/marathon/${slug}/map`);
-  const cookieStore = await cookies();
-  cookieStore.set(RETURN_COOKIE, nextPath, {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24,
-  });
-  redirect(
-    `/register/check-email?email=${encodeURIComponent(value.email)}&next=${encodeURIComponent(nextPath)}`,
-  );
+  if (deps.rememberReturn) {
+    await deps.rememberReturn(nextPath);
+  } else {
+    const cookieStore = await cookies();
+    cookieStore.set(RETURN_COOKIE, nextPath, {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24,
+    });
+  }
+  const checkEmail = `/register/check-email?email=${encodeURIComponent(value.email)}&next=${encodeURIComponent(nextPath)}`;
+  return go(mailed ? checkEmail : `${checkEmail}&mail=failed`);
 }
 
 export async function markMaterialsAction(formData: FormData): Promise<void> {
