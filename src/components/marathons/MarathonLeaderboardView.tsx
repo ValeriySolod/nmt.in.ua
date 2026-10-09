@@ -18,6 +18,19 @@ function formatAvgSec(sec: number | null): string {
   return formatSpeed(sec);
 }
 
+function visibleLogin(
+  mode: MarathonLeaderboardMode,
+  row: {
+    login: string;
+    isCurrentUser: boolean;
+    isRosterStudent: boolean;
+  },
+): string | null {
+  if (row.isCurrentUser || mode === "admin") return row.login;
+  if (mode === "teacher" && row.isRosterStudent) return row.login;
+  return null;
+}
+
 export async function MarathonLeaderboardView({ data, mode }: Props) {
   const t = await getTranslations("MarathonLeaderboard");
   const {
@@ -85,7 +98,9 @@ export async function MarathonLeaderboardView({ data, mode }: Props) {
       ) : (
         <>
           <ul className={css.cardList} aria-label={t("tableAria")}>
-            {rows.map((row) => (
+            {rows.map((row) => {
+              const login = visibleLogin(mode, row);
+              return (
               <li
                 key={row.userId}
                 className={clsx(
@@ -100,7 +115,7 @@ export async function MarathonLeaderboardView({ data, mode }: Props) {
                   <span className={css.rank}>#{row.rank}</span>
                   <span className={css.name}>
                     {row.displayName}
-                    <span className={css.login}>@{row.login}</span>
+                    {login ? <span className={css.login}>@{login}</span> : null}
                   </span>
                 </div>
                 <dl className={css.meta}>
@@ -118,7 +133,8 @@ export async function MarathonLeaderboardView({ data, mode }: Props) {
                   </div>
                 </dl>
               </li>
-            ))}
+              );
+            })}
           </ul>
 
           <div className={css.tableWrap}>
@@ -133,7 +149,9 @@ export async function MarathonLeaderboardView({ data, mode }: Props) {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row) => (
+                {rows.map((row) => {
+                  const login = visibleLogin(mode, row);
+                  return (
                   <tr
                     key={row.userId}
                     className={clsx(
@@ -146,7 +164,7 @@ export async function MarathonLeaderboardView({ data, mode }: Props) {
                     <td className={css.colRank}>{row.rank}</td>
                     <td className={css.colName}>
                       {row.displayName}
-                      <span className={css.login}>@{row.login}</span>
+                      {login ? <span className={css.login}>@{login}</span> : null}
                     </td>
                     <td className={css.colMetric}>
                       {formatPercent(row.avgPercent)}
@@ -156,7 +174,8 @@ export async function MarathonLeaderboardView({ data, mode }: Props) {
                     </td>
                     <td className={css.colMetric}>{row.sessionsCount}</td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

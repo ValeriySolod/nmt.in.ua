@@ -11,6 +11,37 @@ export const TEACHER_PROFILE_SUBJECTS_MAX = 8;
 export const TEACHER_PROFILE_SUBJECT_MAX = 40;
 export const TEACHER_PROFILE_CONTACT_URL_MAX = 500;
 
+export const TEACHER_PROFILE_COUNTRY_MAX = 80;
+export const TEACHER_PROFILE_PHONE_MAX = 32;
+export const TEACHER_PROFILE_TEACHING_LEVELS_MAX = 8;
+export const TEACHER_PROFILE_TEACHING_LANGUAGES_MAX = 8;
+export const TEACHER_PROFILE_JOIN_MOTIVATION_MAX = 2000;
+export const TEACHER_PROFILE_LESSON_PRICE_MAX = 100000;
+export const TEACHER_PROFILE_LESSON_DURATION_MAX = 300;
+
+export const TEACHER_LEVELS = [
+  "grades_5_9",
+  "grades_10_11",
+  "nmt",
+  "adult",
+] as const;
+
+export type TeacherLevel = (typeof TEACHER_LEVELS)[number];
+
+export const TEACHING_LANGUAGES = ["uk", "en", "de", "pl"] as const;
+
+export type TeachingLanguage = (typeof TEACHING_LANGUAGES)[number];
+
+export const LESSON_CURRENCIES = ["UAH", "EUR", "USD", "PLN"] as const;
+
+export type LessonCurrency = (typeof LESSON_CURRENCIES)[number];
+
+export type TeacherModerationStatus =
+  | "draft"
+  | "pending"
+  | "approved"
+  | "rejected";
+
 export type TeacherProfile = {
   userId: number;
   slug: string;
@@ -19,12 +50,41 @@ export type TeacherProfile = {
   experience: string;
   publications: string;
   city: string;
+  country: string;
   subjects: string[];
+  teachingLevels: TeacherLevel[];
+  teachingLanguages: TeachingLanguage[];
   contactUrl: string;
+  phone: string;
+  lessonPrice: number | null;
+  lessonCurrency: LessonCurrency | "";
+  lessonDurationMinutes: number | null;
+  joinMotivation: string;
+  moderationStatus: TeacherModerationStatus;
+  submittedAt: Date | null;
+  reviewedAt: Date | null;
+  reviewedBy: number | null;
+  rejectionReason: string;
   isPublic: boolean;
 };
 
-export type PublicTeacherCard = TeacherProfile & {
+export type PublicTeacherCard = {
+  userId: number;
+  slug: string;
+  headline: string;
+  bio: string;
+  experience: string;
+  publications: string;
+  city: string;
+  country: string;
+  subjects: string[];
+  teachingLevels: TeacherLevel[];
+  teachingLanguages: TeachingLanguage[];
+  lessonPrice: number | null;
+  lessonCurrency: LessonCurrency | "";
+  lessonDurationMinutes: number | null;
+  contactUrl: string;
+  isPublic: boolean;
   displayName: string;
   login: string;
   role: UserRole;
@@ -45,9 +105,16 @@ export type TeacherProfileInput = {
   experience: string;
   publications: string;
   city: string;
+  country: string;
   subjects: string;
+  teachingLevels: string[];
+  teachingLanguages: string[];
   contactUrl: string;
-  isPublic: boolean;
+  phone: string;
+  lessonPrice: string;
+  lessonCurrency: string;
+  lessonDurationMinutes: string;
+  joinMotivation: string;
 };
 
 /** Public teacher card for the welcome landing swiper. */
@@ -67,6 +134,14 @@ export type TeacherProfileFieldError =
   | "cityTooLong"
   | "invalidSubjects"
   | "invalidContactUrl"
+  | "countryTooLong"
+  | "invalidTeachingLevels"
+  | "invalidTeachingLanguages"
+  | "invalidPhone"
+  | "invalidLessonPrice"
+  | "invalidLessonCurrency"
+  | "invalidLessonDuration"
+  | "joinMotivationTooLong"
   | "forbidden"
   | "serverError";
 
@@ -87,8 +162,21 @@ export function emptyTeacherProfile(userId: number): TeacherProfile {
     experience: "",
     publications: "",
     city: "",
+    country: "",
     subjects: [],
+    teachingLevels: [],
+    teachingLanguages: [],
     contactUrl: "",
+    phone: "",
+    lessonPrice: null,
+    lessonCurrency: "",
+    lessonDurationMinutes: null,
+    joinMotivation: "",
+    moderationStatus: "draft",
+    submittedAt: null,
+    reviewedAt: null,
+    reviewedBy: null,
+    rejectionReason: "",
     isPublic: false,
   };
 }

@@ -93,6 +93,12 @@ export const DASHBOARD_NAV: NavItem[] = [
       "Рейтинг учасників марафону: середній % правильних відповідей і швидкість.",
     status: "ready",
   },
+  {
+    href: "/admin/marathons",
+    label: "Марафон",
+    description: "П'ятиденний марафон: загадки, дні, учасники й вирва.",
+    status: "ready",
+  },
 ];
 
 export function getNavItem(href: string): NavItem {

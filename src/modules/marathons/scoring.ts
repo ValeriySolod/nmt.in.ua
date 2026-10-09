@@ -56,6 +56,17 @@ export function aggregateSessions(
   };
 }
 
+/** Sessions started before the student joined do not count, even inside the marathon window. */
+export function countsTowardMarathon(input: {
+  startTime: number;
+  marathonStartsAt: number;
+  marathonEndsAt: number;
+  joinedAtUnix: number;
+}): boolean {
+  const from = Math.max(input.marathonStartsAt, input.joinedAtUnix);
+  return input.startTime >= from && input.startTime <= input.marathonEndsAt;
+}
+
 export function compareStandings(
   a: StandingAggregate,
   b: StandingAggregate,

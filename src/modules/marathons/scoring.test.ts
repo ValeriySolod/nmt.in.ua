@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { aggregateSessions, compareStandings } from "./scoring";
+import {
+  aggregateSessions,
+  compareStandings,
+  countsTowardMarathon,
+} from "./scoring";
 
 test("aggregateSessions ignores sessions below min tasks", () => {
   const agg = aggregateSessions(
@@ -9,6 +13,40 @@ test("aggregateSessions ignores sessions below min tasks", () => {
   );
   assert.equal(agg.sessionsCount, 0);
   assert.equal(agg.avgPercent, null);
+});
+
+test("countsTowardMarathon ignores sessions started before join", () => {
+  const marathonStartsAt = 1_000;
+  const marathonEndsAt = 5_000;
+  const joinedAtUnix = 3_000;
+
+  assert.equal(
+    countsTowardMarathon({
+      startTime: 2_000,
+      marathonStartsAt,
+      marathonEndsAt,
+      joinedAtUnix,
+    }),
+    false,
+  );
+  assert.equal(
+    countsTowardMarathon({
+      startTime: 3_000,
+      marathonStartsAt,
+      marathonEndsAt,
+      joinedAtUnix,
+    }),
+    true,
+  );
+  assert.equal(
+    countsTowardMarathon({
+      startTime: 5_001,
+      marathonStartsAt,
+      marathonEndsAt,
+      joinedAtUnix,
+    }),
+    false,
+  );
 });
 
 test("compareStandings sorts by percent then speed", () => {

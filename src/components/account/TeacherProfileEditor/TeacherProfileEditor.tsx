@@ -1,24 +1,45 @@
 "use client";
 
 import clsx from "clsx";
-import { useActionState, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useForm } from "react-hook-form";
+
 import {
   saveTeacherProfileAction,
+  submitTeacherProfileForModerationAction,
   type SaveTeacherProfileActionState,
 } from "@/modules/teachers/actions";
 import {
   TEACHER_PROFILE_BIO_MAX,
   TEACHER_PROFILE_CITY_MAX,
   TEACHER_PROFILE_CONTACT_URL_MAX,
+  TEACHER_PROFILE_COUNTRY_MAX,
   TEACHER_PROFILE_EXPERIENCE_MAX,
   TEACHER_PROFILE_HEADLINE_MAX,
+  TEACHER_PROFILE_JOIN_MOTIVATION_MAX,
+  TEACHER_PROFILE_LESSON_DURATION_MAX,
+  TEACHER_PROFILE_LESSON_PRICE_MAX,
+  TEACHER_PROFILE_PHONE_MAX,
   TEACHER_PROFILE_PUBLICATIONS_MAX,
   TEACHER_PROFILE_SLUG_MAX,
+  TEACHER_PROFILE_SLUG_MIN,
+  TEACHER_PROFILE_SUBJECT_MAX,
+  TEACHER_PROFILE_SUBJECTS_MAX,
   teacherPublicPath,
   type TeacherProfile,
 } from "@/modules/teachers/types";
 import css from "./TeacherProfileEditor.module.css";
+import {
+  LESSON_CURRENCIES,
+  PHONE_PATTERN,
+  SLUG_PATTERN,
+  getTeacherProfileDefaultValues,
+  teacherProfileToFormData,
+  type TeacherProfileFormField,
+  type TeacherProfileFormValues,
+} from "./teacherProfileForm";
+import { TEACHER_PROFILE_ERROR_FIELD } from "./teacherProfileFormErrors";
 
 const INITIAL: SaveTeacherProfileActionState = { status: "idle" };
 
@@ -32,13 +53,128 @@ export function TeacherProfileEditor({
   suggestedSlug,
 }: TeacherProfileEditorProps) {
   const t = useTranslations("TeacherProfile");
-  const [state, formAction, pending] = useActionState(
-    saveTeacherProfileAction,
-    INITIAL
-  );
+  const [state, setState] = useState<SaveTeacherProfileActionState>(INITIAL);
+  const [moderationState, setModerationState] = useState<
+    Awaited<ReturnType<typeof submitTeacherProfileForModerationAction>>
+  >({ status: "idle" });
+  const [pending, setPending] = useState(false);
+  const [moderationPending, setModerationPending] = useState(false);
   const [copied, setCopied] = useState(false);
-  const slug = profile.slug || suggestedSlug;
+
   const sharePath = profile.slug ? teacherPublicPath(profile.slug) : "";
+
+  const {
+    register,
+    handleSubmit,
+    getValues,
+    setError,
+    clearErrors,
+    formState: { errors },
+  } = useForm<TeacherProfileFormValues>({
+    defaultValues: getTeacherProfileDefaultValues(profile, suggestedSlug),
+    mode: "onSubmit",
+    reValidateMode: "onChange",
+  });
+
+  function fieldError(message?: string) {
+    return message ? (
+      <span className={clsx(css.hint, css.fieldError)} role="alert">
+        {message}
+      </span>
+    ) : null;
+  }
+
+  function applyServerError(code: string) {
+    const field = TEACHER_PROFILE_ERROR_FIELD[code];
+    if (!field) return;
+
+    setError(
+      field,
+      { type: "server", message: t(`errors.${code}`) },
+      { shouldFocus: true },
+    );
+  }
+
+  function validateModerationRequired(
+    values: TeacherProfileFormValues,
+  ): boolean {
+    let valid = true;
+
+    const required: Array<[TeacherProfileFormField, boolean, string]> = [
+      ["headline", Boolean(values.headline.trim()), "headlineRequired"],
+      ["bio", Boolean(values.bio.trim()), "bioRequired"],
+      ["experience", Boolean(values.experience.trim()), "experienceRequired"],
+      ["country", Boolean(values.country.trim()), "countryRequired"],
+      ["subjects", Boolean(values.subjects.trim()), "subjectsRequired"],
+      [
+        "teachingLevels",
+        values.teachingLevels.length > 0,
+        "teachingLevelsRequired",
+      ],
+      [
+        "teachingLanguages",
+        values.teachingLanguages.length > 0,
+        "teachingLanguagesRequired",
+      ],
+      [
+        "joinMotivation",
+        Boolean(values.joinMotivation.trim()),
+        "joinMotivationRequired",
+      ],
+    ];
+
+    for (const [field, condition, code] of required) {
+      if (!condition) {
+        setError(field, { type: "manual", message: t(`errors.${code}`) });
+        valid = false;
+      }
+    }
+
+    return valid;
+  }
+
+  const saveProfile = handleSubmit(async (values) => {
+    clearErrors();
+    setState(INITIAL);
+    setPending(true);
+
+    try {
+      const result = await saveTeacherProfileAction(
+        INITIAL,
+        teacherProfileToFormData(values),
+      );
+      setState(result);
+
+      if (result.status === "error") {
+        applyServerError(result.code);
+      }
+    } finally {
+      setPending(false);
+    }
+  });
+
+  const submitForModeration = handleSubmit(async (values) => {
+    clearErrors();
+    setModerationState({ status: "idle" });
+
+    if (!validateModerationRequired(values)) return;
+
+    setModerationPending(true);
+
+    try {
+      const result = await submitTeacherProfileForModerationAction(
+        { status: "idle" },
+        teacherProfileToFormData(values),
+      );
+      setModerationState(result);
+
+      if (result.status === "error") {
+        applyServerError(result.code);
+      }
+    } finally {
+      setModerationPending(false);
+    }
+  });
 
   useEffect(() => {
     if (!copied) return;
@@ -49,6 +185,7 @@ export function TeacherProfileEditor({
   async function copyShareLink() {
     if (!sharePath) return;
     const url = `${window.location.origin}${sharePath}`;
+
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
@@ -57,6 +194,8 @@ export function TeacherProfileEditor({
     }
   }
 
+  const disabled = pending || moderationPending;
+
   return (
     <section className={css.panel} aria-labelledby="teacher-profile-title">
       <div>
@@ -64,9 +203,35 @@ export function TeacherProfileEditor({
           {t("title")}
         </h2>
         <p className={css.panelLead}>{t("lead")}</p>
+        <p className={css.requiredHint}>{t("requiredHint")}</p>
       </div>
 
-      {state.status === "error" ? (
+      {profile.moderationStatus === "pending" ? (
+        <p className={clsx(css.alert, css.alertPending)} role="status">
+          {t("moderationPending")}
+        </p>
+      ) : null}
+
+      {profile.moderationStatus === "rejected" ? (
+        <div className={clsx(css.alert, css.alertError)} role="alert">
+          <p className={css.statusTitle}>{t("moderationRejected")}</p>
+          {profile.rejectionReason ? (
+            <p className={css.statusReason}>
+              {t("moderationRejectedReason", {
+                reason: profile.rejectionReason,
+              })}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
+      {profile.moderationStatus === "approved" ? (
+        <p className={clsx(css.alert, css.alertSuccess)} role="status">
+          {t("moderationApproved")}
+        </p>
+      ) : null}
+
+      {state.status === "error" && !TEACHER_PROFILE_ERROR_FIELD[state.code] ? (
         <p className={clsx(css.alert, css.alertError)} role="alert">
           {t(`errors.${state.code}`)}
         </p>
@@ -78,9 +243,24 @@ export function TeacherProfileEditor({
         </p>
       ) : null}
 
-      <form className={css.form} action={formAction}>
+      {moderationState.status === "error" &&
+      !TEACHER_PROFILE_ERROR_FIELD[moderationState.code] ? (
+        <p className={clsx(css.alert, css.alertError)} role="alert">
+          {t(`errors.${moderationState.code}`)}
+        </p>
+      ) : null}
+
+      {moderationState.status === "ok" ? (
+        <p className={clsx(css.alert, css.alertSuccess)} role="status">
+          {t("submittedForModeration")}
+        </p>
+      ) : null}
+
+      <form className={css.form} onSubmit={saveProfile} noValidate>
         <label className={css.field}>
-          <span className={css.label}>{t("slug")}</span>
+          <span className={css.label}>
+            {t("slug")} <span className={css.requiredMark}>*</span>
+          </span>
           <span className={css.slugRow}>
             <span className={css.slugPrefix} aria-hidden>
               /t/
@@ -88,70 +268,102 @@ export function TeacherProfileEditor({
             <input
               className={css.input}
               type="text"
-              name="slug"
-              defaultValue={slug}
-              required
-              minLength={3}
-              maxLength={TEACHER_PROFILE_SLUG_MAX}
+              {...register("slug", {
+                required: t("errors.slugRequired"),
+                minLength: {
+                  value: TEACHER_PROFILE_SLUG_MIN,
+                  message: t("errors.invalidSlug"),
+                },
+                maxLength: {
+                  value: TEACHER_PROFILE_SLUG_MAX,
+                  message: t("errors.invalidSlug"),
+                },
+                validate: (value) =>
+                  (SLUG_PATTERN.test(value.trim().toLowerCase()) &&
+                    !value.includes("--")) ||
+                  t("errors.invalidSlug"),
+              })}
               autoComplete="off"
               spellCheck={false}
-              disabled={pending}
+              disabled={disabled}
             />
           </span>
           <span className={css.hint}>{t("slugHint")}</span>
+          {fieldError(errors.slug?.message)}
         </label>
 
         <label className={css.field}>
-          <span className={css.label}>{t("headline")}</span>
+          <span className={css.label}>
+            {t("headline")}
+            <span className={css.requiredMark}>*</span>
+          </span>
           <input
             className={css.input}
             type="text"
-            name="headline"
-            defaultValue={profile.headline}
-            required
-            maxLength={TEACHER_PROFILE_HEADLINE_MAX}
-            disabled={pending}
+            {...register("headline", {
+              maxLength: {
+                value: TEACHER_PROFILE_HEADLINE_MAX,
+                message: t("errors.headlineTooLong"),
+              },
+            })}
+            disabled={disabled}
           />
+          {fieldError(errors.headline?.message)}
         </label>
 
         <label className={css.field}>
-          <span className={css.label}>{t("bio")}</span>
+          <span className={css.label}>
+            {t("bio")} <span className={css.requiredMark}>*</span>
+          </span>
           <textarea
             className={css.textarea}
-            name="bio"
-            defaultValue={profile.bio}
-            required
-            maxLength={TEACHER_PROFILE_BIO_MAX}
+            {...register("bio", {
+              maxLength: {
+                value: TEACHER_PROFILE_BIO_MAX,
+                message: t("errors.bioTooLong"),
+              },
+            })}
             rows={5}
-            disabled={pending}
+            disabled={disabled}
           />
+          {fieldError(errors.bio?.message)}
         </label>
 
         <label className={css.field}>
-          <span className={css.label}>{t("experience")}</span>
+          <span className={css.label}>
+            {t("experience")}
+            <span className={css.requiredMark}>*</span>
+          </span>
           <input
             className={css.input}
             type="text"
-            name="experience"
-            defaultValue={profile.experience}
-            required
-            maxLength={TEACHER_PROFILE_EXPERIENCE_MAX}
-            disabled={pending}
+            {...register("experience", {
+              maxLength: {
+                value: TEACHER_PROFILE_EXPERIENCE_MAX,
+                message: t("errors.experienceTooLong"),
+              },
+            })}
+            disabled={disabled}
           />
           <span className={css.hint}>{t("experienceHint")}</span>
+          {fieldError(errors.experience?.message)}
         </label>
 
         <label className={css.field}>
           <span className={css.label}>{t("publications")}</span>
           <textarea
             className={css.textarea}
-            name="publications"
-            defaultValue={profile.publications}
-            maxLength={TEACHER_PROFILE_PUBLICATIONS_MAX}
+            {...register("publications", {
+              maxLength: {
+                value: TEACHER_PROFILE_PUBLICATIONS_MAX,
+                message: t("errors.publicationsTooLong"),
+              },
+            })}
             rows={3}
-            disabled={pending}
+            disabled={disabled}
           />
           <span className={css.hint}>{t("publicationsHint")}</span>
+          {fieldError(errors.publications?.message)}
         </label>
 
         <div className={css.pair}>
@@ -160,231 +372,281 @@ export function TeacherProfileEditor({
             <input
               className={css.input}
               type="text"
-              name="city"
-              defaultValue={profile.city}
-              maxLength={TEACHER_PROFILE_CITY_MAX}
-              disabled={pending}
+              {...register("city", {
+                maxLength: {
+                  value: TEACHER_PROFILE_CITY_MAX,
+                  message: t("errors.cityTooLong"),
+                },
+              })}
+              disabled={disabled}
             />
+            {fieldError(errors.city?.message)}
           </label>
+
           <label className={css.field}>
-            <span className={css.label}>{t("country")}</span>
+            <span className={css.label}>
+              {t("country")}
+              <span className={css.requiredMark}>*</span>
+            </span>
             <input
               className={css.input}
               type="text"
-              name="country"
-              defaultValue=""
-              required
-              disabled={pending}
+              {...register("country", {
+                maxLength: {
+                  value: TEACHER_PROFILE_COUNTRY_MAX,
+                  message: t("errors.countryTooLong"),
+                },
+              })}
+              disabled={disabled}
             />
+            {fieldError(errors.country?.message)}
           </label>
+
           <label className={css.field}>
-            <span className={css.label}>{t("subjects")}</span>
+            <span className={css.label}>
+              {t("subjects")}
+              <span className={css.requiredMark}>*</span>
+            </span>
             <input
               className={css.input}
               type="text"
-              name="subjects"
-              defaultValue={profile.subjects.join(", ")}
-              disabled={pending}
+              {...register("subjects", {
+                validate: (value) => {
+                  const subjects = value
+                    .split(/[,;\n]+/)
+                    .map((item) => item.trim())
+                    .filter(Boolean);
+                  return (
+                    (subjects.length <= TEACHER_PROFILE_SUBJECTS_MAX &&
+                      subjects.every(
+                        (item) => item.length <= TEACHER_PROFILE_SUBJECT_MAX,
+                      )) ||
+                    t("errors.invalidSubjects")
+                  );
+                },
+              })}
+              disabled={disabled}
             />
             <span className={css.hint}>{t("subjectsHint")}</span>
+            {fieldError(errors.subjects?.message)}
           </label>
         </div>
+
         <fieldset className={css.fieldset}>
-          <legend className={css.label}>{t("levels")}</legend>
-
-          <label className={css.option}>
-            <input
-              type="checkbox"
-              name="levels"
-              value="grades_5_9"
-              disabled={pending}
-            />
-            <span>{t("levelsOptions.grades_5_9")}</span>
-          </label>
-
-          <label className={css.option}>
-            <input
-              type="checkbox"
-              name="levels"
-              value="grades_10_11"
-              disabled={pending}
-            />
-            <span>{t("levelsOptions.grades_10_11")}</span>
-          </label>
-
-          <label className={css.option}>
-            <input
-              type="checkbox"
-              name="levels"
-              value="nmt"
-              disabled={pending}
-            />
-            <span>{t("levelsOptions.nmt")}</span>
-          </label>
-
-          <label className={css.option}>
-            <input
-              type="checkbox"
-              name="levels"
-              value="adult"
-              disabled={pending}
-            />
-            <span>{t("levelsOptions.adult")}</span>
-          </label>
+          <legend className={css.label}>
+            {t("levels")}
+            <span className={css.requiredMark}>*</span>
+          </legend>
+          {(["grades_5_9", "grades_10_11", "nmt", "adult"] as const).map(
+            (level) => (
+              <label className={css.option} key={level}>
+                <input
+                  type="checkbox"
+                  {...register("teachingLevels")}
+                  value={level}
+                  disabled={disabled}
+                />
+                <span>{t(`levelsOptions.${level}`)}</span>
+              </label>
+            ),
+          )}
+          {fieldError(errors.teachingLevels?.message)}
         </fieldset>
+
         <fieldset className={css.fieldset}>
-  <legend className={css.label}>{t("languages")}</legend>
+          <legend className={css.label}>
+            {t("languages")}
+            <span className={css.requiredMark}>*</span>
+          </legend>
+          {(["uk", "en", "de", "pl"] as const).map((language) => (
+            <label className={css.option} key={language}>
+              <input
+                type="checkbox"
+                {...register("teachingLanguages")}
+                value={language}
+                disabled={disabled}
+              />
+              <span>{t(`languageOptions.${language}`)}</span>
+            </label>
+          ))}
+          {fieldError(errors.teachingLanguages?.message)}
+        </fieldset>
 
-  <label className={css.option}>
-    <input
-      type="checkbox"
-      name="languages"
-      value="uk"
-      disabled={pending}
-    />
-    <span>{t("languageOptions.uk")}</span>
-  </label>
-
-  <label className={css.option}>
-    <input
-      type="checkbox"
-      name="languages"
-      value="en"
-      disabled={pending}
-    />
-    <span>{t("languageOptions.en")}</span>
-  </label>
-
-  <label className={css.option}>
-    <input
-      type="checkbox"
-      name="languages"
-      value="de"
-      disabled={pending}
-    />
-    <span>{t("languageOptions.de")}</span>
-  </label>
-
-  <label className={css.option}>
-    <input
-      type="checkbox"
-      name="languages"
-      value="pl"
-      disabled={pending}
-    />
-    <span>{t("languageOptions.pl")}</span>
-  </label>
-</fieldset>
         <label className={css.field}>
           <span className={css.label}>{t("contactUrl")}</span>
           <input
             className={css.input}
             type="url"
-            name="contactUrl"
-            defaultValue={profile.contactUrl}
-            maxLength={TEACHER_PROFILE_CONTACT_URL_MAX}
+            {...register("contactUrl", {
+              maxLength: {
+                value: TEACHER_PROFILE_CONTACT_URL_MAX,
+                message: t("errors.invalidContactUrl"),
+              },
+              validate: (value) => {
+                if (!value.trim()) return true;
+                try {
+                  const url = new URL(value);
+                  return (
+                    ["http:", "https:"].includes(url.protocol) ||
+                    t("errors.invalidContactUrl")
+                  );
+                } catch {
+                  return t("errors.invalidContactUrl");
+                }
+              },
+            })}
             placeholder="https://…"
-            disabled={pending}
+            disabled={disabled}
           />
+          {fieldError(errors.contactUrl?.message)}
         </label>
+
         <label className={css.field}>
-  <span className={css.label}>{t("phone")}</span>
-  <input
-    className={css.input}
-    type="tel"
-    name="phone"
-    autoComplete="tel"
-    disabled={pending}
-  />
-</label>
-
-<div className={css.pair}>
-  <label className={css.field}>
-    <span className={css.label}>{t("lessonPrice")}</span>
-    <input
-      className={css.input}
-      type="number"
-      name="price"
-      min="0"
-      step="0.01"
-      disabled={pending}
-    />
-  </label>
-
-  <label className={css.field}>
-    <span className={css.label}>{t("currency")}</span>
-    <select
-      className={css.input}
-      name="currency"
-      defaultValue=""
-      disabled={pending}
-    >
-      <option value="">—</option>
-      <option value="UAH">UAH</option>
-      <option value="EUR">EUR</option>
-      <option value="USD">USD</option>
-      <option value="PLN">PLN</option>
-    </select>
-  </label>
-</div>
-
-<label className={css.field}>
-  <span className={css.label}>{t("lessonDuration")}</span>
-  <input
-    className={css.input}
-    type="number"
-    name="lessonDuration"
-    min="1"
-    disabled={pending}
-  />
-</label>
-<label className={css.field}>
-  <span className={css.label}>{t("joinMotivation")}</span>
-  <textarea
-    className={css.textarea}
-    name="joinMotivation"
-    rows={5}
-    required
-    disabled={pending}
-  />
-  <span className={css.hint}>{t("joinMotivationHint")}</span>
-</label>
-        {/* <label className={css.check}>
+          <span className={css.label}>{t("phone")}</span>
           <input
-            type="checkbox"
-            name="isPublic"
-            defaultChecked={profile.isPublic}
-            disabled={pending}
+            className={css.input}
+            type="tel"
+            {...register("phone", {
+              maxLength: {
+                value: TEACHER_PROFILE_PHONE_MAX,
+                message: t("errors.invalidPhone"),
+              },
+              validate: (value) =>
+                !value.trim() ||
+                PHONE_PATTERN.test(value.trim()) ||
+                t("errors.invalidPhone"),
+            })}
+            autoComplete="tel"
+            disabled={disabled}
           />
-          <span>
-            <span className={css.checkTitle}>{t("isPublic")}</span>
-            <span className={css.hint}>{t("isPublicHint")}</span>
-          </span>
-        </label> */}
+          {fieldError(errors.phone?.message)}
+        </label>
 
-<div className={css.actions}>
-  <button type="submit" className={css.submit} disabled={pending}>
-    {pending ? t("saving") : t("save")}
-  </button>
+        <div className={css.pair}>
+          <label className={css.field}>
+            <span className={css.label}>{t("lessonPrice")}</span>
+            <input
+              className={css.input}
+              type="number"
+              {...register("lessonPrice", {
+                validate: (value) => {
+                  if (!value.trim()) return true;
+                  const parsed = Number(value);
+                  return (
+                    (Number.isFinite(parsed) &&
+                      parsed > 0 &&
+                      parsed <= TEACHER_PROFILE_LESSON_PRICE_MAX &&
+                      /^\d+(?:\.\d{1,2})?$/.test(value.trim())) ||
+                    t("errors.invalidLessonPrice")
+                  );
+                },
+              })}
+              min="0"
+              step="0.01"
+              disabled={disabled}
+            />
+            {fieldError(errors.lessonPrice?.message)}
+          </label>
 
-  <button
-    type="button"
-    className={css.share}
-    disabled={pending}
-  >
-    {t("submitForModeration")}
-  </button>
+          <label className={css.field}>
+            <span className={css.label}>{t("currency")}</span>
+            <select
+              className={css.input}
+              {...register("lessonCurrency", {
+                validate: (currency) => {
+                  const price = getValues("lessonPrice").trim();
+                  if (!price && !currency) return true;
+                  if (price && !currency)
+                    return t("errors.invalidLessonCurrency");
+                  if (!price && currency)
+                    return t("errors.invalidLessonCurrency");
+                  return (
+                    LESSON_CURRENCIES.includes(
+                      currency as (typeof LESSON_CURRENCIES)[number],
+                    ) || t("errors.invalidLessonCurrency")
+                  );
+                },
+              })}
+              disabled={disabled}
+            >
+              <option value="">—</option>
+              {LESSON_CURRENCIES.map((currency) => (
+                <option value={currency} key={currency}>
+                  {currency}
+                </option>
+              ))}
+            </select>
+            {fieldError(errors.lessonCurrency?.message)}
+          </label>
+        </div>
 
-  <button
-    type="button"
-    className={css.share}
-    onClick={copyShareLink}
-    disabled={!profile.slug || pending}
-    aria-live="polite"
-  >
-    {copied ? t("copied") : t("copyLink")}
-  </button>
-</div>
+        <label className={css.field}>
+          <span className={css.label}>{t("lessonDuration")}</span>
+          <input
+            className={css.input}
+            type="number"
+            {...register("lessonDurationMinutes", {
+              validate: (value) => {
+                if (!value.trim()) return true;
+                const parsed = Number(value);
+                return (
+                  (Number.isInteger(parsed) &&
+                    parsed > 0 &&
+                    parsed <= TEACHER_PROFILE_LESSON_DURATION_MAX) ||
+                  t("errors.invalidLessonDuration")
+                );
+              },
+            })}
+            min="1"
+            disabled={disabled}
+          />
+          {fieldError(errors.lessonDurationMinutes?.message)}
+        </label>
+
+        <label className={css.field}>
+          <span className={css.label}>{t("joinMotivation")}</span>
+          <textarea
+            className={css.textarea}
+            {...register("joinMotivation", {
+              maxLength: {
+                value: TEACHER_PROFILE_JOIN_MOTIVATION_MAX,
+                message: t("errors.joinMotivationTooLong"),
+              },
+            })}
+            rows={5}
+            disabled={disabled}
+          />
+          <span className={css.hint}>{t("joinMotivationHint")}</span>
+          {fieldError(errors.joinMotivation?.message)}
+        </label>
+
+        <div className={css.actions}>
+          <button type="submit" className={css.submit} disabled={disabled}>
+            {pending ? t("saving") : t("save")}
+          </button>
+
+          {profile.moderationStatus === "draft" ||
+          profile.moderationStatus === "rejected" ? (
+            <button
+              type="button"
+              onClick={submitForModeration}
+              className={css.share}
+              disabled={disabled}
+            >
+              {t("submitForModeration")}
+            </button>
+          ) : null}
+
+          <button
+            type="button"
+            className={css.share}
+            onClick={copyShareLink}
+            disabled={!profile.slug || disabled}
+            aria-live="polite"
+          >
+            {copied ? t("copied") : t("copyLink")}
+          </button>
+        </div>
       </form>
     </section>
   );

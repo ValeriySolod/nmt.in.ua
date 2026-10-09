@@ -97,5 +97,6 @@ export const ADMIN_NAV_HREFS = [
   "/problems",
   "/feedback",
   "/leaderboard",
+  "/admin/marathons",
   "/settings",
 ] as const;

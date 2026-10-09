@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { CheckEmailForm } from "@/components/auth/CheckEmailForm/CheckEmailForm";
 import { createPageMetadata } from "@/constants/seo";
+import { safeInternalPath } from "@/lib/safeInternalPath";
 
 export async function generateMetadata() {
   const t = await getTranslations("Metadata.checkEmail");
@@ -15,7 +16,11 @@ export async function generateMetadata() {
 }
 
 type CheckEmailPageProps = {
-  searchParams: Promise<{ email?: string | string[]; mail?: string | string[] }>;
+  searchParams: Promise<{
+    email?: string | string[];
+    mail?: string | string[];
+    next?: string | string[];
+  }>;
 };
 
 export default async function CheckEmailPage({
@@ -25,10 +30,12 @@ export default async function CheckEmailPage({
   const raw = Array.isArray(params.email) ? params.email[0] : params.email;
   const email = (raw ?? "").trim().toLowerCase();
   const mail = Array.isArray(params.mail) ? params.mail[0] : params.mail;
+  const rawNext = Array.isArray(params.next) ? params.next[0] : params.next;
+  const nextPath = safeInternalPath(rawNext);
 
   return (
     <AuthShell>
-      <CheckEmailForm email={email} mailFailed={mail === "failed"} />
+      <CheckEmailForm email={email} mailFailed={mail === "failed"} nextPath={nextPath} />
     </AuthShell>
   );
 }

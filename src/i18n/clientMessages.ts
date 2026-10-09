@@ -30,6 +30,7 @@ export const CORE_CLIENT_NAMESPACES = [
   "FractionPractice",
   "Stage2",
   "TeacherProfile",
+  "TeacherPublicCard",
   // Soft-nav from other cabinet routes must already carry these namespaces —
   // `(app)` layout does not re-pick messages mid-chain.
   "Consultations",
@@ -40,6 +41,7 @@ export const CORE_CLIENT_NAMESPACES = [
   "TeacherStudentSessions",
   "AdminContent",
   "AdminProfiles",
+  "Marathon",
 ] as const;
 
 /**
@@ -103,7 +105,9 @@ function isMarketingPath(pathname: string): boolean {
     pathname === "/diagnostic" ||
     pathname.startsWith("/diagnostic/") ||
     pathname === "/t" ||
-    pathname.startsWith("/t/")
+    pathname.startsWith("/t/") ||
+    /^\/marathon\/[^/]+$/.test(pathname) ||
+    /^\/marathon\/[^/]+\/join$/.test(pathname)
   );
 }
 

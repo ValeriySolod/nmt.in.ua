@@ -150,7 +150,7 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 | --- | --- |
 | `src/app/` | Маршрути App Router + metadata |
 | `src/app/_home/CabinetHome.tsx` | Кабінет на `/` залежно від ролі |
-| `src/proxy.ts` | Rate limit + auth-guard + ролі admin / teacher |
+| `src/proxy.ts` | Бюджет запитів (`src/lib/requestBudget.ts`: окремо користувач і IP класу; prefetch і статика не рахуються) + auth-guard + ролі admin / teacher |
 | `src/app/(marketing)/` | Лендінг, auth, діагностика, публічна візитка |
 | `src/app/(app)/session/[id]/` | Тренажер однієї сесії |
 | `src/app/(app)/simulator/` | Старт симулятора НМТ |
@@ -179,7 +179,7 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 | `src/modules/mail/` | Brevo / log-транзакційні листи |
 | `src/modules/payments/` | Реєстрація викладача, WayForPay Purchase, webhook |
 | `src/modules/content-import/` | CSV/JSON → БД |
-| `src/modules/admin-content/` | CRUD `quiz_tasks` з кабінету адміна |
+| `src/modules/admin-content/` | CRUD `quiz_tasks`: список, складність, легенда теми, видалення навіть якщо завдання вже в сесії (сесія перераховується) |
 | `src/modules/admin-profiles/` | Список / бан / видалення акаунтів |
 | `src/modules/testing/` | Старт, checkAnswer, finish, симулятор, таймер |
 | `src/modules/stage2/` | Інтерактивні формати (окремі таблиці, не `task_sessions`) |
@@ -215,7 +215,7 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 | Auth | `src/modules/auth` | `requireUserId`, `requireSessionUserId`, `getCurrentUser`, login/register/`changePassword` |
 | Оплата | `src/modules/payments` | `startTeacherRegistration`, `applyWayForPayWebhook`, `simulateTeacherPaymentSuccess`, `buildWayForPayCheckout` |
 | Імпорт | `src/modules/content-import` | parse + validate + транзакція `themes` → connections → `quiz_tasks` (+ опційно `problems`) |
-| Адмін-банк | `src/modules/admin-content` | список/створення/редагування/видалення `quiz_tasks` |
+| Адмін-банк | `src/modules/admin-content` | список, створення, складність, легенда теми, видалення `quiz_tasks` (у тому числі з сесій) |
 | Профілі | `src/modules/admin-profiles` | фільтр, бан, видалення |
 | Тест | `src/modules/testing` | `startTopicTest`, `startNmtSimulator`, `checkAnswer`, `finishTrainerSession` |
 | Stage 2 | `src/modules/stage2` | 5 форматів + раунди `practice`/`diagnostic`; вкладка ховається, якщо каталог порожній |
@@ -399,8 +399,8 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 | Перф (TTFB / бандл) | `(app)`/`(marketing)` layouts, `catalogCache`, `sampleRandomIds` | — | ✅ 10.09: без `ORDER BY RAND()`, кеш довідників, cookie-профіль |
 | Пагінація `/results`, `/sessions` | `src/components/ui/Pagination`, `src/lib/pagination.ts` | Мала | ✅ 10.2026: 10/стор., URL `?page=`; лише ≥768px |
 | Мобільний свайпер сесій / результатів | `LearningSessionsTable`, `TopicResultsTable` | Мала | ✅ 10.2026: картки + свайп, без пагінації на телефоні |
-| Лідерборд марафону | `src/modules/marathons`, `/leaderboard` | Середня | ✅ v0 на гілці `leaderboard`: join + рейтинг з `task_sessions`. 8.4 (денні порції) — після PM |
-| 8.4 Марафон (повний) | `docs/leaderboard-proposal.md`, Trello 8.4 | — | ⏸️ чекає PM; лідерборд уже прив’язаний до `marathons` |
+| Лідерборд марафону | `src/modules/marathons`, `/leaderboard` | Середня | ✅ v0: join + рейтинг із `task_sessions` після вступу і в межах дат. Лише `kind=leaderboard`. Пілот не сідається сам |
+| 8.4 Денний марафон | `src/modules/marathons/daily`, `/marathon/[slug]`, `/admin/marathons`, `docs/marathon.md` | Середня | ✅ 08.10: реєстрація → дні за Києвом → фініш з CTA. Дозвіл `marathon:manage` (зараз admin). SQL `040` + lazy schema. Приклад — кнопка в адмінці (`math-5`). Cron і бот — `docs/marathon.md` |
 | Досягнення | `/account` заглушки | Середня | Відкрито; після подій марафону |
 
 Карта app router: `src/app/page.tsx` — `/` (гість легкий / учень → CabinetHome); `src/app/(marketing)/` — welcome / login / register / diagnostic / `t/[slug]`; `src/app/(app)/` — кабінет (`force-dynamic`). Root layout лише `html`/`body` + `globals.css`. Неіснуючий публічний шлях на кшталт `/welcome/немає` дає кастомний 404; випадковий `/foo` без сесії — редірект на `/login` (auth-guard).
@@ -411,7 +411,7 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 
 ### Telegram Tasks API (TG-003)
 
-TG-005–TG-008 реалізовано: `/done`, деталі й підтвердження завершення, ledger сповіщень та захищений POST trigger із GitHub Actions schedule. Потрібні чинні схеми, міграція 037 і серверні `TELEGRAM_*` та `DB_*`. Невизначені доставки залишають `sending`; підтверджені відмови можуть повторюватися. Сповіщення не змінюють стан завдань. Локальні команди, live сценарії та обмеження rate limiting/аудиту — у [TG-010](telegram-integration.md#tg-010--перевірки-та-відомі-обмеження).
+TG-005–TG-008 реалізовано: `/done`, деталі й підтвердження завершення, ledger сповіщень та захищений POST trigger із GitHub Actions schedule. Потрібні чинні схеми, міграція 037 і серверні `TELEGRAM_*` та `DB_*`. Невизначена доставка лишається `sending` і може бути взята знову через 15 хв; підтверджена відмова повертає `ready` і повторюється одразу. Сповіщення не змінюють стан завдань. Локальні команди, live сценарії та обмеження rate limiting/аудиту — у [TG-010](telegram-integration.md#tg-010--перевірки-та-відомі-обмеження).
 
 Read-only сервіс `src/modules/telegram/tasks.ts` приймає Telegram identity, а не application userId. Прив'язка через `user_telegram_accounts` визначає власника; джерело даних — наявні таблиці сесій і завдань. DTO не містить правильних відповідей чи секретів. Міграція для TG-003 не потрібна. `TELEGRAM_*` залишаються опційними: без них сайт працює, але `/account` не генерує Telegram link. Webhook після ввімкнення: `https://nmt.in.ua/api/telegram/webhook`. Контракт і правила фільтрації — у [telegram-integration.md](./telegram-integration.md).
 

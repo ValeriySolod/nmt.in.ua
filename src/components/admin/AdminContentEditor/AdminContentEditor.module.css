@@ -70,6 +70,23 @@
   font-size: var(--fs-small);
 }
 
+.guideField {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2xs);
+  margin-top: var(--space-md);
+}
+
+.guideInput {
+  min-height: 12rem;
+}
+
+.guideHint {
+  margin: 0;
+  color: var(--subtle);
+  font-size: var(--fs-small);
+}
+
 .input {
   width: 100%;
   min-height: 44px;
@@ -156,6 +173,67 @@
   margin: 0;
   color: var(--muted);
   font-size: var(--fs-small);
+}
+
+.bulkBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bulkHint {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--fs-small);
+}
+
+.bulkDeleteBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 18px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, #c23b3b 88%, var(--surface));
+  color: #f6f1e2;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.bulkDeleteBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.bulkDeleteBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.colCheck {
+  width: 3.25rem;
+  padding-inline: 0;
+  text-align: center;
+}
+
+.checkHit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-inline: auto;
+  cursor: pointer;
+}
+
+.checkHit input {
+  width: 1.15rem;
+  height: 1.15rem;
+  margin: 0;
+  accent-color: var(--green);
 }
 
 .tableWrap {
@@ -249,17 +327,25 @@
   pointer-events: none;
 }
 
-.diffBadge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 2.5rem;
-  min-height: 2rem;
-  padding: 4px 10px;
+.diffValue {
+  display: block;
+  width: 3.25rem;
+  height: 44px;
+  margin-inline: auto;
+  padding: 0 4px;
   border: 1px solid var(--line-soft);
   border-radius: var(--radius-md);
   background: rgb(253 251 244 / 90%);
+  color: var(--ink);
+  font: inherit;
   font-weight: 700;
+  text-align: center;
+}
+
+.diffValue:focus-visible {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: var(--ring);
 }
 
 .editBtn,
@@ -431,7 +517,8 @@
 @media (prefers-reduced-motion: reduce) {
   .createBtn:hover:not(:disabled),
   .saveBtn:hover:not(:disabled),
-  .cancelBtn:hover:not(:disabled) {
+  .cancelBtn:hover:not(:disabled),
+  .bulkDeleteBtn:hover:not(:disabled) {
     transform: none;
   }
 }

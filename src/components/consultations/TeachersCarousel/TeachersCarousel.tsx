@@ -10,7 +10,7 @@ import {
   type KeyboardEvent,
 } from "react";
 import { useTranslations } from "next-intl";
-import { UserAvatar } from "@/components/account/UserAvatar";
+import { TeacherPublicCardView } from "@/components/teachers/TeacherPublicCard/TeacherPublicCardView";
 import { ModeTabs } from "@/components/ui/ModeTabs";
 import { rateTeacherAction } from "@/modules/teachers/actions";
 import type { TeacherCarouselItem } from "@/modules/teachers/types";
@@ -34,7 +34,10 @@ function sortTeachers(
       return a.displayName.localeCompare(b.displayName, "uk");
     }
     if (sort === "city") {
-      const cityCmp = (a.city || "\uffff").localeCompare(b.city || "\uffff", "uk");
+      const cityCmp = (a.city || "\uffff").localeCompare(
+        b.city || "\uffff",
+        "uk",
+      );
       if (cityCmp !== 0) return cityCmp;
       return a.displayName.localeCompare(b.displayName, "uk");
     }
@@ -121,7 +124,7 @@ export function TeachersCarousel({
   const scrollByCard = useCallback((dir: -1 | 1) => {
     const track = trackRef.current;
     if (!track) return;
-    const card = track.querySelector<HTMLElement>(`.${css.card}`);
+    const card = track.querySelector<HTMLElement>(`.${css.carouselItem}`);
     const step = card ? card.offsetWidth + 16 : 280;
     track.scrollBy({ left: dir * step, behavior: "smooth" });
   }, []);
@@ -153,7 +156,10 @@ export function TeachersCarousel({
 
   if (teachers.length === 0) {
     return (
-      <section className={css.section} aria-labelledby="teachers-carousel-title">
+      <section
+        className={css.section}
+        aria-labelledby="teachers-carousel-title"
+      >
         <header className={css.header}>
           <h2 id="teachers-carousel-title" className={css.title}>
             {t("carouselTitle")}
@@ -220,73 +226,34 @@ export function TeachersCarousel({
           const selected = selectedTeacherUserId === teacher.userId;
           const ratingBusy = isPending && pendingId === teacher.userId;
           return (
-            <article
+            <div
               key={teacher.userId}
-              className={clsx(css.card, selected && css.cardSelected)}
-              aria-labelledby={`teacher-card-${teacher.userId}`}
+              className={clsx(css.carouselItem, selected && css.cardSelected)}
             >
-              <div className={css.identity}>
-                <UserAvatar
-                  user={{
-                    id: teacher.userId,
-                    login: teacher.login,
-                    displayName: teacher.displayName,
-                    role: teacher.role,
-                    avatarRev: teacher.avatarRev,
-                  }}
-                  className={css.avatar}
-                />
-                <div className={css.identityCopy}>
-                  <h3
-                    id={`teacher-card-${teacher.userId}`}
-                    className={css.name}
-                  >
-                    {teacher.displayName}
-                  </h3>
-                  {teacher.headline ? (
-                    <p className={css.headline}>{teacher.headline}</p>
-                  ) : null}
-                  {teacher.city ? (
-                    <p className={css.city}>{teacher.city}</p>
-                  ) : null}
-                </div>
-              </div>
-
-              {teacher.subjects.length > 0 ? (
-                <ul className={css.chips}>
-                  {teacher.subjects.slice(0, 4).map((subject) => (
-                    <li key={subject} className={css.chip}>
-                      {subject}
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-
-              <div className={css.ratingBlock}>
-                <p className={css.ratingMeta}>
-                  {teacher.avgRating != null
-                    ? t("ratingSummary", {
-                        avg: teacher.avgRating.toFixed(1),
-                        count: teacher.ratingCount,
-                      })
-                    : t("ratingNone")}
-                </p>
-                <StarRating
-                  value={teacher.myRating}
-                  label={t("rateAria", { name: teacher.displayName })}
-                  disabled={ratingBusy}
-                  onPick={(score) => rate(teacher.userId, score)}
-                />
-              </div>
-
-              <button
-                type="button"
-                className={css.personal}
-                onClick={() => onSelectPersonal(teacher)}
-              >
-                {t("personalCta")}
-              </button>
-            </article>
+              <TeacherPublicCardView
+                card={teacher}
+                ctaLabel={t("personalCta")}
+                onCtaClick={() => onSelectPersonal(teacher)}
+                extraContent={
+                  <div className={css.ratingBlock}>
+                    <StarRating
+                      value={teacher.myRating}
+                      label={t("rateAria", { name: teacher.displayName })}
+                      disabled={ratingBusy}
+                      onPick={(score) => rate(teacher.userId, score)}
+                    />
+                    <p className={css.ratingMeta}>
+                      {teacher.avgRating != null
+                        ? t("ratingSummary", {
+                            avg: teacher.avgRating.toFixed(1),
+                            count: teacher.ratingCount,
+                          })
+                        : t("ratingNone")}
+                    </p>
+                  </div>
+                }
+              />
+            </div>
           );
         })}
       </div>

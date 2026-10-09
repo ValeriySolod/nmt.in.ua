@@ -7,7 +7,7 @@ import css from "../auth.module.css";
 type VerifyEmailErrorCode = "invalid" | "expired" | "used" | "generic";
 
 type VerifyEmailResultProps =
-  | { status: "success" }
+  | { status: "success"; continueHref?: string }
   | { status: "error"; code: VerifyEmailErrorCode };
 
 export async function VerifyEmailResult(props: VerifyEmailResultProps) {
@@ -25,7 +25,7 @@ export async function VerifyEmailResult(props: VerifyEmailResultProps) {
           <p className={css.lead}>{t("successLead")}</p>
         </header>
         <div className={css.actions}>
-          <Link href="/" className={css.submit}>
+          <Link href={props.continueHref || "/"} className={css.submit}>
             {t("goToCabinet")}
           </Link>
           <Link href="/login" className={css.submitQuiet}>

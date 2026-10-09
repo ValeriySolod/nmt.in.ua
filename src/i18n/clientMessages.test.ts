@@ -108,10 +108,10 @@ test("CLIENT_MESSAGE_NAMESPACES still lists the full union for docs/tests", () =
   assert.ok(CLIENT_MESSAGE_NAMESPACES.includes("Header"));
 });
 
-test("cabinet /account ships TeacherProfile; /t cards stay on the public payload", () => {
+test("cabinet ships TeacherProfile and TeacherPublicCard; /t stays on the public payload", () => {
   const account = pickClientMessages(uk, "/account");
   assert.ok("TeacherProfile" in account);
-  assert.equal("TeacherPublicCard" in account, false);
+  assert.ok("TeacherPublicCard" in account);
 
   const publicCard = pickClientMessages(uk, "/t/igor-petrenko");
   assert.ok(PUBLIC_CLIENT_NAMESPACES.every((key) => key in publicCard));
