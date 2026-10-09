@@ -20,8 +20,16 @@ export const dynamic = "force-dynamic";
 
 type PageProps = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ error?: string | string[]; q?: string | string[] }>;
+  searchParams: Promise<{
+    error?: string | string[];
+    saved?: string | string[];
+    q?: string | string[];
+  }>;
 };
+
+function first(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
 
 export async function generateMetadata() {
   const t = await getTranslations("Metadata.marathonAdmin");
@@ -42,7 +50,7 @@ export default async function AdminMarathonEditorPage({ params, searchParams }: 
   const marathon = await getDailyById(marathonId);
   if (!marathon) notFound();
   const query = await searchParams;
-  const q = Array.isArray(query.q) ? query.q[0] : query.q;
+  const q = first(query.q);
   const [riddles, days, reports, questions] = await Promise.all([
     listRiddles(marathon.id),
     listDays(marathon.id),
@@ -81,7 +89,8 @@ export default async function AdminMarathonEditorPage({ params, searchParams }: 
       reports={reports}
       funnel={funnel}
       questions={questions}
-      error={Array.isArray(query.error) ? query.error[0] : query.error}
+      error={first(query.error)}
+      savedToken={first(query.saved)}
     />
   );
 }

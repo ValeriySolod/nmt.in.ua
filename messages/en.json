@@ -841,6 +841,135 @@
     "funnelLine": "Registered {registered} → email {verified} → final {final} → converted {converted}",
     "participants": "Participants",
     "streakLabel": "Streak",
+    "saved": "Saved",
+    "saving": "Saving…",
+    "working": "Please wait…",
+    "deleting": "Deleting…",
+    "formSummary": "Nothing was saved. Fix these fields:",
+    "copy": "Copy",
+    "copied": "Copied",
+    "copyFailed": "Could not copy. Select the link and copy it manually.",
+    "publicLinkLabel": "Public link",
+    "draftHidden": "The page is not public until the status is “{status}”.",
+    "defaults": {
+      "finalCta": "Continue learning"
+    },
+    "fields": {
+      "slug": "Address",
+      "title": "Title",
+      "subject": "Subject",
+      "startDate": "Start date",
+      "unlockHour": "Hour (Kyiv)",
+      "daysCount": "Days",
+      "passThreshold": "Threshold, %",
+      "finalCtaText": "Button label",
+      "finalCtaUrl": "Button link",
+      "order": "Order",
+      "riddleTitle": "Riddle title",
+      "body": "Text",
+      "answer": "Answer",
+      "hint": "Hint",
+      "dayNumber": "Day number",
+      "topic": "Topic",
+      "introText": "Intro",
+      "materialType": "Material type",
+      "urlOrBody": "Text or link",
+      "questionId": "Bank ID",
+      "prompt": "Prompt",
+      "options": "Options",
+      "correct": "Correct option number"
+    },
+    "materialTypes": {
+      "text": "Text",
+      "youtube": "YouTube",
+      "loom": "Loom"
+    },
+    "hints": {
+      "slug": "Lowercase Latin letters, digits, and hyphens. For example, math-5.",
+      "startDate": "Defaults to today in Kyiv.",
+      "unlockHour": "HH:MM, for example 09:00.",
+      "daysCount": "An integer from 1 to 14.",
+      "passThreshold": "An integer from 0 to 100.",
+      "finalCtaUrl": "A path starting with / or a full http:// or https:// URL.",
+      "materialVideo": "For YouTube or Loom, paste the video link.",
+      "taskEither": "Either a bank ID, or your own prompt with options."
+    },
+    "placeholders": {
+      "slug": "math-5",
+      "unlockHour": "09:00",
+      "finalCtaUrl": "/"
+    },
+    "fieldErrors": {
+      "form": {
+        "server": "Could not save. Try again.",
+        "invalid": "Could not identify this record. Reload the page."
+      },
+      "slug": {
+        "required": "Enter an address. For example, math-5.",
+        "format": "The address may contain only lowercase Latin letters, digits, and hyphens. For example, math-5.",
+        "duplicate": "A marathon with this address already exists."
+      },
+      "title": {
+        "required": "The title must be at least 2 characters."
+      },
+      "startDate": {
+        "required": "Enter a start date.",
+        "format": "The start date must be YYYY-MM-DD."
+      },
+      "unlockHour": {
+        "required": "Enter the unlock hour.",
+        "format": "Use HH:MM, for example 09:00."
+      },
+      "daysCount": {
+        "range": "Days must be an integer from 1 to 14."
+      },
+      "passThreshold": {
+        "range": "The threshold must be an integer from 0 to 100."
+      },
+      "finalCtaText": {
+        "required": "Enter the button label."
+      },
+      "finalCtaUrl": {
+        "required": "Enter the button link.",
+        "format": "The link must start with / or with http:// or https://."
+      },
+      "order": {
+        "required": "Enter an order — an integer from 1.",
+        "range": "Order must be an integer from 1 to 50.",
+        "duplicate": "That order is already taken."
+      },
+      "body": {
+        "required": "Enter the text."
+      },
+      "answer": {
+        "required": "Enter the answer."
+      },
+      "dayNumber": {
+        "required": "Enter the day number.",
+        "range": "The day number must be an integer from 1 to 14.",
+        "duplicate": "A day with this number already exists."
+      },
+      "topic": {
+        "required": "The topic must be at least 2 characters."
+      },
+      "urlOrBody": {
+        "required": "Enter text or a link.",
+        "youtube": "This YouTube link was not recognized.",
+        "loom": "This Loom link was not recognized."
+      },
+      "questionId": {
+        "missing": "No question with that ID is in the bank."
+      },
+      "prompt": {
+        "required": "Enter a prompt or a question ID from the bank."
+      },
+      "options": {
+        "required": "At least two answer options are required."
+      },
+      "correct": {
+        "range": "The correct option number must point at a filled option (1–4)."
+      }
+    },
     "status": {
       "draft": "Draft",
       "active": "Active",

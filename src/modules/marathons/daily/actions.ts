@@ -12,14 +12,26 @@ import { safeInternalPath } from "@/lib/safeInternalPath";
 import { dayUnlockAt } from "./calendar";
 import { createMarathonBotLink } from "./botLink";
 import {
+  DUPLICATE_DAY,
+  DUPLICATE_ORDER,
+  DUPLICATE_SLUG,
+  FORM_INVALID,
+  FORM_SERVER,
+  QUESTION_MISSING,
+  adminFormError,
   answersFromForm,
   isDailyStatus,
   isDuplicateKey,
+  parseDay,
+  parseDayUpdate,
   parseMarathonInput,
   parseMaterial,
+  parseRiddle,
+  parseTask,
   readInt,
   readText,
   utmJsonFromForm,
+  type AdminFormState,
 } from "./forms";
 import { seedMathMarathon } from "./seed";
 import {
@@ -75,10 +87,17 @@ function adminPath(id?: number): string {
   return id ? `/admin/marathons/${id}` : "/admin/marathons";
 }
 
-export async function createMarathonAction(formData: FormData): Promise<void> {
+function savedPath(id?: number): string {
+  return `${adminPath(id)}?saved=${Date.now()}`;
+}
+
+export async function createMarathonAction(
+  _prev: AdminFormState,
+  formData: FormData,
+): Promise<AdminFormState> {
   await requireManager();
   const parsed = parseMarathonInput(formData);
-  if (!parsed.ok) redirect(`${adminPath()}?error=invalid`);
+  if (!parsed.ok) return adminFormError(parsed.issues);
   let id = 0;
   try {
     id = await insertDailyMarathon({
@@ -86,29 +105,33 @@ export async function createMarathonAction(formData: FormData): Promise<void> {
       ...bounds(parsed.value),
     });
   } catch (error) {
-    if (isDuplicateKey(error)) redirect(`${adminPath()}?error=duplicate`);
+    if (isDuplicateKey(error)) return adminFormError([DUPLICATE_SLUG]);
     console.error("createMarathonAction", error);
-    redirect(`${adminPath()}?error=server`);
+    return adminFormError([FORM_SERVER]);
   }
   revalidatePath(adminPath());
-  redirect(adminPath(id));
+  redirect(savedPath(id));
 }
 
-export async function updateMarathonAction(formData: FormData): Promise<void> {
+export async function updateMarathonAction(
+  _prev: AdminFormState,
+  formData: FormData,
+): Promise<AdminFormState> {
   await requireManager();
   const id = readInt(formData.get("id"));
   const parsed = parseMarathonInput(formData);
-  if (!id || !parsed.ok) redirect(`${adminPath(id ?? undefined)}?error=invalid`);
+  if (!id) return adminFormError([FORM_INVALID]);
+  if (!parsed.ok) return adminFormError(parsed.issues);
   try {
     await updateDailyMarathon(id, { ...parsed.value, ...bounds(parsed.value) });
   } catch (error) {
-    if (isDuplicateKey(error)) redirect(`${adminPath(id)}?error=duplicate`);
+    if (isDuplicateKey(error)) return adminFormError([DUPLICATE_SLUG]);
     console.error("updateMarathonAction", error);
-    redirect(`${adminPath(id)}?error=server`);
+    return adminFormError([FORM_SERVER]);
   }
   revalidatePath(adminPath(id));
   revalidatePath(`/marathon/${parsed.value.slug}`);
-  redirect(adminPath(id));
+  redirect(savedPath(id));
 }
 
 export async function setMarathonStatusAction(formData: FormData): Promise<void> {
@@ -118,7 +141,7 @@ export async function setMarathonStatusAction(formData: FormData): Promise<void>
   if (!id || !isDailyStatus(status)) redirect(`${adminPath(id ?? undefined)}?error=invalid`);
   await setDailyStatus(id, status);
   revalidatePath(adminPath(id));
-  redirect(adminPath(id));
+  redirect(savedPath(id));
 }
 
 export async function deleteMarathonAction(formData: FormData): Promise<void> {
@@ -141,28 +164,27 @@ export async function seedMarathonAction(): Promise<void> {
     redirect(`${adminPath()}?error=server`);
   }
   revalidatePath(adminPath());
-  redirect(result === "exists" ? `${adminPath()}?error=seed_exists` : adminPath());
+  redirect(result === "exists" ? `${adminPath()}?error=seed_exists` : savedPath());
 }
 
-export async function addRiddleAction(formData: FormData): Promise<void> {
+export async function addRiddleAction(
+  _prev: AdminFormState,
+  formData: FormData,
+): Promise<AdminFormState> {
   await requireManager();
   const id = readInt(formData.get("marathonId"));
-  const order = readInt(formData.get("order"));
-  const title = readText(formData.get("title"), 255);
-  const body = readText(formData.get("body"), 8000);
-  const answer = readText(formData.get("answer"), 512);
-  const hint = readText(formData.get("hint"), 2000);
-  if (!id || !order || !title || !body || !answer) {
-    redirect(`${adminPath(id ?? undefined)}?error=invalid`);
-  }
+  const parsed = parseRiddle(formData);
+  if (!id) return adminFormError([FORM_INVALID]);
+  if (!parsed.ok) return adminFormError(parsed.issues);
   try {
-    await insertRiddle(id, { order, title, body, answer, hint: hint || null });
+    await insertRiddle(id, parsed.value);
   } catch (error) {
-    if (isDuplicateKey(error)) redirect(`${adminPath(id)}?error=duplicate`);
-    throw error;
+    if (isDuplicateKey(error)) return adminFormError([DUPLICATE_ORDER]);
+    console.error("addRiddleAction", error);
+    return adminFormError([FORM_SERVER]);
   }
   revalidatePath(adminPath(id));
-  redirect(adminPath(id));
+  redirect(savedPath(id));
 }
 
 export async function deleteRiddleAction(formData: FormData): Promise<void> {
@@ -175,35 +197,39 @@ export async function deleteRiddleAction(formData: FormData): Promise<void> {
   redirect(adminPath(id));
 }
 
-export async function addDayAction(formData: FormData): Promise<void> {
+export async function addDayAction(
+  _prev: AdminFormState,
+  formData: FormData,
+): Promise<AdminFormState> {
   await requireManager();
   const id = readInt(formData.get("marathonId"));
-  const dayNumber = readInt(formData.get("dayNumber"));
-  const topic = readText(formData.get("topic"), 255);
-  const introText = readText(formData.get("introText"), 4000);
-  if (!id || !dayNumber || dayNumber < 1 || dayNumber > 14 || topic.length < 2) {
-    redirect(`${adminPath(id ?? undefined)}?error=invalid`);
-  }
+  const parsed = parseDay(formData);
+  if (!id) return adminFormError([FORM_INVALID]);
+  if (!parsed.ok) return adminFormError(parsed.issues);
   try {
-    await insertDay(id, { dayNumber, topic, introText: introText || null });
+    await insertDay(id, parsed.value);
   } catch (error) {
-    if (isDuplicateKey(error)) redirect(`${adminPath(id)}?error=duplicate`);
-    throw error;
+    if (isDuplicateKey(error)) return adminFormError([DUPLICATE_DAY]);
+    console.error("addDayAction", error);
+    return adminFormError([FORM_SERVER]);
   }
   revalidatePath(adminPath(id));
-  redirect(adminPath(id));
+  redirect(savedPath(id));
 }
 
-export async function updateDayAction(formData: FormData): Promise<void> {
+export async function updateDayAction(
+  _prev: AdminFormState,
+  formData: FormData,
+): Promise<AdminFormState> {
   await requireManager();
   const id = readInt(formData.get("marathonId"));
   const dayId = readInt(formData.get("dayId"));
-  const topic = readText(formData.get("topic"), 255);
-  const introText = readText(formData.get("introText"), 4000);
-  if (!id || !dayId || topic.length < 2) redirect(`${adminPath(id ?? undefined)}?error=invalid`);
-  await updateDay(id, dayId, { topic, introText });
+  const parsed = parseDayUpdate(formData);
+  if (!id || !dayId) return adminFormError([FORM_INVALID]);
+  if (!parsed.ok) return adminFormError(parsed.issues);
+  await updateDay(id, dayId, parsed.value);
   revalidatePath(adminPath(id));
-  redirect(adminPath(id));
+  redirect(savedPath(id));
 }
 
 export async function deleteDayAction(formData: FormData): Promise<void> {
@@ -216,20 +242,25 @@ export async function deleteDayAction(formData: FormData): Promise<void> {
   redirect(adminPath(id));
 }
 
-export async function addMaterialAction(formData: FormData): Promise<void> {
+export async function addMaterialAction(
+  _prev: AdminFormState,
+  formData: FormData,
+): Promise<AdminFormState> {
   await requireManager();
   const id = readInt(formData.get("marathonId"));
   const dayId = readInt(formData.get("dayId"));
-  const material = parseMaterial(formData);
-  if (!id || !dayId || !material) redirect(`${adminPath(id ?? undefined)}?error=invalid`);
+  const parsed = parseMaterial(formData);
+  if (!id || !dayId) return adminFormError([FORM_INVALID]);
+  if (!parsed.ok) return adminFormError(parsed.issues);
   try {
-    await insertMaterial(dayId, material);
+    await insertMaterial(dayId, parsed.value);
   } catch (error) {
-    if (isDuplicateKey(error)) redirect(`${adminPath(id)}?error=duplicate`);
-    throw error;
+    if (isDuplicateKey(error)) return adminFormError([DUPLICATE_ORDER]);
+    console.error("addMaterialAction", error);
+    return adminFormError([FORM_SERVER]);
   }
   revalidatePath(adminPath(id));
-  redirect(adminPath(id));
+  redirect(savedPath(id));
 }
 
 export async function deleteMaterialAction(formData: FormData): Promise<void> {
@@ -243,46 +274,44 @@ export async function deleteMaterialAction(formData: FormData): Promise<void> {
   redirect(adminPath(id));
 }
 
-export async function addTaskAction(formData: FormData): Promise<void> {
+export async function addTaskAction(
+  _prev: AdminFormState,
+  formData: FormData,
+): Promise<AdminFormState> {
   await requireManager();
   const id = readInt(formData.get("marathonId"));
   const dayId = readInt(formData.get("dayId"));
-  const order = readInt(formData.get("order")) ?? 1;
-  const questionId = readInt(formData.get("questionId"));
-  if (!id || !dayId || order < 1) redirect(`${adminPath(id ?? undefined)}?error=invalid`);
+  const parsed = parseTask(formData);
+  if (!id || !dayId) return adminFormError([FORM_INVALID]);
+  if (!parsed.ok) return adminFormError(parsed.issues);
   try {
-    if (questionId && questionId > 0) {
-      if (!(await quizTaskExists(questionId))) redirect(`${adminPath(id)}?error=question`);
+    if (parsed.value.mode === "bank") {
+      if (!(await quizTaskExists(parsed.value.questionId))) {
+        return adminFormError([QUESTION_MISSING]);
+      }
       await insertTask(dayId, {
-        order,
-        questionId,
+        order: parsed.value.order,
+        questionId: parsed.value.questionId,
         prompt: null,
         options: null,
         correct: null,
       });
     } else {
-      const prompt = readText(formData.get("prompt"), 4000);
-      const options = [1, 2, 3, 4]
-        .map((index) => readText(formData.get(`option${index}`), 500))
-        .filter(Boolean);
-      const correct = readInt(formData.get("correct"));
-      if (!prompt || options.length < 2 || !correct || correct > options.length) {
-        redirect(`${adminPath(id)}?error=invalid`);
-      }
       await insertTask(dayId, {
-        order,
+        order: parsed.value.order,
         questionId: null,
-        prompt,
-        options,
-        correct,
+        prompt: parsed.value.prompt,
+        options: parsed.value.options,
+        correct: parsed.value.correct,
       });
     }
   } catch (error) {
-    if (isDuplicateKey(error)) redirect(`${adminPath(id)}?error=duplicate`);
-    throw error;
+    if (isDuplicateKey(error)) return adminFormError([DUPLICATE_ORDER]);
+    console.error("addTaskAction", error);
+    return adminFormError([FORM_SERVER]);
   }
   revalidatePath(adminPath(id));
-  redirect(adminPath(id));
+  redirect(savedPath(id));
 }
 
 export async function deleteTaskAction(formData: FormData): Promise<void> {

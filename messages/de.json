@@ -841,6 +841,135 @@
     "funnelLine": "Registriert {registered} → E-Mail {verified} → Abschluss {final} → weiter {converted}",
     "participants": "Teilnehmer",
     "streakLabel": "Serie",
+    "saved": "Gespeichert",
+    "saving": "Speichern…",
+    "working": "Bitte warten…",
+    "deleting": "Löschen…",
+    "formSummary": "Nichts gespeichert. Korrigiere die Felder:",
+    "copy": "Kopieren",
+    "copied": "Kopiert",
+    "copyFailed": "Kopieren fehlgeschlagen. Markiere den Link und kopiere ihn von Hand.",
+    "publicLinkLabel": "Öffentlicher Link",
+    "draftHidden": "Die Seite ist nicht öffentlich, solange der Status nicht «{status}» ist.",
+    "defaults": {
+      "finalCta": "Weiter lernen"
+    },
+    "fields": {
+      "slug": "Adresse",
+      "title": "Titel",
+      "subject": "Fach",
+      "startDate": "Startdatum",
+      "unlockHour": "Uhrzeit (Kiew)",
+      "daysCount": "Tage",
+      "passThreshold": "Schwelle, %",
+      "finalCtaText": "Button-Text",
+      "finalCtaUrl": "Button-Link",
+      "order": "Reihenfolge",
+      "riddleTitle": "Titel des Rätsels",
+      "body": "Text",
+      "answer": "Antwort",
+      "hint": "Hinweis",
+      "dayNumber": "Tagesnummer",
+      "topic": "Thema",
+      "introText": "Einstieg",
+      "materialType": "Materialart",
+      "urlOrBody": "Text oder Link",
+      "questionId": "Bank-ID",
+      "prompt": "Formulierung",
+      "options": "Optionen",
+      "correct": "Nummer der richtigen Antwort"
+    },
+    "materialTypes": {
+      "text": "Text",
+      "youtube": "YouTube",
+      "loom": "Loom"
+    },
+    "hints": {
+      "slug": "Kleine lateinische Buchstaben, Ziffern und Bindestrich. Zum Beispiel math-5.",
+      "startDate": "Standard ist heute nach Kiewer Zeit.",
+      "unlockHour": "Format HH:MM, zum Beispiel 09:00.",
+      "daysCount": "Ganze Zahl von 1 bis 14.",
+      "passThreshold": "Ganze Zahl von 0 bis 100.",
+      "finalCtaUrl": "Pfad mit / oder volle Adresse http:// bzw. https://.",
+      "materialVideo": "Für YouTube oder Loom den Videolink einfügen.",
+      "taskEither": "Entweder eine Bank-ID oder eine eigene Formulierung mit Optionen."
+    },
+    "placeholders": {
+      "slug": "math-5",
+      "unlockHour": "09:00",
+      "finalCtaUrl": "/"
+    },
+    "fieldErrors": {
+      "form": {
+        "server": "Speichern fehlgeschlagen. Versuche es noch einmal.",
+        "invalid": "Der Eintrag ließ sich nicht zuordnen. Lade die Seite neu."
+      },
+      "slug": {
+        "required": "Gib eine Adresse an. Zum Beispiel math-5.",
+        "format": "Die Adresse darf nur kleine lateinische Buchstaben, Ziffern und Bindestriche enthalten. Zum Beispiel math-5.",
+        "duplicate": "Ein Marathon mit dieser Adresse gibt es schon."
+      },
+      "title": {
+        "required": "Der Titel braucht mindestens 2 Zeichen."
+      },
+      "startDate": {
+        "required": "Gib das Startdatum an.",
+        "format": "Das Startdatum muss JJJJ-MM-TT sein."
+      },
+      "unlockHour": {
+        "required": "Gib die Uhrzeit an.",
+        "format": "Uhrzeit im Format HH:MM, zum Beispiel 09:00."
+      },
+      "daysCount": {
+        "range": "Die Anzahl der Tage ist eine ganze Zahl von 1 bis 14."
+      },
+      "passThreshold": {
+        "range": "Die Schwelle ist eine ganze Zahl von 0 bis 100."
+      },
+      "finalCtaText": {
+        "required": "Gib den Button-Text an."
+      },
+      "finalCtaUrl": {
+        "required": "Gib den Button-Link an.",
+        "format": "Der Link muss mit / oder mit http:// bzw. https:// beginnen."
+      },
+      "order": {
+        "required": "Gib die Reihenfolge an — eine ganze Zahl ab 1.",
+        "range": "Die Reihenfolge ist eine ganze Zahl von 1 bis 50.",
+        "duplicate": "Diese Reihenfolge ist schon belegt."
+      },
+      "body": {
+        "required": "Gib den Text an."
+      },
+      "answer": {
+        "required": "Gib die Antwort an."
+      },
+      "dayNumber": {
+        "required": "Gib die Tagesnummer an.",
+        "range": "Die Tagesnummer ist eine ganze Zahl von 1 bis 14.",
+        "duplicate": "Einen Tag mit dieser Nummer gibt es schon."
+      },
+      "topic": {
+        "required": "Das Thema braucht mindestens 2 Zeichen."
+      },
+      "urlOrBody": {
+        "required": "Gib Text oder einen Link an.",
+        "youtube": "Dieser YouTube-Link wurde nicht erkannt.",
+        "loom": "Dieser Loom-Link wurde nicht erkannt."
+      },
+      "questionId": {
+        "missing": "Keine Aufgabe mit dieser ID in der Bank."
+      },
+      "prompt": {
+        "required": "Gib eine Formulierung oder eine Aufgaben-ID aus der Bank an."
+      },
+      "options": {
+        "required": "Mindestens zwei Antwortoptionen sind nötig."
+      },
+      "correct": {
+        "range": "Die Nummer der richtigen Antwort muss auf eine ausgefüllte Option zeigen (1–4)."
+      }
+    },
     "status": {
       "draft": "Entwurf",
       "active": "Aktiv",
