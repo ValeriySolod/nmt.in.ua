@@ -355,6 +355,9 @@ export function AddTaskForm({
           placeholder={t("correct")}
         />
       </AdminField>
+      <AdminField name="explanation" label={t("fields.explanation")}>
+        <AdminTextarea name="explanation" placeholder={t("explanationHint")} />
+      </AdminField>
     </ValidatedForm>
   );
 }

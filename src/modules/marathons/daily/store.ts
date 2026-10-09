@@ -2,6 +2,16 @@ import "server-only";
 
 import type { SqlConnection } from "@/lib/db/mysql";
 import { evaluateDayAccess } from "./calendar";
+import {
+  parseStoredAnswers,
+  PENDING_TASK_SQL,
+  projectPendingTask,
+  projectReviewedTask,
+  REVIEW_TASK_SQL,
+  type PendingPlayTask,
+  type ReviewedPlayTask,
+  type TaskSourceRow,
+} from "./playTasks";
 import { submitOpenedDay, type SubmitSuccess } from "./submit";
 import type { ProgressMark } from "./streak";
 
@@ -45,12 +55,7 @@ export type Material = {
   urlOrBody: string;
 };
 
-export type PlayTask = {
-  id: number;
-  order: number;
-  prompt: string;
-  options: string[];
-};
+export type PlayTask = PendingPlayTask;
 
 export type Participant = {
   userId: number;
@@ -70,6 +75,7 @@ export type DayProgress = {
   score: number | null;
   passed: boolean;
   completedAt: number | null;
+  answers: Record<number, number>;
 };
 
 export type ParticipantReport = {
@@ -475,80 +481,38 @@ export async function deleteMaterial(
   }, getConnection);
 }
 
-type TaskRow = {
-  id: number;
-  sort_order: number;
-  question_id: number | null;
-  inline_prompt: string | null;
-  inline_options: string | null;
-  inline_correct: number | null;
-  task_text: string | null;
-  answer_1: string | null;
-  answer_2: string | null;
-  answer_3: string | null;
-  answer_4: string | null;
-  right_answer_n: number | null;
-};
-
-function parseOptions(raw: string | null): string[] {
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter((item): item is string => typeof item === "string" && item.trim().length > 0);
-  } catch {
-    return [];
-  }
-}
-
-function mapTask(row: TaskRow): (PlayTask & { correct: number }) | null {
-  if (row.question_id && row.task_text && row.right_answer_n) {
-    const options = [row.answer_1, row.answer_2, row.answer_3, row.answer_4].filter(
-      (item): item is string => Boolean(item && item.trim()),
-    );
-    if (options.length < 2) return null;
-    return {
-      id: row.id,
-      order: row.sort_order,
-      prompt: row.task_text,
-      options,
-      correct: Number(row.right_answer_n),
-    };
-  }
-  const options = parseOptions(row.inline_options);
-  if (!row.inline_prompt || options.length < 2 || !row.inline_correct) return null;
-  return {
-    id: row.id,
-    order: row.sort_order,
-    prompt: row.inline_prompt,
-    options,
-    correct: Number(row.inline_correct),
-  };
-}
-
-async function loadTasks(
+async function loadReviewRows(
   connection: SqlConnection,
   dayId: number,
-): Promise<Array<PlayTask & { correct: number }>> {
-  const rows = await connection.query<TaskRow>(
-    `SELECT t.id, t.sort_order, t.question_id, t.inline_prompt, t.inline_options, t.inline_correct,
-            q.task_text, q.answer_1, q.answer_2, q.answer_3, q.answer_4, q.right_answer_n
-     FROM marathon_day_tasks t
-     LEFT JOIN quiz_tasks q ON q.id = t.question_id
-     WHERE t.day_id = ?
-     ORDER BY t.sort_order`,
-    [dayId],
-  );
-  return rows.flatMap((row) => {
-    const task = mapTask(row);
-    return task ? [task] : [];
-  });
+): Promise<TaskSourceRow[]> {
+  return connection.query<TaskSourceRow>(REVIEW_TASK_SQL, [dayId]);
 }
 
-export async function listPlayTasks(dayId: number, getConnection?: Conn): Promise<PlayTask[]> {
+/** Prompt and options only. Does not select the key or the explanation. */
+export async function listPendingTasks(
+  dayId: number,
+  getConnection?: Conn,
+): Promise<PendingPlayTask[]> {
   return withConn(async (connection) => {
-    const tasks = await loadTasks(connection, dayId);
-    return tasks.map(({ correct: _correct, ...task }) => task);
+    const rows = await connection.query<TaskSourceRow>(PENDING_TASK_SQL, [dayId]);
+    return rows.flatMap((row) => {
+      const task = projectPendingTask(row);
+      return task ? [task] : [];
+    });
+  }, getConnection);
+}
+
+export async function listTaskReview(
+  dayId: number,
+  answers: Record<number, number>,
+  getConnection?: Conn,
+): Promise<ReviewedPlayTask[]> {
+  return withConn(async (connection) => {
+    const rows = await loadReviewRows(connection, dayId);
+    return rows.flatMap((row) => {
+      const task = projectReviewedTask(row, answers);
+      return task ? [task] : [];
+    });
   }, getConnection);
 }
 
@@ -557,17 +521,9 @@ export async function listAdminTasks(
   getConnection?: Conn,
 ): Promise<Array<PlayTask & { correct: number; questionId: number | null }>> {
   return withConn(async (connection) => {
-    const rows = await connection.query<TaskRow>(
-      `SELECT t.id, t.sort_order, t.question_id, t.inline_prompt, t.inline_options, t.inline_correct,
-              q.task_text, q.answer_1, q.answer_2, q.answer_3, q.answer_4, q.right_answer_n
-       FROM marathon_day_tasks t
-       LEFT JOIN quiz_tasks q ON q.id = t.question_id
-       WHERE t.day_id = ?
-       ORDER BY t.sort_order`,
-      [dayId],
-    );
+    const rows = await loadReviewRows(connection, dayId);
     return rows.flatMap((row) => {
-      const task = mapTask(row);
+      const task = projectReviewedTask(row, {});
       if (!task) {
         return [{
           id: row.id,
@@ -575,10 +531,17 @@ export async function listAdminTasks(
           prompt: row.inline_prompt || row.task_text || `Завдання #${row.question_id ?? row.id}`,
           options: [],
           correct: Number(row.inline_correct ?? row.right_answer_n ?? 0),
-          questionId: row.question_id,
+          questionId: row.question_id ?? null,
         }];
       }
-      return [{ ...task, questionId: row.question_id }];
+      return [{
+        id: task.id,
+        order: task.order,
+        prompt: task.prompt,
+        options: task.options,
+        correct: task.correct,
+        questionId: row.question_id ?? null,
+      }];
     });
   }, getConnection);
 }
@@ -591,14 +554,15 @@ export async function insertTask(
     prompt: string | null;
     options: string[] | null;
     correct: number | null;
+    explanation?: string | null;
   },
   getConnection?: Conn,
 ): Promise<void> {
   await withConn(async (connection) => {
     await connection.execute(
       `INSERT INTO marathon_day_tasks
-        (day_id, sort_order, question_id, inline_prompt, inline_options, inline_correct)
-       VALUES (?, ?, ?, ?, ?, ?)`,
+        (day_id, sort_order, question_id, inline_prompt, inline_options, inline_correct, inline_explanation)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
         dayId,
         input.order,
@@ -606,6 +570,7 @@ export async function insertTask(
         input.prompt,
         input.options ? JSON.stringify(input.options) : null,
         input.correct,
+        input.explanation?.trim() || null,
       ],
     );
   }, getConnection);
@@ -729,8 +694,10 @@ export async function listProgress(
       score: number | null;
       passed: number;
       completed_at: unknown;
+      answers_json: string | null;
     }>(
-      `SELECT pr.day_id, d.day_number, pr.materials_viewed_at, pr.score, pr.passed, pr.completed_at
+      `SELECT pr.day_id, d.day_number, pr.materials_viewed_at, pr.score, pr.passed,
+              pr.completed_at, pr.answers_json
        FROM marathon_day_progress pr
        INNER JOIN marathon_days d ON d.id = pr.day_id
        WHERE pr.marathon_id = ? AND pr.user_id = ?
@@ -744,6 +711,7 @@ export async function listProgress(
       score: row.score == null ? null : Number(row.score),
       passed: flag(row.passed),
       completedAt: asMs(row.completed_at),
+      answers: parseStoredAnswers(row.answers_json),
     }));
   }, getConnection);
 }
@@ -784,7 +752,11 @@ export async function completeParticipantDay(input: {
   now: Date;
 }, getConnection?: Conn): Promise<SubmitSuccess | { ok: false; code: "invalid_day" | "locked" | "materials_required" }> {
   return withConn(async (connection) => {
-    const tasks = await loadTasks(connection, input.day.id);
+    const rows = await loadReviewRows(connection, input.day.id);
+    const tasks = rows.flatMap((row) => {
+      const task = projectReviewedTask(row, {});
+      return task ? [task] : [];
+    });
     return submitOpenedDay(
       {
         startDate: input.marathon.startDate,
@@ -807,12 +779,13 @@ export async function completeParticipantDay(input: {
         persist: async (result) => {
           await connection.execute(
             `INSERT INTO marathon_day_progress
-              (marathon_id, user_id, day_id, materials_viewed_at, score, passed, completed_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?)
+              (marathon_id, user_id, day_id, materials_viewed_at, score, passed, completed_at, answers_json)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
              ON DUPLICATE KEY UPDATE
                score = VALUES(score),
                passed = VALUES(passed),
                completed_at = VALUES(completed_at),
+               answers_json = VALUES(answers_json),
                materials_viewed_at = COALESCE(materials_viewed_at, VALUES(materials_viewed_at))`,
             [
               input.marathon.id,
@@ -822,6 +795,7 @@ export async function completeParticipantDay(input: {
               result.score,
               result.passed ? 1 : 0,
               input.now,
+              JSON.stringify(input.answers),
             ],
           );
           const done = new Set(
@@ -896,6 +870,12 @@ export async function markConverted(
        SET converted_at = COALESCE(converted_at, ?)
        WHERE marathon_id = ? AND user_id = ?`,
       [now, marathonId, userId],
+    );
+    await connection.execute(
+      `UPDATE app_users
+       SET cabinet_scope = 'full'
+       WHERE id = ? AND cabinet_scope = 'marathon'`,
+      [userId],
     );
   }, getConnection);
 }
@@ -1104,5 +1084,25 @@ export async function releaseNotification(
        WHERE marathon_id = ? AND user_id = ? AND day_number = ? AND kind = ? AND channel = ?`,
       [intent.marathonId, intent.userId, intent.dayNumber, intent.kind, intent.channel],
     );
+  }, getConnection);
+}
+
+/** Map of the latest joined daily marathon (active first, then finished). */
+export async function getStudentMarathonHref(
+  userId: number,
+  getConnection?: Conn,
+): Promise<string | null> {
+  return withConn(async (connection) => {
+    const rows = await connection.query<{ slug: string }>(
+      `SELECT m.slug
+       FROM marathon_participants p
+       INNER JOIN marathons m ON m.id = p.marathon_id
+       WHERE p.user_id = ? AND m.kind = 'daily' AND m.status IN ('active', 'finished')
+       ORDER BY (m.status = 'active') DESC, p.joined_at DESC
+       LIMIT 1`,
+      [userId],
+    );
+    const slug = rows[0]?.slug;
+    return slug ? `/marathon/${slug}/map` : null;
   }, getConnection);
 }

@@ -6,6 +6,11 @@ import {
   sessionCookieNeedsUpgrade,
 } from "@/modules/auth/getCurrentUser";
 import { findUserById } from "@/modules/auth/users";
+import {
+  isMarathonOnlyStudent,
+  marathonOnlyRedirectTarget,
+} from "@/modules/marathons/daily/access";
+import { getStudentMarathonHref } from "@/modules/marathons/daily/store";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { headers } from "next/headers";
@@ -25,11 +30,21 @@ export default async function AppLayout({
   const messages = pickClientMessages(await getMessages(), pathname);
   const user = await getCurrentUser();
 
+  let cabinetScope = user?.cabinetScope ?? "full";
+  let marathonHref: string | null = null;
   if (user) {
     const account = await findUserById(user.id);
     if (!account || account.isBanned) {
       // Cookie mutation is illegal during RSC render — use the route handler.
       redirect("/api/auth/clear-session");
+    }
+    cabinetScope = account.cabinetScope ?? "full";
+    if (user.role === "student") {
+      marathonHref = await getStudentMarathonHref(user.id);
+      if (isMarathonOnlyStudent(user.role, cabinetScope)) {
+        const target = marathonOnlyRedirectTarget(pathname, marathonHref);
+        if (target) redirect(target);
+      }
     }
   }
 
@@ -41,7 +56,13 @@ export default async function AppLayout({
     <NextIntlClientProvider locale={locale} messages={messages}>
       {needsCookieUpgrade ? <UpgradeSessionCookie /> : null}
       {user ? (
-        <DashboardShell user={user}>{children}</DashboardShell>
+        <DashboardShell
+          user={user}
+          cabinetScope={cabinetScope}
+          marathonHref={marathonHref}
+        >
+          {children}
+        </DashboardShell>
       ) : (
         children
       )}

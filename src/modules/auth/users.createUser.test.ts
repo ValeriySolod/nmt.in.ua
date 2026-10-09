@@ -58,6 +58,7 @@ test("createUser inserts a student and returns AuthUser", async () => {
     login: "maria_k",
     displayName: "Марія Коваленко",
     role: "student",
+    cabinetScope: "full",
     email: "maria@example.com",
     emailVerifyRequired: true,
   });
@@ -165,5 +166,6 @@ test("findUserById maps avatar_rev onto AuthUser", async () => {
     displayName: "Марія Коваленко",
     role: "student",
     avatarRev: 1_700_000_111,
+    cabinetScope: "full",
   });
 });

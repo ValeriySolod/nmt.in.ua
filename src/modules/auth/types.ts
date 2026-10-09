@@ -7,11 +7,23 @@ export const USER_ROLES = ["student", "teacher", "admin"] as const;
 
 export type UserRole = (typeof USER_ROLES)[number];
 
+/**
+ * `full` — ordinary platform account (register, teacher-created student, staff).
+ * `marathon` — account created only by the daily-marathon join form.
+ * The final CTA and an admin promotion set this back to `full`.
+ * Teachers and admins are never gated by this flag.
+ */
+export const CABINET_SCOPES = ["full", "marathon"] as const;
+
+export type CabinetScope = (typeof CABINET_SCOPES)[number];
+
 export type AuthUser = {
   id: number;
   login: string;
   displayName: string;
   role: UserRole;
+  /** Omitted on session-only reads. Present after `app_users` is loaded. */
+  cabinetScope?: CabinetScope;
   /** Unix seconds of the stored avatar; omitted when the user has none. */
   avatarRev?: number;
   /** True when an admin banned the account (blocks login). */

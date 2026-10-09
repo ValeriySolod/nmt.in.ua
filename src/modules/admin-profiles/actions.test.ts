@@ -35,6 +35,7 @@ test("setProfileBannedAction bans for admin", async () => {
         email: "pupil1@example.com",
         emailVerified: true,
         role: "student",
+        cabinetScope: "full",
         isBanned: true,
         isOnline: false,
         lastLoginAt: null,
@@ -42,6 +43,9 @@ test("setProfileBannedAction bans for admin", async () => {
         createdAt: "2026-01-01T00:00:00.000Z",
       }),
       deleteProfile: async () => {
+        throw new Error("unused");
+      },
+      promotePlatformStudent: async () => {
         throw new Error("unused");
       },
       revalidatePath: () => undefined,
@@ -67,6 +71,9 @@ test("deleteProfileAction maps last_admin", async () => {
       deleteProfile: async () => {
         throw new AdminProfilesError("no", "last_admin");
       },
+      promotePlatformStudent: async () => {
+        throw new Error("unused");
+      },
       revalidatePath: () => undefined,
     },
   );
@@ -88,6 +95,9 @@ test("setProfileBannedAction forbids non-admin", async () => {
         throw new Error("unused");
       },
       deleteProfile: async () => {
+        throw new Error("unused");
+      },
+      promotePlatformStudent: async () => {
         throw new Error("unused");
       },
       revalidatePath: () => undefined,

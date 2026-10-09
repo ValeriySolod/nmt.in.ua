@@ -9,6 +9,7 @@ import { roleLabel, type UserRole, USER_ROLES } from "@/modules/auth/client";
 import { queryHref } from "@/lib/queryHref";
 import {
   deleteProfileAction,
+  promotePlatformStudentAction,
   setProfileBannedAction,
   type ProfileModerationActionState,
 } from "@/modules/admin-profiles/actions";
@@ -65,17 +66,30 @@ export function AdminProfilesPanel({
     deleteProfileAction,
     DELETE_INITIAL,
   );
+  const [promoteState, promoteAction, promotePending] = useActionState(
+    promotePlatformStudentAction,
+    BAN_INITIAL,
+  );
 
-  const pending = banPending || deletePending;
-  const flash = banState.status !== "idle" ? banState : deleteState;
+  const pending = banPending || deletePending || promotePending;
+  const flash =
+    banState.status !== "idle"
+      ? banState
+      : deleteState.status !== "idle"
+        ? deleteState
+        : promoteState;
   const { items, page, totalPages, total, roleCounts } = profilesPage;
   const showPager = totalPages > 1;
 
   useEffect(() => {
-    if (banState.status === "success" || deleteState.status === "success") {
+    if (
+      banState.status === "success" ||
+      deleteState.status === "success" ||
+      promoteState.status === "success"
+    ) {
       router.refresh();
     }
-  }, [banState, deleteState, router]);
+  }, [banState, deleteState, promoteState, router]);
 
   const locale =
     typeof document !== "undefined"
@@ -173,6 +187,9 @@ export function AdminProfilesPanel({
                         {profile.isBanned ? (
                           <span className={css.banned}>{t("bannedBadge")}</span>
                         ) : null}
+                        {profile.cabinetScope === "marathon" ? (
+                          <span className={css.scopeBadge}>{t("marathonOnlyBadge")}</span>
+                        ) : null}
                       </p>
                       <p className={css.login}>@{profile.login}</p>
                       <p className={css.meta}>
@@ -246,6 +263,32 @@ export function AdminProfilesPanel({
                             {profile.isBanned ? t("unban") : t("ban")}
                           </button>
                         </form>
+                        {profile.role === "student" &&
+                        profile.cabinetScope === "marathon" ? (
+                          <form
+                            action={promoteAction}
+                            onSubmit={(event) => {
+                              if (
+                                !window.confirm(
+                                  t("promoteConfirm", {
+                                    name: profile.displayName,
+                                  }),
+                                )
+                              ) {
+                                event.preventDefault();
+                              }
+                            }}
+                          >
+                            <input type="hidden" name="userId" value={profile.id} />
+                            <button
+                              type="submit"
+                              className={clsx(css.actionBtn, css.actionUnban)}
+                              disabled={pending}
+                            >
+                              {t("promote")}
+                            </button>
+                          </form>
+                        ) : null}
                         <form
                           action={deleteAction}
                           onSubmit={(event) => {

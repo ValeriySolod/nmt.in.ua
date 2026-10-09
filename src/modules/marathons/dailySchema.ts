@@ -42,6 +42,7 @@ const CHILD_TABLES = [
     inline_prompt TEXT NULL,
     inline_options TEXT NULL,
     inline_correct TINYINT NULL,
+    inline_explanation TEXT NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uq_marathon_task_order (day_id, sort_order),
     KEY idx_marathon_task_question (question_id),
@@ -55,6 +56,7 @@ const CHILD_TABLES = [
     score TINYINT UNSIGNED NULL,
     passed TINYINT(1) NOT NULL DEFAULT 0,
     completed_at TIMESTAMP NULL DEFAULT NULL,
+    answers_json TEXT NULL,
     PRIMARY KEY (marathon_id, user_id, day_id),
     CONSTRAINT fk_marathon_progress_participant FOREIGN KEY (marathon_id, user_id)
       REFERENCES marathon_participants (marathon_id, user_id) ON DELETE CASCADE,
@@ -203,5 +205,70 @@ export async function migrateDailyMarathon(
       if (isDuplicate(error)) continue;
       throw error;
     }
+  }
+
+  const taskColumns = await columnNames(connection, "marathon_day_tasks");
+  if (taskColumns.size > 0 && !taskColumns.has("inline_explanation")) {
+    await addColumn(
+      connection,
+      "marathon_day_tasks",
+      "inline_explanation",
+      "TEXT NULL AFTER inline_correct",
+    );
+  }
+
+  const progressColumns = await columnNames(connection, "marathon_day_progress");
+  if (progressColumns.size > 0 && !progressColumns.has("answers_json")) {
+    await addColumn(
+      connection,
+      "marathon_day_progress",
+      "answers_json",
+      "TEXT NULL AFTER completed_at",
+    );
+  }
+
+  const userColumns = await columnNames(connection, "app_users");
+  if (userColumns.size > 0 && !userColumns.has("cabinet_scope")) {
+    await addColumn(
+      connection,
+      "app_users",
+      "cabinet_scope",
+      "ENUM('full','marathon') NOT NULL DEFAULT 'full' AFTER role",
+    );
+    await backfillMarathonCabinet(connection);
+  }
+}
+
+/**
+ * Accounts created by the marathon form before `cabinet_scope` existed have
+ * no other signal than "daily participant, no converted_at, no topic sessions".
+ * A platform student who joined and already has sessions stays `full`.
+ * An admin can open the cabinet for anyone the heuristic caught.
+ */
+async function backfillMarathonCabinet(connection: SqlConnection): Promise<void> {
+  try {
+    await connection.execute(
+      `UPDATE app_users u
+       SET u.cabinet_scope = 'marathon'
+       WHERE u.role = 'student'
+         AND u.cabinet_scope = 'full'
+         AND EXISTS (
+           SELECT 1 FROM marathon_participants p
+           INNER JOIN marathons m ON m.id = p.marathon_id
+           WHERE p.user_id = u.id AND m.kind = 'daily'
+         )
+         AND NOT EXISTS (
+           SELECT 1 FROM marathon_participants p
+           WHERE p.user_id = u.id AND p.converted_at IS NOT NULL
+         )
+         AND NOT EXISTS (
+           SELECT 1 FROM task_sessions s WHERE s.user_id = u.id
+         )`,
+      [],
+    );
+  } catch (error) {
+    const errno = (error as { errno?: number }).errno;
+    if (errno === 1146 || errno === 1054) return;
+    throw error;
   }
 }

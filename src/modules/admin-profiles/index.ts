@@ -9,9 +9,11 @@ export {
   getAdminProfiles,
   setProfileBanned,
   deleteProfile,
+  promotePlatformStudent,
 } from "./store";
 export type { GetAdminProfilesOptions } from "./store";
 export {
   setProfileBannedAction,
   deleteProfileAction,
+  promotePlatformStudentAction,
 } from "./actions";

@@ -4,16 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import { FeedbackEntry } from "@/components/feedback/FeedbackDialog";
-import { DASHBOARD_NAV } from "@/constants/navigation";
-import type { UserRole } from "@/modules/auth/client";
+import type { CabinetScope, UserRole } from "@/modules/auth/client";
 import {
-  ADMIN_NAV_HREFS,
-  canAssignMentorSessions,
-  canImportContent,
-  canManageProfiles,
-  canManageStudents,
-  hasPermission,
-} from "@/modules/auth/client";
+  isMarathonOnlyStudent,
+  sidebarLinkActive,
+  visibleSidebar,
+} from "@/modules/marathons/daily/access";
 import { useTranslations } from "next-intl";
 import css from "./AppSidebar.module.css";
 
@@ -21,60 +17,21 @@ type AppSidebarProps = {
   open: boolean;
   onNavigate: () => void;
   role: UserRole;
+  cabinetScope?: CabinetScope;
+  marathonHref?: string | null;
 };
 
-const NAV_ICONS: Record<string, string> = {
-  "/": "∑",
-  "/results": "%",
-  "/sessions": "⏱",
-  "/assign": "✎",
-  "/students": "◈",
-  "/profiles": "◉",
-  "/simulator": "◎",
-  "/materials/textbook": "▣",
-  "/problems": "ƒ",
-  "/feedback": "★",
-  "/settings": "⚙",
-  "/consultations": "✉",
-  "/leaderboard": "▴",
-  "/admin/marathons": "5",
-};
-
-const NAV_KEYS: Record<string, string> = {
-  "/": "home",
-  "/results": "results",
-  "/sessions": "sessions",
-  "/assign": "assign",
-  "/students": "students",
-  "/profiles": "profiles",
-  "/simulator": "simulator",
-  "/materials/textbook": "materials",
-  "/problems": "problems",
-  "/feedback": "feedback",
-  "/settings": "settings",
-  "/consultations": "consultations",
-  "/leaderboard": "leaderboard",
-  "/admin/marathons": "marathons",
-};
-
-const ADMIN_NAV_SET = new Set<string>(ADMIN_NAV_HREFS);
-
-export function AppSidebar({ open, onNavigate, role }: AppSidebarProps) {
+export function AppSidebar({
+  open,
+  onNavigate,
+  role,
+  cabinetScope = "full",
+  marathonHref = null,
+}: AppSidebarProps) {
   const t = useTranslations("Sidebar");
   const pathname = usePathname();
-  const navItems = DASHBOARD_NAV.filter((item) => {
-    if (role === "admin") return ADMIN_NAV_SET.has(item.href);
-    if (role === "teacher" && item.href === "/") return false;
-    if (item.href === "/assign") return canAssignMentorSessions(role);
-    if (item.href === "/settings") return canImportContent(role);
-    if (item.href === "/feedback") return canImportContent(role);
-    if (item.href === "/profiles") return canManageProfiles(role);
-    if (item.href === "/students") return canManageStudents(role);
-    if (item.href === "/admin/marathons") {
-      return hasPermission(role, "marathon:manage");
-    }
-    return true;
-  });
+  const marathonOnly = isMarathonOnlyStudent(role, cabinetScope);
+  const navItems = visibleSidebar({ role, cabinetScope, marathonHref });
 
   return (
     <aside
@@ -87,18 +44,13 @@ export function AppSidebar({ open, onNavigate, role }: AppSidebarProps) {
       <div className={css.scrollInner}>
         <div className={css.top}>
           <p className={css.kicker}>{t("kicker")}</p>
-          <p className={css.hint}>{t("hint")}</p>
+          <p className={css.hint}>{marathonOnly ? t("marathonHint") : t("hint")}</p>
         </div>
 
         <nav className={css.nav}>
           <ul className={css.list}>
             {navItems.map((item) => {
-              const active =
-                item.href === "/"
-                  ? pathname === "/" ||
-                    (role === "admin" && pathname.startsWith("/tasks"))
-                  : pathname === item.href ||
-                    pathname.startsWith(`${item.href}/`);
+              const active = sidebarLinkActive(item.href, pathname, role);
               const isSoon = item.status === "soon";
 
               return (
@@ -115,13 +67,13 @@ export function AppSidebar({ open, onNavigate, role }: AppSidebarProps) {
                     tabIndex={open ? undefined : -1}
                   >
                     <span className={css.icon} aria-hidden>
-                      {NAV_ICONS[item.href] ?? "•"}
+                      {item.icon}
                     </span>
                     <span className={css.labelRow}>
                       <span className={css.label}>
                         {item.href === "/" && role === "admin"
                           ? t("nav.homeAdmin")
-                          : t(`nav.${NAV_KEYS[item.href]}`)}
+                          : t(`nav.${item.labelKey}`)}
                       </span>
                       {isSoon ? (
                         <span
@@ -140,12 +92,14 @@ export function AppSidebar({ open, onNavigate, role }: AppSidebarProps) {
         </nav>
 
         <div className={css.bottom}>
-          <FeedbackEntry
-            source="footer"
-            isGuest={false}
-            variant="sidebar"
-            tabIndex={open ? undefined : -1}
-          />
+          {marathonOnly ? null : (
+            <FeedbackEntry
+              source="footer"
+              isGuest={false}
+              variant="sidebar"
+              tabIndex={open ? undefined : -1}
+            />
+          )}
 
           <div className={css.footerCard} aria-hidden>
             <span className={css.footerFormula}>a² + b² = c²</span>

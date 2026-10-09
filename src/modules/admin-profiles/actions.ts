@@ -3,14 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/modules/auth/getCurrentUser";
 import { canManageProfiles } from "@/modules/auth/types";
-import { deleteProfile, setProfileBanned } from "./store";
+import { deleteProfile, promotePlatformStudent, setProfileBanned } from "./store";
 import { AdminProfilesError } from "./types";
 
 export type ProfileModerationActionState =
   | { status: "idle" }
   | {
       status: "success";
-      action: "ban" | "unban" | "delete";
+      action: "ban" | "unban" | "delete" | "promote";
       displayName: string;
     }
   | { status: "error"; code: ProfileModerationErrorCode };
@@ -27,6 +27,7 @@ type ModerationDeps = {
   requireUser: typeof requireUser;
   setProfileBanned: typeof setProfileBanned;
   deleteProfile: typeof deleteProfile;
+  promotePlatformStudent: typeof promotePlatformStudent;
   revalidatePath: typeof revalidatePath;
 };
 
@@ -74,6 +75,7 @@ export async function setProfileBannedAction(
     requireUser,
     setProfileBanned,
     deleteProfile,
+    promotePlatformStudent,
     revalidatePath,
   },
 ): Promise<ProfileModerationActionState> {
@@ -114,6 +116,7 @@ export async function deleteProfileAction(
     requireUser,
     setProfileBanned,
     deleteProfile,
+    promotePlatformStudent,
     revalidatePath,
   },
 ): Promise<ProfileModerationActionState> {
@@ -141,6 +144,45 @@ export async function deleteProfileAction(
       return { status: "error", code: mapError(error) };
     }
     console.error("deleteProfileAction failed", error);
+    return { status: "error", code: "generic" };
+  }
+}
+
+export async function promotePlatformStudentAction(
+  _prev: ProfileModerationActionState,
+  formData: FormData,
+  deps: ModerationDeps = {
+    requireUser,
+    setProfileBanned,
+    deleteProfile,
+    promotePlatformStudent,
+    revalidatePath,
+  },
+): Promise<ProfileModerationActionState> {
+  const auth = await requireAdmin(deps);
+  if (!auth.ok) return auth.state;
+
+  const targetUserId = parseUserId(formData.get("userId"));
+  if (!targetUserId) {
+    return { status: "error", code: "invalid_input" };
+  }
+
+  try {
+    const profile = await deps.promotePlatformStudent({
+      actorUserId: auth.userId,
+      targetUserId,
+    });
+    deps.revalidatePath("/profiles");
+    return {
+      status: "success",
+      action: "promote",
+      displayName: profile.displayName,
+    };
+  } catch (error) {
+    if (error instanceof AdminProfilesError) {
+      return { status: "error", code: mapError(error) };
+    }
+    console.error("promotePlatformStudentAction failed", error);
     return { status: "error", code: "generic" };
   }
 }
