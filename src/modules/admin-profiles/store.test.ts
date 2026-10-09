@@ -3,7 +3,7 @@ import test from "node:test";
 
 import type { SqlConnection } from "@/lib/db/mysql";
 import { AdminProfilesError } from "./types";
-import { deleteProfile, setProfileBanned } from "./store";
+import { deleteProfile, promotePlatformStudent, setProfileBanned } from "./store";
 
 function mockConnection(handlers: {
   query?: (sql: string, params?: unknown[]) => Promise<unknown[]>;
@@ -70,6 +70,42 @@ test("setProfileBanned bans a regular student", async () => {
   );
   assert.equal(profile.isBanned, true);
   assert.equal(profile.login, "pupil1");
+});
+
+test("promotePlatformStudent opens a marathon-only student", async () => {
+  let sql = "";
+  const profile = await promotePlatformStudent(
+    { actorUserId: 3, targetUserId: 10 },
+    {
+      getConnection: async () =>
+        mockConnection({
+          query: async () => [{ ...studentRow, cabinet_scope: "marathon" }],
+          execute: async (statement) => {
+            sql = statement;
+            return { insertId: 0, affectedRows: 1 };
+          },
+        }),
+    },
+  );
+  assert.equal(profile.cabinetScope, "full");
+  assert.match(sql, /cabinet_scope = 'full'/);
+});
+
+test("promotePlatformStudent rejects a platform student", async () => {
+  await assert.rejects(
+    () =>
+      promotePlatformStudent(
+        { actorUserId: 3, targetUserId: 10 },
+        {
+          getConnection: async () =>
+            mockConnection({
+              query: async () => [studentRow],
+            }),
+        },
+      ),
+    (error: unknown) =>
+      error instanceof AdminProfilesError && error.code === "invalid_input",
+  );
 });
 
 test("deleteProfile blocks the last active admin", async () => {

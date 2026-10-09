@@ -1,4 +1,4 @@
-import type { UserRole } from "@/modules/auth/types";
+import type { CabinetScope, UserRole } from "@/modules/auth/types";
 
 export type AdminProfile = {
   id: number;
@@ -7,6 +7,7 @@ export type AdminProfile = {
   email: string | null;
   emailVerified: boolean;
   role: UserRole;
+  cabinetScope: CabinetScope;
   isBanned: boolean;
   isOnline: boolean;
   lastLoginAt: string | null;

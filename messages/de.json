@@ -30,6 +30,7 @@
     "ariaLabel": "Dashboard-Navigation",
     "kicker": "Lernmenü",
     "hint": "Wähle einen Bereich und übe regelmäßig",
+    "marathonHint": "Hier ist nur dein Marathon. Den vollen Bereich öffnet die Schaltfläche am Ende.",
     "soon": "bald",
     "soonLabel": "Demnächst",
     "footer": "Formeln zur Hand — Fortschritt voraus",
@@ -48,7 +49,8 @@
       "profiles": "Profile",
       "assign": "Thementest zuweisen",
       "leaderboard": "Marathon-Rangliste",
-      "marathons": "Marathon"
+      "marathons": "Marathon",
+      "marathon": "Marathon"
     }
   },
   "RecentResults": {
@@ -804,6 +806,13 @@
     "toTasks": "Zu den Aufgaben",
     "tasksTitle": "Aufgaben",
     "submit": "Prüfen",
+    "yourChoice": "Deine Wahl",
+    "correctMark": "Richtige Antwort",
+    "taskRight": "Richtig",
+    "taskWrong": "Falsch",
+    "explanation": "Erklärung",
+    "choiceMissing": "Die Antwort wurde nicht gespeichert.",
+    "explanationHint": "Optional. Die Teilnehmenden sehen sie nach dem Abgeben.",
     "backToMap": "Zur Tageskarte",
     "finalTitle": "Marathon-Zusammenfassung",
     "notDone": "Noch nicht geschafft",
@@ -877,7 +886,8 @@
       "questionId": "Bank-ID",
       "prompt": "Formulierung",
       "options": "Optionen",
-      "correct": "Nummer der richtigen Antwort"
+      "correct": "Nummer der richtigen Antwort",
+      "explanation": "Erklärung"
     },
     "materialTypes": {
       "text": "Text",
@@ -1974,6 +1984,9 @@
     "offline": "offline",
     "never": "noch nie angemeldet",
     "bannedBadge": "gesperrt",
+    "marathonOnlyBadge": "nur Marathon",
+    "promote": "Zum Plattform-Schüler machen",
+    "promoteConfirm": "Vollen Bereich für „{name}“ öffnen?",
     "roleMeta": "Rolle: {role}",
     "lastLoginMeta": "Letzter Login: {date}",
     "lastSeenMeta": "Zuletzt aktiv: {date}",
@@ -1992,7 +2005,8 @@
     "success": {
       "ban": "Konto {name} wurde gesperrt.",
       "unban": "Konto {name} wurde entsperrt.",
-      "delete": "Konto {name} wurde gelöscht."
+      "delete": "Konto {name} wurde gelöscht.",
+      "promote": "Konto {name} hat jetzt den vollen Bereich."
     },
     "errors": {
       "invalid_input": "Ungültige Daten.",

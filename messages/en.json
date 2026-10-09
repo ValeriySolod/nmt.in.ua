@@ -30,6 +30,7 @@
     "ariaLabel": "Dashboard navigation",
     "kicker": "Learning menu",
     "hint": "Choose a section and practice consistently",
+    "marathonHint": "Only your marathon is here. The full cabinet opens from the button at the end.",
     "soon": "soon",
     "soonLabel": "Coming soon",
     "footer": "Formulas at hand — progress ahead",
@@ -48,7 +49,8 @@
       "profiles": "Profiles",
       "assign": "Assign topic test",
       "leaderboard": "Marathon leaderboard",
-      "marathons": "Marathon"
+      "marathons": "Marathon",
+      "marathon": "Marathon"
     }
   },
   "RecentResults": {
@@ -804,6 +806,13 @@
     "toTasks": "To the tasks",
     "tasksTitle": "Tasks",
     "submit": "Check",
+    "yourChoice": "Your choice",
+    "correctMark": "Correct answer",
+    "taskRight": "Correct",
+    "taskWrong": "Incorrect",
+    "explanation": "Explanation",
+    "choiceMissing": "The answer was not saved.",
+    "explanationHint": "Optional. Shown to the participant after they submit.",
     "backToMap": "Back to the map",
     "finalTitle": "Marathon summary",
     "notDone": "Not finished yet",
@@ -877,7 +886,8 @@
       "questionId": "Bank ID",
       "prompt": "Prompt",
       "options": "Options",
-      "correct": "Correct option number"
+      "correct": "Correct option number",
+      "explanation": "Explanation"
     },
     "materialTypes": {
       "text": "Text",
@@ -1974,6 +1984,9 @@
     "offline": "offline",
     "never": "never signed in",
     "bannedBadge": "banned",
+    "marathonOnlyBadge": "marathon only",
+    "promote": "Make a platform student",
+    "promoteConfirm": "Open the full cabinet for “{name}”?",
     "roleMeta": "Role: {role}",
     "lastLoginMeta": "Last login: {date}",
     "lastSeenMeta": "Last seen: {date}",
@@ -1992,7 +2005,8 @@
     "success": {
       "ban": "Account {name} has been banned.",
       "unban": "Account {name} has been unbanned.",
-      "delete": "Account {name} has been deleted."
+      "delete": "Account {name} has been deleted.",
+      "promote": "Account {name} now has the full cabinet."
     },
     "errors": {
       "invalid_input": "Invalid data.",

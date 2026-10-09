@@ -1,7 +1,7 @@
 import "server-only";
 
 import type { SqlConnection } from "@/lib/db/mysql";
-import type { AuthUser, UserRole, StudentOption } from "./types";
+import type { AuthUser, CabinetScope, UserRole, StudentOption } from "./types";
 import { SQL_CREATE_USER_AVATARS } from "./avatar/schema";
 import { hashPassword } from "./password";
 
@@ -17,6 +17,7 @@ const SQL_CREATE_USERS = `
     email_verified_at TIMESTAMP NULL DEFAULT NULL,
     email_verify_required TINYINT(1) NOT NULL DEFAULT 0,
     role ENUM('student', 'teacher', 'admin') NOT NULL,
+    cabinet_scope ENUM('full', 'marathon') NOT NULL DEFAULT 'full',
     is_banned TINYINT(1) NOT NULL DEFAULT 0,
     last_login_at TIMESTAMP NULL DEFAULT NULL,
     last_seen_at TIMESTAMP NULL DEFAULT NULL,
@@ -28,8 +29,8 @@ const SQL_CREATE_USERS = `
 `;
 
 const SQL_FIND_BY_LOGIN = `
-  SELECT u.id, u.login, u.password_hash, u.display_name, u.role, u.is_banned,
-         u.email, u.email_verified_at, u.email_verify_required,
+  SELECT u.id, u.login, u.password_hash, u.display_name, u.role, u.cabinet_scope,
+         u.is_banned, u.email, u.email_verified_at, u.email_verify_required,
          UNIX_TIMESTAMP(a.updated_at) AS avatar_rev
   FROM ${AUTH_USERS_TABLE} u
   LEFT JOIN user_avatars a ON a.user_id = u.id
@@ -38,7 +39,7 @@ const SQL_FIND_BY_LOGIN = `
 `;
 
 const SQL_FIND_BY_ID = `
-  SELECT u.id, u.login, u.display_name, u.role, u.is_banned,
+  SELECT u.id, u.login, u.display_name, u.role, u.cabinet_scope, u.is_banned,
          u.email, u.email_verified_at, u.email_verify_required,
          UNIX_TIMESTAMP(a.updated_at) AS avatar_rev
   FROM ${AUTH_USERS_TABLE} u
@@ -48,8 +49,8 @@ const SQL_FIND_BY_ID = `
 `;
 
 const SQL_FIND_BY_EMAIL = `
-  SELECT u.id, u.login, u.password_hash, u.display_name, u.role, u.is_banned,
-         u.email, u.email_verified_at, u.email_verify_required,
+  SELECT u.id, u.login, u.password_hash, u.display_name, u.role, u.cabinet_scope,
+         u.is_banned, u.email, u.email_verified_at, u.email_verify_required,
          UNIX_TIMESTAMP(a.updated_at) AS avatar_rev
   FROM ${AUTH_USERS_TABLE} u
   LEFT JOIN user_avatars a ON a.user_id = u.id
@@ -63,6 +64,7 @@ type UserRow = {
   password_hash?: string;
   display_name: string;
   role: UserRole;
+  cabinet_scope?: string | null;
   is_banned?: number | boolean | null;
   email?: string | null;
   email_verified_at?: Date | string | null;
@@ -81,12 +83,17 @@ function isTruthyFlag(value: unknown): boolean {
   return value === true || value === 1 || value === "1";
 }
 
+function mapCabinetScope(value: unknown): CabinetScope {
+  return value === "marathon" ? "marathon" : "full";
+}
+
 function mapUser(row: UserRow): AuthUser {
   const user: AuthUser = {
     id: row.id,
     login: row.login,
     displayName: row.display_name.trim(),
     role: row.role,
+    cabinetScope: mapCabinetScope(row.cabinet_scope),
   };
   if (isTruthyFlag(row.is_banned)) {
     user.isBanned = true;
@@ -124,7 +131,7 @@ async function ensureUserColumn(
   connection: SqlConnection,
   columnName: string,
   addColumnSql: string,
-): Promise<void> {
+): Promise<boolean> {
   const rows = await connection.query<{
     COLUMN_NAME?: string;
     column_name?: string;
@@ -136,11 +143,43 @@ async function ensureUserColumn(
        AND COLUMN_NAME = ?`,
     [AUTH_USERS_TABLE, columnName],
   );
-  if (rows.length > 0) return;
+  if (rows.length > 0) return false;
   await connection.execute(
     `ALTER TABLE ${AUTH_USERS_TABLE} ADD COLUMN ${addColumnSql}`,
     [],
   );
+  return true;
+}
+
+/** Once, when `cabinet_scope` is created. Later boots must not undo an admin promotion. */
+async function backfillMarathonCabinetScope(
+  connection: SqlConnection,
+): Promise<void> {
+  try {
+    await connection.execute(
+      `UPDATE ${AUTH_USERS_TABLE} u
+       SET u.cabinet_scope = 'marathon'
+       WHERE u.role = 'student'
+         AND u.cabinet_scope = 'full'
+         AND EXISTS (
+           SELECT 1 FROM marathon_participants p
+           INNER JOIN marathons m ON m.id = p.marathon_id
+           WHERE p.user_id = u.id AND m.kind = 'daily'
+         )
+         AND NOT EXISTS (
+           SELECT 1 FROM marathon_participants p
+           WHERE p.user_id = u.id AND p.converted_at IS NOT NULL
+         )
+         AND NOT EXISTS (
+           SELECT 1 FROM task_sessions s WHERE s.user_id = u.id
+         )`,
+      [],
+    );
+  } catch (error) {
+    const errno = (error as { errno?: number }).errno;
+    if (errno === 1146 || errno === 1054) return;
+    throw error;
+  }
 }
 
 async function ensureEmailUniqueIndex(connection: SqlConnection): Promise<void> {
@@ -175,6 +214,14 @@ async function runAuthSchemaMigration(
       "is_banned",
       "is_banned TINYINT(1) NOT NULL DEFAULT 0 AFTER role",
     );
+    const addedCabinetScope = await ensureUserColumn(
+      connection,
+      "cabinet_scope",
+      "cabinet_scope ENUM('full','marathon') NOT NULL DEFAULT 'full' AFTER role",
+    );
+    if (addedCabinetScope) {
+      await backfillMarathonCabinetScope(connection);
+    }
     await ensureUserColumn(
       connection,
       "last_login_at",
@@ -334,8 +381,8 @@ export async function markEmailVerified(
 
 const SQL_INSERT_USER = `
   INSERT INTO ${AUTH_USERS_TABLE}
-    (login, password_hash, display_name, role, email, email_verified_at, email_verify_required)
-  VALUES (?, ?, ?, ?, ?, NULL, ?)
+    (login, password_hash, display_name, role, email, email_verified_at, email_verify_required, cabinet_scope)
+  VALUES (?, ?, ?, ?, ?, NULL, ?, ?)
 `;
 
 export type CreateUserInput = {
@@ -345,6 +392,8 @@ export type CreateUserInput = {
   role?: UserRole;
   /** Required for public student registration; optional for teacher activation. */
   email?: string | null;
+  /** Daily-marathon join sets `marathon`. Everything else stays `full`. */
+  cabinetScope?: CabinetScope;
 };
 
 export type CreateUserRecordInput = {
@@ -353,6 +402,7 @@ export type CreateUserRecordInput = {
   passwordHash: string;
   role: UserRole;
   email?: string | null;
+  cabinetScope?: CabinetScope;
 };
 
 export class CreateUserError extends Error {
@@ -401,6 +451,8 @@ export async function insertUserOnConnection(
         ? input.email.trim().toLowerCase()
         : null;
     const emailVerifyRequired = email ? 1 : 0;
+    const cabinetScope: CabinetScope =
+      input.cabinetScope === "marathon" ? "marathon" : "full";
     const result = await connection.execute(SQL_INSERT_USER, [
       input.login,
       input.passwordHash,
@@ -408,12 +460,14 @@ export async function insertUserOnConnection(
       input.role,
       email,
       emailVerifyRequired,
+      cabinetScope,
     ]);
     return {
       id: result.insertId,
       login: input.login,
       displayName: input.displayName,
       role: input.role,
+      cabinetScope,
       ...(email ? { email, emailVerifyRequired: true } : {}),
     };
   } catch (error) {
@@ -470,6 +524,7 @@ export async function createUser(
       passwordHash: hashPassword(input.password),
       role,
       email: input.email ?? null,
+      cabinetScope: input.cabinetScope,
     },
     deps,
   );

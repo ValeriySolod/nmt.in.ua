@@ -217,6 +217,9 @@
 .options {
   display: grid;
   gap: var(--space-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .option {
@@ -235,6 +238,51 @@
   width: 1.1rem;
   height: 1.1rem;
   accent-color: var(--green);
+}
+
+.optionStatic,
+.optionRight,
+.optionWrong,
+.optionKey {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  min-height: 44px;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.optionRight,
+.optionKey {
+  border-color: var(--green);
+  background: var(--green-bg);
+}
+
+.optionWrong {
+  border-color: color-mix(in srgb, crimson 45%, var(--line));
+  background: color-mix(in srgb, crimson 8%, var(--surface));
+}
+
+.reviewRight,
+.reviewWrong,
+.reviewNote {
+  margin: 0;
+  font-size: var(--fs-small);
+}
+
+.reviewRight {
+  color: var(--green-dark);
+}
+
+.reviewWrong {
+  color: color-mix(in srgb, crimson 70%, var(--ink));
+}
+
+.reviewNote {
+  color: var(--muted);
 }
 
 .embed {

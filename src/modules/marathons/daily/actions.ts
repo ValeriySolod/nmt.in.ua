@@ -303,6 +303,7 @@ export async function addTaskAction(
         prompt: parsed.value.prompt,
         options: parsed.value.options,
         correct: parsed.value.correct,
+        explanation: parsed.value.explanation,
       });
     }
   } catch (error) {
@@ -388,6 +389,7 @@ export async function registerMarathonAction(formData: FormData): Promise<void> 
         email: attempt.value.email,
         password,
         role: "student",
+        cabinetScope: "marathon",
       });
       userId = user.id;
       break;

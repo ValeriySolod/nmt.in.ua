@@ -219,6 +219,15 @@
   background: var(--green-bg);
 }
 
+.scopeBadge {
+  margin-inline-start: 0.4rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: var(--radius-pill);
+  background: var(--green-bg);
+  color: var(--green-dark);
+  font-size: var(--fs-small);
+}
+
 .actionDelete {
   border-color: color-mix(in srgb, crimson 55%, var(--line));
   background: color-mix(in srgb, crimson 12%, var(--surface));
