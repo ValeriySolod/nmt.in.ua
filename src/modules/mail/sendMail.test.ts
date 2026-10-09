@@ -155,6 +155,29 @@ test("sendMail does not retry a rejected sender", async () => {
   assert.equal(attempt, 1);
 });
 
+test("sendMail posts through node:https seam and reads the Brevo body", async () => {
+  let attempts = 0;
+  const result = await sendMail(letter, {
+    env: brevoEnv,
+    sleep: async () => {},
+    postImpl: async ({ body, headers }) => {
+      attempts += 1;
+      assert.match(body, /teacher@example.com/);
+      assert.equal(headers["api-key"], "xkeysib-test");
+      assert.equal(headers.accept, "application/json");
+      if (attempts === 1) throw new Error("socket hang up");
+      return {
+        status: 201,
+        statusText: "Created",
+        raw: JSON.stringify({ messageId: "<abc@brevo>" }),
+      };
+    },
+  });
+
+  assert.deepEqual(result, { ok: true, mode: "brevo" });
+  assert.equal(attempts, 2);
+});
+
 test("parseMailFrom splits a display name from the address", () => {
   assert.deepEqual(parseMailFrom("NMT.in.ua <noreply@nmt.in.ua>"), {
     name: "NMT.in.ua",
