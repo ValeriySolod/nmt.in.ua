@@ -4,13 +4,15 @@ import { MarathonDayView } from "@/components/marathon/MarathonDayView";
 import { createPageMetadata } from "@/constants/seo";
 import { requireUser } from "@/modules/auth/getCurrentUser";
 import { evaluateDayAccess } from "@/modules/marathons/daily/calendar";
+import { dayClientPayload } from "@/modules/marathons/daily/playTasks";
 import {
   getDailyBySlug,
   getParticipant,
   listDays,
   listMaterials,
-  listPlayTasks,
+  listPendingTasks,
   listProgress,
+  listTaskReview,
 } from "@/modules/marathons/daily/store";
 
 export const dynamic = "force-dynamic";
@@ -56,13 +58,27 @@ export default async function MarathonDayPage({ params, searchParams }: PageProp
   const open = access.open;
   const locale = await getLocale();
   const materials = open ? await listMaterials(day.id) : [];
-  const tasks = open && progress?.materialsViewed ? await listPlayTasks(day.id) : [];
+  const submitted = progress?.completedAt != null;
+  const pending =
+    open && progress?.materialsViewed && !submitted
+      ? await listPendingTasks(day.id)
+      : [];
+  const graded =
+    open && submitted
+      ? await listTaskReview(day.id, progress?.answers ?? {})
+      : [];
+  const payload = dayClientPayload({
+    submitted,
+    pending,
+    review: graded,
+  });
   return (
     <MarathonDayView
       marathon={marathon}
       day={day}
       materials={materials}
-      tasks={tasks}
+      tasks={payload.tasks}
+      review={payload.review}
       progress={progress}
       lockedUntil={open ? null : access.unlockAt}
       locale={locale}

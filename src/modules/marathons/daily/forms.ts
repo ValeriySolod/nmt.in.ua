@@ -205,6 +205,7 @@ export type TaskInput =
       prompt: string;
       options: string[];
       correct: number;
+      explanation: string | null;
     };
 
 export function parseTask(formData: FormData): ParseResult<TaskInput> {
@@ -226,7 +227,11 @@ export function parseTask(formData: FormData): ParseResult<TaskInput> {
     issue(issues, "correct", "range");
   }
   if (issues.length > 0 || order == null || correct == null) return { ok: false, issues };
-  return { ok: true, value: { order, mode: "inline", prompt, options, correct } };
+  const explanation = readText(formData.get("explanation"), 4000);
+  return {
+    ok: true,
+    value: { order, mode: "inline", prompt, options, correct, explanation: explanation || null },
+  };
 }
 
 export function utmFromForm(formData: FormData): UtmParams {

@@ -5,8 +5,8 @@ import { ensureAuthSchema } from "@/modules/auth/users";
 import { AdminProfilesError, ADMIN_PROFILES_PAGE_SIZE, type AdminProfile, type AdminProfilesPage, type AdminProfilesRoleCounts } from "./types";
 
 const SQL_LIST_PROFILES = `
-  SELECT id, login, display_name, email, email_verified_at, role, is_banned,
-         last_login_at, last_seen_at, created_at
+  SELECT id, login, display_name, email, email_verified_at, role, cabinet_scope,
+         is_banned, last_login_at, last_seen_at, created_at
   FROM app_users
 `;
 
@@ -22,11 +22,15 @@ const SQL_ROLE_COUNTS = `
 `;
 
 const SQL_FIND_TARGET = `
-  SELECT id, login, display_name, email, email_verified_at, role, is_banned,
-         last_login_at, last_seen_at, created_at
+  SELECT id, login, display_name, email, email_verified_at, role, cabinet_scope,
+         is_banned, last_login_at, last_seen_at, created_at
   FROM app_users
   WHERE id = ?
   LIMIT 1
+`;
+
+const SQL_OPEN_CABINET = `
+  UPDATE app_users SET cabinet_scope = 'full' WHERE id = ? AND cabinet_scope = 'marathon'
 `;
 
 const SQL_SET_BANNED = `
@@ -46,6 +50,7 @@ type ProfileRow = {
   email: string | null;
   email_verified_at: Date | string | null;
   role: UserRole;
+  cabinet_scope?: string | null;
   is_banned: number | boolean | null;
   last_login_at: Date | string | null;
   last_seen_at: Date | string | null;
@@ -105,6 +110,7 @@ function mapProfile(row: ProfileRow, nowMs = Date.now()): AdminProfile {
     email,
     emailVerified: Boolean(formatTimestamp(row.email_verified_at)),
     role: row.role,
+    cabinetScope: row.cabinet_scope === "marathon" ? "marathon" : "full",
     isBanned: isTruthyFlag(row.is_banned),
     isOnline: isUserOnline(lastSeenAt, nowMs),
     lastLoginAt,
@@ -335,6 +341,40 @@ export async function deleteProfile(
   } catch (error) {
     if (error instanceof AdminProfilesError) throw error;
     console.error("deleteProfile: unexpected database error", error);
+    throw new AdminProfilesError("Database operation failed.", "db_error");
+  } finally {
+    connection.release();
+  }
+}
+
+export type PromotePlatformStudentInput = {
+  actorUserId: number;
+  targetUserId: number;
+};
+
+/** Lifts the marathon-only cabinet limit. Does not set `converted_at`. */
+export async function promotePlatformStudent(
+  input: PromotePlatformStudentInput,
+  deps: { getConnection: () => Promise<SqlConnection> } = {
+    getConnection: loadDefaultConnection,
+  },
+): Promise<AdminProfile> {
+  assertValidIds(input.actorUserId, input.targetUserId);
+  await ensureAuthSchema(deps);
+  const connection = await deps.getConnection();
+  try {
+    const target = await loadTarget(connection, input.targetUserId);
+    if (target.role !== "student" || target.cabinetScope !== "marathon") {
+      throw new AdminProfilesError(
+        "Only a marathon-only student can be opened to the platform.",
+        "invalid_input",
+      );
+    }
+    await connection.execute(SQL_OPEN_CABINET, [input.targetUserId]);
+    return { ...target, cabinetScope: "full" };
+  } catch (error) {
+    if (error instanceof AdminProfilesError) throw error;
+    console.error("promotePlatformStudent: unexpected database error", error);
     throw new AdminProfilesError("Database operation failed.", "db_error");
   } finally {
     connection.release();

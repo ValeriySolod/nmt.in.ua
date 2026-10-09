@@ -168,6 +168,7 @@ test("simulateTeacherPaymentSuccess activates a pending teacher", async () => {
       login: "math_tutor",
       displayName: "Оксана Ментор",
       role: "teacher",
+      cabinetScope: "full",
     });
   }
   assert.ok(inserted);

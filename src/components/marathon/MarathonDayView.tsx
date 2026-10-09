@@ -8,7 +8,8 @@ import {
 } from "@/modules/marathons/daily/actions";
 import { formatKyivWhen } from "@/modules/marathons/daily/calendar";
 import { loomEmbedSrc, renderSafeMarkdown, youtubeEmbedSrc } from "@/modules/marathons/daily/richText";
-import type { DailyMarathon, DayProgress, MarathonDay, Material, PlayTask } from "@/modules/marathons/daily/store";
+import type { PendingPlayTask, ReviewedPlayTask } from "@/modules/marathons/daily/playTasks";
+import type { DailyMarathon, DayProgress, MarathonDay, Material } from "@/modules/marathons/daily/store";
 import { marathonErrorText } from "./errors";
 import css from "./marathon.module.css";
 
@@ -16,7 +17,8 @@ type MarathonDayViewProps = {
   marathon: DailyMarathon;
   day: MarathonDay;
   materials: Material[];
-  tasks: PlayTask[];
+  tasks: PendingPlayTask[];
+  review: ReviewedPlayTask[];
   progress: DayProgress | undefined;
   lockedUntil: Date | null;
   locale: string;
@@ -25,7 +27,8 @@ type MarathonDayViewProps = {
 
 export async function MarathonDayView(props: MarathonDayViewProps) {
   const t = await getTranslations("Marathon");
-  const { marathon, day, materials, tasks, progress, lockedUntil, locale, error } = props;
+  const { marathon, day, materials, tasks, review, progress, lockedUntil, locale, error } = props;
+  const submitted = progress?.completedAt != null;
   const message = marathonErrorText(t, error);
   return (
     <div className={css.narrow}>
@@ -58,38 +61,91 @@ export async function MarathonDayView(props: MarathonDayViewProps) {
               {progress?.materialsViewed ? (
                 <section className={css.stack} aria-labelledby="day-tasks">
                   <h2 id="day-tasks">{t("tasksTitle")}</h2>
-                  {progress.completedAt != null ? (
+                  {submitted ? (
                     <p className={css.alert} role="status">
                       {progress.passed
                         ? t("markPassed", { score: progress.score ?? 0 })
                         : t("markFailed", { score: progress.score ?? 0 })}
                     </p>
                   ) : null}
-                  <form action={submitDayAction} className={css.stack}>
-                    <input type="hidden" name="slug" value={marathon.slug} />
-                    <input type="hidden" name="day" value={day.dayNumber} />
-                    {tasks.map((task, index) => (
-                      <fieldset key={task.id} className={css.card}>
-                        <legend>
-                          {index + 1}. <MathText text={task.prompt} as="span" />
-                        </legend>
-                        <div className={css.options}>
-                          {task.options.map((option, optionIndex) => (
-                            <label key={`${task.id}-${optionIndex}`} className={css.option}>
-                              <input
-                                type="radio"
-                                name={`task_${task.id}`}
-                                value={optionIndex + 1}
-                                required
-                              />
-                              <MathText text={option} as="span" />
-                            </label>
-                          ))}
-                        </div>
-                      </fieldset>
-                    ))}
-                    <button type="submit" className={css.button}>{t("submit")}</button>
-                  </form>
+                  {submitted ? (
+                    <div className={css.stack}>
+                      {review.map((task, index) => (
+                        <article key={task.id} className={css.card}>
+                          <h3>
+                            {index + 1}. <MathText text={task.prompt} as="span" />
+                          </h3>
+                          <p className={task.right ? css.reviewRight : css.reviewWrong}>
+                            {task.right ? t("taskRight") : t("taskWrong")}
+                          </p>
+                          {task.choice == null ? (
+                            <p className={css.meta}>{t("choiceMissing")}</p>
+                          ) : null}
+                          <ol className={css.options}>
+                            {task.options.map((option, optionIndex) => {
+                              const number = optionIndex + 1;
+                              const chosen = task.choice === number;
+                              const key = task.correct === number;
+                              return (
+                                <li
+                                  key={`${task.id}-${optionIndex}`}
+                                  className={
+                                    chosen
+                                      ? task.right
+                                        ? css.optionRight
+                                        : css.optionWrong
+                                      : key
+                                        ? css.optionKey
+                                        : css.optionStatic
+                                  }
+                                >
+                                  <MathText text={option} as="span" />
+                                  {chosen ? (
+                                    <span className={css.reviewNote}>{t("yourChoice")}</span>
+                                  ) : null}
+                                  {key ? (
+                                    <span className={css.reviewNote}>{t("correctMark")}</span>
+                                  ) : null}
+                                </li>
+                              );
+                            })}
+                          </ol>
+                          {task.explanation ? (
+                            <div className={css.prose}>
+                              <p className={css.reviewNote}>{t("explanation")}</p>
+                              <MathText text={task.explanation} as="div" />
+                            </div>
+                          ) : null}
+                        </article>
+                      ))}
+                    </div>
+                  ) : (
+                    <form action={submitDayAction} className={css.stack}>
+                      <input type="hidden" name="slug" value={marathon.slug} />
+                      <input type="hidden" name="day" value={day.dayNumber} />
+                      {tasks.map((task, index) => (
+                        <fieldset key={task.id} className={css.card}>
+                          <legend>
+                            {index + 1}. <MathText text={task.prompt} as="span" />
+                          </legend>
+                          <div className={css.options}>
+                            {task.options.map((option, optionIndex) => (
+                              <label key={`${task.id}-${optionIndex}`} className={css.option}>
+                                <input
+                                  type="radio"
+                                  name={`task_${task.id}`}
+                                  value={optionIndex + 1}
+                                  required
+                                />
+                                <MathText text={option} as="span" />
+                              </label>
+                            ))}
+                          </div>
+                        </fieldset>
+                      ))}
+                      <button type="submit" className={css.button}>{t("submit")}</button>
+                    </form>
+                  )}
                 </section>
               ) : null}
             </>

@@ -23,7 +23,7 @@ nmt.in.ua — тренажер підготовки до НМТ з матема�
 
 | Роль | Що може | Куди потрапляє з `/` |
 | --- | --- | --- |
-| Учень (`student`) | Тест за темою, вкладка інтерактивних форматів, симулятор, підручник, задачник, практика дробів, результати, свої сесії, консультації, `/join` | Старт тесту (`TopicTestStart`) |
+| Учень (`student`) | Тест за темою, симулятор, підручник, задачник, результати, сесії, консультації, `/join`. Якщо акаунт лише з марафону (`cabinet_scope=marathon`) — у меню тільки «Марафон», інші URL ведуть на карту | Старт тесту, або карта марафону |
 | Викладач (`teacher`) | `/assign`, `/students` (створити учня, групи, інвайти), результати й сесії учнів, консультації («Приєднати»), візитка на `/account`. Пункту «Тест за обраною темою» в меню немає | Редірект на `/assign` |
 | Адмін (`admin`) | Банк MCQ на `/` (редактор `quiz_tasks`), імпорт `/settings`, відгуки `/feedback`, профілі `/profiles`, `/tasks/new` і `/tasks/[id]`. **Без** візитки й навчальних віджетів на `/account` | Редактор контенту, не тест |
 
@@ -400,7 +400,7 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 | Пагінація `/results`, `/sessions` | `src/components/ui/Pagination`, `src/lib/pagination.ts` | Мала | ✅ 10.2026: 10/стор., URL `?page=`; лише ≥768px |
 | Мобільний свайпер сесій / результатів | `LearningSessionsTable`, `TopicResultsTable` | Мала | ✅ 10.2026: картки + свайп, без пагінації на телефоні |
 | Лідерборд марафону | `src/modules/marathons`, `/leaderboard` | Середня | ✅ v0: join + рейтинг із `task_sessions` після вступу і в межах дат. Лише `kind=leaderboard`. Пілот не сідається сам |
-| 8.4 Денний марафон | `src/modules/marathons/daily`, `/marathon/[slug]`, `/admin/marathons`, `docs/marathon.md` | Середня | ✅ 08.10: реєстрація → дні за Києвом → фініш з CTA. Дозвіл `marathon:manage` (зараз admin). SQL `040` + lazy schema. Приклад — кнопка в адмінці (`math-5`). Cron і бот — `docs/marathon.md` |
+| 8.4 Денний марафон | `src/modules/marathons/daily`, `/marathon/[slug]`, `/admin/marathons`, `docs/marathon.md` | Середня | ✅ Меню: `cabinet_scope` (`full` / `marathon`) у `access.ts`. Завдання до здачі — `playTasks.ts` (`PENDING_TASK_SQL`). SQL `040` + `041`. Дозвіл `marathon:manage` (зараз admin) |
 | Досягнення | `/account` заглушки | Середня | Відкрито; після подій марафону |
 
 Карта app router: `src/app/page.tsx` — `/` (гість легкий / учень → CabinetHome); `src/app/(marketing)/` — welcome / login / register / diagnostic / `t/[slug]`; `src/app/(app)/` — кабінет (`force-dynamic`). Root layout лише `html`/`body` + `globals.css`. Неіснуючий публічний шлях на кшталт `/welcome/немає` дає кастомний 404; випадковий `/foo` без сесії — редірект на `/login` (auth-guard).

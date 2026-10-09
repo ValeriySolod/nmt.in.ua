@@ -3,7 +3,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
-import type { AuthUser } from "@/modules/auth/client";
+import type { AuthUser, CabinetScope } from "@/modules/auth/client";
 import { AppHeader } from "@/components/dashboard/AppHeader";
 import { AppSidebar } from "@/components/dashboard/AppSidebar";
 import { PresenceHeartbeat } from "@/components/dashboard/PresenceHeartbeat";
@@ -16,6 +16,8 @@ const STORAGE_KEY = "nmt-sidebar-open";
 type DashboardShellProps = {
   children: React.ReactNode;
   user: AuthUser | null;
+  cabinetScope?: CabinetScope;
+  marathonHref?: string | null;
 };
 
 const listeners = new Set<() => void>();
@@ -56,6 +58,8 @@ function setSidebarOpen(next: boolean | ((prev: boolean) => boolean)) {
 export function DashboardShell({
   children,
   user,
+  cabinetScope = "full",
+  marathonHref = null,
 }: DashboardShellProps) {
   const t = useTranslations("Dashboard");
   const tCommon = useTranslations("Common");
@@ -184,6 +188,8 @@ export function DashboardShell({
           <AppSidebar
             open={sidebarOpen}
             role={user.role}
+            cabinetScope={cabinetScope}
+            marathonHref={marathonHref}
             onNavigate={() => {
               if (window.matchMedia("(max-width: 767px)").matches) {
                 setSidebarOpen(false);

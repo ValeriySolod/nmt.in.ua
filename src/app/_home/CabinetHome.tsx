@@ -12,7 +12,12 @@ import {
   getQuizTasksByTheme,
   ADMIN_TASKS_PAGE_SIZE,
 } from "@/modules/admin-content";
+import { findUserById } from "@/modules/auth/users";
 import { canImportContent, type AuthUser } from "@/modules/auth/types";
+import {
+  isMarathonOnlyStudent,
+} from "@/modules/marathons/daily/access";
+import { getStudentMarathonHref } from "@/modules/marathons/daily/store";
 import { getAvailableTopicThemes } from "@/modules/testing/getAvailableTopicThemes";
 import { countStage2CatalogTasks } from "@/modules/stage2/rounds";
 
@@ -34,6 +39,14 @@ export async function CabinetHome({
   initialPage = 1,
   needsCookieUpgrade,
 }: CabinetHomeProps) {
+  const account = user.role === "student" ? await findUserById(user.id) : null;
+  const cabinetScope = account?.cabinetScope ?? "full";
+  const marathonHref =
+    user.role === "student" ? await getStudentMarathonHref(user.id) : null;
+  if (isMarathonOnlyStudent(user.role, cabinetScope)) {
+    redirect(marathonHref ?? "/account");
+  }
+
   if (user.role === "teacher") {
     redirect("/assign");
   }
@@ -90,7 +103,11 @@ export async function CabinetHome({
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
       {needsCookieUpgrade ? <UpgradeSessionCookie /> : null}
-      <DashboardShell user={user}>
+      <DashboardShell
+        user={user}
+        cabinetScope={cabinetScope}
+        marathonHref={marathonHref}
+      >
         <TopicTestStart
           themes={themes}
           initialThemeId={initialThemeId}

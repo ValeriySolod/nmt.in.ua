@@ -137,6 +137,7 @@ test("activatePaidTeacher inserts a teacher from the pending hash and marks paid
       login: "math_tutor",
       displayName: "Оксана Ментор",
       role: "teacher",
+      cabinetScope: "full",
     });
   }
   assert.ok(inserted);
