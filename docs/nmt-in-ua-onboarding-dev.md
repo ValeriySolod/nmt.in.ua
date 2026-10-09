@@ -399,8 +399,8 @@ Merge в `main` запускає [`.github/workflows/deploy-hosting.yml`](../.gi
 | Перф (TTFB / бандл) | `(app)`/`(marketing)` layouts, `catalogCache`, `sampleRandomIds` | — | ✅ 10.09: без `ORDER BY RAND()`, кеш довідників, cookie-профіль |
 | Пагінація `/results`, `/sessions` | `src/components/ui/Pagination`, `src/lib/pagination.ts` | Мала | ✅ 10.2026: 10/стор., URL `?page=`; лише ≥768px |
 | Мобільний свайпер сесій / результатів | `LearningSessionsTable`, `TopicResultsTable` | Мала | ✅ 10.2026: картки + свайп, без пагінації на телефоні |
-| Лідерборд марафону | `src/modules/marathons`, `/leaderboard` | Середня | ✅ v0: join + рейтинг із `task_sessions` після вступу і в межах дат. Пілот не сідається сам. 8.4 (денні порції) — після PM |
-| 8.4 Марафон (повний) | `docs/leaderboard-proposal.md`, Trello 8.4 | — | ⏸️ чекає PM; лідерборд уже прив’язаний до `marathons` |
+| Лідерборд марафону | `src/modules/marathons`, `/leaderboard` | Середня | ✅ v0: join + рейтинг із `task_sessions` після вступу і в межах дат. Лише `kind=leaderboard`. Пілот не сідається сам |
+| 8.4 Денний марафон | `src/modules/marathons/daily`, `/marathon/[slug]`, `/admin/marathons`, `docs/marathon.md` | Середня | ✅ 08.10: реєстрація → дні за Києвом → фініш з CTA. Дозвіл `marathon:manage` (зараз admin). SQL `040` + lazy schema. Приклад — кнопка в адмінці (`math-5`). Cron і бот — `docs/marathon.md` |
 | Досягнення | `/account` заглушки | Середня | Відкрито; після подій марафону |
 
 Карта app router: `src/app/page.tsx` — `/` (гість легкий / учень → CabinetHome); `src/app/(marketing)/` — welcome / login / register / diagnostic / `t/[slug]`; `src/app/(app)/` — кабінет (`force-dynamic`). Root layout лише `html`/`body` + `globals.css`. Неіснуючий публічний шлях на кшталт `/welcome/немає` дає кастомний 404; випадковий `/foo` без сесії — редірект на `/login` (auth-guard).

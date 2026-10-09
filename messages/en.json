@@ -47,7 +47,8 @@
       "homeAdmin": "Tasks by topic",
       "profiles": "Profiles",
       "assign": "Assign topic test",
-      "leaderboard": "Marathon leaderboard"
+      "leaderboard": "Marathon leaderboard",
+      "marathons": "Marathon"
     }
   },
   "RecentResults": {
@@ -121,8 +122,8 @@
     "bio": "About",
     "experience": "Experience",
     "experienceHint": "For example: “12 years teaching mathematics”.",
-    "publications": "Academic work",
-    "publicationsHint": "A short list or links. Multiple lines are fine.",
+    "publications": "Publications and professional materials",
+    "publicationsHint": "Links or titles of publications, articles, teaching materials, courses, or other professional work.",
     "city": "City",
     "subjects": "Subjects",
     "subjectsHint": "Comma-separated, up to 8 items.",
@@ -149,6 +150,11 @@
     "joinMotivation": "Why do you want to join NMT?",
     "joinMotivationHint": "Briefly tell us why you want to join the platform.",
     "submitForModeration": "Submit for moderation",
+    "submittedForModeration": "Profile submitted for moderation",
+    "moderationPending": "Application under review",
+    "moderationRejected": "Application rejected",
+    "moderationRejectedReason": "Reason: {reason}",
+    "moderationApproved": "Profile approved and published",
     "isPublic": "Publish the card",
     "isPublicHint": "While unchecked, /t/… returns 404.",
     "save": "Save card",
@@ -156,6 +162,7 @@
     "saved": "Card saved.",
     "copyLink": "Copy link",
     "copied": "Copied",
+    "requiredHint": "* Required fields for submission for moderation",
     "errors": {
       "slugRequired": "Enter a page address.",
       "invalidSlug": "Use Latin letters, digits, and hyphens, 3–48 characters.",
@@ -166,6 +173,27 @@
       "experienceTooLong": "The experience line is too long.",
       "publicationsTooLong": "The academic work list is too long.",
       "cityTooLong": "The city name is too long.",
+      "countryTooLong": "Country name is too long.",
+      "invalidTeachingLevels": "Select valid student levels.",
+      "invalidTeachingLanguages": "Select valid teaching languages.",
+      "invalidPhone": "Enter a valid phone number.",
+      "invalidLessonPrice": "Enter a valid lesson price.",
+      "invalidLessonCurrency": "Select a valid currency.",
+      "invalidLessonDuration": "Enter a valid lesson duration.",
+      "joinMotivationTooLong": "Motivation text is too long.",
+      "headlineRequired": "Enter a profile headline.",
+      "bioRequired": "Fill in the About section.",
+      "experienceRequired": "Enter your teaching experience.",
+      "countryRequired": "Enter your country.",
+      "subjectsRequired": "Enter at least one subject.",
+      "teachingLevelsRequired": "Select at least one student level.",
+      "teachingLanguagesRequired": "Select at least one teaching language.",
+      "joinMotivationRequired": "Tell us why you want to join NMT.",
+      "displayNameRequired": "Enter your first and last name in your profile.",
+      "emailRequired": "An email address is required to submit your application.",
+      "photoRequired": "Add a profile photo before submitting your application.",
+      "notFound": "Teacher profile was not found.",
+      "invalidModerationStatus": "This profile cannot currently be submitted for moderation.",
       "invalidSubjects": "Too many subjects, or one item is too long.",
       "invalidContactUrl": "The link must start with http:// or https://.",
       "forbidden": "Only a teacher or admin can edit the card.",
@@ -176,7 +204,29 @@
     "kicker": "Teacher",
     "city": "City",
     "subjects": "Subjects",
-    "contact": "Get in touch"
+    "contact": "Get in touch",
+    "teachingLanguages": "Teaching languages",
+    "teachingLevels": "Teaching levels",
+    "experience": "Experience",
+    "minutes": "min",
+    "readMore": "Read more",
+    "showLess": "Show less",
+    "about": "About me",
+    "publications": "Publications and professional activity",
+    "professionalLink": "Professional profile",
+    "ctaPlaceholder": "Book a lesson",
+    "levels": {
+      "grades_5_9": "Grades 5–9",
+      "grades_10_11": "Grades 10–11",
+      "nmt": "NMT",
+      "adult": "Adults"
+    },
+    "languages": {
+      "uk": "Ukrainian",
+      "en": "English",
+      "de": "German",
+      "pl": "Polish"
+    }
   },
   "Common": {
     "soon": "Coming soon",
@@ -719,6 +769,234 @@
     "resultsCta": "Results by topic",
     "sessionsCta": "My sessions",
     "newTest": "Take it again"
+  },
+  "Marathon": {
+    "kicker": "Marathon",
+    "landingLead": "{days} free days of math: one topic a day. The riddles on this page do not gate access.",
+    "riddlesTitle": "Riddles",
+    "showHint": "Hint",
+    "showAnswer": "Answer",
+    "join": "Join",
+    "haveAccount": "I already have an account",
+    "finishedNote": "This marathon has finished.",
+    "joinTitle": "Join the marathon",
+    "joinLead": "Create an account to take “{title}”. Confirm your email and the day map will open.",
+    "name": "Name",
+    "email": "Email",
+    "password": "Password",
+    "passwordConfirm": "Password again",
+    "mapLead": "{days} days. An open day can be finished any time; future days unlock for everyone at once.",
+    "streak": "Streak: {count}",
+    "dayLabel": "Day {n}",
+    "markPassed": "Passed · {score}%",
+    "markFailed": "Below the bar · {score}%",
+    "open": "Open",
+    "opensAt": "Opens {when}",
+    "toFinal": "Summary",
+    "notifyTitle": "Notifications",
+    "notifyEmail": "Email",
+    "notifyBot": "Telegram",
+    "save": "Save",
+    "botLinked": "Bot already linked",
+    "linkBot": "Link Telegram",
+    "botOff": "The bot is not configured yet.",
+    "materialsTitle": "Materials",
+    "toTasks": "To the tasks",
+    "tasksTitle": "Tasks",
+    "submit": "Check",
+    "backToMap": "Back to the map",
+    "finalTitle": "Marathon summary",
+    "notDone": "Not finished yet",
+    "weakTitle": "Weak topics",
+    "noWeak": "Every day is passed.",
+    "badgeAll": "Every day passed",
+    "badgeFinish": "Marathon finished",
+    "badgePartial": "You can still catch up",
+    "adminTitle": "Marathons",
+    "adminLead": "Create a marathon, fill the days, and launch it. A day unlocks for every participant at the same Kyiv time.",
+    "seed": "Add the sample: 5 days of math",
+    "create": "New marathon",
+    "delete": "Delete",
+    "deleteConfirm": "Delete permanently?",
+    "addRiddle": "Add a riddle",
+    "addDay": "Add a day",
+    "addMaterial": "Add material",
+    "addTask": "Add a task",
+    "order": "Order",
+    "riddleTitle": "Riddle title",
+    "body": "Text",
+    "answer": "Answer",
+    "hint": "Hint",
+    "daysTitle": "Days",
+    "dayNumber": "Day number",
+    "topic": "Topic",
+    "intro": "Intro",
+    "questionSearch": "Search the question bank",
+    "search": "Search",
+    "questionId": "Bank ID",
+    "inlinePrompt": "Or your own prompt",
+    "option": "Option",
+    "correct": "Correct option number",
+    "funnelTitle": "Funnel",
+    "funnelLine": "Registered {registered} → email {verified} → final {final} → converted {converted}",
+    "participants": "Participants",
+    "streakLabel": "Streak",
+    "saved": "Saved",
+    "saving": "Saving…",
+    "working": "Please wait…",
+    "deleting": "Deleting…",
+    "formSummary": "Nothing was saved. Fix these fields:",
+    "copy": "Copy",
+    "copied": "Copied",
+    "copyFailed": "Could not copy. Select the link and copy it manually.",
+    "publicLinkLabel": "Public link",
+    "draftHidden": "The page is not public until the status is “{status}”.",
+    "defaults": {
+      "finalCta": "Continue learning"
+    },
+    "fields": {
+      "slug": "Address",
+      "title": "Title",
+      "subject": "Subject",
+      "startDate": "Start date",
+      "unlockHour": "Hour (Kyiv)",
+      "daysCount": "Days",
+      "passThreshold": "Threshold, %",
+      "finalCtaText": "Button label",
+      "finalCtaUrl": "Button link",
+      "order": "Order",
+      "riddleTitle": "Riddle title",
+      "body": "Text",
+      "answer": "Answer",
+      "hint": "Hint",
+      "dayNumber": "Day number",
+      "topic": "Topic",
+      "introText": "Intro",
+      "materialType": "Material type",
+      "urlOrBody": "Text or link",
+      "questionId": "Bank ID",
+      "prompt": "Prompt",
+      "options": "Options",
+      "correct": "Correct option number"
+    },
+    "materialTypes": {
+      "text": "Text",
+      "youtube": "YouTube",
+      "loom": "Loom"
+    },
+    "hints": {
+      "slug": "Lowercase Latin letters, digits, and hyphens. For example, math-5.",
+      "startDate": "Defaults to today in Kyiv.",
+      "unlockHour": "HH:MM, for example 09:00.",
+      "daysCount": "An integer from 1 to 14.",
+      "passThreshold": "An integer from 0 to 100.",
+      "finalCtaUrl": "A path starting with / or a full http:// or https:// URL.",
+      "materialVideo": "For YouTube or Loom, paste the video link.",
+      "taskEither": "Either a bank ID, or your own prompt with options."
+    },
+    "placeholders": {
+      "slug": "math-5",
+      "unlockHour": "09:00",
+      "finalCtaUrl": "/"
+    },
+    "fieldErrors": {
+      "form": {
+        "server": "Could not save. Try again.",
+        "invalid": "Could not identify this record. Reload the page."
+      },
+      "slug": {
+        "required": "Enter an address. For example, math-5.",
+        "format": "The address may contain only lowercase Latin letters, digits, and hyphens. For example, math-5.",
+        "duplicate": "A marathon with this address already exists."
+      },
+      "title": {
+        "required": "The title must be at least 2 characters."
+      },
+      "startDate": {
+        "required": "Enter a start date.",
+        "format": "The start date must be YYYY-MM-DD."
+      },
+      "unlockHour": {
+        "required": "Enter the unlock hour.",
+        "format": "Use HH:MM, for example 09:00."
+      },
+      "daysCount": {
+        "range": "Days must be an integer from 1 to 14."
+      },
+      "passThreshold": {
+        "range": "The threshold must be an integer from 0 to 100."
+      },
+      "finalCtaText": {
+        "required": "Enter the button label."
+      },
+      "finalCtaUrl": {
+        "required": "Enter the button link.",
+        "format": "The link must start with / or with http:// or https://."
+      },
+      "order": {
+        "required": "Enter an order — an integer from 1.",
+        "range": "Order must be an integer from 1 to 50.",
+        "duplicate": "That order is already taken."
+      },
+      "body": {
+        "required": "Enter the text."
+      },
+      "answer": {
+        "required": "Enter the answer."
+      },
+      "dayNumber": {
+        "required": "Enter the day number.",
+        "range": "The day number must be an integer from 1 to 14.",
+        "duplicate": "A day with this number already exists."
+      },
+      "topic": {
+        "required": "The topic must be at least 2 characters."
+      },
+      "urlOrBody": {
+        "required": "Enter text or a link.",
+        "youtube": "This YouTube link was not recognized.",
+        "loom": "This Loom link was not recognized."
+      },
+      "questionId": {
+        "missing": "No question with that ID is in the bank."
+      },
+      "prompt": {
+        "required": "Enter a prompt or a question ID from the bank."
+      },
+      "options": {
+        "required": "At least two answer options are required."
+      },
+      "correct": {
+        "range": "The correct option number must point at a filled option (1–4)."
+      }
+    },
+    "status": {
+      "draft": "Draft",
+      "active": "Active",
+      "finished": "Finished"
+    },
+    "errors": {
+      "closed": "This marathon is not accepting participants.",
+      "invalid": "Check the form fields.",
+      "duplicate": "That entry already exists.",
+      "server": "Could not save. Try again.",
+      "seed_exists": "The sample marathon already exists.",
+      "question": "No question with that ID is in the bank.",
+      "locked": "This day is not open yet.",
+      "missing": "Marathon not found.",
+      "materials_required": "Read the materials first.",
+      "bot_off": "The bot is not configured yet.",
+      "requiredFields": "Fill in every field.",
+      "invalidLogin": "This email cannot become a login. Try another address.",
+      "invalidDisplayName": "The name must be 2 to 80 characters.",
+      "invalidEmail": "Enter a real email address.",
+      "passwordTooShort": "The password is too short.",
+      "passwordTooLong": "The password is too long.",
+      "passwordMismatch": "The passwords do not match.",
+      "loginTaken": "That login is already taken.",
+      "emailTaken": "That email is already registered.",
+      "reservedLogin": "That login is reserved."
+    }
   },
   "MarathonLeaderboard": {
     "kicker": "Marathon",
@@ -1532,6 +1810,30 @@
     "resetPassword": {
       "title": "New password",
       "description": "Set a new password for the learning workspace."
+    },
+    "marathon": {
+      "title": "Math marathon",
+      "description": "A free math marathon: riddles, registration, and one topic a day."
+    },
+    "marathonJoin": {
+      "title": "Join the marathon",
+      "description": "Register for the nmt.in.ua math marathon."
+    },
+    "marathonMap": {
+      "title": "Marathon day map",
+      "description": "Open and upcoming days of the math marathon."
+    },
+    "marathonDay": {
+      "title": "Marathon day {n}",
+      "description": "Materials and tasks for a day of the math marathon."
+    },
+    "marathonFinal": {
+      "title": "Marathon summary",
+      "description": "Results of the marathon days and an offer to keep learning."
+    },
+    "marathonAdmin": {
+      "title": "Marathons",
+      "description": "Manage math marathons, participants, and the funnel."
     },
     "assign": {
       "title": "Assign topic test",

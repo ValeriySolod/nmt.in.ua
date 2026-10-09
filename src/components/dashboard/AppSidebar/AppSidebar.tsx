@@ -12,6 +12,7 @@ import {
   canImportContent,
   canManageProfiles,
   canManageStudents,
+  hasPermission,
 } from "@/modules/auth/client";
 import { useTranslations } from "next-intl";
 import css from "./AppSidebar.module.css";
@@ -36,6 +37,7 @@ const NAV_ICONS: Record<string, string> = {
   "/settings": "⚙",
   "/consultations": "✉",
   "/leaderboard": "▴",
+  "/admin/marathons": "5",
 };
 
 const NAV_KEYS: Record<string, string> = {
@@ -52,6 +54,7 @@ const NAV_KEYS: Record<string, string> = {
   "/settings": "settings",
   "/consultations": "consultations",
   "/leaderboard": "leaderboard",
+  "/admin/marathons": "marathons",
 };
 
 const ADMIN_NAV_SET = new Set<string>(ADMIN_NAV_HREFS);
@@ -67,6 +70,9 @@ export function AppSidebar({ open, onNavigate, role }: AppSidebarProps) {
     if (item.href === "/feedback") return canImportContent(role);
     if (item.href === "/profiles") return canManageProfiles(role);
     if (item.href === "/students") return canManageStudents(role);
+    if (item.href === "/admin/marathons") {
+      return hasPermission(role, "marathon:manage");
+    }
     return true;
   });
 

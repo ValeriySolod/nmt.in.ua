@@ -48,7 +48,7 @@ export async function getActiveMarathon(
     const rows = await connection.query<MarathonRecord>(
       `SELECT id, slug, title, description, status, starts_at, ends_at, min_tasks_per_session
        FROM marathons
-       WHERE status = 'active' AND starts_at <= ? AND ends_at > ?
+       WHERE status = 'active' AND kind = 'leaderboard' AND starts_at <= ? AND ends_at > ?
        ORDER BY starts_at DESC
        LIMIT 1`,
       [now, now],
@@ -80,10 +80,10 @@ export async function getMarathonLeaderboard(
     const marathonRows = await connection.query<MarathonRecord>(
       marathonSlug
         ? `SELECT id, slug, title, description, status, starts_at, ends_at, min_tasks_per_session
-           FROM marathons WHERE slug = ? LIMIT 1`
+           FROM marathons WHERE slug = ? AND kind = 'leaderboard' LIMIT 1`
         : `SELECT id, slug, title, description, status, starts_at, ends_at, min_tasks_per_session
            FROM marathons
-           WHERE status = 'active' AND starts_at <= ? AND ends_at > ?
+           WHERE status = 'active' AND kind = 'leaderboard' AND starts_at <= ? AND ends_at > ?
            ORDER BY starts_at DESC LIMIT 1`,
       marathonSlug ? [marathonSlug] : [now, now],
     );
