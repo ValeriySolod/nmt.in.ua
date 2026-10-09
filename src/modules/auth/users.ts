@@ -488,10 +488,12 @@ export async function createUserRecord(
   await ensureAuthSchema(deps);
   const connection = await deps.getConnection();
   try {
+    // Shared hosting does not always have autocommit. A bare INSERT then
+    // stayed invisible to the next pooled connection, the verify-token FK
+    // (023_auth_tokens.sql) failed, and the letter only left on resend.
+    // START TRANSACTION also drops a leftover transaction on this socket.
+    await connection.beginTransaction();
     const user = await insertUserOnConnection(connection, input);
-    // autocommit is not guaranteed on shared hosting. The verify-token insert
-    // references this row (FK in 023_auth_tokens.sql) from another pooled
-    // connection, so the user must be durable before we release.
     await connection.commit();
     return user;
   } catch (error) {

@@ -121,9 +121,18 @@ export async function loginAction(
  * does **not** open a session until the email is confirmed.
  * Paid teacher checkout (`/register/teacher`) is hidden for now.
  */
+type RegisterActionDeps = {
+  createUser?: typeof createUser;
+  sendVerificationMail?: typeof sendRegistrationVerificationMail;
+  claimGuestProgress?: typeof claimGuestProgress;
+  clearGuestCookie?: typeof clearGuestCookie;
+  redirectTo?: (path: string) => never;
+};
+
 export async function registerAction(
   _prev: RegisterActionState,
   formData: FormData,
+  deps: RegisterActionDeps = {},
 ): Promise<RegisterActionState> {
   const validated = validateRegistrationInput({
     login: String(formData.get("login") ?? ""),
@@ -140,9 +149,10 @@ export async function registerAction(
   const roleRaw = String(formData.get("role") ?? "student").trim();
   const role = roleRaw === "teacher" ? "teacher" : "student";
 
+  const create = deps.createUser ?? createUser;
   let userId: number;
   try {
-    const user = await createUser({
+    const user = await create({
       login: validated.value.login,
       displayName: validated.value.displayName,
       email: validated.value.email,
@@ -163,9 +173,11 @@ export async function registerAction(
 
   if (role === "student" && formData.get("from") === "diagnostic") {
     try {
-      const result = await claimGuestProgress(userId);
+      const claim = deps.claimGuestProgress ?? claimGuestProgress;
+      const result = await claim(userId);
       if (result.claimed) {
-        await clearGuestCookie();
+        const clearGuest = deps.clearGuestCookie ?? clearGuestCookie;
+        await clearGuest();
       }
     } catch (error) {
       console.error("registerAction: claimGuestProgress failed", error);
@@ -174,7 +186,8 @@ export async function registerAction(
 
   let mailed = false;
   try {
-    const result = await sendRegistrationVerificationMail({
+    const send = deps.sendVerificationMail ?? sendRegistrationVerificationMail;
+    const result = await send({
       userId,
       email: validated.value.email,
       displayName: validated.value.displayName,
@@ -185,7 +198,9 @@ export async function registerAction(
   }
 
   const checkEmail = `/register/check-email?email=${encodeURIComponent(validated.value.email)}`;
-  redirect(mailed ? checkEmail : `${checkEmail}&mail=failed`);
+  const destination = mailed ? checkEmail : `${checkEmail}&mail=failed`;
+  if (deps.redirectTo) return deps.redirectTo(destination);
+  redirect(destination);
 }
 
 export async function logoutAction(): Promise<void> {

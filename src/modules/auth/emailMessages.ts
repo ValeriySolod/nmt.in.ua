@@ -1,7 +1,19 @@
 import "server-only";
 
-import { absoluteUrl, sendMail } from "@/modules/mail/sendMail";
+import {
+  absoluteUrl,
+  sendMail,
+  type SendMailInput,
+  type SendMailResult,
+} from "@/modules/mail/sendMail";
 import { issueAuthToken } from "./authTokens";
+
+const PERMANENT_MAIL_ERRORS = new Set([
+  "brevo_error",
+  "missing_api_key",
+  "bad_from",
+  "missing_to",
+]);
 
 export async function sendEmailVerificationMail(input: {
   userId: number;
@@ -15,7 +27,27 @@ export async function sendEmailVerificationMail(input: {
   loginAlreadyAllowed?: boolean;
 }): Promise<{ ok: boolean }> {
   const { rawToken } = await issueAuthToken(input.userId, "email_verify");
-  const link = absoluteUrl(`/verify-email?token=${encodeURIComponent(rawToken)}`);
+  const letter = buildVerificationLetter({ ...input, rawToken });
+  const result = await sendMail(letter);
+  if (!result.ok) {
+    console.error("verify-mail: letter was not accepted", {
+      userId: input.userId,
+      email: input.email,
+      error: result.error,
+    });
+  }
+  return { ok: result.ok };
+}
+
+function buildVerificationLetter(input: {
+  email: string;
+  displayName: string;
+  rawToken: string;
+  loginAlreadyAllowed?: boolean;
+}): SendMailInput {
+  const link = absoluteUrl(
+    `/verify-email?token=${encodeURIComponent(input.rawToken)}`,
+  );
   const name = input.displayName.trim() || input.email;
   const open = input.loginAlreadyAllowed === true;
 
@@ -60,44 +92,91 @@ export async function sendEmailVerificationMail(input: {
     <p style="color:#666">Якщо ви не реєструвались на nmt.in.ua — проігноруйте цей лист.</p>
   `;
 
-  const result = await sendMail({
+  return {
     to: input.email,
     subject,
     text,
     html,
-  });
-  return { ok: result.ok };
+  };
 }
 
+type RegistrationMailInput = {
+  userId: number;
+  email: string;
+  displayName: string;
+  locale?: string;
+  loginAlreadyAllowed?: boolean;
+};
+
 /**
- * Public signup (student or teacher) gets one automatic second try.
- * The manual «Надіслати лист ще раз» button is that same second call;
- * a dropped first Brevo request or a token insert that raced the new user
- * used to stop there, and the letter only left after the person clicked.
+ * First letter for every signup path: public `/register` (student and
+ * teacher), a teacher-created student, and marathon `/join`.
+ *
+ * One token for the whole call. A transport retry sends that same link
+ * again. Issuing a second token here used to mark the first link used
+ * while Brevo was still delivering it, so the inbox stayed empty until
+ * the person pressed «Надіслати лист ще раз» (that button is a new request
+ * and does not call `redirect()`).
  */
 export async function sendRegistrationVerificationMail(
-  input: {
-    userId: number;
-    email: string;
-    displayName: string;
-    locale?: string;
-  },
-  deps: { send?: typeof sendEmailVerificationMail } = {},
+  input: RegistrationMailInput,
+  deps: {
+    issue?: (userId: number) => Promise<{ rawToken: string }>;
+    deliver?: (letter: SendMailInput) => Promise<SendMailResult>;
+  } = {},
 ): Promise<{ ok: boolean }> {
-  const send = deps.send ?? sendEmailVerificationMail;
+  const issue =
+    deps.issue ??
+    ((userId: number) => issueAuthToken(userId, "email_verify"));
+  const deliver = deps.deliver ?? sendMail;
+
+  let rawToken: string;
   try {
-    const first = await send(input);
-    if (first.ok) return first;
+    const issued = await issue(input.userId);
+    rawToken = issued.rawToken;
   } catch (error) {
-    console.error(
-      "sendRegistrationVerificationMail: first attempt failed",
+    console.error("verify-mail: could not issue a confirmation token", {
+      userId: input.userId,
+      email: input.email,
       error,
-    );
+    });
+    return { ok: false };
   }
+
+  const letter = buildVerificationLetter({ ...input, rawToken });
   try {
-    return await send(input);
+    const first = await deliver(letter);
+    if (first.ok) return { ok: true };
+    console.error("verify-mail: first delivery was not accepted", {
+      userId: input.userId,
+      email: input.email,
+      error: first.error,
+    });
+    if (PERMANENT_MAIL_ERRORS.has(first.error)) return { ok: false };
   } catch (error) {
-    console.error("sendRegistrationVerificationMail: retry failed", error);
+    console.error("verify-mail: first delivery threw", {
+      userId: input.userId,
+      email: input.email,
+      error,
+    });
+  }
+
+  try {
+    const second = await deliver(letter);
+    if (!second.ok) {
+      console.error("verify-mail: retry was not accepted", {
+        userId: input.userId,
+        email: input.email,
+        error: second.error,
+      });
+    }
+    return { ok: second.ok };
+  } catch (error) {
+    console.error("verify-mail: retry threw", {
+      userId: input.userId,
+      email: input.email,
+      error,
+    });
     return { ok: false };
   }
 }
